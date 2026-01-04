@@ -1,25 +1,32 @@
-<h2>تفعيل ضمان أمواج للإلكترونيات</h2>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>تسجيل ضمان</title>
+</head>
 
-<p>يرجى إدخال البيانات أدناه ليتم تفعيل الضمان.</p>
+<body>
+
+<h2>تسجيل ضمان أمواج للإلكترونيات</h2>
 
 <form>
 
-<label>👤 اسم الزبون</label><br>
+<label>اسم الزبون</label><br>
 <input id="name" type="text" placeholder="اكتب اسم الزبون"><br><br>
 
-<label>📞 رقم الهاتف</label><br>
+<label>رقم الهاتف</label><br>
 <input id="phone" type="text" placeholder="07XXXXXXXX"><br><br>
 
-<label>🧾 رقم الفاتورة</label><br>
+<label>رقم الفاتورة</label><br>
 <input id="invoice" type="text" placeholder="اكتب رقم الفاتورة"><br><br>
 
-<label>🛠️ نوع القطعة</label><br>
+<label>نوع القطعة</label><br>
 <select id="type">
-  <option value="screen">شاشة</option>
-  <option value="battery">بطارية</option>
+  <option value="screen">شاشة (ضمان 30 يوم)</option>
+  <option value="battery">بطارية (ضمان سنة كاملة)</option>
 </select><br><br>
 
-<label>📅 تاريخ الشراء</label><br>
+<label>تاريخ التركيب</label><br>
 <input id="date" type="date"><br><br>
 
 <button type="button" onclick="saveWarranty()">تفعيل الضمان</button>
@@ -28,42 +35,26 @@
 
 <script>
 function saveWarranty() {
+
   const name = document.getElementById("name").value;
   const phone = document.getElementById("phone").value;
   const invoice = document.getElementById("invoice").value;
   const type = document.getElementById("type").value;
-  const purchaseDate = new Date(document.getElementById("date").value);
+  const purchaseDate = document.getElementById("date").value;
 
   if(!name || !phone || !invoice || !purchaseDate){
-    alert("رجاءً أكمل جميع الحقول");
+    alert("رجاءً املأ جميع الحقول 👍");
     return;
   }
 
-  // حساب مدة الضمان
   let expiryDate = new Date(purchaseDate);
 
-  if(type === "screen") {
-    expiryDate.setMonth(expiryDate.getMonth() + 1);   // شهر
-  } else {
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1); // سنة
-  }
+  if(type === "screen") expiryDate.setDate(expiryDate.getDate() + 30);
+  if(type === "battery") expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
-  // تجهيز البيانات
-  const warranty = {
-    name,
-    phone,
-    invoice,
-    type,
-    purchaseDate: purchaseDate.toISOString().split("T")[0],
-    expiryDate: expiryDate.toISOString().split("T")[0]
-  };
-
-  // خزن مؤقتًا في LocalStorage
-  let warranties = JSON.parse(localStorage.getItem("warranties") || "[]");
-  warranties.push(warranty);
-  localStorage.setItem("warranties", JSON.stringify(warranties));
-
-  alert("تم تفعيل الضمان بنجاح ✔️");
-
+  alert("تم تسجيل الضمان بنجاح 👌\nتاريخ انتهاء الضمان: " + expiryDate.toLocaleDateString());
 }
 </script>
+
+</body>
+</html>
