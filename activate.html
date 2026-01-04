@@ -1,3 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تفعيل ضمان أمواج</title>
+</head>
+
+<body>
+
+<h3>تفعيل ضمان أمواج الالكترونيات</h3>
+<p>الرجاء إدخال البيانات لتفعيل الضمان</p>
+
+<label>اسم الزبون</label><br>
+<input type="text" id="name"><br><br>
+
+<label>رقم الهاتف</label><br>
+<input type="text" id="phone"><br><br>
+
+<label>رقم الفاتورة</label><br>
+<input type="text" id="invoice"><br><br>
+
+<label>نوع القطعة</label><br>
+<select id="type">
+<option value="screen">شاشة</option>
+<option value="battery">بطارية</option>
+</select><br><br>
+
+<label>تاريخ التركيب</label><br>
+<input type="date" id="start"><br><br>
+
+<button onclick="sendData()">تفعيل الضمان</button>
+
 <script>
 function sendData() {
 
@@ -9,15 +41,14 @@ function sendData() {
         start: document.getElementById("start").value
     };
 
-    // التحقق من الحقول
     if (!data.name || !data.phone || !data.invoice || !data.start) {
         alert("يرجى ملء جميع الحقول");
         return;
     }
 
-    fetch("https://script.google.com/macros/s/AKfycby-bIRBkcUhiw-l4BOlkEKkJFBoqStvU4t8SpPcVsrStWO-LaY16-a6r_ok2ToW--M/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbw4__oST5aqplWO7pG2013TsGbWeKbkLdqMZTsxY5OkkftCJ2nOdYS-mUlM6s3EMKyC/exec", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
     })
     .then(r => r.text())
@@ -25,3 +56,6 @@ function sendData() {
     .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
+
+</body>
+</html>
