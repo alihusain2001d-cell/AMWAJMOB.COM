@@ -3,61 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <title>تفعيل ضمان أمواج</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  font-family: sans-serif;
+  padding: 15px;
+}
+label{font-weight: bold}
+input,select,button{
+  width:100%;
+  padding:8px;
+  margin:6px 0 15px;
+}
+button{
+  background:#1e88e5;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+}
+</style>
 </head>
 
 <body>
 
-<h3>تفعيل ضمان أمواج للالكترونيات</h3>
+<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
 <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
-<form>
+<label>اسم الزبون</label>
+<input id="name" type="text">
 
-<label>اسم الزبون</label><br>
-<input type="text" id="name"><br><br>
+<label>رقم الهاتف</label>
+<input id="phone" type="text">
 
-<label>رقم الهاتف</label><br>
-<input type="text" id="phone"><br><br>
+<label>رقم الفاتورة</label>
+<input id="invoice" type="text">
 
-<label>رقم الفاتورة</label><br>
-<input type="text" id="invoice"><br><br>
-
-<label>نوع القطعة</label><br>
+<label>نوع القطعة</label>
 <select id="type">
-<option value="screen">شاشة</option>
-<option value="battery">بطارية</option>
-</select><br><br>
+  <option value="screen">شاشة</option>
+  <option value="battery">بطارية</option>
+</select>
 
-<label>تاريخ التركيب</label><br>
-<input type="date" id="start"><br><br>
+<label>تاريخ التركيب</label>
+<input id="start" type="date">
 
-<button type="button" onclick="sendData()">تفعيل الضمان</button>
-
-</form>
+<button onclick="sendData()">تفعيل الضمان</button>
 
 <script>
-function sendData() {
+function sendData(){
 
-    const data = {
-        name: document.getElementById("name").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
-        invoice: document.getElementById("invoice").value.trim(),
-        type: document.getElementById("type").value,
-        start: document.getElementById("start").value
-    };
+  const data = {
+    name:   document.getElementById("name").value.trim(),
+    phone:  document.getElementById("phone").value.trim(),
+    invoice:document.getElementById("invoice").value.trim(),
+    type:   document.getElementById("type").value,
+    start:  document.getElementById("start").value
+  };
 
-    if (!data.name || !data.phone || !data.invoice || !data.start) {
-        alert("يرجى ملء جميع الحقول");
-        return;
-    }
+  if(!data.name || !data.phone || !data.invoice || !data.start){
+    alert("الرجاء إدخال جميع الحقول");
+    return;
+  }
 
-    fetch("https://script.google.com/macros/s/AKfycbykUyV4TO8My4jI7bGgZuonR6laY8mQy1gMxhr_LtgBGcPlvDAOo7LxU8HizsDYNOc/exec", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(data)
-    })
-    .then(r => r.text())
-    .then(msg => alert(msg))
-    .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+  fetch("https://script.google.com/macros/s/AKfycbxSVHYeTogrQCrCZnlBPNQVcaiJhkUYjw9g878noBkeuhzxbKxCwNEv-S8QxT1tOdH5/exec",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.text())
+  .then(msg=>alert(msg))
+  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
 
