@@ -1,3 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تفعيل ضمان أمواج</title>
+</head>
+
+<body>
+
+<h3>تفعيل ضمان أمواج للالكترونيات</h3>
+<p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
+
+<form>
+
+<label>اسم الزبون</label><br>
+<input type="text" id="name"><br><br>
+
+<label>رقم الهاتف</label><br>
+<input type="text" id="phone"><br><br>
+
+<label>رقم الفاتورة</label><br>
+<input type="text" id="invoice"><br><br>
+
+<label>نوع القطعة</label><br>
+<select id="type">
+<option value="screen">شاشة</option>
+<option value="battery">بطارية</option>
+</select><br><br>
+
+<label>تاريخ التركيب</label><br>
+<input type="date" id="start"><br><br>
+
+<button type="button" onclick="sendData()">تفعيل الضمان</button>
+
+</form>
+
 <script>
 function sendData() {
 
@@ -9,15 +45,14 @@ function sendData() {
         start: document.getElementById("start").value
     };
 
-    // تأكد من تعبئة الحقول
     if (!data.name || !data.phone || !data.invoice || !data.start) {
-        alert("الرجاء ملء جميع الحقول");
+        alert("يرجى ملء جميع الحقول");
         return;
     }
 
-    fetch("https://script.google.com/macros/s/AKfycbykUyV4TO8My4jI7bGgZuonR6laY8mQy1gMxhr_LtgBGcPlvDAOo7LxU8HizsDYNOc/exec", {
+    fetch("YOUR_SCRIPT_URL_HERE", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
     })
     .then(r => r.text())
@@ -25,3 +60,6 @@ function sendData() {
     .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
+
+</body>
+</html>
