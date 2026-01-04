@@ -50,7 +50,7 @@ function sendData() {
         return;
     }
 
-    fetch("YOUR_SCRIPT_URL_HERE", {
+    fetch("https://script.google.com/macros/s/AKfycbykUyV4TO8My4jI7bGgZuonR6laY8mQy1gMxhr_LtgBGcPlvDAOo7LxU8HizsDYNOc/exec", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(data)
