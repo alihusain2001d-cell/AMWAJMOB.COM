@@ -9,13 +9,13 @@ function sendData() {
         start: document.getElementById("start").value
     };
 
-    // تأكد أن الحقول ليست فارغة
+    // التحقق من الحقول
     if (!data.name || !data.phone || !data.invoice || !data.start) {
         alert("يرجى ملء جميع الحقول");
         return;
     }
 
-    fetch("https://script.google.com/macros/s/AKfycwbwZTc2eqFIPxJAQ7rcPRp6AlzhpYH4ykB8ZA_q_TPgjtNXjkGBrpqkIEfIJ0Bb6KWC/exec", {
+    fetch("https://script.google.com/macros/s/AKfycby-bIRBkcUhiw-l4BOlkEKkJFBoqStvU4t8SpPcVsrStWO-LaY16-a6r_ok2ToW--M/exec", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
