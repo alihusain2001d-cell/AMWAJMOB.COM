@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>تفعيل ضمان أمواج</title>
 </head>
 
 <body>
 
-<h2>تفعيل ضمان أمواج للإلكترونيات</h2>
-<p>يرجى إدخال البيانات أدناه لتفعيل الضمان.</p>
+<h3>تفعيل ضمان أمواج للالكترونيات</h3>
+<p>الرجاء إدخال البيانات أدناه لتفعيل الضمان.</p>
 
-<form id="warrantyForm">
+<form>
 
 <label>اسم الزبون</label><br>
-<input type="text" id="name" placeholder="اكتب اسم الزبون"><br><br>
+<input type="text" id="name"><br><br>
 
 <label>رقم الهاتف</label><br>
-<input type="text" id="phone" placeholder="07xxxxxxxx"><br><br>
+<input type="text" id="phone"><br><br>
 
 <label>رقم الفاتورة</label><br>
-<input type="text" id="invoice" placeholder="ادخل رقم الفاتورة"><br><br>
+<input type="text" id="invoice" placeholder="اكتب رقم الفاتورة"><br><br>
 
 <label>نوع القطعة</label><br>
 <select id="type">
@@ -45,7 +45,7 @@ function sendData() {
     start: document.getElementById("start").value
   };
 
-  fetch("https://script.google.com/macros/s/AKfycbzVNtcEGp5OQKFpF39PCvpWKPNx8ek6jKgdMvROVX1TVY7b53UktcquhdNh3mV0T9Yt/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbzHUJy24UZp34OJ7SYLIwejZc91MU_3daq-5v-gWyFfO2TXW7lJxrtHfzMZlMamiW6i/exec", {
     method: "POST",
     body: JSON.stringify(data)
   })
