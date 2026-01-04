@@ -2,18 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>استعلام ضمان أمواج للإلكترونيات</title>
+<title>استعلام ضمان أمواج</title>
 </head>
 
 <body>
+
 <h2>استعلام ضمان أمواج للإلكترونيات</h2>
 
-<p>يرجى الاحتفاظ بوصل الشراء و QR — الضمان لا يعمل بدون رقم الفاتورة.</p>
+<p>يرجى إدخال رقم الفاتورة للبحث عن الضمان.</p>
 
-<label>ادخل رقم الفاتورة:</label>
-<input type="text" />
+<label>🧾 رقم الفاتورة</label><br>
+<input id="invoiceSearch" type="text" placeholder="اكتب رقم الفاتورة">
+<br><br>
 
-<button>بحث</button>
+<button onclick="checkWarranty()">بحث</button>
+
+<hr>
+
+<div id="result"></div>
+
+<script>
+function checkWarranty() {
+  const invoice = document.getElementById("invoiceSearch").value;
+  let warranties = JSON.parse(localStorage.getItem("warranties") || "[]");
+
+  const found = warranties.find(w => w.invoice === invoice);
+
+  if (!found) {
+    document.getElementById("result").innerHTML =
+      "<p style='color:red'>❌ لا يوجد ضمان لهذا الرقم</p>";
+    return;
+  }
+
+  // فحص حالة الضمان
+  let today = new Date();
+  let expiry = new Date(found.expiryDate);
+
+  let status =
+    today <= expiry
+      ? "<span style='color:green'>✔️ الضمان ساري</span>"
+      : "<span style='color:red'>❌ الضمان منتهي</span>";
+
+  document.getElementById("result").innerHTML = `
+    <p>👤 الاسم: ${found.name}</p>
+    <p>📞 الهاتف: ${found.phone}</p>
+    <p>🧾 الفاتورة: ${found.invoice}</p>
+    <p>🔧 نوع القطعة: ${found.type === "screen" ? "شاشة" : "بطارية"}</p>
+    <p>📅 تاريخ الشراء: ${found.purchaseDate}</p>
+    <p>📅 تاريخ انتهاء الضمان: ${found.expiryDate}</p>
+    <h3>${status}</h3>
+  `;
+}
+</script>
 
 </body>
 </html>
