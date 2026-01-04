@@ -1,59 +1,27 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>تفعيل ضمان أمواج</title>
-</head>
-
-<body>
-
-<h3>تفعيل ضمان أمواج للالكترونيات</h3>
-<p>الرجاء إدخال البيانات أدناه لتفعيل الضمان.</p>
-
-<form>
-
-<label>اسم الزبون</label><br>
-<input type="text" id="name"><br><br>
-
-<label>رقم الهاتف</label><br>
-<input type="text" id="phone"><br><br>
-
-<label>رقم الفاتورة</label><br>
-<input type="text" id="invoice" placeholder="اكتب رقم الفاتورة"><br><br>
-
-<label>نوع القطعة</label><br>
-<select id="type">
-  <option value="screen">شاشة</option>
-  <option value="battery">بطارية</option>
-</select><br><br>
-
-<label>تاريخ التركيب</label><br>
-<input type="date" id="start"><br><br>
-
-<button type="button" onclick="sendData()">تفعيل الضمان</button>
-
-</form>
-
 <script>
 function sendData() {
 
-  const data = {
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    invoice: document.getElementById("invoice").value,
-    type: document.getElementById("type").value,
-    start: document.getElementById("start").value
-  };
+    const data = {
+        name: document.getElementById("name").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        invoice: document.getElementById("invoice").value.trim(),
+        type: document.getElementById("type").value,
+        start: document.getElementById("start").value
+    };
 
-  fetch("https://script.google.com/macros/s/AKfycbywBDlUwhweznu_cVnZTc_s1dqzNWmoiYc6qA7F7GAN5StJGF9VIassGvEr1uFNdQn6/exec", {
-    method: "POST",
-    body: JSON.stringify(data)
-  })
-  .then(r => r.text())
-  .then(msg => alert(msg))
-  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+    // تأكد أن الحقول ليست فارغة
+    if (!data.name || !data.phone || !data.invoice || !data.start) {
+        alert("يرجى ملء جميع الحقول");
+        return;
+    }
+
+    fetch("https://script.google.com/macros/s/AKfycwbwZTc2eqFIPxJAQ7rcPRp6AlzhpYH4ykB8ZA_q_TPgjtNXjkGBrpqkIEfIJ0Bb6KWC/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.text())
+    .then(msg => alert(msg))
+    .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
-
-</body>
-</html>
