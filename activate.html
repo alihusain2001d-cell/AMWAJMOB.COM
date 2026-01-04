@@ -2,57 +2,56 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>تسجيل ضمان</title>
+<title>تفعيل ضمان أمواج</title>
 </head>
 
 <body>
 
-<h2>تسجيل ضمان أمواج للإلكترونيات</h2>
+<h2>تفعيل ضمان أمواج للإلكترونيات</h2>
+<p>يرجى إدخال البيانات أدناه لتفعيل الضمان.</p>
 
-<form>
+<form id="warrantyForm">
 
 <label>اسم الزبون</label><br>
-<input id="name" type="text" placeholder="اكتب اسم الزبون"><br><br>
+<input type="text" id="name" placeholder="اكتب اسم الزبون"><br><br>
 
 <label>رقم الهاتف</label><br>
-<input id="phone" type="text" placeholder="07XXXXXXXX"><br><br>
+<input type="text" id="phone" placeholder="07xxxxxxxx"><br><br>
 
 <label>رقم الفاتورة</label><br>
-<input id="invoice" type="text" placeholder="اكتب رقم الفاتورة"><br><br>
+<input type="text" id="invoice" placeholder="ادخل رقم الفاتورة"><br><br>
 
 <label>نوع القطعة</label><br>
 <select id="type">
-  <option value="screen">شاشة (ضمان 30 يوم)</option>
-  <option value="battery">بطارية (ضمان سنة كاملة)</option>
+  <option value="screen">شاشة</option>
+  <option value="battery">بطارية</option>
 </select><br><br>
 
 <label>تاريخ التركيب</label><br>
-<input id="date" type="date"><br><br>
+<input type="date" id="start"><br><br>
 
-<button type="button" onclick="saveWarranty()">تفعيل الضمان</button>
+<button type="button" onclick="sendData()">تفعيل الضمان</button>
 
 </form>
 
 <script>
-function saveWarranty() {
+function sendData() {
 
-  const name = document.getElementById("name").value;
-  const phone = document.getElementById("phone").value;
-  const invoice = document.getElementById("invoice").value;
-  const type = document.getElementById("type").value;
-  const purchaseDate = document.getElementById("date").value;
+  const data = {
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    invoice: document.getElementById("invoice").value,
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
+  };
 
-  if(!name || !phone || !invoice || !purchaseDate){
-    alert("رجاءً املأ جميع الحقول 👍");
-    return;
-  }
-
-  let expiryDate = new Date(purchaseDate);
-
-  if(type === "screen") expiryDate.setDate(expiryDate.getDate() + 30);
-  if(type === "battery") expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-
-  alert("تم تسجيل الضمان بنجاح 👌\nتاريخ انتهاء الضمان: " + expiryDate.toLocaleDateString());
+  fetch("https://script.google.com/macros/s/AKfycbzVNtcEGp5OQKFpF39PCvpWKPNx8ek6jKgdMvROVX1TVY7b53UktcquhdNh3mV0T9Yt/exec", {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(r => r.text())
+  .then(msg => alert(msg))
+  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
 
