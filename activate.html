@@ -68,6 +68,7 @@ function sendData(){
     return;
   }
 <script>
+
 function sendData() {
 
   const data = {
@@ -85,15 +86,17 @@ function sendData() {
 
   console.log(data);
 
-  fetch("https://script.google.com/macros/s/AKfyc.../exec", {
+  fetch("https://script.google.com/macros/s/AKfycbwP9bmyinzJtVNQnyoE38z2j2t-tEfPUsM1tumOzFW_UKFClYJawsQBSXfGBTN_iwqh/exec", {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   })
+
   .then(r => r.text())
   .then(msg => alert(msg))
   .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
-
 }
+
 </script>
 
 </body>
