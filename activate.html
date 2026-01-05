@@ -1,5 +1,5 @@
 <script>
-function sendData(){
+async function sendData(){
 
   const data = {
     name: document.getElementById("name").value.trim(),
@@ -14,56 +14,68 @@ function sendData(){
     return;
   }
 
-  // مدة الضمان
+  // =========================
+  // 1️⃣ منع تكرار رقم الفاتورة
+  // =========================
+  const SHEET =
+   "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
+
+  const res = await fetch(SHEET);
+  const csv = await res.text();
+
+  // نفكّ البيانات
+  const lines = csv.trim().split("\n").map(r => r.split(","));
+  const headers = lines.shift();   // الصف الأول عناوين
+  const rows = lines.map(r => {
+     let obj = {};
+     headers.forEach((h,i)=> obj[h] = r[i]);
+     return obj;
+  });
+
+  const exists = rows.find(r => r.invoice == data.invoice);
+
+  if(exists){
+    alert("⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيل الضمان مرتين");
+    return;
+  }
+
+  // =========================
+  // 2️⃣ حساب تاريخ الانتهاء
+  // =========================
   let days = data.type === "screen" ? 30 : 365;
 
   const startDate = new Date(data.start);
   const expiry = new Date(startDate);
   expiry.setDate(expiry.getDate() + days);
 
-  // نحفظ تاريخ الانتهاء داخل البيانات (حتى يروح للجدول)
   data.expiry = expiry.toISOString().slice(0,10);
 
-  // إظهار رسالة على الصفحة
-  document.getElementById("result").style.display = "block";
-  document.getElementById("result").innerHTML = `
-    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    انتهاء الضمان: <b>${data.expiry}</b>
-  `;
+  alert("✔ تم تفعيل الضمان بنجاح");
 
-  // إرسال إلى Google Sheet (Pipedream)
+  // =========================
+  // 3️⃣ إرسال البيانات للجدول
+  // =========================
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
   })
-  .then(()=> {
-
-    alert("✔ تم تفعيل الضمان بنجاح");
-
-    // رسالة واتساب للزبون
-    const msg =
-`مرحباً 🌊
-
-تم تفعيل ضمان منتجك بنجاح.
-
-📄 رقم الفاتورة: ${data.invoice}
-📆 تاريخ التفعيل: ${data.start}
-⏳ انتهاء الضمان: ${data.expiry}
-
-للاستعلام عن الضمان لاحقاً:
-https://www.amwajmob.com/index.html
-
-شكراً لاختياركم أمواج لقطع غيار الأجهزة الجوالة 💙`;
-
-    // تحويل رقم الهاتف لصيغة واتساب (العراق 964)
-    let phone = data.phone.replace(/^0/, "");
-    const wa = `https://wa.me/964${phone}?text=${encodeURIComponent(msg)}`;
-
-    // فتح واتساب
-    window.open(wa, "_blank");
-  })
   .catch(()=> alert("حدث خطأ — حاول مرة أخرى"));
+
+  // =========================
+  // 4️⃣ رسالة واتساب للزبون
+  // =========================
+  const msg =
+`شكراً لشرائك من امواج للإلكترونيات 🌊
+
+تم تفعيل ضمانك بنجاح ✔
+
+للاستعلام عن الضمان اضغط هنا:
+https://www.amwajmob.com/index.html`;
+
+  let phone = data.phone.replace(/^0/, "");
+  const wa = `https://wa.me/964${phone}?text=${encodeURIComponent(msg)}`;
+
+  window.open(wa, "_blank");
 }
 </script>
