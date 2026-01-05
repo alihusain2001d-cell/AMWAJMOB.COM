@@ -2,187 +2,186 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تفعيل ضمان أمواج</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   font-family: sans-serif;
-  padding:15px;
-  background:#f3faff;
+  padding: 15px;
+  background:#f7fbff;
 }
-.card{
+
+.container{
+  max-width:520px;
+  margin:auto;
   background:#fff;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:15px;
-  box-shadow:0 5px 12px rgba(0,0,0,.08);
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
+
+.logo{
+  text-align:center;
+  margin-bottom:15px;
+}
+.logo img{
+  width:130px;
+}
+
+h3{text-align:center;margin-top:0}
+label{font-weight:bold}
 input,select,button{
   width:100%;
-  padding:9px;
-  margin:6px 0;
-  border-radius:6px;
+  padding:8px;
+  margin:6px 0 14px;
 }
+
 button{
-  background:#0099cc;
+  background:#1e88e5;
   color:#fff;
   border:none;
-}
-.result{
-  background:#e8faff;
-  padding:10px;
   border-radius:6px;
-  margin-top:10px;
 }
-.whatsapp{
-  background:#25d366;
-  color:#fff;
+
+.result{
+  background:#e8f4ff;
+  padding:12px;
+  border-radius:8px;
+  margin-top:12px;
+  display:none;
+}
+
+.footer{
   text-align:center;
-  display:block;
+  margin-top:15px;
+  color:#333;
+}
+
+.timer-box{
+  background:#f5fbf2;
+  border:1px solid #d6efcb;
   margin-top:10px;
   padding:10px;
   border-radius:10px;
-  text-decoration:none;
   font-weight:bold;
+}
+
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:6px;
+  margin-top:15px;
+  text-decoration:none;
 }
 </style>
 </head>
 
 <body>
 
-<h3 style="text-align:center">تفعيل ضمان أمواج</h3>
+<div class="container">
 
-<div class="card">
+<div class="logo">
+  <img src="1633875906547.jpg">
+</div>
+
+<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+
+<p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
 <label>اسم الزبون</label>
-<input id="name">
+<input id="name" type="text">
 
 <label>رقم الهاتف</label>
-<input id="phone">
+<input id="phone" type="text">
 
 <label>رقم الفاتورة</label>
-<input id="invoice">
+<input id="invoice" type="text">
 
 <label>نوع القطعة</label>
 <select id="type">
-<option value="screen">شاشة</option>
-<option value="battery">بطارية</option>
+  <option value="screen">شاشة</option>
+  <option value="battery">بطارية</option>
 </select>
 
 <label>تاريخ التركيب</label>
 <input id="start" type="date">
 
-<button onclick="activate()">تفعيل الضمان</button>
+<button onclick="sendData()">تفعيل الضمان</button>
 
-<div id="activeMsg" class="result" style="display:none"></div>
+<div id="result" class="result"></div>
 
+<div style="text-align:center; margin-top:15px; font-weight:bold;">
+📞 للاستفسار: <a href="tel:7696" style="text-decoration:none;color:#1e88e5;">7696</a>
 </div>
 
-<div class="card">
-<h4>🔍 إستعلام الضمان برقم الفاتورة</h4>
-
-<input id="searchInvoice" placeholder="أدخل رقم الفاتورة">
-<button onclick="check()">بحث</button>
-
-<div id="searchMsg" class="result" style="display:none"></div>
+<div class="footer">
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
 </div>
 
-<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-تواصل واتساب: 07709000160
+<a class="whatsapp" href="https://wa.me/9647700000000" target="_blank">
+تواصل عبر واتساب
 </a>
 
-<p style="text-align:center;opacity:.8">🌊 شكراً لاختياركم أمواج</p>
+</div>
 
 <script>
+function sendData(){
 
-const WEBHOOK = "https://eo9txe5hkh3d1yk.m.pipedream.net";   // رابطك الحالي
-const SHEET_ID = "1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38";
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    invoice: document.getElementById("invoice").value.trim(),
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
+  };
 
-function daysAdd(date, days){
- let d = new Date(date);
- d.setDate(d.getDate()+days);
- return d.toISOString().split("T")[0];
+  if(!data.name || !data.phone || !data.invoice || !data.start){
+    alert("الرجاء إدخال جميع الحقول");
+    return;
+  }
+
+  // تحديد مدة الضمان
+  let days = data.type === "screen" ? 30 : 365;
+  const startDate = new Date(data.start);
+  const expiry = new Date(startDate);
+  expiry.setDate(expiry.getDate() + days);
+
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").innerHTML = `
+    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+    تاريخ التفعيل: <b>${data.start}</b><br>
+    انتهاء الضمان: <b>${expiry.toISOString().slice(0,10)}</b>
+    <div id="timer" class="timer-box"></div>
+  `;
+
+  // عداد تنازلي
+  setInterval(()=>{
+    const now = new Date();
+    const diff = expiry - now;
+
+    if(diff <= 0){
+      document.getElementById("timer").innerHTML = "⚠ انتهى الضمان";
+      return;
+    }
+
+    const daysLeft = Math.floor(diff / (1000*60*60*24));
+    document.getElementById("timer").innerHTML =
+      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
+  },1000);
+
+  // ارساله للجدول
+  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.text())
+  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
-
-// تفعيل الضمان
-async function activate(){
-
- let data = {
-  name: name.value.trim(),
-  phone: phone.value.trim(),
-  invoice: invoice.value.trim(),
-  type: type.value,
-  start: start.value
- };
-
- if(!data.name || !data.phone || !data.invoice || !data.start){
-   alert("رجاءً إدخال جميع الحقول");
-   return;
- }
-
- // مدة حسب القطعة
- let expiry = (data.type=="screen")
-     ? daysAdd(data.start,30)
-     : daysAdd(data.start,365);
-
- // تأكد عدم تكرار الفاتورة
- let exist = await fetch(
- `https://opensheet.elk.sh/${SHEET_ID}/sheet1`
- ).then(r=>r.json());
-
- if(exist.some(r=>r.invoice==data.invoice)){
-   alert("⚠ رقم الفاتورة مُسجل مسبقاً");
-   return;
- }
-
- data.expiry = expiry;
-
- fetch(WEBHOOK,{
-  method:"POST",
-  headers:{ "Content-Type":"application/json"},
-  body:JSON.stringify(data)
- })
- .then(()=>{
-
-   activeMsg.style.display="block";
-   activeMsg.innerHTML =
-   `تم تفعيل الضمان<br>
-   تاريخ التفعيل: ${data.start}<br>
-   انتهاء الضمان: ${expiry}`;
-
-   invoice.value="";
- })
- .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
-}
-
-
-// الإستعلام
-async function check(){
-
- let inv = searchInvoice.value.trim();
- if(!inv){ alert("أدخل رقم الفاتورة"); return; }
-
- let rows = await fetch(
- `https://opensheet.elk.sh/${SHEET_ID}/sheet1`
- ).then(r=>r.json());
-
- let w = rows.find(x=>x.invoice==inv);
-
- searchMsg.style.display="block";
-
- if(!w){
-  searchMsg.innerHTML="❌ لا يوجد ضمان لهذا الرقم";
- }else{
-  searchMsg.innerHTML=
-  `✔ اسم: ${w.name}<br>
-   هاتف: ${w.phone}<br>
-   نوع: ${w.type}<br>
-   تاريخ التفعيل: ${w.start}<br>
-   انتهاء الضمان: ${w.expiry}`;
- }
-}
-
 </script>
 
 </body>
