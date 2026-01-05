@@ -17,7 +17,6 @@ async function getRows() {
 
 async function sendData(){
 
-  // جمع البيانات
   const data = {
     name: document.getElementById("name").value.trim(),
     phone: document.getElementById("phone").value.trim(),
@@ -31,7 +30,7 @@ async function sendData(){
     return;
   }
 
-  // ❌ منع تكرار رقم الفاتورة
+  // منع تكرار رقم الفاتورة
   const rows = await getRows();
   const exists = rows.find(r => r.invoice == data.invoice);
   if(exists){
@@ -39,7 +38,7 @@ async function sendData(){
     return;
   }
 
-  // حساب الضمان
+  // حساب مدة الضمان
   let days = data.type === "screen" ? 30 : 365;
   const startDate = new Date(data.start);
   const expiry = new Date(startDate);
@@ -47,23 +46,27 @@ async function sendData(){
 
   data.expiry = expiry.toISOString().slice(0,10);
 
-  // اظهار نتيجة للمستخدم
+  // عرض النتيجة
   document.getElementById("result").style.display="block";
   document.getElementById("result").innerHTML =
-    `تم تفعيل الضمان بنجاح ⭐<br>
-     تاريخ التفعيل: <b>${data.start}</b><br>
-     انتهاء الضمان: <b>${data.expiry}</b>
-     <div id="timer" class="timer-box"></div>`;
+  `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+   تاريخ التفعيل: <b>${data.start}</b><br>
+   انتهاء الضمان: <b>${data.expiry}</b>
+   <div id="timer" class="timer-box"></div>`;
 
-  // عداد
+  // عداد الأيام المتبقية
   setInterval(()=>{
     const diff = expiry - new Date();
-    if(diff<=0){ document.getElementById("timer").innerHTML="انتهى الضمان"; return; }
+    if(diff<=0){
+      document.getElementById("timer").innerHTML="⚠ انتهى الضمان";
+      return;
+    }
+    const daysLeft = Math.floor(diff/(1000*60*60*24));
     document.getElementById("timer").innerHTML =
-      "الوقت المتبقي: " + Math.floor(diff/(1000*60*60*24)) + " يوم";
+      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
   },1000);
 
-  // ارسال للجدول (Pipedream)
+  // ارسال البيانات للجدول
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -71,7 +74,7 @@ async function sendData(){
   });
 
   // رسالة واتساب للزبون
-  let msg =
+  const msg =
 `شكراً لشرائك من أمواج للإلكترونيات 🌊
 تم تفعيل ضمانك بنجاح ✔
 
@@ -82,6 +85,8 @@ async function sendData(){
 للاستعلام عن الضمان:
 https://www.amwajmob.com/index.html`;
 
-  window.open(`https://wa.me/964${data.phone.slice(1)}?text=${encodeURIComponent(msg)}`);
+  window.open(
+    \`https://wa.me/964\${data.phone.slice(1)}?text=\${encodeURIComponent(msg)}\`
+  );
 }
 </script>
