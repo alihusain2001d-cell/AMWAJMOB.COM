@@ -73,10 +73,53 @@ function sendData(){
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   })
-  .then(r => r.text())
-  .then(msg => alert(msg))
-  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+.then(msg => {
+
+  // نعرض رسالة نجاح
+  alert("تم تفعيل الضمان بنجاح");
+
+  // نحسب مدة الضمان حسب النوع
+  let months = (data.type === "screen") ? 1 : 12;
+
+  // تاريخ انتهاء الضمان
+  let expiry = new Date(data.start);
+  expiry.setMonth(expiry.getMonth() + months);
+
+  // نعرض العدّاد
+  const box = document.createElement("div");
+  box.style =
+    "margin-top:15px;padding:12px;border-radius:10px;border:1px solid #8cd2ff;background:#e8f7ff;font-size:18px;font-weight:bold";
+
+  document.body.appendChild(box);
+
+  function tick() {
+    let now = new Date();
+    let diff = expiry - now;
+
+    if (diff <= 0) {
+      box.innerHTML = "انتهى الضمان";
+      return;
+    }
+
+    let d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    let h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    let m = Math.floor((diff / (1000 * 60)) % 60);
+    let s = Math.floor((diff / 1000) % 60);
+
+    box.innerHTML =
+      `الوقت المتبقي: ${d} يوم — ${h}:${m}:${s}`;
+  }
+
+  tick();
+  setInterval(tick, 1000);
+
+})
+.catch(() => alert("حدث خطأ — حاول مرة أخرى"));
 }
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
