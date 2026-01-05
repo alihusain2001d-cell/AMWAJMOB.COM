@@ -6,22 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  font-family: sans-serif;
-  padding: 15px;
-}
-label{font-weight: bold}
-input,select,button{
-  width:100%;
-  padding:8px;
-  margin:6px 0 15px;
-}
-button{
-  background:#1e88e5;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-}
+body{font-family:sans-serif;padding:15px}
+label{font-weight:bold}
+input,select,button{width:100%;padding:8px;margin:6px 0 15px}
+button{background:#1e88e5;color:#fff;border:none;border-radius:6px}
+#result,#timer{background:#f4f6fb;padding:10px;border-radius:8px;margin-top:10px}
 </style>
 </head>
 
@@ -50,6 +39,9 @@ button{
 
 <button onclick="sendData()">تفعيل الضمان</button>
 
+<div id="result"></div>
+<div id="timer"></div>
+
 <script>
 function sendData(){
 
@@ -66,60 +58,53 @@ function sendData(){
     return;
   }
 
-  console.log(data);
-
-  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
+  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(data)
   })
-.then(msg => {
+  .then(() => {
 
-  // نعرض رسالة نجاح
-  alert("تم تفعيل الضمان بنجاح");
+    const startDate = new Date(data.start);
+    let expiryDate = new Date(startDate);
 
-  // نحسب مدة الضمان حسب النوع
-  let months = (data.type === "screen") ? 1 : 12;
+    // شهر للشاشة — سنة للبطارية
+    if(data.type === "screen"){
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+    } else {
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    }
 
-  // تاريخ انتهاء الضمان
-  let expiry = new Date(data.start);
-  expiry.setMonth(expiry.getMonth() + months);
+    document.getElementById("result").innerHTML =
+      `تم تفعيل الضمان بتاريخ: <b>${startDate.toLocaleDateString()}</b><br>
+       تاريخ انتهاء الضمان: <b>${expiryDate.toLocaleDateString()}</b><br><br>
+       ⭐ شكراً لاختياركم <b>أمواج للإلكترونيات</b> ⭐`;
 
-  // نعرض العدّاد
-  const box = document.createElement("div");
-  box.style =
-    "margin-top:15px;padding:12px;border-radius:10px;border:1px solid #8cd2ff;background:#e8f7ff;font-size:18px;font-weight:bold";
+    startCountdown(expiryDate);
+  })
+  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+}
 
-  document.body.appendChild(box);
+function startCountdown(expiryDate){
+  const timer = document.getElementById("timer");
 
-  function tick() {
-    let now = new Date();
-    let diff = expiry - now;
+  setInterval(() => {
+    const now = new Date();
+    const diff = expiryDate - now;
 
-    if (diff <= 0) {
-      box.innerHTML = "انتهى الضمان";
+    if(diff <= 0){
+      timer.innerHTML = "انتهى الضمان";
       return;
     }
 
-    let d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    let h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    let m = Math.floor((diff / (1000 * 60)) % 60);
-    let s = Math.floor((diff / 1000) % 60);
+    const days = Math.floor(diff / (1000*60*60*24));
+    const hours = Math.floor((diff / (1000*60*60)) % 24);
+    const minutes = Math.floor((diff / (1000*60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
 
-    box.innerHTML =
-      `الوقت المتبقي: ${d} يوم — ${h}:${m}:${s}`;
-  }
-
-  tick();
-  setInterval(tick, 1000);
-
-})
-.catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+    timer.innerHTML = `⏳ الوقت المتبقي: ${days} يوم — ${hours}:${minutes}:${seconds}`;
+  },1000);
 }
-</script>
-
-</body>
-</html>
 </script>
 
 </body>
