@@ -67,16 +67,32 @@ function sendData(){
     alert("الرجاء إدخال جميع الحقول");
     return;
   }
-fetch("https://script.google.com/macros/s/…/exec", {
-  method: "POST",
-  body: JSON.stringify(data)
-})
-.then(r => r.text())
-.then(msg => alert(msg))
-.catch(() => alert("حدث خطأ — حاول مرة أخرى"));
-  .then(r=>r.text())
-  .then(msg=>alert(msg))
-  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
+<script>
+function sendData() {
+
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    invoice: document.getElementById("invoice").value.trim(),
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
+  };
+
+  if (!data.name || !data.phone || !data.invoice || !data.start) {
+    alert("الرجاء إدخال جميع الحقول");
+    return;
+  }
+
+  console.log(data);
+
+  fetch("https://script.google.com/macros/s/AKfyc.../exec", {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(r => r.text())
+  .then(msg => alert(msg))
+  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
+
 }
 </script>
 
