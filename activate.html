@@ -1,9 +1,23 @@
+<script>
+const SHEET =
+ "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_CID1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
+
+async function getRows() {
+  const res = await fetch(SHEET);
+  const text = await res.text();
+  const lines = text.trim().split("\n").map(r => r.split(","));
+  const headers = lines.shift();
+
+  return lines.map(r => {
+    let o = {};
+    headers.forEach((h,i)=>o[h]=r[i]);
+    return o;
+  });
+}
+
 async function sendData(){
 
-  // رابط الشيت (CSV للقراءة)
-  const SHEET =
-"https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
-
+  // جمع البيانات
   const data = {
     name: document.getElementById("name").value.trim(),
     phone: document.getElementById("phone").value.trim(),
@@ -12,86 +26,62 @@ async function sendData(){
     start: document.getElementById("start").value
   };
 
-  // تحقق من الإدخال
   if(!data.name || !data.phone || !data.invoice || !data.start){
     alert("الرجاء إدخال جميع الحقول");
     return;
   }
 
-  // 1️⃣ قراءة الجدول — حتى نمنع تكرار الفاتورة
-  try{
-    const res = await fetch(SHEET);
-    const text = await res.text();
-
-    const rows = text
-      .trim()
-      .split("\n")
-      .map(r => r.split(","));
-
-    const headers = rows.shift();   // العناوين
-    const invoiceIndex = headers.indexOf("invoice");
-
-    const exists = rows.find(r => r[invoiceIndex] == data.invoice);
-
-    if(exists){
-      alert("⚠ هذا رقم الفاتورة مسجّل سابقاً — لا يمكن تكراره");
-      return;
-    }
-  }catch(e){
-    alert("لم يتم التحقق من الفواتير — حاول مجدداً");
+  // ❌ منع تكرار رقم الفاتورة
+  const rows = await getRows();
+  const exists = rows.find(r => r.invoice == data.invoice);
+  if(exists){
+    alert("⚠ هذا رقم الفاتورة مسجل مسبقاً");
     return;
   }
 
-  // 2️⃣ تحديد مدة الضمان
+  // حساب الضمان
   let days = data.type === "screen" ? 30 : 365;
-
   const startDate = new Date(data.start);
   const expiry = new Date(startDate);
   expiry.setDate(expiry.getDate() + days);
 
-  // نضيفه للارسال
   data.expiry = expiry.toISOString().slice(0,10);
 
-  // 3️⃣ إظهار النتيجة للزبون
-  const box = document.getElementById("result");
-  box.style.display = "block";
-  box.innerHTML = `
-    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    تاريخ الانتهاء: <b>${data.expiry}</b>
-    <div id="timer" class="timer-box"></div>
-  `;
+  // اظهار نتيجة للمستخدم
+  document.getElementById("result").style.display="block";
+  document.getElementById("result").innerHTML =
+    `تم تفعيل الضمان بنجاح ⭐<br>
+     تاريخ التفعيل: <b>${data.start}</b><br>
+     انتهاء الضمان: <b>${data.expiry}</b>
+     <div id="timer" class="timer-box"></div>`;
 
-  // عدّاد الأيام المتبقية
+  // عداد
   setInterval(()=>{
-    const now = new Date();
-    const diff = expiry - now;
-    if(diff <= 0){
-      document.getElementById("timer").innerHTML = "⚠ انتهى الضمان";
-      return;
-    }
-    const daysLeft = Math.floor(diff / (1000*60*60*24));
+    const diff = expiry - new Date();
+    if(diff<=0){ document.getElementById("timer").innerHTML="انتهى الضمان"; return; }
     document.getElementById("timer").innerHTML =
-      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
+      "الوقت المتبقي: " + Math.floor(diff/(1000*60*60*24)) + " يوم";
   },1000);
 
-  // 4️⃣ إرسال البيانات إلى Pipedream (الشيت)
+  // ارسال للجدول (Pipedream)
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify(data)
-  }).catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
+  });
 
-  // 5️⃣ رسالة واتساب للزبون
-  const msg =
+  // رسالة واتساب للزبون
+  let msg =
 `شكراً لشرائك من أمواج للإلكترونيات 🌊
 تم تفعيل ضمانك بنجاح ✔
 
 رقم الفاتورة: ${data.invoice}
+نوع القطعة: ${data.type}
 تاريخ الانتهاء: ${data.expiry}
 
 للاستعلام عن الضمان:
 https://www.amwajmob.com/index.html`;
 
-  window.open(`https://wa.me/964${data.phone.slice(-10)}?text=${encodeURIComponent(msg)}`);
+  window.open(`https://wa.me/964${data.phone.slice(1)}?text=${encodeURIComponent(msg)}`);
 }
+</script>
