@@ -54,12 +54,14 @@ button{
 function sendData(){
 
   const data = {
-    name:   document.getElementById("name").value.trim(),
-    phone:  document.getElementById("phone").value.trim(),
-    invoice:document.getElementById("invoice").value.trim(),
-    type:   document.getElementById("type").value,
-    start:  document.getElementById("start").value
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    invoice: document.getElementById("invoice").value.trim(),
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
   };
+
+  console.log(data);   // <<< أضف هذا السطر
 
   if(!data.name || !data.phone || !data.invoice || !data.start){
     alert("الرجاء إدخال جميع الحقول");
