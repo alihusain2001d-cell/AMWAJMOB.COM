@@ -1,5 +1,8 @@
-<script>
 async function sendData(){
+
+  // رابط الشيت (CSV للقراءة)
+  const SHEET =
+"https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
 
   const data = {
     name: document.getElementById("name").value.trim(),
@@ -9,73 +12,86 @@ async function sendData(){
     start: document.getElementById("start").value
   };
 
+  // تحقق من الإدخال
   if(!data.name || !data.phone || !data.invoice || !data.start){
     alert("الرجاء إدخال جميع الحقول");
     return;
   }
 
-  // =========================
-  // 1️⃣ منع تكرار رقم الفاتورة
-  // =========================
-  const SHEET =
-   "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
+  // 1️⃣ قراءة الجدول — حتى نمنع تكرار الفاتورة
+  try{
+    const res = await fetch(SHEET);
+    const text = await res.text();
 
-  const res = await fetch(SHEET);
-  const csv = await res.text();
+    const rows = text
+      .trim()
+      .split("\n")
+      .map(r => r.split(","));
 
-  // نفكّ البيانات
-  const lines = csv.trim().split("\n").map(r => r.split(","));
-  const headers = lines.shift();   // الصف الأول عناوين
-  const rows = lines.map(r => {
-     let obj = {};
-     headers.forEach((h,i)=> obj[h] = r[i]);
-     return obj;
-  });
+    const headers = rows.shift();   // العناوين
+    const invoiceIndex = headers.indexOf("invoice");
 
-  const exists = rows.find(r => r.invoice == data.invoice);
+    const exists = rows.find(r => r[invoiceIndex] == data.invoice);
 
-  if(exists){
-    alert("⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيل الضمان مرتين");
+    if(exists){
+      alert("⚠ هذا رقم الفاتورة مسجّل سابقاً — لا يمكن تكراره");
+      return;
+    }
+  }catch(e){
+    alert("لم يتم التحقق من الفواتير — حاول مجدداً");
     return;
   }
 
-  // =========================
-  // 2️⃣ حساب تاريخ الانتهاء
-  // =========================
+  // 2️⃣ تحديد مدة الضمان
   let days = data.type === "screen" ? 30 : 365;
 
   const startDate = new Date(data.start);
   const expiry = new Date(startDate);
   expiry.setDate(expiry.getDate() + days);
 
+  // نضيفه للارسال
   data.expiry = expiry.toISOString().slice(0,10);
 
-  alert("✔ تم تفعيل الضمان بنجاح");
+  // 3️⃣ إظهار النتيجة للزبون
+  const box = document.getElementById("result");
+  box.style.display = "block";
+  box.innerHTML = `
+    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+    تاريخ التفعيل: <b>${data.start}</b><br>
+    تاريخ الانتهاء: <b>${data.expiry}</b>
+    <div id="timer" class="timer-box"></div>
+  `;
 
-  // =========================
-  // 3️⃣ إرسال البيانات للجدول
-  // =========================
+  // عدّاد الأيام المتبقية
+  setInterval(()=>{
+    const now = new Date();
+    const diff = expiry - now;
+    if(diff <= 0){
+      document.getElementById("timer").innerHTML = "⚠ انتهى الضمان";
+      return;
+    }
+    const daysLeft = Math.floor(diff / (1000*60*60*24));
+    document.getElementById("timer").innerHTML =
+      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
+  },1000);
+
+  // 4️⃣ إرسال البيانات إلى Pipedream (الشيت)
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify(data)
-  })
-  .catch(()=> alert("حدث خطأ — حاول مرة أخرى"));
+  }).catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 
-  // =========================
-  // 4️⃣ رسالة واتساب للزبون
-  // =========================
+  // 5️⃣ رسالة واتساب للزبون
   const msg =
-`شكراً لشرائك من امواج للإلكترونيات 🌊
-
+`شكراً لشرائك من أمواج للإلكترونيات 🌊
 تم تفعيل ضمانك بنجاح ✔
 
-للاستعلام عن الضمان اضغط هنا:
+رقم الفاتورة: ${data.invoice}
+تاريخ الانتهاء: ${data.expiry}
+
+للاستعلام عن الضمان:
 https://www.amwajmob.com/index.html`;
 
-  let phone = data.phone.replace(/^0/, "");
-  const wa = `https://wa.me/964${phone}?text=${encodeURIComponent(msg)}`;
-
-  window.open(wa, "_blank");
+  window.open(`https://wa.me/964${data.phone.slice(-10)}?text=${encodeURIComponent(msg)}`);
 }
-</script>
