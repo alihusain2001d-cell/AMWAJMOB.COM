@@ -6,17 +6,90 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:sans-serif;padding:15px}
+body{
+  font-family: sans-serif;
+  padding: 15px;
+  background:#f7fbff;
+}
+
+.container{
+  max-width:520px;
+  margin:auto;
+  background:#fff;
+  padding:18px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.logo{
+  text-align:center;
+  margin-bottom:15px;
+}
+.logo img{
+  width:130px;
+}
+
+h3{text-align:center;margin-top:0}
 label{font-weight:bold}
-input,select,button{width:100%;padding:8px;margin:6px 0 15px}
-button{background:#1e88e5;color:#fff;border:none;border-radius:6px}
-#result,#timer{background:#f4f6fb;padding:10px;border-radius:8px;margin-top:10px}
+input,select,button{
+  width:100%;
+  padding:8px;
+  margin:6px 0 14px;
+}
+
+button{
+  background:#1e88e5;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+}
+
+.result{
+  background:#e8f4ff;
+  padding:12px;
+  border-radius:8px;
+  margin-top:12px;
+  display:none;
+}
+
+.footer{
+  text-align:center;
+  margin-top:15px;
+  color:#333;
+}
+
+.timer-box{
+  background:#f5fbf2;
+  border:1px solid #d6efcb;
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:6px;
+  margin-top:15px;
+  text-decoration:none;
+}
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
+<div class="logo">
+  <img src="1633875906547.jpg">
+</div>
+
 <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+
 <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
 <label>اسم الزبون</label>
@@ -39,8 +112,21 @@ button{background:#1e88e5;color:#fff;border:none;border-radius:6px}
 
 <button onclick="sendData()">تفعيل الضمان</button>
 
-<div id="result"></div>
-<div id="timer"></div>
+<div id="result" class="result"></div>
+
+<div style="text-align:center; margin-top:15px; font-weight:bold;">
+📞 للاستفسار: <a href="tel:7696" style="text-decoration:none;color:#1e88e5;">7696</a>
+</div>
+
+<div class="footer">
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+</div>
+
+<a class="whatsapp" href="https://wa.me/9647700000000" target="_blank">
+تواصل عبر واتساب
+</a>
+
+</div>
 
 <script>
 function sendData(){
@@ -58,52 +144,43 @@ function sendData(){
     return;
   }
 
-  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  })
-  .then(() => {
+  // تحديد مدة الضمان
+  let days = data.type === "screen" ? 30 : 365;
+  const startDate = new Date(data.start);
+  const expiry = new Date(startDate);
+  expiry.setDate(expiry.getDate() + days);
 
-    const startDate = new Date(data.start);
-    let expiryDate = new Date(startDate);
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").innerHTML = `
+    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+    تاريخ التفعيل: <b>${data.start}</b><br>
+    انتهاء الضمان: <b>${expiry.toISOString().slice(0,10)}</b>
+    <div id="timer" class="timer-box"></div>
+  `;
 
-    // شهر للشاشة — سنة للبطارية
-    if(data.type === "screen"){
-      expiryDate.setMonth(expiryDate.getMonth() + 1);
-    } else {
-      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    }
-
-    document.getElementById("result").innerHTML =
-      `تم تفعيل الضمان بتاريخ: <b>${startDate.toLocaleDateString()}</b><br>
-       تاريخ انتهاء الضمان: <b>${expiryDate.toLocaleDateString()}</b><br><br>
-       ⭐ شكراً لاختياركم <b>أمواج للإلكترونيات</b> ⭐`;
-
-    startCountdown(expiryDate);
-  })
-  .catch(() => alert("حدث خطأ — حاول مرة أخرى"));
-}
-
-function startCountdown(expiryDate){
-  const timer = document.getElementById("timer");
-
-  setInterval(() => {
+  // عداد تنازلي
+  setInterval(()=>{
     const now = new Date();
-    const diff = expiryDate - now;
+    const diff = expiry - now;
 
     if(diff <= 0){
-      timer.innerHTML = "انتهى الضمان";
+      document.getElementById("timer").innerHTML = "⚠ انتهى الضمان";
       return;
     }
 
-    const days = Math.floor(diff / (1000*60*60*24));
-    const hours = Math.floor((diff / (1000*60*60)) % 24);
-    const minutes = Math.floor((diff / (1000*60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-
-    timer.innerHTML = `⏳ الوقت المتبقي: ${days} يوم — ${hours}:${minutes}:${seconds}`;
+    const daysLeft = Math.floor(diff / (1000*60*60*24));
+    document.getElementById("timer").innerHTML =
+      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
   },1000);
+
+  // ارساله للجدول
+  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.text())
+  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
 </script>
 
