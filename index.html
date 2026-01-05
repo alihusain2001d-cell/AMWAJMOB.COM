@@ -1,59 +1,48 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8" />
-<title>استعلام ضمان أمواج</title>
-</head>
-
-<body>
-
-<h2>استعلام ضمان أمواج للإلكترونيات</h2>
-
-<p>يرجى إدخال رقم الفاتورة للبحث عن الضمان.</p>
-
-<label>🧾 رقم الفاتورة</label><br>
-<input id="invoiceSearch" type="text" placeholder="اكتب رقم الفاتورة">
-<br><br>
-
-<button onclick="checkWarranty()">بحث</button>
-
-<hr>
-
-<div id="result"></div>
-
 <script>
-function checkWarranty() {
-  const invoice = document.getElementById("invoiceSearch").value;
-  let warranties = JSON.parse(localStorage.getItem("warranties") || "[]");
 
-  const found = warranties.find(w => w.invoice === invoice);
+const SHEET = 
+ "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
 
-  if (!found) {
-    document.getElementById("result").innerHTML =
-      "<p style='color:red'>❌ لا يوجد ضمان لهذا الرقم</p>";
+async function getRows(){
+  const res = await fetch(SHEET);
+  const text = await res.text();
+
+  const lines = text.trim().split("\n").map(r=>r.split(","));
+  const headers = lines.shift();
+
+  return lines.map(r=>{
+    let o={};
+    headers.forEach((h,i)=>o[h]=r[i]);
+    return o;
+  });
+}
+
+async function checkWarranty() {
+
+  const invoice = document.getElementById("invoiceSearch").value.trim();
+
+  if(!invoice){
+    alert("ادخل رقم الفاتورة");
     return;
   }
 
-  // فحص حالة الضمان
-  let today = new Date();
-  let expiry = new Date(found.expiryDate);
+  const rows = await getRows();
+  const found = rows.find(r => r.invoice == invoice);
 
-  let status =
-    today <= expiry
-      ? "<span style='color:green'>✔️ الضمان ساري</span>"
-      : "<span style='color:red'>❌ الضمان منتهي</span>";
+  if(!found){
+    document.getElementById("result").innerHTML =
+      `<p style="color:red">❌ لا يوجد ضمان بهذا الرقم</p>`;
+    return;
+  }
 
   document.getElementById("result").innerHTML = `
-    <p>👤 الاسم: ${found.name}</p>
-    <p>📞 الهاتف: ${found.phone}</p>
-    <p>🧾 الفاتورة: ${found.invoice}</p>
-    <p>🔧 نوع القطعة: ${found.type === "screen" ? "شاشة" : "بطارية"}</p>
-    <p>📅 تاريخ الشراء: ${found.purchaseDate}</p>
-    <p>📅 تاريخ انتهاء الضمان: ${found.expiryDate}</p>
-    <h3>${status}</h3>
+    ✔ <b>الضمان فعال</b><br><br>
+    الاسم: ${found.name}<br>
+    الهاتف: ${found.phone}<br>
+    النوع: ${found.type}<br>
+    تاريخ التركيب: ${found.start || found.start_date}<br>
+    انتهاء الضمان: <b>${found.expiry}</b>
   `;
 }
-</script>
 
-</body>
-</html>
+</script>
