@@ -28,32 +28,32 @@ button{padding:10px 18px;margin-top:10px;background:#2196F3;color:#fff;border:0;
 
 <script>
 const SHEET =
-"https://docs.google.com/spreadsheets/d/1BiV0ZxQN_CID1ta7w8W5rfmY1bXfs9oax7Q3oqeXq38/pub?output=csv";
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
 async function check() {
-
   let v = document.getElementById("inv").value.trim();
-  if(!v) return alert("اكتب رقم الفاتورة");
+  if (!v) return alert("ادخل رقم الفاتورة");
 
   let res = await fetch(SHEET);
   let text = await res.text();
 
+  // نحول CSV إلى مصفوفة
   let rows = text.split("\n").map(r => r.split(","));
-let found = rows.find(r => String(r[0]).trim() == String(v).trim());
+
+  // نبحث بالفاتورة (العمود الأول)
+  let found = rows.find(r => String(r[0]).trim() === v);
+
   if (!found) {
     document.getElementById("out").innerHTML =
       "<b>❌ لم يتم العثور على رقم الفاتورة</b>";
   } else {
     document.getElementById("out").innerHTML =
-      `<b>✔️ تم العثور على الضمان</b><br><br>
-      الاسم: ${found[1]}<br>
-      الهاتف: ${found[2]}<br>
-      النوع: ${found[3]}<br>
-      تاريخ البداية: ${found[4]}<br>
-      انتهاء الضمان: ${found[5]}`;
+      `<b>✔️ تم العثور على الضمان</b><br>
+       الاسم: ${found[1]}<br>
+       الهاتف: ${found[2]}<br>
+       النوع: ${found[3]}<br>
+       تاريخ البدء: ${found[4]}<br>
+       الانتهاء: ${found[5]}`;
   }
 }
 </script>
-
-</body>
-</html>
