@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>التحقق من الضمان</title>
+<meta charset="UTF-8" />
+<title>البحث عن الضمان</title>
 
 <style>
 body {font-family: Tahoma; background:#f4f6fa; text-align:center;}
 .box{background:#fff;padding:20px;margin:40px auto;border-radius:10px;width:90%;max-width:450px;
-box-shadow:0 3px 10px rgba(0,0,0,.1)}
+box-shadow: 0 3px 18px rgba(0,0,0,.1);}
 input{padding:10px;width:90%;margin-top:10px}
 button{padding:10px 18px;margin-top:10px;background:#2196F3;color:#fff;border:0;border-radius:6px}
 .result{margin-top:15px;text-align:right}
@@ -17,22 +17,22 @@ button{padding:10px 18px;margin-top:10px;background:#2196F3;color:#fff;border:0;
 <body>
 
 <div class="box">
-<h2>التحقق من الضمان</h2>
+<h2>تحقق من الضمان</h2>
 
-<input id="inv" placeholder="ادخل رقم الفاتورة">
+<input id="inv" placeholder="أدخل رقم الفاتورة">
 <br>
 <button onclick="check()">بحث</button>
 
-<div id="out" class="result"></div>
+<div id="out" class="result">...</div>
 </div>
 
 <script>
 const SHEET =
-  "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_CID1ta7w8W5rfmY1bXfs9oax7Q3oqeXq38/gviz/tq?tqx=out:json";
+"https://docs.google.com/spreadsheets/d/1BiV0ZxQN_CID1ta7w8W5rfmY1bXfs9oax7Q3oqeXq38/gviz/tq?tqx=out:json";
 
 async function check() {
   let v = document.getElementById("inv").value.trim();
-  if (!v) return alert("ادخل رقم الفاتورة");
+  if(!v) return alert("أدخل رقم الفاتورة");
 
   let res = await fetch(SHEET);
   let text = await res.text();
@@ -44,17 +44,16 @@ async function check() {
 
   let found = rows.find(r => String(r[0]).trim() === v);
 
-  if (!found) {
+  if(!found) {
     document.getElementById("out").innerHTML =
-      "<b>❌ لم يتم العثور على هذا الرقم</b>";
+      "<b>❌ لم يتم العثور على رقم الفاتورة</b>";
   } else {
     document.getElementById("out").innerHTML =
-      `<b>✔ تم العثور على الضمان</b><br><br>
-      الاسم: ${found[1]}<br>
-      الهاتف: ${found[2]}<br>
-      النوع: ${found[3]}<br>
-      تاريخ البداية: ${found[4]}<br>
-      تاريخ الانتهاء: ${found[5]}`;
+      `<b>✔ تم العثور على الضمان</b><br>
+       الاسم: ${found[1]}<br>
+       الهاتف: ${found[2]}<br>
+       النوع: ${found[3]}<br>
+       بداية الضمان: ${found[4]}<br>
+       انتهاء: ${found[5]}`;
   }
 }
-</script>
