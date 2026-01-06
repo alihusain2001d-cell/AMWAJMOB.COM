@@ -39,8 +39,7 @@ async function check() {
   let text = await res.text();
 
   let rows = text.split("\n").map(r => r.split(","));
-  let found = rows.find(r => String(r[0]).trim() === v);
-
+let found = rows.find(r => String(r[0]).trim() == String(v).trim());
   if (!found) {
     document.getElementById("out").innerHTML =
       "<b>❌ لم يتم العثور على رقم الفاتورة</b>";
