@@ -1,189 +1,60 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>تفعيل ضمان أمواج</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<title>تفعيل الضمان</title>
 
 <style>
-body{
-  font-family: sans-serif;
-  padding: 15px;
-  background:#f7fbff;
-}
-
-.container{
-  max-width:520px;
-  margin:auto;
-  background:#fff;
-  padding:18px;
-  border-radius:12px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
-.logo{
-  text-align:center;
-  margin-bottom:15px;
-}
-.logo img{
-  width:130px;
-}
-
-h3{text-align:center;margin-top:0}
-label{font-weight:bold}
-input,select,button{
-  width:100%;
-  padding:8px;
-  margin:6px 0 14px;
-}
-
-button{
-  background:#1e88e5;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-}
-
-.result{
-  background:#e8f4ff;
-  padding:12px;
-  border-radius:8px;
-  margin-top:12px;
-  display:none;
-}
-
-.footer{
-  text-align:center;
-  margin-top:15px;
-  color:#333;
-}
-
-.timer-box{
-  background:#f5fbf2;
-  border:1px solid #d6efcb;
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.whatsapp{
-  background:#25D366;
-  color:#fff;
-  padding:10px;
-  display:block;
-  text-align:center;
-  border-radius:6px;
-  margin-top:15px;
-  text-decoration:none;
-}
+body{font-family:tahoma;background:#f6f6fa;text-align:center}
+form{background:#fff;padding:20px;margin:40px auto;border-radius:10px;width:90%;max-width:450px}
+input,select{width:100%;padding:10px;margin-top:10px}
+button{padding:10px 18px;margin-top:15px;background:#2196F3;color:#fff;border:0;border-radius:6px}
 </style>
-</head>
 
+</head>
 <body>
 
-<div class="container">
+<form onsubmit="save();return false;">
+<h2>تفعيل الضمان</h2>
 
-<div class="logo">
-  <img src="1633875906547.jpg">
-</div>
-
-<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
-
-<p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
-
-<label>اسم الزبون</label>
-<input id="name" type="text">
-
-<label>رقم الهاتف</label>
-<input id="phone" type="text">
-
-<label>رقم الفاتورة</label>
-<input id="invoice" type="text">
-
-<label>نوع القطعة</label>
+<input id="invoice" placeholder="رقم الفاتورة" required>
+<input id="name" placeholder="اسم الزبون" required>
+<input id="phone" placeholder="رقم الهاتف" required>
 <select id="type">
-  <option value="screen">شاشة</option>
-  <option value="battery">بطارية</option>
+<option>screen</option>
+<option>cover</option>
+<option>other</option>
 </select>
 
-<label>تاريخ التركيب</label>
-<input id="start" type="date">
+<input id="start" type="date" required>
 
-<button onclick="sendData()">تفعيل الضمان</button>
+<div id="msg"></div>
 
-<div id="result" class="result"></div>
-
-<div style="text-align:center; margin-top:15px; font-weight:bold;">
-📞 للاستفسار: <a href="tel:7696" style="text-decoration:none;color:#1e88e5;">7696</a>
-</div>
-
-<div class="footer">
-شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
-</div>
-
-<a class="whatsapp" href="https://wa.me/9647700000000" target="_blank">
-تواصل عبر واتساب
-</a>
-
-</div>
+<button type="submit">تفعيل</button>
+</form>
 
 <script>
-function sendData(){
+const API = "https://script.google.com/macros/s/AKfycby42AZQl-sbgkUXartnlq2kkQM7IHzLLq1gB2pjxezR_pqdm3kWtZbZGDN-LGbT24Y9/exec";
 
-  const data = {
-    name: document.getElementById("name").value.trim(),
-    phone: document.getElementById("phone").value.trim(),
-    invoice: document.getElementById("invoice").value.trim(),
-    type: document.getElementById("type").value,
-    start: document.getElementById("start").value
-  };
+async function save(){
 
-  if(!data.name || !data.phone || !data.invoice || !data.start){
-    alert("الرجاء إدخال جميع الحقول");
-    return;
-  }
+ let data = {
+   invoice: invoice.value.trim(),
+   name: name.value.trim(),
+   phone: phone.value.trim(),
+   type: type.value,
+   start: start.value
+ };
 
-  // تحديد مدة الضمان
-  let days = data.type === "screen" ? 30 : 365;
-  const startDate = new Date(data.start);
-  const expiry = new Date(startDate);
-  expiry.setDate(expiry.getDate() + days);
+ let res = await fetch(API,{
+   method:"POST",
+   body: JSON.stringify(data)
+ });
 
-  document.getElementById("result").style.display = "block";
-  document.getElementById("result").innerHTML = `
-    ⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    انتهاء الضمان: <b>${expiry.toISOString().slice(0,10)}</b>
-    <div id="timer" class="timer-box"></div>
-  `;
-
-  // عداد تنازلي
-  setInterval(()=>{
-    const now = new Date();
-    const diff = expiry - now;
-
-    if(diff <= 0){
-      document.getElementById("timer").innerHTML = "⚠ انتهى الضمان";
-      return;
-    }
-
-    const daysLeft = Math.floor(diff / (1000*60*60*24));
-    document.getElementById("timer").innerHTML =
-      `الوقت المتبقي: <b>${daysLeft}</b> يوم`;
-  },1000);
-
-  // ارساله للجدول
-  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  })
-  .then(r=>r.text())
-  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
+ let txt = await res.text();
+ msg.innerHTML = txt;
 }
 </script>
 
 </body>
 </html>
-
