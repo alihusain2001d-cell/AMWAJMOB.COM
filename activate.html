@@ -20,11 +20,8 @@ body{
 .logo img{width:135px}
 
 .tabs{display:flex;margin:6px 0 14px;}
-.tab{
-  flex:1;text-align:center;padding:9px;
-  border-radius:10px;cursor:pointer;
-  background:#e9f2ff;font-weight:bold;
-}
+.tab{flex:1;text-align:center;padding:9px;border-radius:10px;cursor:pointer;
+background:#e9f2ff;font-weight:bold}
 .tab.active{background:#1e88e5;color:#fff}
 
 .section{display:none}
@@ -51,12 +48,17 @@ button{background:#1e88e5;color:#fff;border:none}
   display:none
 }
 .msg.error{background:#ffecec;color:#b30000;border:1px solid #ffb3b3}
-.msg.ok{background:#e9faec;color:#1b7d2c;border:1px solid #bfe6c9}
 .whatsapp{
   background:#25D366;color:#fff;padding:11px;
   display:block;text-align:center;
   border-radius:8px;text-decoration:none;
   margin-top:14px
+}
+.footer{
+  text-align:center;
+  margin-top:10px;
+  font-size:14px;
+  color:#333;
 }
 </style>
 </head>
@@ -114,6 +116,11 @@ button{background:#1e88e5;color:#fff;border:none}
 تواصل عبر واتساب
 </a>
 
+<div class="footer">
+📞 للاستفسار: <b>7696</b><br>
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+</div>
+
 </div>
 
 <script>
@@ -157,7 +164,6 @@ async function sendData(){
 
   if(!data.name||!data.phone||!data.invoice){
     msg.innerHTML="⚠ يرجى إدخال جميع الحقول";
-    msg.className="msg error";
     msg.style.display="block";
     return;
   }
@@ -168,8 +174,7 @@ async function sendData(){
   let exists=rows.find(r=>String(r[0]).trim()===data.invoice);
 
   if(exists){
-    msg.innerHTML="⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيله مرة أخرى";
-    msg.className="msg error";
+    msg.innerHTML="⚠ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى";
     msg.style.display="block";
     return;
   }
@@ -188,7 +193,6 @@ async function sendData(){
   الانتهاء: <b>${formatDate(expiry)}</b>
   <div id="timer" class="timer-box"></div>`;
 
-  // عداد
   setInterval(()=>{
     const diff=expiry-new Date();
     if(diff<=0){document.getElementById("timer").innerHTML="انتهى الضمان";return;}
@@ -196,7 +200,6 @@ async function sendData(){
       "الوقت المتبقي: <b>"+Math.floor(diff/86400000)+"</b> يوم";
   },1000);
 
-  // إرسال للجدول
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
