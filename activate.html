@@ -159,6 +159,11 @@ async function sendData(){
    return;
  }
 
+<div id="dupMsg" class="msg-err">
+    ⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
+  </div>
+
+  
  // 🔎 فحص التكرار — مع كسر الكاش
  let res=await fetch(SHEET + "?t=" + Date.now());
  let rows=(await res.text()).split("\n").map(r=>r.split(","));
