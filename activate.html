@@ -21,20 +21,22 @@ body{
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
 
-/* تبويبات */
-.tabs button{
-  width:50%;
-  padding:10px;
+.logo{text-align:center;margin-bottom:12px}
+.logo img{width:140px}
+
+/* أزرار البداية */
+.bigbtn{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
   border:0;
+  margin:8px 0;
+  font-size:18px;
   font-weight:bold;
   cursor:pointer;
-  border-radius:10px;
 }
-.activeTab{background:#1e88e5;color:#fff}
-.inactiveTab{background:#e9eef7;color:#444}
-
-.logo{text-align:center;margin-bottom:12px}
-.logo img{width:130px}
+.big1{background:#1e88e5;color:#fff}
+.big2{background:#6c7d90;color:#fff}
 
 label{font-weight:bold;font-size:14px}
 input,select,button{
@@ -46,22 +48,7 @@ input,select,button{
   font-size:14px;
 }
 
-button{
-  background:#1e88e5;
-  color:#fff;
-  border:none;
-}
-
-.whatsapp{
-  background:#25D366;
-  color:#fff;
-  padding:10px;
-  display:block;
-  text-align:center;
-  border-radius:10px;
-  margin-top:14px;
-  text-decoration:none;
-}
+button{background:#1e88e5;color:#fff;border:none}
 
 .result{
   background:#e8f4ff;
@@ -83,7 +70,16 @@ button{
 
 .footer{text-align:center;margin-top:10px;font-size:13px}
 
-.resultCheck{text-align:right;margin-top:12px}
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:10px;
+  margin-top:14px;
+  text-decoration:none;
+}
 </style>
 </head>
 
@@ -95,25 +91,28 @@ button{
   <img src="1633875906547.jpg">
 </div>
 
-<div class="tabs">
-  <button id="tabActivate" class="activeTab" onclick="showTab('activate')">تفعيل الضمان</button>
-  <button id="tabCheck" class="inactiveTab" onclick="showTab('check')">التحقق من الضمان</button>
+<!-- شاشة البداية -->
+<div id="home">
+  <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
+  <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
 </div>
 
-<!------------ تفعيل الضمان ------------>
-<div id="activate">
+<!-- تفعيل -->
+<div id="activate" style="display:none">
+
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
 
   <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
   <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
   <label>اسم الزبون</label>
-  <input id="name" type="text">
+  <input id="name">
 
   <label>رقم الهاتف</label>
-  <input id="phone" type="text">
+  <input id="phone">
 
   <label>رقم الفاتورة</label>
-  <input id="invoice" type="text">
+  <input id="invoice">
 
   <label>نوع القطعة</label>
   <select id="type">
@@ -122,33 +121,35 @@ button{
   </select>
 
   <label>تاريخ التركيب (اليوم تلقائياً)</label>
-  <input id="start" type="text" readonly style="background:#f7f9ff">
+  <input id="start" readonly style="background:#f7f9ff">
 
-  <div id="dupMsg" class="msg-err">
-    ⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
-  </div>
+  <div id="dupMsg" class="msg-err"></div>
 
   <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
 
   <div id="result" class="result"></div>
 
   <div class="footer">
-    📞 للاستفسار: <b>7696</b><br>
-    شكراً لاختياركم أمواج لقطع غيار الأجهزة الجوالة 🌊
+📞 للاستفسار: <b>7696</b><br>
+شكراً لاختياركم أمواج لقطع غيار الأجهزة الجوالة 🌊
   </div>
 
-  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
+  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
+تواصل عبر واتساب
+  </a>
 </div>
 
-<!------------ التحقق من الضمان ------------>
+<!-- التحقق -->
 <div id="check" style="display:none">
+
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
 
   <h3>تحقق من الضمان</h3>
 
   <input id="inv" placeholder="أدخل رقم الفاتورة">
   <button onclick="check()">بحث</button>
 
-  <div id="out" class="resultCheck"></div>
+  <div id="out" class="result"></div>
 </div>
 
 </div>
@@ -157,95 +158,117 @@ button{
 const SHEET =
  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
-// Tabs
-function showTab(t){
-  document.getElementById("activate").style.display = (t==="activate")?"block":"none";
-  document.getElementById("check").style.display    = (t==="check")?"block":"none";
-  document.getElementById("tabActivate").className  = (t==="activate")?"activeTab":"inactiveTab";
-  document.getElementById("tabCheck").className     = (t==="check")?"activeTab":"inactiveTab";
+function openAct(){show('activate')}
+function openChk(){show('check')}
+function backHome(){show('home')}
+
+function show(id){
+ document.getElementById("home").style.display="none";
+ document.getElementById("activate").style.display="none";
+ document.getElementById("check").style.display="none";
+ document.getElementById(id).style.display="block";
 }
 
-// تاريخ اليوم
+// التاريخ اليوم
 function formatDate(d){
-  let dt=new Date(d);
-  return String(dt.getDate()).padStart(2,'0')+"/"+
-         String(dt.getMonth()+1).padStart(2,'0')+"/"+
-         dt.getFullYear();
+ let dt=new Date(d);
+ return String(dt.getDate()).padStart(2,'0')+"/"+
+        String(dt.getMonth()+1).padStart(2,'0')+"/"+
+        dt.getFullYear();
 }
 document.getElementById("start").value = formatDate(new Date());
 
-// التحقق من التكرار ثم الإرسال
+// كاش داخلي لمنع إرسال نفس الرقم مرة ثانية
+let usedInvoices = new Set();
+
 async function sendData(){
 
-  const btn = document.getElementById("btnActivate");
-  btn.disabled = true;
-  btn.innerText = "جاري التفعيل …";
-  document.getElementById("dupMsg").style.display="none";
+ const btn=document.getElementById("btnActivate");
+ btn.disabled=true;
+ btn.innerText="جاري التفعيل …";
+ document.getElementById("dupMsg").style.display="none";
 
-  const data = {
-    name: document.getElementById("name").value.trim(),
-    phone: document.getElementById("phone").value.trim(),
-    invoice: document.getElementById("invoice").value.trim(),
-    type: document.getElementById("type").value,
-    start: document.getElementById("start").value
-  };
+ const data={
+   name:document.getElementById("name").value.trim(),
+   phone:document.getElementById("phone").value.trim(),
+   invoice:document.getElementById("invoice").value.trim(),
+   type:document.getElementById("type").value,
+   start:document.getElementById("start").value
+ };
 
-  if(!data.name || !data.phone || !data.invoice){
-    alert("الرجاء إدخال جميع الحقول");
-    btn.disabled=false; btn.innerText="تفعيل الضمان";
-    return;
-  }
+ if(!data.name||!data.phone||!data.invoice){
+   alert("الرجاء إدخال جميع الحقول");
+   btn.disabled=false; btn.innerText="تفعيل الضمان";
+   return;
+ }
 
-  // فحص التكرار من الجدول
-  let res = await fetch(SHEET); 
-  let rows = (await res.text()).split("\n").map(r=>r.split(","));
-  let exists = rows.find(r => String(r[0]).trim() === data.invoice);
+ // منع الإرسال المكرر فورياً
+ if(usedInvoices.has(data.invoice)){
+   showDup("⚠️ هذا الرقم تم إرساله — يرجى عدم التكرار");
+   btn.disabled=false; btn.innerText="تفعيل الضمان";
+   return;
+ }
 
-  if(exists){
-    document.getElementById("dupMsg").style.display="block";
-    btn.disabled=false; btn.innerText="تفعيل الضمان";
-    return;
-  }
+ // فحص من الجدول
+ let res=await fetch(SHEET);
+ let rows=(await res.text()).split("\n").map(r=>r.split(","));
+ if(rows.find(r=>String(r[0]).trim()===data.invoice)){
+   showDup("⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى");
+   btn.disabled=false; btn.innerText="تفعيل الضمان";
+   return;
+ }
 
-  // حساب انتهاء الضمان
-  let days = data.type==="screen"?30:365;
-  let [d,m,y]=data.start.split("/");
-  let s=new Date(`${y}-${m}-${d}`);
-  let e=new Date(s); e.setDate(e.getDate()+days);
+ // حساب الانتهاء
+ let days=data.type==="screen"?30:365;
+ let [d,m,y]=data.start.split("/");
+ let s=new Date(`${y}-${m}-${d}`);
+ let e=new Date(s); e.setDate(e.getDate()+days);
 
-  document.getElementById("result").style.display="block";
-  document.getElementById("result").innerHTML =
-   `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    انتهاء الضمان: <b>${formatDate(e)}</b>`;
+ document.getElementById("result").style.display="block";
+ document.getElementById("result").innerHTML=
+ `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+  تاريخ التفعيل: <b>${data.start}</b><br>
+  انتهاء الضمان: <b>${formatDate(e)}</b>`;
 
-  // إرسال للجدول
-  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
+ // سجل الفاتورة محلياً حتى لا يعاد إرسالها
+ usedInvoices.add(data.invoice);
 
-  btn.innerText="تم الإرسال ✔️";
+ // إرسال
+ await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify(data)
+ });
+
+ btn.innerText="تم الإرسال ✔️";
+ btn.disabled=false;
 }
 
-// التحقق من الضمان
+function showDup(msg){
+ let d=document.getElementById("dupMsg");
+ d.innerHTML=msg;
+ d.style.display="block";
+}
+
+// التحقق
 async function check(){
-  let v=document.getElementById("inv").value.trim();
-  if(!v) return alert("ادخل رقم الفاتورة");
+ let v=document.getElementById("inv").value.trim();
+ if(!v) return alert("ادخل رقم الفاتورة");
 
-  let text = await (await fetch(SHEET)).text();
-  let rows = text.split("\n").map(r=>r.split(","));
-  let r = rows.find(r=>String(r[0]).trim()===v);
+ let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+ let r=rows.find(r=>String(r[0]).trim()===v);
 
-  document.getElementById("out").innerHTML =
-    r ? `✔️ تم العثور على الضمان<br>
-         الاسم: ${r[1]}<br>
-         الهاتف: ${r[2]}<br>
-         النوع: ${r[3]}<br>
-         تاريخ البدء: ${r[4]}<br>
-         الانتهاء: ${r[5]}`
-      : "❌ لم يتم العثور على رقم الفاتورة";
+ let out=document.getElementById("out");
+ out.style.display="block";
+
+ out.innerHTML = r ?
+ `✔️ تم العثور على الضمان<br>
+  الاسم: ${r[1]}<br>
+  الهاتف: ${r[2]}<br>
+  النوع: ${r[3]}<br>
+  تاريخ البدء: ${r[4]}<br>
+  الانتهاء: ${r[5]}`
+ : "❌ لم يتم العثور على رقم الفاتورة";
 }
 </script>
 
