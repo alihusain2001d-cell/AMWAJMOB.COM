@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>ضمان أمواج</title>
+<title>تفعيل وضمان أمواج</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -11,6 +11,7 @@ body{
   padding: 20px;
   background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
+
 .container{
   max-width:540px;
   margin:auto;
@@ -19,53 +20,46 @@ body{
   border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-.logo{text-align:center;margin-bottom:10px}
+
+.logo{text-align:center;margin-bottom:16px}
 .logo img{width:135px}
 
-.tabs{display:flex;margin:10px 0 18px}
+.tabs{
+  display:flex;
+  margin-bottom:15px;
+}
 .tabs button{
   flex:1;
   padding:10px;
   border:0;
   cursor:pointer;
-  border-radius:10px;
   font-weight:bold;
+  border-radius:10px;
 }
 .active{background:#1e88e5;color:#fff}
-.hidden{display:none}
+.inactive{background:#e9eef7;color:#333}
 
+label{font-weight:bold;font-size:15px}
 input,select,button{
   width:100%;
   padding:10px;
   margin:6px 0 14px;
+  font-size:15px;
   border-radius:10px;
   border:1px solid #ccd6e6;
 }
-.mainBtn{background:#1e88e5;color:white;border:0}
+button{background:#1e88e5;color:#fff;border:none}
 
 .result{
-  background:#e8f4ff;
-  padding:12px;
-  border-radius:10px;
-  margin-top:10px;
-  display:none;
+  background:#e8f4ff;padding:14px;border-radius:10px;margin-top:14px;
+  display:none;font-size:15px;
 }
-.timer-box{
-  background:#f5fbf2;
-  border:1px solid #d6efcb;
-  padding:10px;
-  border-radius:10px;
-  margin-top:8px;
-}
+
+.footer{text-align:center;margin-top:16px;color:#333;font-size:14px}
+
 .whatsapp{
-  background:#25D366;
-  color:#fff;
-  padding:11px;
-  display:block;
-  text-align:center;
-  border-radius:8px;
-  margin-top:14px;
-  text-decoration:none;
+  background:#25D366;color:#fff;padding:12px;display:block;
+  text-align:center;border-radius:8px;margin-top:16px;text-decoration:none
 }
 </style>
 </head>
@@ -79,86 +73,96 @@ input,select,button{
 </div>
 
 <div class="tabs">
-  <button id="tabActive" class="active" onclick="showTab('activate')">تفعيل الضمان</button>
-  <button id="tabCheck" onclick="showTab('check')">التحقق من الضمان</button>
+  <button id="tabActive" class="active" onclick="showTab('active')">تفعيل الضمان</button>
+  <button id="tabCheck" class="inactive" onclick="showTab('check')">التحقق من الضمان</button>
 </div>
 
-<!-- ================= تفعيل الضمان ================= -->
-<div id="activate">
+<!-- تفعيل -->
+<div id="activeBox">
 
-  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
-  <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
+<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+<p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
-  <label>اسم الزبون</label>
-  <input id="name">
+<label>اسم الزبون</label>
+<input id="name" type="text">
 
-  <label>رقم الهاتف</label>
-  <input id="phone">
+<label>رقم الهاتف</label>
+<input id="phone" type="text">
 
-  <label>رقم الفاتورة</label>
-  <input id="invoice">
+<label>رقم الفاتورة</label>
+<input id="invoice" type="text">
 
-  <label>نوع القطعة</label>
-  <select id="type">
-    <option value="screen">شاشة</option>
-    <option value="battery">بطارية</option>
-  </select>
+<label>نوع القطعة</label>
+<select id="type">
+  <option value="screen">شاشة</option>
+  <option value="battery">بطارية</option>
+</select>
 
-  <label>تاريخ التركيب (تلقائيًا اليوم)</label>
-  <input id="start" readonly style="background:#f7f9ff">
+<label>تاريخ التركيب (تلقائيًا اليوم)</label>
+<input id="start" type="text" readonly style="background:#f7f9ff;">
 
-  <button class="mainBtn" onclick="sendData()">تفعيل الضمان</button>
+<button onclick="sendData()">تفعيل الضمان</button>
 
-  <div id="result" class="result"></div>
+<div id="result" class="result"></div>
 
-  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-    تواصل عبر واتساب
-  </a>
+<div style="text-align:center;margin-top:15px;font-weight:bold;">
+📞 للاستفسار: <a href="tel:7696" style="color:#1e88e5;text-decoration:none;">7696</a>
 </div>
 
-<!-- ================= التحقق من الضمان ================= -->
-<div id="check" class="hidden">
+<div class="footer">
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+</div>
 
-  <h3>تحقق من الضمان</h3>
+<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
 
-  <input id="inv" placeholder="أدخل رقم الفاتورة">
-  <button class="mainBtn" onclick="check()">بحث</button>
+</div>
 
-  <div id="out" class="result" style="display:block"></div>
+<!-- التحقق -->
+<div id="checkBox" style="display:none;text-align:center">
+
+<h3>تحقق من الضمان</h3>
+
+<input id="inv" placeholder="أدخل رقم الفاتورة">
+<button onclick="check()">بحث</button>
+
+<div id="out" class="result" style="display:block"></div>
 
 </div>
 
 </div>
 
 <script>
-/* تبويبات */
-function showTab(tab){
-  document.getElementById("activate").classList.add("hidden");
-  document.getElementById("check").classList.add("hidden");
-  document.getElementById(tab).classList.remove("hidden");
-
-  document.getElementById("tabActive").classList.remove("active");
-  document.getElementById("tabCheck").classList.remove("active");
-
-  if(tab==="activate") document.getElementById("tabActive").classList.add("active");
-  else document.getElementById("tabCheck").classList.add("active");
-}
-
-/* ====== كود التفعيل (نفس القديم) ====== */
+/* ---------------- التاريخ ---------------- */
 function formatDate(d){
-  const dt=new Date(d);
-  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+  const dt = new Date(d);
+  return String(dt.getDate()).padStart(2,'0') + "/" +
+         String(dt.getMonth()+1).padStart(2,'0') + "/" +
+         dt.getFullYear();
 }
-const today = new Date();
-document.getElementById("start").value = formatDate(today);
+document.getElementById("start").value = formatDate(new Date());
 
+/* ---------------- التبويبات ---------------- */
+function showTab(which){
+  document.getElementById("activeBox").style.display =
+    which==='active' ? 'block' : 'none';
+  document.getElementById("checkBox").style.display =
+    which==='check' ? 'block' : 'none';
+
+  document.getElementById("tabActive").className =
+    which==='active' ? 'active' : 'inactive';
+  document.getElementById("tabCheck").className =
+    which==='check' ? 'active' : 'inactive';
+}
+
+/* ---------------- تفعيل الضمان ---------------- */
 function sendData(){
-  const data={
-    name: name.value.trim(),
-    phone: phone.value.trim(),
-    invoice: invoice.value.trim(),
-    type: type.value,
-    start: start.value
+
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    invoice: document.getElementById("invoice").value.trim(),
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
   };
 
   if(!data.name || !data.phone || !data.invoice){
@@ -166,45 +170,51 @@ function sendData(){
     return;
   }
 
-  let days = data.type==="screen" ? 30 : 365;
+  let days = data.type === "screen" ? 30 : 365;
 
-  const [d,m,y]=data.start.split("/");
-  const startDate=new Date(`${y}-${m}-${d}`);
-  const expiry=new Date(startDate);
-  expiry.setDate(expiry.getDate()+days);
+  const [d,m,y] = data.start.split("/");
+  const startDate = new Date(`${y}-${m}-${d}`);
+  const expiry = new Date(startDate);
+  expiry.setDate(expiry.getDate() + days);
 
-  result.style.display="block";
-  result.innerHTML=
-  `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-  تاريخ التفعيل: <b>${data.start}</b><br>
-  انتهاء الضمان: <b>${formatDate(expiry)}</b>`;
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").innerHTML =
+    `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+     تاريخ التفعيل: <b>${data.start}</b><br>
+     انتهاء الضمان: <b>${formatDate(expiry)}</b>`;
 
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
-  });
+  })
+  .catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
 
-/* ====== كود التحقق (نفس القديم) ====== */
-const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+/* ---------------- التحقق من الضمان ---------------- */
+const SHEET =
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
-async function check(){
-  let v=inv.value.trim();
-  if(!v) return alert("ادخل رقم الفاتورة");
+async function check() {
+  let v = document.getElementById("inv").value.trim();
+  if (!v) return alert("ادخل رقم الفاتورة");
 
-  let text=await (await fetch(SHEET)).text();
-  let rows=text.split("\n").map(r=>r.split(","));
-  let r=rows.find(r=>String(r[0]).trim()===v);
+  let res = await fetch(SHEET);
+  let text = await res.text();
+  let rows = text.split("\n").map(r => r.split(","));
+  let found = rows.find(r => String(r[0]).trim() === v);
 
-  if(!r) out.innerHTML="<b>❌ لم يتم العثور على رقم الفاتورة</b>";
-  else out.innerHTML=
-    `✔️ تم العثور على الضمان<br>
-     الاسم: ${r[1]}<br>
-     الهاتف: ${r[2]}<br>
-     النوع: ${r[3]}<br>
-     تاريخ البدء: ${r[4]}<br>
-     الانتهاء: ${r[5]}`;
+  if (!found) {
+    out.innerHTML = "<b>❌ لم يتم العثور على رقم الفاتورة</b>";
+  } else {
+    out.innerHTML =
+      `<b>✔️ تم العثور على الضمان</b><br>
+       الاسم: ${found[1]}<br>
+       الهاتف: ${found[2]}<br>
+       النوع: ${found[3]}<br>
+       تاريخ البدء: ${found[4]}<br>
+       الانتهاء: ${found[5]}`;
+  }
 }
 </script>
 
