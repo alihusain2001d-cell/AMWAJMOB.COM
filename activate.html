@@ -45,6 +45,13 @@ button{background:#1e88e5;color:#fff;border:none}
   background:#f5fbf2;border:1px solid #d6efcb;
   padding:9px;border-radius:10px;margin-top:10px
 }
+.msg{
+  padding:10px;border-radius:10px;
+  margin-top:-6px;margin-bottom:12px;
+  display:none
+}
+.msg.error{background:#ffecec;color:#b30000;border:1px solid #ffb3b3}
+.msg.ok{background:#e9faec;color:#1b7d2c;border:1px solid #bfe6c9}
 .whatsapp{
   background:#25D366;color:#fff;padding:11px;
   display:block;text-align:center;
@@ -88,6 +95,8 @@ button{background:#1e88e5;color:#fff;border:none}
 <label>تاريخ التركيب (اليوم تلقائيًا)</label>
 <input id="start" readonly>
 
+<div id="dupMsg" class="msg error"></div>
+
 <button onclick="sendData()">تفعيل الضمان</button>
 
 <div id="result" class="result"></div>
@@ -96,12 +105,9 @@ button{background:#1e88e5;color:#fff;border:none}
 
 <!-- التحقق -->
 <div id="sec2" class="section">
-
 <input id="inv" placeholder="أدخل رقم الفاتورة">
 <button onclick="check()">بحث</button>
-
 <div id="out" class="result" style="display:block"></div>
-
 </div>
 
 <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
@@ -126,17 +132,20 @@ function formatDate(d){
 }
 document.getElementById("start").value = formatDate(new Date());
 
-// safe getter
 function gv(id){
   const el=document.getElementById(id);
   return el?(el.value||"").trim():"";
 }
 
-// === تفعيل الضمان مع منع التكرار ===
 const SHEET =
  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
+// === تفعيل ===
 async function sendData(){
+
+  const msg = document.getElementById("dupMsg");
+  msg.style.display="none";
+  msg.innerHTML="";
 
   const data={
     name:gv("name"),
@@ -147,22 +156,26 @@ async function sendData(){
   };
 
   if(!data.name||!data.phone||!data.invoice){
-    alert("الرجاء إدخال جميع الحقول");
+    msg.innerHTML="⚠ يرجى إدخال جميع الحقول";
+    msg.className="msg error";
+    msg.style.display="block";
     return;
   }
 
-  // 1️⃣ منع التكرار — فحص الفاتورة
-  let text = await (await fetch(SHEET)).text();
-  let rows = text.split("\n").map(r=>r.split(","));
-  let exists = rows.find(r => String(r[0]).trim() === data.invoice);
+  // فحص التكرار
+  let text=await (await fetch(SHEET)).text();
+  let rows=text.split("\n").map(r=>r.split(","));
+  let exists=rows.find(r=>String(r[0]).trim()===data.invoice);
 
   if(exists){
-    alert("⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيله مرة أخرى");
+    msg.innerHTML="⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيله مرة أخرى";
+    msg.className="msg error";
+    msg.style.display="block";
     return;
   }
 
-  // 2️⃣ حساب انتهاء الضمان
-  let days = data.type==="screen" ? 30 : 365;
+  // حساب الانتهاء
+  let days=data.type==="screen"?30:365;
   const [d,m,y]=data.start.split("/");
   const startDate=new Date(`${y}-${m}-${d}`);
   const expiry=new Date(startDate);
@@ -175,6 +188,7 @@ async function sendData(){
   الانتهاء: <b>${formatDate(expiry)}</b>
   <div id="timer" class="timer-box"></div>`;
 
+  // عداد
   setInterval(()=>{
     const diff=expiry-new Date();
     if(diff<=0){document.getElementById("timer").innerHTML="انتهى الضمان";return;}
@@ -182,15 +196,15 @@ async function sendData(){
       "الوقت المتبقي: <b>"+Math.floor(diff/86400000)+"</b> يوم";
   },1000);
 
-  // 3️⃣ إرسال للجدول
+  // إرسال للجدول
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
-  }).catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
+  });
 }
 
-// === التحقق من الضمان ===
+// === التحقق ===
 async function check(){
   let v=gv("inv");
   if(!v) return alert("ادخل رقم الفاتورة");
