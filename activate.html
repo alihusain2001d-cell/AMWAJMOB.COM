@@ -24,43 +24,40 @@ body{
 .logo{text-align:center;margin-bottom:16px}
 .logo img{width:135px}
 
-.tab-buttons{
-  margin:15px 0 20px;
-}
-
-.tab-buttons button{
+.big-buttons button{
   width:100%;
-  padding:14px;
-  margin-bottom:10px;
-  border-radius:10px;
-  font-size:17px;
+  padding:16px;
+  margin-bottom:12px;
+  border-radius:12px;
+  font-size:18px;
   border:1px solid #ccd6e6;
   background:#f5f7fb;
   cursor:pointer;
 }
 
-.tab-buttons button.active{
+.big-buttons button.main{
   background:#1e88e5;
   color:#fff;
 }
 
 .section{display:none;}
-.section.active{display:block;}
 
-label{font-weight:bold;font-size:15px}
+label{font-weight:bold;font-size:16px}
 input,select{
-  width:100%;padding:10px;margin:6px 0 14px;
+  width:100%;padding:12px;margin:6px 0 14px;
   border-radius:10px;border:1px solid #ccd6e6;
+  font-size:16px;
 }
 
-button.main{
+button.action{
   width:100%;
-  padding:11px;
+  padding:12px;
   background:#1e88e5;
   color:#fff;
   border:none;
   border-radius:8px;
   margin-top:5px;
+  font-size:17px;
 }
 
 .msg-dup{
@@ -75,21 +72,21 @@ button.main{
 
 .footer{
   text-align:center;
-  margin-top:16px;
-  font-size:17px;
+  margin-top:14px;
+  font-size:16px;
   font-weight:700;
 }
 
 .whatsapp{
   background:#25D366;
   color:#fff;
-  padding:11px;
+  padding:12px;
   display:block;
   text-align:center;
   border-radius:8px;
   margin-top:18px;
   text-decoration:none;
-  font-size:16px;
+  font-size:17px;
   font-weight:700;
 }
 </style>
@@ -103,13 +100,14 @@ button.main{
   <img src="1633875906547.jpg">
 </div>
 
-<div class="tab-buttons">
-  <button id="btn-activate" class="active" onclick="openTab('activate')">تفعيل الضمان</button>
+<!-- أولاً: زرين فقط -->
+<div id="home" class="big-buttons">
+  <button class="main" onclick="openTab('activate')">تفعيل الضمان</button>
   <button onclick="openTab('search')">التحقق من الضمان</button>
 </div>
 
 <!-- تفعيل -->
-<div id="activate" class="section active">
+<div id="activate" class="section">
 
 <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
 <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
@@ -136,11 +134,11 @@ button.main{
 ⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
 </div>
 
-<button class="main" onclick="sendData()">تفعيل الضمان</button>
+<button class="action" onclick="sendData()">تفعيل الضمان</button>
 
 <div class="footer">
 📞 للاستفسار:
-<a href="tel:7696" style="text-decoration:none;color:#1e88e5;font-size:16px;font-weight:700">
+<a href="tel:7696" style="text-decoration:none;color:#1e88e5;">
 7696
 </a><br>
 شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
@@ -149,6 +147,7 @@ button.main{
 <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
 تواصل عبر واتساب
 </a>
+
 </div>
 
 <!-- التحقق -->
@@ -156,9 +155,9 @@ button.main{
 <h3>تحقق من الضمان</h3>
 
 <input id="inv" placeholder="أدخل رقم الفاتورة">
-<button class="main" onclick="check()">بحث</button>
+<button class="action" onclick="check()">بحث</button>
 
-<div id="out" style="margin-top:12px;text-align:right"></div>
+<div id="out" style="margin-top:12px;text-align:right;font-size:16px"></div>
 </div>
 
 </div>
@@ -168,10 +167,9 @@ const SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
 function openTab(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  document.querySelectorAll(".tab-buttons button").forEach(b=>b.classList.remove("active"));
-  if(id==="activate") document.getElementById("btn-activate").classList.add("active");
+  document.getElementById("home").style.display="none";
+  document.querySelectorAll(".section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
 function formatDate(d){
@@ -189,8 +187,9 @@ async function sendData(){
 
   if(!name||!phone||!invoice){alert("الرجاء إدخال جميع الحقول");return;}
 
-  // فحص تكرار
-  let res=await fetch(SHEET); let rows=(await res.text()).split("\n").map(r=>r.split(","));
+  let res=await fetch(SHEET);
+  let rows=(await res.text()).split("\n").map(r=>r.split(","));
+
   if(rows.some(r=>String(r[0]).trim()===invoice)){
     document.getElementById("dup").style.display="block";
     return;
@@ -209,7 +208,8 @@ async function check(){
   let v=document.getElementById("inv").value.trim();
   if(!v) return alert("ادخل رقم الفاتورة");
 
-  let res=await fetch(SHEET); let rows=(await res.text()).split("\n").map(r=>r.split(","));
+  let res=await fetch(SHEET);
+  let rows=(await res.text()).split("\n").map(r=>r.split(","));
   let f=rows.find(r=>String(r[0]).trim()===v);
 
   document.getElementById("out").innerHTML = f ?
