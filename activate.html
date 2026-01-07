@@ -8,58 +8,89 @@
 <style>
 body{
   font-family: sans-serif;
-  padding: 18px;
+  padding: 20px;
   background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
+
 .container{
-  max-width:560px;
+  max-width:540px;
   margin:auto;
   background:#fff;
   padding:20px;
   border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-.logo{text-align:center;margin-bottom:10px}
-.logo img{width:150px}
 
-.tabs{display:flex;gap:6px;margin:10px 0 16px}
-.tabs button{
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #cfd8e3;
-  background:#f3f6fb;
-  font-weight:bold;
+.logo{text-align:center;margin-bottom:16px}
+.logo img{width:135px}
+
+.tab-buttons{
+  margin:15px 0 20px;
 }
-.tabs button.active{
+
+.tab-buttons button{
+  width:100%;
+  padding:14px;
+  margin-bottom:10px;
+  border-radius:10px;
+  font-size:17px;
+  border:1px solid #ccd6e6;
+  background:#f5f7fb;
+  cursor:pointer;
+}
+
+.tab-buttons button.active{
   background:#1e88e5;
   color:#fff;
-  border-color:#1e88e5;
 }
 
-label{font-weight:bold;font-size:14px}
-input,select,button{
-  width:100%;padding:9px;margin:6px 0 12px;
+.section{display:none;}
+.section.active{display:block;}
+
+label{font-weight:bold;font-size:15px}
+input,select{
+  width:100%;padding:10px;margin:6px 0 14px;
   border-radius:10px;border:1px solid #ccd6e6;
 }
-button.submit{background:#1e88e5;color:#fff;border:none}
 
-.result, .alert-box{
-  padding:10px;border-radius:10px;margin-top:10px;font-size:14px
+button.main{
+  width:100%;
+  padding:11px;
+  background:#1e88e5;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  margin-top:5px;
 }
-.result{background:#e8f4ff;display:none}
-.alert-box{display:none;background:#fde7e7;color:#9c1d1d}
+
+.msg-dup{
+  display:none;
+  background:#fde8e8;
+  color:#b30000;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.footer{
+  text-align:center;
+  margin-top:16px;
+  font-size:17px;
+  font-weight:700;
+}
 
 .whatsapp{
-  background:#25D366;color:#fff;padding:11px;
-  text-align:center;border-radius:8px;margin-top:14px;
-  text-decoration:none;display:block
-}
-
-.footer{text-align:center;font-size:13px;margin-top:12px}
-.timer-box{
-  background:#f5fbf2;border:1px solid #d6efcb;margin-top:10px;
-  padding:8px;border-radius:10px;font-weight:bold;
+  background:#25D366;
+  color:#fff;
+  padding:11px;
+  display:block;
+  text-align:center;
+  border-radius:8px;
+  margin-top:18px;
+  text-decoration:none;
+  font-size:16px;
+  font-weight:700;
 }
 </style>
 </head>
@@ -72,152 +103,122 @@ button.submit{background:#1e88e5;color:#fff;border:none}
   <img src="1633875906547.jpg">
 </div>
 
-<div class="tabs">
-  <button id="tabActivate" onclick="openTab('activate')">تفعيل الضمان</button>
-  <button id="tabCheck" onclick="openTab('check')">التحقق من الضمان</button>
+<div class="tab-buttons">
+  <button id="btn-activate" class="active" onclick="openTab('activate')">تفعيل الضمان</button>
+  <button onclick="openTab('search')">التحقق من الضمان</button>
 </div>
 
-<!-- ====== تفعيل الضمان ====== -->
-<div id="activateBox" style="display:none">
+<!-- تفعيل -->
+<div id="activate" class="section active">
 
-  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
-  <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
+<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+<p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
-  <label>اسم الزبون</label>
-  <input id="name">
+<label>اسم الزبون</label>
+<input id="name">
 
-  <label>رقم الهاتف</label>
-  <input id="phone">
+<label>رقم الهاتف</label>
+<input id="phone">
 
-  <label>رقم الفاتورة</label>
-  <input id="invoice">
+<label>رقم الفاتورة</label>
+<input id="invoice">
 
-  <label>نوع القطعة</label>
-  <select id="type">
-    <option value="screen">شاشة</option>
-    <option value="battery">بطارية</option>
-  </select>
+<label>نوع القطعة</label>
+<select id="type">
+  <option value="screen">شاشة</option>
+  <option value="battery">بطارية</option>
+</select>
 
-  <label>تاريخ التركيب (اليوم تلقائياً)</label>
-  <input id="start" readonly style="background:#f7f9ff">
+<label>تاريخ التركيب (اليوم تلقائياً)</label>
+<input id="start" readonly>
 
-  <div id="dupMsg" class="alert-box"></div>
-
-  <button class="submit" onclick="sendData()">تفعيل الضمان</button>
-
-  <div id="result" class="result"></div>
-
-  <div class="footer">
-    📞 للاستفسار: <a href="tel:7696">7696</a><br>
-    شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
-  </div>
-
-  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-    تواصل عبر واتساب
-  </a>
+<div id="dup" class="msg-dup">
+⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
 </div>
 
-<!-- ====== التحقق من الضمان ====== -->
-<div id="checkBox" style="display:none">
-  <h3>تحقق من الضمان</h3>
+<button class="main" onclick="sendData()">تفعيل الضمان</button>
 
-  <input id="inv" placeholder="أدخل رقم الفاتورة">
-  <button class="submit" onclick="check()">بحث</button>
+<div class="footer">
+📞 للاستفسار:
+<a href="tel:7696" style="text-decoration:none;color:#1e88e5;font-size:16px;font-weight:700">
+7696
+</a><br>
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+</div>
 
-  <div id="out" class="result" style="display:block;background:#f7f9ff"></div>
+<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
+تواصل عبر واتساب
+</a>
+</div>
+
+<!-- التحقق -->
+<div id="search" class="section">
+<h3>تحقق من الضمان</h3>
+
+<input id="inv" placeholder="أدخل رقم الفاتورة">
+<button class="main" onclick="check()">بحث</button>
+
+<div id="out" style="margin-top:12px;text-align:right"></div>
 </div>
 
 </div>
 
 <script>
 const SHEET =
- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
-// tabs
-function openTab(name){
-  document.getElementById("activateBox").style.display = name==="activate"?"block":"none";
-  document.getElementById("checkBox").style.display   = name==="check"?"block":"none";
-  document.getElementById("tabActivate").classList.toggle("active",name==="activate");
-  document.getElementById("tabCheck").classList.toggle("active",name==="check");
+function openTab(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".tab-buttons button").forEach(b=>b.classList.remove("active"));
+  if(id==="activate") document.getElementById("btn-activate").classList.add("active");
 }
 
-// اليوم تلقائياً
 function formatDate(d){
-  const dt=new Date(d);
-  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
+  const x=new Date(d);
+  return `${String(x.getDate()).padStart(2,'0')}/${String(x.getMonth()+1).padStart(2,'0')}/${x.getFullYear()}`;
 }
-document.getElementById("start").value = formatDate(new Date());
+document.getElementById("start").value=formatDate(new Date());
 
-// منع التكرار + التفعيل
 async function sendData(){
+  const name=document.getElementById("name").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const invoice=document.getElementById("invoice").value.trim();
+  const type=document.getElementById("type").value;
+  const start=document.getElementById("start").value;
 
-  const data={
-    name: name.value.trim(),
-    phone: phone.value.trim(),
-    invoice: invoice.value.trim(),
-    type: type.value,
-    start: start.value
-  };
+  if(!name||!phone||!invoice){alert("الرجاء إدخال جميع الحقول");return;}
 
-  if(!data.name || !data.phone || !data.invoice){
-    alert("الرجاء إدخال جميع الحقول");
+  // فحص تكرار
+  let res=await fetch(SHEET); let rows=(await res.text()).split("\n").map(r=>r.split(","));
+  if(rows.some(r=>String(r[0]).trim()===invoice)){
+    document.getElementById("dup").style.display="block";
     return;
-  }
-
-  // فحص تكرار الفاتورة
-  let rows = (await (await fetch(SHEET)).text())
-              .split("\n").map(r=>r.split(","));
-
-  if(rows.some(r=>String(r[0]).trim()===data.invoice)){
-    dupMsg.style.display="block";
-    dupMsg.innerHTML="⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى";
-    return;
-  } else dupMsg.style.display="none";
-
-  // مدة الضمان
-  let days = data.type==="screen"?30:365;
-  const [d,m,y]=data.start.split("/");
-  const expiry=new Date(`${y}-${m}-${d}`); expiry.setDate(expiry.getDate()+days);
-
-  result.style.display="block";
-  result.innerHTML=`⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-  تاريخ التفعيل: <b>${data.start}</b><br>
-  انتهاء الضمان: <b>${formatDate(expiry)}</b>
-  <div id="timer" class="timer-box"></div>`;
-
-  setInterval(()=>{
-    const diff=expiry-new Date();
-    timer.innerHTML= diff<=0 ? "⚠ انتهى الضمان"
-      : "الوقت المتبقي: <b>"+Math.floor(diff/(1000*60*60*24))+"</b> يوم";
-  },1000);
+  } else document.getElementById("dup").style.display="none";
 
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,phone,invoice,type,start})
   });
+
+  alert("⭐ تم تفعيل الضمان بنجاح");
 }
 
-// التحقق
 async function check(){
-  let v = inv.value.trim();
+  let v=document.getElementById("inv").value.trim();
   if(!v) return alert("ادخل رقم الفاتورة");
 
-  let rows = (await (await fetch(SHEET)).text())
-              .split("\n").map(r=>r.split(","));
+  let res=await fetch(SHEET); let rows=(await res.text()).split("\n").map(r=>r.split(","));
   let f=rows.find(r=>String(r[0]).trim()===v);
 
-  out.innerHTML = !f
-   ? "<b>❌ لم يتم العثور على رقم الفاتورة</b>"
-   : `<b>✔️ تم العثور على الضمان</b><br>
-      الاسم: ${f[1]}<br>
-      الهاتف: ${f[2]}<br>
-      النوع: ${f[3]}<br>
-      تاريخ البدء: ${f[4]}<br>
-      الانتهاء: ${f[5]}`;
+  document.getElementById("out").innerHTML = f ?
+   `<b>✔️ تم العثور على الضمان</b><br>
+    الاسم: ${f[1]}<br>الهاتف: ${f[2]}<br>
+    النوع: ${f[3]}<br>تاريخ البدء: ${f[4]}<br>
+    الانتهاء: ${f[5]}`
+   : `<b>❌ لم يتم العثور على رقم الفاتورة</b>`;
 }
-
-// أول ما تفتح الصفحة — اختَر الخدمة
-openTab(""); 
 </script>
 
 </body>
