@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>تفعيل / تحقق من الضمان</title>
+<title>ضمان أمواج</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -11,7 +11,6 @@ body{
   padding: 20px;
   background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
-
 .container{
   max-width:540px;
   margin:auto;
@@ -20,59 +19,52 @@ body{
   border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-
 .logo{text-align:center;margin-bottom:10px}
-.logo img{width:130px}
+.logo img{width:135px}
 
-.tabs{
-  display:flex;
-  margin-bottom:15px;
-}
+.tabs{display:flex;margin:10px 0 18px}
 .tabs button{
   flex:1;
   padding:10px;
   border:0;
   cursor:pointer;
-  background:#dcecfb;
   border-radius:10px;
   font-weight:bold;
 }
-.tabs button.active{
-  background:#1e88e5;
-  color:white;
-}
+.active{background:#1e88e5;color:#fff}
+.hidden{display:none}
 
 input,select,button{
   width:100%;
   padding:10px;
-  margin:6px 0 12px;
-  font-size:15px;
+  margin:6px 0 14px;
   border-radius:10px;
   border:1px solid #ccd6e6;
 }
-
-button.action{
-  background:#1e88e5;
-  color:white;
-  border:0;
-}
+.mainBtn{background:#1e88e5;color:white;border:0}
 
 .result{
-  display:none;
   background:#e8f4ff;
   padding:12px;
   border-radius:10px;
   margin-top:10px;
+  display:none;
 }
-
-.whatsapp{
-  display:block;
-  text-align:center;
-  background:#25D366;
-  color:#fff;
+.timer-box{
+  background:#f5fbf2;
+  border:1px solid #d6efcb;
   padding:10px;
   border-radius:10px;
-  margin-top:12px;
+  margin-top:8px;
+}
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:11px;
+  display:block;
+  text-align:center;
+  border-radius:8px;
+  margin-top:14px;
   text-decoration:none;
 }
 </style>
@@ -87,12 +79,15 @@ button.action{
 </div>
 
 <div class="tabs">
-  <button id="tab1" class="active" onclick="showTab(1)">تفعيل الضمان</button>
-  <button id="tab2" onclick="showTab(2)">التحقق من الضمان</button>
+  <button id="tabActive" class="active" onclick="showTab('activate')">تفعيل الضمان</button>
+  <button id="tabCheck" onclick="showTab('check')">التحقق من الضمان</button>
 </div>
 
-<!-- تفعيل -->
+<!-- ================= تفعيل الضمان ================= -->
 <div id="activate">
+
+  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+  <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
   <label>اسم الزبون</label>
   <input id="name">
@@ -109,49 +104,55 @@ button.action{
     <option value="battery">بطارية</option>
   </select>
 
-  <label>تاريخ التركيب (اليوم تلقائياً)</label>
-  <input id="start" readonly>
+  <label>تاريخ التركيب (تلقائيًا اليوم)</label>
+  <input id="start" readonly style="background:#f7f9ff">
 
-  <button class="action" onclick="sendData()">تفعيل الضمان</button>
+  <button class="mainBtn" onclick="sendData()">تفعيل الضمان</button>
 
   <div id="result" class="result"></div>
+
+  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
+    تواصل عبر واتساب
+  </a>
 </div>
 
-<!-- التحقق -->
-<div id="check" style="display:none">
+<!-- ================= التحقق من الضمان ================= -->
+<div id="check" class="hidden">
 
-  <input id="inv" placeholder="رقم الفاتورة">
-  <button class="action" onclick="check()">بحث</button>
+  <h3>تحقق من الضمان</h3>
 
-  <div id="out" class="result"></div>
+  <input id="inv" placeholder="أدخل رقم الفاتورة">
+  <button class="mainBtn" onclick="check()">بحث</button>
+
+  <div id="out" class="result" style="display:block"></div>
+
 </div>
-
-<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-تواصل عبر واتساب
-</a>
 
 </div>
 
 <script>
-function showTab(n){
-  document.getElementById("activate").style.display = (n===1?"block":"none");
-  document.getElementById("check").style.display   = (n===2?"block":"none");
-  document.getElementById("tab1").classList.toggle("active",n===1);
-  document.getElementById("tab2").classList.toggle("active",n===2);
+/* تبويبات */
+function showTab(tab){
+  document.getElementById("activate").classList.add("hidden");
+  document.getElementById("check").classList.add("hidden");
+  document.getElementById(tab).classList.remove("hidden");
+
+  document.getElementById("tabActive").classList.remove("active");
+  document.getElementById("tabCheck").classList.remove("active");
+
+  if(tab==="activate") document.getElementById("tabActive").classList.add("active");
+  else document.getElementById("tabCheck").classList.add("active");
 }
 
-/* تنسيق التاريخ */
+/* ====== كود التفعيل (نفس القديم) ====== */
 function formatDate(d){
-  const day = String(d.getDate()).padStart(2,"0");
-  const mon = String(d.getMonth()+1).padStart(2,"0");
-  return `${day}/${mon}/${d.getFullYear()}`;
+  const dt=new Date(d);
+  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
 }
+const today = new Date();
+document.getElementById("start").value = formatDate(today);
 
-const today=new Date();
-document.getElementById("start").value=formatDate(today);
-
-async function sendData(){
-
+function sendData(){
   const data={
     name: name.value.trim(),
     phone: phone.value.trim(),
@@ -161,49 +162,49 @@ async function sendData(){
   };
 
   if(!data.name || !data.phone || !data.invoice){
-    alert("املأ جميع الحقول");
+    alert("الرجاء إدخال جميع الحقول");
     return;
   }
 
-  let days = data.type==="screen"?30:365;
+  let days = data.type==="screen" ? 30 : 365;
 
   const [d,m,y]=data.start.split("/");
-  const startDate=new Date(Number(y),Number(m)-1,Number(d));
+  const startDate=new Date(`${y}-${m}-${d}`);
   const expiry=new Date(startDate);
   expiry.setDate(expiry.getDate()+days);
 
   result.style.display="block";
-  result.innerHTML=`⭐ تم تفعيل الضمان ⭐<br>
-  تاريخ: <b>${data.start}</b><br>
-  الانتهاء: <b>${formatDate(expiry)}</b>`;
+  result.innerHTML=
+  `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+  تاريخ التفعيل: <b>${data.start}</b><br>
+  انتهاء الضمان: <b>${formatDate(expiry)}</b>`;
 
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({...data, expiry: formatDate(expiry)})
+    body:JSON.stringify(data)
   });
 }
 
-/*** التحقق ***/
+/* ====== كود التحقق (نفس القديم) ====== */
 const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
 async function check(){
   let v=inv.value.trim();
   if(!v) return alert("ادخل رقم الفاتورة");
 
-  let t=await fetch(SHEET).then(r=>r.text());
-  let rows=t.split("\n").map(r=>r.split(","));
-  let f=rows.find(r=>r[0].trim()===v);
+  let text=await (await fetch(SHEET)).text();
+  let rows=text.split("\n").map(r=>r.split(","));
+  let r=rows.find(r=>String(r[0]).trim()===v);
 
-  out.style.display="block";
-  out.innerHTML = f
-    ? `✔ تم العثور على الضمان<br>
-       الاسم: ${f[1]}<br>
-       الهاتف: ${f[2]}<br>
-       النوع: ${f[3]}<br>
-       تاريخ البدء: ${f[4]}<br>
-       الانتهاء: ${f[5]}`
-    : "❌ لم يتم العثور على رقم الفاتورة";
+  if(!r) out.innerHTML="<b>❌ لم يتم العثور على رقم الفاتورة</b>";
+  else out.innerHTML=
+    `✔️ تم العثور على الضمان<br>
+     الاسم: ${r[1]}<br>
+     الهاتف: ${r[2]}<br>
+     النوع: ${r[3]}<br>
+     تاريخ البدء: ${r[4]}<br>
+     الانتهاء: ${r[5]}`;
 }
 </script>
 
