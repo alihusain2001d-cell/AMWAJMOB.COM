@@ -131,47 +131,56 @@ function formatDate(d){
 }
 document.getElementById("start").value = formatDate(new Date());
 
+// لمنع إرسال نفس الفاتورة داخل الجلسة
+let localInvoices = new Set();
 let sending=false;
 
 async function sendData(){
 
- if(sending) return;          // 🔒 منع الضغط المتكرر
+ if(sending) return;
  sending = true;
 
  const btn=document.getElementById("btnSend");
  btn.innerText="جاري الإرسال...";
  btn.disabled=true;
 
- document.getElementById("dupMsg").style.display="none";
- document.getElementById("okMsg").style.display="none";
+ dupMsg.style.display="none";
+ okMsg.style.display="none";
 
  const data={
-  name:document.getElementById("name").value.trim(),
-  phone:document.getElementById("phone").value.trim(),
-  invoice:document.getElementById("invoice").value.trim(),
-  type:document.getElementById("type").value,
-  start:document.getElementById("start").value
+  name:name.value.trim(),
+  phone:phone.value.trim(),
+  invoice:invoice.value.trim(),
+  type:type.value,
+  start:start.value
  };
 
  if(!data.name||!data.phone||!data.invoice){
    alert("الرجاء إدخال جميع الحقول");
-   resetBtn();
-   return;
+   resetBtn(); return;
  }
 
- // 🔎 فحص التكرار — مع كسر الكاش
- let res=await fetch(SHEET + "?t=" + Date.now());
+ // ⛔ منع التكرار داخل الجلسة
+ if(localInvoices.has(data.invoice)){
+   dupMsg.innerHTML="⚠ هذا الرقم تم إدخاله الآن — لا يمكن تكراره";
+   dupMsg.style.display="block";
+   resetBtn(); return;
+ }
+
+ // فحص من الجدول مع منع الكاش
+ let res=await fetch(SHEET+"?t="+Date.now(),{cache:"no-store"});
  let rows=(await res.text()).split("\n").map(r=>r.split(","));
 
  if(rows.find(r=>String(r[0]).trim()===data.invoice)){
-   let d=document.getElementById("dupMsg");
-   d.innerHTML="⚠ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى";
-   d.style.display="block";
-   resetBtn();
-   return;
+   dupMsg.innerHTML="⚠ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى";
+   dupMsg.style.display="block";
+   resetBtn(); return;
  }
 
- // تحديد مدة الضمان
+ // إضافة محلياً لمنع تكرار فوري
+ localInvoices.add(data.invoice);
+
+ // مدة الضمان
  let days=data.type==="screen"?30:365;
  let [dd,mm,yy]=data.start.split("/");
  let sDate=new Date(`${yy}-${mm}-${dd}`);
@@ -184,37 +193,32 @@ async function sendData(){
    body:JSON.stringify(data)
  });
 
- let ok=document.getElementById("okMsg");
- ok.innerHTML=
-   `⭐ تم تفعيل الضمان بنجاح<br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    تاريخ الانتهاء: <b>${formatDate(exp)}</b>`;
- ok.style.display="block";
+ okMsg.innerHTML=
+ `⭐ تم تفعيل الضمان بنجاح<br>
+  تاريخ التفعيل: <b>${data.start}</b><br>
+  تاريخ الانتهاء: <b>${formatDate(exp)}</b>`;
+ okMsg.style.display="block";
 
  resetBtn();
 
- document.getElementById("name").value="";
- document.getElementById("phone").value="";
- document.getElementById("invoice").value="";
+ name.value=""; phone.value=""; invoice.value="";
 }
 
 function resetBtn(){
  sending=false;
- const btn=document.getElementById("btnSend");
- btn.innerText="تفعيل الضمان";
- btn.disabled=false;
+ btnSend.innerText="تفعيل الضمان";
+ btnSend.disabled=false;
 }
 
-// التحقق
+// البحث
 async function check(){
- let v=document.getElementById("inv").value.trim();
+ let v=inv.value.trim();
  if(!v) return alert("ادخل رقم الفاتورة");
 
- let res=await fetch(SHEET + "?t=" + Date.now());
+ let res=await fetch(SHEET+"?t="+Date.now(),{cache:"no-store"});
  let rows=(await res.text()).split("\n").map(r=>r.split(","));
  let r=rows.find(r=>String(r[0]).trim()===v);
 
- let out=document.getElementById("out");
  if(!r){
    out.className="alert alert-red";
    out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
