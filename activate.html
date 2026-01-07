@@ -11,19 +11,15 @@ body{
   padding:20px;
   background:linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
-
 .container{
   max-width:540px;margin:auto;background:#fff;
   padding:18px;border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-
 .logo{text-align:center;margin-bottom:12px}
 .logo img{width:135px}
 
-.tabs{
-  display:flex;margin:6px 0 14px;
-}
+.tabs{display:flex;margin:6px 0 14px;}
 .tab{
   flex:1;text-align:center;padding:9px;
   border-radius:10px;cursor:pointer;
@@ -39,19 +35,16 @@ input,select,button{
   width:100%;padding:9px;margin:6px 0 14px;
   border-radius:10px;border:1px solid #ccd6e6;
 }
-
 button{background:#1e88e5;color:#fff;border:none}
 
 .result{
   background:#e8f4ff;padding:12px;border-radius:10px;
   display:none;font-size:15px
 }
-
 .timer-box{
   background:#f5fbf2;border:1px solid #d6efcb;
   padding:9px;border-radius:10px;margin-top:10px
 }
-
 .whatsapp{
   background:#25D366;color:#fff;padding:11px;
   display:block;text-align:center;
@@ -118,7 +111,7 @@ button{background:#1e88e5;color:#fff;border:none}
 </div>
 
 <script>
-// tabs
+// Tabs
 function showTab(n){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
@@ -126,12 +119,11 @@ function showTab(n){
   document.getElementById("sec"+n).classList.add("active");
 }
 
-// date formatting
+// format date
 function formatDate(d){
   const dt=new Date(d);
   return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
 }
-
 document.getElementById("start").value = formatDate(new Date());
 
 // safe getter
@@ -140,21 +132,41 @@ function gv(id){
   return el?(el.value||"").trim():"";
 }
 
-// activate
-function sendData(){
+// === تفعيل الضمان مع منع التكرار ===
+const SHEET =
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
+async function sendData(){
+
   const data={
-    name:gv("name"), phone:gv("phone"), invoice:gv("invoice"),
-    type:gv("type"), start:gv("start")
+    name:gv("name"),
+    phone:gv("phone"),
+    invoice:gv("invoice"),
+    type:gv("type"),
+    start:gv("start")
   };
 
   if(!data.name||!data.phone||!data.invoice){
-    alert("الرجاء إدخال جميع الحقول"); return;
+    alert("الرجاء إدخال جميع الحقول");
+    return;
   }
 
-  let days=data.type==="screen"?30:365;
+  // 1️⃣ منع التكرار — فحص الفاتورة
+  let text = await (await fetch(SHEET)).text();
+  let rows = text.split("\n").map(r=>r.split(","));
+  let exists = rows.find(r => String(r[0]).trim() === data.invoice);
+
+  if(exists){
+    alert("⚠ هذا رقم الفاتورة مُسجّل مسبقاً — لا يمكن تفعيله مرة أخرى");
+    return;
+  }
+
+  // 2️⃣ حساب انتهاء الضمان
+  let days = data.type==="screen" ? 30 : 365;
   const [d,m,y]=data.start.split("/");
   const startDate=new Date(`${y}-${m}-${d}`);
-  const expiry=new Date(startDate); expiry.setDate(expiry.getDate()+days);
+  const expiry=new Date(startDate);
+  expiry.setDate(expiry.getDate()+days);
 
   const res=document.getElementById("result");
   res.style.display="block";
@@ -167,19 +179,18 @@ function sendData(){
     const diff=expiry-new Date();
     if(diff<=0){document.getElementById("timer").innerHTML="انتهى الضمان";return;}
     document.getElementById("timer").innerHTML=
-     "الوقت المتبقي: <b>"+Math.floor(diff/86400000)+"</b> يوم";
+      "الوقت المتبقي: <b>"+Math.floor(diff/86400000)+"</b> يوم";
   },1000);
 
+  // 3️⃣ إرسال للجدول
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
-  }).catch(()=>alert("خطأ — حاول مرة أخرى"));
+  }).catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
 
-// verify
-const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
-
+// === التحقق من الضمان ===
 async function check(){
   let v=gv("inv");
   if(!v) return alert("ادخل رقم الفاتورة");
