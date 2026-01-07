@@ -42,11 +42,34 @@ input,select,button{
   margin:6px 0 14px;
   font-size:15px;
   text-align:right;
+  border-radius:10px;
+  border:1px solid #ccd6e6;
 }
 
+/* تحسين شكل التاريخ للموبايل */
 input[type="date"]{
   direction:ltr;
   text-align:right;
+  background:#ffffff;
+  color:#333;
+  appearance:none;
+  -webkit-appearance:none;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  padding:0 4px;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field{
+  color:#1e88e5;
+  padding:0 2px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+  opacity:.8;
 }
 
 button{
