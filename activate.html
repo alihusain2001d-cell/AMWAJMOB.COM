@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>تفعيل ضمان أمواج</title>
+<title>تفعيل / التحقق من الضمان - أمواج</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -21,89 +21,48 @@ body{
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
 
+.tabs{
+  display:flex;
+  margin-bottom:15px;
+}
+.tab{
+  flex:1;
+  padding:10px;
+  text-align:center;
+  cursor:pointer;
+  border-radius:10px;
+  border:1px solid #cde0f5;
+}
+.tab.active{
+  background:#1e88e5;
+  color:#fff;
+}
+
 .logo{text-align:center;margin-bottom:16px}
 .logo img{width:135px}
 
-.tabs{
-  display:flex;
-  margin:10px 0 18px;
-}
-
-.tabs button{
-  flex:1;
-  padding:10px;
-  border:0;
-  border-radius:8px;
-  background:#e8f2ff;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.tabs button.active{
-  background:#1e88e5;
-  color:#fff;
-}
-
-section{display:none}
-section.active{display:block}
-
 label{font-weight:bold;font-size:15px}
-
 input,select,button{
-  width:100%;
-  padding:10px;
-  margin:6px 0 14px;
-  font-size:15px;
-  text-align:right;
-  border-radius:10px;
+  width:100%;padding:10px;margin:6px 0 14px;
+  font-size:15px;text-align:right;border-radius:10px;
   border:1px solid #ccd6e6;
 }
-
 button{
-  background:#1e88e5;
-  color:#fff;
-  border:none;
-  border-radius:8px;
+  background:#1e88e5;color:#fff;border:none;border-radius:8px;
 }
-
 .result{
-  background:#e8f4ff;
-  padding:14px;
-  border-radius:10px;
-  margin-top:14px;
-  display:none;
-  font-size:15px;
+  background:#e8f4ff;padding:14px;border-radius:10px;
+  margin-top:14px;display:none;font-size:15px;
 }
-
-.result2{margin-top:12px;text-align:right}
-
-.footer{
-  text-align:center;
-  margin-top:16px;
-  color:#333;
-  font-size:14px;
-}
-
+.footer{text-align:center;margin-top:16px;color:#333;font-size:14px}
 .timer-box{
-  background:#f5fbf2;
-  border:1px solid #d6efcb;
-  margin-top:12px;
-  padding:10px;
-  border-radius:10px;
-  font-weight:bold;
+  background:#f5fbf2;border:1px solid #d6efcb;
+  margin-top:12px;padding:10px;border-radius:10px;font-weight:bold;
 }
-
 .whatsapp{
-  background:#25D366;
-  color:#fff;
-  padding:12px;
-  display:block;
-  text-align:center;
-  border-radius:10px;
-  margin-top:18px;
-  text-decoration:none;
-  font-size:16px;
-  font-weight:bold;
+  background:#25D366;color:#fff;padding:11px;
+  display:block;text-align:center;border-radius:8px;
+  margin-top:18px;text-decoration:none;font-size:15px;
 }
 </style>
 </head>
@@ -117,27 +76,24 @@ button{
 </div>
 
 <div class="tabs">
-  <button id="t1" class="active" onclick="showTab(1)">تفعيل الضمان</button>
-  <button id="t2" onclick="showTab(2)">التحقق من الضمان</button>
+  <div class="tab active" onclick="showTab('activate')">تفعيل الضمان</div>
+  <div class="tab" onclick="showTab('search')">التحقق من الضمان</div>
 </div>
 
-<!-- ========= تفعيل الضمان ========= -->
-<section id="tab1" class="active">
+<!-- تفعيل الضمان -->
+<div id="activate">
 
-<h3 style="text-align:center;margin:0 0 10px">
-تفعيل ضمان أمواج للإلكترونيات
-</h3>
-
+<h3>تفعيل ضمان أمواج للإلكترونيات</h3>
 <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
 <label>اسم الزبون</label>
-<input id="name">
+<input id="name" type="text">
 
 <label>رقم الهاتف</label>
-<input id="phone">
+<input id="phone" type="text">
 
 <label>رقم الفاتورة</label>
-<input id="invoice">
+<input id="invoice" type="text">
 
 <label>نوع القطعة</label>
 <select id="type">
@@ -152,50 +108,49 @@ button{
 
 <div id="result" class="result"></div>
 
-</section>
-
-<!-- ========= التحقق من الضمان ========= -->
-<section id="tab2">
-
-<input id="inv" placeholder="أدخل رقم الفاتورة">
-<button onclick="check()">بحث</button>
-
-<div id="out" class="result2"></div>
-
-</section>
-
-<div class="footer">
-📞 للاستفسار:
-<a href="tel:7696" style="text-decoration:none;color:#1e88e5;">7696</a><br>
-شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
-</div>
-
 <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
 تواصل عبر واتساب
 </a>
 
 </div>
 
+<!-- التحقق من الضمان -->
+<div id="search" style="display:none">
+
+<h3>تحقق من الضمان</h3>
+<input id="inv" placeholder="أدخل رقم الفاتورة">
+<button onclick="check()">بحث</button>
+
+<div id="out" class="result" style="display:block"></div>
+
+</div>
+
+<div class="footer">
+📞 للاستفسار: <a href="tel:7696">7696</a><br>
+شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+</div>
+
+</div>
+
 <script>
-// Tabs
-function showTab(n){
-  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
-  document.getElementById("tab"+n).classList.add("active");
-  document.getElementById("t"+n).classList.add("active");
+function showTab(t){
+  document.getElementById('activate').style.display = t==='activate'?'block':'none';
+  document.getElementById('search').style.display   = t==='search'?'block':'none';
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab')[t==='activate'?0:1].classList.add('active');
 }
 
-// تاريخ اليوم
+// --- التاريخ ---
 function formatDate(d){
-  const dt=new Date(d);
-  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+  const dt=new Date(d),day=String(dt.getDate()).padStart(2,'0'),
+        month=String(dt.getMonth()+1).padStart(2,'0'),
+        year=dt.getFullYear();
+  return `${day}/${month}/${year}`;
 }
-const today=new Date();
-start.value=formatDate(today);
+document.getElementById("start").value = formatDate(new Date());
 
-// تفعيل الضمان
+// --- تفعيل ---
 function sendData(){
-
   const data={
     name:name.value.trim(),
     phone:phone.value.trim(),
@@ -203,36 +158,39 @@ function sendData(){
     type:type.value,
     start:start.value
   };
-
-  if(!data.name || !data.phone || !data.invoice){
-    alert("الرجاء إدخال جميع الحقول");
-    return;
+  if(!data.name||!data.phone||!data.invoice){
+    alert("الرجاء إدخال جميع الحقول");return;
   }
 
-  let days=data.type==="screen"?30:365;
+  let days = data.type==="screen"?30:365;
   const [d,m,y]=data.start.split("/");
   const startDate=new Date(`${y}-${m}-${d}`);
   const expiry=new Date(startDate);
   expiry.setDate(expiry.getDate()+days);
 
   result.style.display="block";
-  result.innerHTML=
-   `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-    تاريخ التفعيل: <b>${data.start}</b><br>
-    انتهاء الضمان: <b>${formatDate(expiry)}</b>`;
+  result.innerHTML =
+  `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+   تاريخ التفعيل: <b>${data.start}</b><br>
+   انتهاء الضمان: <b>${formatDate(expiry)}</b>
+   <div id="timer" class="timer-box"></div>`;
+
+  setInterval(()=>{
+    const diff=expiry-new Date();
+    if(diff<=0){timer.innerHTML="⚠ انتهى الضمان";return;}
+    timer.innerHTML=`الوقت المتبقي: <b>${Math.floor(diff/(1000*60*60*24))}</b> يوم`;
+  },1000);
 
   fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
-  });
+  }).catch(()=>alert("حدث خطأ — حاول مرة أخرى"));
 }
 
-// رابط الشيت
-const SHEET =
- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+// --- التحقق ---
+const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
-// تحقق من الضمان
 async function check(){
   let v=inv.value.trim();
   if(!v) return alert("ادخل رقم الفاتورة");
@@ -245,13 +203,13 @@ async function check(){
   if(!found){
     out.innerHTML="<b>❌ لم يتم العثور على رقم الفاتورة</b>";
   }else{
-    out.innerHTML=
-     `<b>✔️ تم العثور على الضمان</b><br>
-      الاسم: ${found[1]}<br>
-      الهاتف: ${found[2]}<br>
-      النوع: ${found[3]}<br>
-      تاريخ البدء: ${found[4]}<br>
-      الانتهاء: ${found[5]}`;
+    out.innerHTML =
+    `<b>✔️ تم العثور على الضمان</b><br>
+     الاسم: ${found[1]}<br>
+     الهاتف: ${found[2]}<br>
+     النوع: ${found[3]}<br>
+     تاريخ البدء: ${found[4]}<br>
+     الانتهاء: ${found[5]}`;
   }
 }
 </script>
