@@ -100,7 +100,7 @@ button.action{
   <img src="1633875906547.jpg">
 </div>
 
-<!-- أولاً: زرين فقط -->
+<!-- شاشة البداية -->
 <div id="home" class="big-buttons">
   <button class="main" onclick="openTab('activate')">تفعيل الضمان</button>
   <button onclick="openTab('search')">التحقق من الضمان</button>
@@ -134,13 +134,11 @@ button.action{
 ⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
 </div>
 
-<button class="action" onclick="sendData()">تفعيل الضمان</button>
+<button id="btnSend" class="action" onclick="sendData()">تفعيل الضمان</button>
 
 <div class="footer">
 📞 للاستفسار:
-<a href="tel:7696" style="text-decoration:none;color:#1e88e5;">
-7696
-</a><br>
+<a href="tel:7696" style="text-decoration:none;color:#1e88e5;">7696</a><br>
 شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
 </div>
 
@@ -178,30 +176,61 @@ function formatDate(d){
 }
 document.getElementById("start").value=formatDate(new Date());
 
+// ⛔ منع الضغط المتكرر
+let sending = false;
+
 async function sendData(){
+
+  if(sending) return;          // إذا سبق وضغط — لا يفعل شيء
+  sending = true;
+
+  const btn = document.getElementById("btnSend");
+  btn.innerText = "جاري الإرسال...";
+  btn.disabled = true;
+
   const name=document.getElementById("name").value.trim();
   const phone=document.getElementById("phone").value.trim();
   const invoice=document.getElementById("invoice").value.trim();
   const type=document.getElementById("type").value;
   const start=document.getElementById("start").value;
 
-  if(!name||!phone||!invoice){alert("الرجاء إدخال جميع الحقول");return;}
+  if(!name||!phone||!invoice){
+    alert("الرجاء إدخال جميع الحقول");
+    btn.innerText="تفعيل الضمان";   // نرجّع الزر
+    btn.disabled=false;
+    sending=false;
+    return;
+  }
 
   let res=await fetch(SHEET);
   let rows=(await res.text()).split("\n").map(r=>r.split(","));
 
   if(rows.some(r=>String(r[0]).trim()===invoice)){
     document.getElementById("dup").style.display="block";
+
+    btn.innerText="تفعيل الضمان";
+    btn.disabled=false;
+    sending=false;
+
     return;
   } else document.getElementById("dup").style.display="none";
 
-  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone,invoice,type,start})
-  });
+  try{
+    await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,phone,invoice,type,start})
+    });
 
-  alert("⭐ تم تفعيل الضمان بنجاح");
+    alert("⭐ تم تفعيل الضمان بنجاح");
+  }
+  catch(e){
+    alert("حدث خطأ — حاول مرة أخرى");
+
+    btn.innerText="تفعيل الضمان";
+    btn.disabled=false;
+    sending=false;
+  }
 }
 
 async function check(){
