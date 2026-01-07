@@ -2,63 +2,88 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>ضمان أمواج</title>
-
-<meta name="viewport"
- content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>نظام ضمان أمواج</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <style>
 body{
-  font-family:sans-serif;
-  padding:20px;
-  background:linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
+  font-family: sans-serif;
+  padding: 18px;
+  background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
+
 .container{
-  max-width:540px;margin:auto;background:#fff;
-  padding:18px;border-radius:16px;
+  max-width:580px;
+  margin:auto;
+  background:#fff;
+  padding:18px;
+  border-radius:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-.logo{text-align:center;margin-bottom:12px}
-.logo img{width:135px}
 
-.tabs{display:flex;margin:6px 0 14px;}
-.tab{flex:1;text-align:center;padding:9px;border-radius:10px;cursor:pointer;
-background:#e9f2ff;font-weight:bold}
-.tab.active{background:#1e88e5;color:#fff}
-
-.section{display:none}
-.section.active{display:block}
-
-label{font-weight:bold;font-size:15px}
-input,select,button{
-  width:100%;padding:10px;margin:6px 0 14px;
-  border-radius:10px;border:1px solid #ccd6e6;
-  font-size:16px;   /* ← يمنع التكبير بالأيفون */
+/* تبويبات */
+.tabs button{
+  width:50%;
+  padding:10px;
+  border:0;
+  font-weight:bold;
+  cursor:pointer;
+  border-radius:10px;
 }
-button{background:#1e88e5;color:#fff;border:none}
+.activeTab{background:#1e88e5;color:#fff}
+.inactiveTab{background:#e9eef7;color:#444}
+
+.logo{text-align:center;margin-bottom:12px}
+.logo img{width:130px}
+
+label{font-weight:bold;font-size:14px}
+input,select,button{
+  width:100%;
+  padding:10px;
+  margin:6px 0 14px;
+  border-radius:10px;
+  border:1px solid #ccd6e6;
+  font-size:14px;
+}
+
+button{
+  background:#1e88e5;
+  color:#fff;
+  border:none;
+}
+
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:10px;
+  margin-top:14px;
+  text-decoration:none;
+}
 
 .result{
-  background:#e8f4ff;padding:12px;border-radius:10px;
-  display:none;font-size:15px
+  background:#e8f4ff;
+  padding:12px;
+  border-radius:10px;
+  display:none;
 }
-.timer-box{
-  background:#f5fbf2;border:1px solid #d6efcb;
-  padding:9px;border-radius:10px;margin-top:10px
+
+.msg-err{
+  display:none;
+  background:#fde7e7;
+  color:#b10606;
+  border:1px solid #f3bcbc;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+  font-weight:bold;
 }
-.msg{
-  padding:10px;border-radius:10px;
-  margin-top:-6px;margin-bottom:12px;
-  display:none
-}
-.msg.error{background:#ffecec;color:#b30000;border:1px solid #ffb3b3}
-.whatsapp{
-  background:#25D366;color:#fff;padding:11px;
-  display:block;text-align:center;border-radius:8px;
-  text-decoration:none;margin-top:14px
-}
-.footer{
-  text-align:center;margin-top:10px;font-size:14px;color:#333;
-}
+
+.footer{text-align:center;margin-top:10px;font-size:13px}
+
+.resultCheck{text-align:right;margin-top:12px}
 </style>
 </head>
 
@@ -71,118 +96,158 @@ button{background:#1e88e5;color:#fff;border:none}
 </div>
 
 <div class="tabs">
-  <div id="tab1" class="tab active" onclick="showTab(1)">تفعيل الضمان</div>
-  <div id="tab2" class="tab" onclick="showTab(2)">التحقق من الضمان</div>
+  <button id="tabActivate" class="activeTab" onclick="showTab('activate')">تفعيل الضمان</button>
+  <button id="tabCheck" class="inactiveTab" onclick="showTab('check')">التحقق من الضمان</button>
 </div>
 
-<!-- تفعيل -->
-<div id="sec1" class="section active">
+<!------------ تفعيل الضمان ------------>
+<div id="activate">
 
-<label>اسم الزبون</label>
-<input id="name">
+  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+  <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
-<label>رقم الهاتف</label>
-<input id="phone">
+  <label>اسم الزبون</label>
+  <input id="name" type="text">
 
-<label>رقم الفاتورة</label>
-<input id="invoice">
+  <label>رقم الهاتف</label>
+  <input id="phone" type="text">
 
-<label>نوع القطعة</label>
-<select id="type">
-  <option value="screen">شاشة</option>
-  <option value="battery">بطارية</option>
-</select>
+  <label>رقم الفاتورة</label>
+  <input id="invoice" type="text">
 
-<label>تاريخ التركيب (اليوم تلقائيًا)</label>
-<input id="start" readonly>
+  <label>نوع القطعة</label>
+  <select id="type">
+    <option value="screen">شاشة</option>
+    <option value="battery">بطارية</option>
+  </select>
 
-<div id="dupMsg" class="msg error"></div>
+  <label>تاريخ التركيب (اليوم تلقائياً)</label>
+  <input id="start" type="text" readonly style="background:#f7f9ff">
 
-<button onclick="sendData()">تفعيل الضمان</button>
+  <div id="dupMsg" class="msg-err">
+    ⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى
+  </div>
 
-<div id="result" class="result"></div>
+  <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
+
+  <div id="result" class="result"></div>
+
+  <div class="footer">
+    📞 للاستفسار: <b>7696</b><br>
+    شكراً لاختياركم أمواج لقطع غيار الأجهزة الجوالة 🌊
+  </div>
+
+  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
 </div>
 
-<!-- التحقق -->
-<div id="sec2" class="section">
-<input id="inv" placeholder="أدخل رقم الفاتورة">
-<button onclick="check()">بحث</button>
-<div id="out" class="result" style="display:block"></div>
-</div>
+<!------------ التحقق من الضمان ------------>
+<div id="check" style="display:none">
 
-<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-تواصل عبر واتساب
-</a>
+  <h3>تحقق من الضمان</h3>
 
-<div class="footer">
-📞 للاستفسار: <b>7696</b><br>
-شكراً لاختياركم <b>أمواج لقطع غيار الأجهزة الجوالة</b> 🌊
+  <input id="inv" placeholder="أدخل رقم الفاتورة">
+  <button onclick="check()">بحث</button>
+
+  <div id="out" class="resultCheck"></div>
 </div>
 
 </div>
 
 <script>
-function showTab(n){
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById("tab"+n).classList.add("active");
-  document.getElementById("sec"+n).classList.add("active");
+const SHEET =
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
+// Tabs
+function showTab(t){
+  document.getElementById("activate").style.display = (t==="activate")?"block":"none";
+  document.getElementById("check").style.display    = (t==="check")?"block":"none";
+  document.getElementById("tabActivate").className  = (t==="activate")?"activeTab":"inactiveTab";
+  document.getElementById("tabCheck").className     = (t==="check")?"activeTab":"inactiveTab";
 }
 
+// تاريخ اليوم
 function formatDate(d){
-  const dt=new Date(d);
-  return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`
+  let dt=new Date(d);
+  return String(dt.getDate()).padStart(2,'0')+"/"+
+         String(dt.getMonth()+1).padStart(2,'0')+"/"+
+         dt.getFullYear();
 }
 document.getElementById("start").value = formatDate(new Date());
 
-function gv(id){const el=document.getElementById(id);return el?(el.value||"").trim():"";}
-const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
-
+// التحقق من التكرار ثم الإرسال
 async function sendData(){
-  const msg=document.getElementById("dupMsg");
-  msg.style.display="none";msg.innerHTML="";
 
-  const data={name:gv("name"),phone:gv("phone"),invoice:gv("invoice"),type:gv("type"),start:gv("start")};
-  if(!data.name||!data.phone||!data.invoice){
-    msg.innerHTML="⚠ يرجى إدخال جميع الحقول";msg.style.display="block";return;
+  const btn = document.getElementById("btnActivate");
+  btn.disabled = true;
+  btn.innerText = "جاري التفعيل …";
+  document.getElementById("dupMsg").style.display="none";
+
+  const data = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    invoice: document.getElementById("invoice").value.trim(),
+    type: document.getElementById("type").value,
+    start: document.getElementById("start").value
+  };
+
+  if(!data.name || !data.phone || !data.invoice){
+    alert("الرجاء إدخال جميع الحقول");
+    btn.disabled=false; btn.innerText="تفعيل الضمان";
+    return;
   }
 
-  let text=await (await fetch(SHEET)).text();
-  let rows=text.split("\n").map(r=>r.split(","));
-  if(rows.find(r=>String(r[0]).trim()===data.invoice)){
-    msg.innerHTML="⚠ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى";
-    msg.style.display="block";return;
+  // فحص التكرار من الجدول
+  let res = await fetch(SHEET); 
+  let rows = (await res.text()).split("\n").map(r=>r.split(","));
+  let exists = rows.find(r => String(r[0]).trim() === data.invoice);
+
+  if(exists){
+    document.getElementById("dupMsg").style.display="block";
+    btn.disabled=false; btn.innerText="تفعيل الضمان";
+    return;
   }
 
-  let days=data.type==="screen"?30:365;
-  const [d,m,y]=data.start.split("/");
-  const expiry=new Date(`${y}-${m}-${d}`);expiry.setDate(expiry.getDate()+days);
+  // حساب انتهاء الضمان
+  let days = data.type==="screen"?30:365;
+  let [d,m,y]=data.start.split("/");
+  let s=new Date(`${y}-${m}-${d}`);
+  let e=new Date(s); e.setDate(e.getDate()+days);
 
-  const res=document.getElementById("result");
-  res.style.display="block";
-  res.innerHTML=`⭐ تم تفعيل الضمان ⭐<br><br>
-  تاريخ التفعيل: <b>${data.start}</b><br>
-  الانتهاء: <b>${formatDate(expiry)}</b>
-  <div id="timer" class="timer-box"></div>`;
+  document.getElementById("result").style.display="block";
+  document.getElementById("result").innerHTML =
+   `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
+    تاريخ التفعيل: <b>${data.start}</b><br>
+    انتهاء الضمان: <b>${formatDate(e)}</b>`;
 
-  setInterval(()=>{
-    const diff=expiry-new Date();
-    if(diff<=0){document.getElementById("timer").innerHTML="انتهى الضمان";return;}
-    document.getElementById("timer").innerHTML="الوقت المتبقي: <b>"+Math.floor(diff/86400000)+"</b> يوم";
-  },1000);
+  // إرسال للجدول
+  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  });
 
-  fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  btn.innerText="تم الإرسال ✔️";
 }
 
+// التحقق من الضمان
 async function check(){
-  let v=gv("inv"); if(!v) return alert("ادخل رقم الفاتورة");
-  let text=await (await fetch(SHEET)).text();
-  let rows=text.split("\n").map(r=>r.split(","));
-  let r=rows.find(r=>String(r[0]).trim()===v);
-  document.getElementById("out").innerHTML = r ?
-   `✔️ تم العثور على الضمان<br>الاسم:${r[1]}<br>الهاتف:${r[2]}<br>النوع:${r[3]}<br>تاريخ البدء:${r[4]}<br>الانتهاء:${r[5]}`
-   : "❌ لم يتم العثور على الفاتورة";
+  let v=document.getElementById("inv").value.trim();
+  if(!v) return alert("ادخل رقم الفاتورة");
+
+  let text = await (await fetch(SHEET)).text();
+  let rows = text.split("\n").map(r=>r.split(","));
+  let r = rows.find(r=>String(r[0]).trim()===v);
+
+  document.getElementById("out").innerHTML =
+    r ? `✔️ تم العثور على الضمان<br>
+         الاسم: ${r[1]}<br>
+         الهاتف: ${r[2]}<br>
+         النوع: ${r[3]}<br>
+         تاريخ البدء: ${r[4]}<br>
+         الانتهاء: ${r[5]}`
+      : "❌ لم يتم العثور على رقم الفاتورة";
 }
 </script>
+
 </body>
 </html>
