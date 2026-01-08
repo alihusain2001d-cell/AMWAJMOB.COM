@@ -102,7 +102,6 @@ function formatDate(d){
 }
 document.getElementById("start").value=formatDate(new Date());
 
-<script>
 async function sendData(){
 
   const btn = document.getElementById("btnActivate");
@@ -115,14 +114,13 @@ async function sendData(){
 
   try{
 
-    let data = {
-      name: document.getElementById("name").value.trim(),
-      phone: document.getElementById("phone").value.trim(),
-      invoice: document.getElementById("invoice").value.trim(),
-      type: document.getElementById("type").value,
-      start: document.getElementById("start").value
-    };
-
+   let data = {
+  name: document.getElementById("name").value.trim(),
+  phone: document.getElementById("phone").value.trim(),
+  invoice: document.getElementById("invoice").value.trim(),
+  type: document.getElementById("type").value,
+  start: document.getElementById("start").value
+};
     if(!data.name || !data.phone || !data.invoice){
       alert("أكمل جميع الحقول");
       btn.disabled = false;
@@ -130,7 +128,6 @@ async function sendData(){
       return;
     }
 
-    // جلب البيانات من الجدول
     let text = await (await fetch(SHEET)).text();
     let rows = text.split("\n").map(r => r.split(","));
 
@@ -142,16 +139,13 @@ async function sendData(){
       return;
     }
 
-    // حساب تاريخ الانتهاء
     let days = data.type === "screen" ? 30 : 365;
     let [d,m,y] = data.start.split("/");
     let endDate = new Date(y, m-1, d);
     endDate.setDate(endDate.getDate() + days);
 
-    let today = new Date();
-    let remainingDays = Math.ceil((endDate - today) / (1000*60*60*24));
+    let remainingDays = Math.ceil((endDate - new Date()) / (1000*60*60*24));
 
-    // عرض النتيجة
     result.style.display = "block";
     result.innerHTML = `
 تم التفعيل ✔️<br>
@@ -159,15 +153,11 @@ async function sendData(){
 ⏳ المتبقي: <b>${remainingDays}</b> يوم
 `;
 
-    // إرسال البيانات (بدون تعليق)
     fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        ...data,
-        end: formatDate(endDate)
-      })
-    }).catch(e => console.log(e));
+      body:JSON.stringify({...data, end: formatDate(endDate)})
+    });
 
     btn.innerText = "تم ✔️";
     btn.disabled = false;
@@ -179,7 +169,6 @@ async function sendData(){
   }
 }
 
-// التحقق من الضمان
 async function checkWarranty(){
 
   let v = document.getElementById("inv").value.trim();
@@ -198,27 +187,20 @@ async function checkWarranty(){
 
   if(r){
 
-    let endParts = r[5].split("/");
-    let endDate = new Date(endParts[2], endParts[1]-1, endParts[0]);
-    let today = new Date();
-    let remainingDays = Math.ceil((endDate - today) / (1000*60*60*24));
+    let [d,m,y] = r[5].split("/");
+    let endDate = new Date(y, m-1, d);
+    let remainingDays = Math.ceil((endDate - new Date()) / (1000*60*60*24));
 
-    let remainingText = remainingDays >= 0
-      ? `⏳ المتبقي: <b>${remainingDays}</b> يوم`
-      : `❌ الضمان منتهي`;
-
-    out.innerHTML = `
+ `= out.innerHTML 
 ✔️ تم العثور على الضمان<br>
 الاسم: ${r[1]}<br>
 الهاتف: ${r[2]}<br>
 النوع: ${r[3]}<br>
 تاريخ البدء: ${r[4]}<br>
 تاريخ الانتهاء: ${r[5]}<br>
-${remainingText}
+⏳ المتبقي: <b>${remainingDays}</b> يوم
 `;
-
   }else{
     out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
   }
 }
-</script>
