@@ -232,31 +232,55 @@ let remainingText = remainingDays >= 0
  }
 }
 
-async function checkWarranty(){
- let v=document.getElementById("inv").value.trim();
- let out=document.getElementById("out");
- if(!v){alert("أدخل رقم الفاتورة");return;}
+<script>
+async function check(){
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
- let r=rows.find(r=>r[0] && r[0].trim()===v);
- out.style.display="block";
+  let v = document.getElementById("inv").value.trim();
+  let out = document.getElementById("out");
 
- if(r){
-  let [d,m,y]=r[5].split("/");
-  let end=new Date(y,m-1,d);
-  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
-  out.innerHTML=`
-✔️ الضمان موجود<br>
+  if(!v){
+    alert("ادخل رقم الفاتورة");
+    return;
+  }
+
+  let text = await (await fetch(SHEET)).text();
+  let rows = text.split("\n").map(r => r.split(","));
+
+  let r = rows.find(r => String(r[0]).trim() === v);
+
+  out.style.display = "block";
+
+  if(r){
+
+    // قراءة تاريخ الانتهاء
+    let parts = r[5].trim().split(/[\/\-]/);
+    let endDate = new Date(parts[2], parts[1]-1, parts[0]);
+
+    // تاريخ اليوم بدون وقت
+    let today = new Date();
+    today.setHours(0,0,0,0);
+    endDate.setHours(0,0,0,0);
+
+    let diff = Math.round((endDate - today) / (1000*60*60*24));
+
+    let status =
+      diff >= 0
+      ? `⏳ المتبقي: <b>${diff + 1}</b> يوم`
+      : `❌ الضمان منتهي`;
+
+    out.innerHTML = `
+✔️ تم العثور على الضمان<br>
 الاسم: ${r[1]}<br>
 الهاتف: ${r[2]}<br>
 النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
-${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
+تاريخ البدء: ${r[4]}<br>
+تاريخ الانتهاء: ${r[5]}<br>
+${status}
 `;
- }else{
-  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
- }
+
+  }else{
+    out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
+  }
 }
 </script>
 
