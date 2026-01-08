@@ -213,10 +213,20 @@ async function sendData(){
   let s=new Date(`${y}-${m}-${d}`);
   let e=new Date(s); e.setDate(e.getDate()+days);
 
-  result.style.display="block";
-  result.innerHTML=`تم التفعيل ✔️<br>الانتهاء: ${formatDate(e)}`;
+// حساب الأيام المتبقية
+let today = new Date();
+let diffTime = e.getTime() - today.getTime();
+let remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  usedInvoices.add(data.invoice);
+result.style.display = "block";
+result.innerHTML = `
+تم التفعيل ✔️<br>
+الانتهاء: <b>${formatDate(e)}</b><br>
+⏳ المتبقي: <b>${remainingDays}</b> يوم
+`;
+
+// منع التكرار
+usedInvoices.add(data.invoice);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
