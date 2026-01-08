@@ -245,40 +245,50 @@ function showDup(m){
  dupMsg.style.display="block";
 }
 
-async function checkWarranty(){
- let v=inv.value.trim();
- if(!v) return alert("أدخل رقم الفاتورة");
+// التحقق من الضمان
+async function check(){
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
- let r=rows.find(r=>r[0]==v);
+  let v = document.getElementById("inv").value.trim();
+  if(!v){
+    alert("ادخل رقم الفاتورة");
+    return;
+  }
 
-out.style.display = "block";
+  // جلب البيانات
+  let text = await (await fetch(SHEET)).text();
+  let rows = text.split("\n").map(r => r.split(","));
 
-if(r){
-  // حساب الأيام المتبقية
-  let [d,m,y] = r[5].split("/");
-  let endDate = new Date(`${y}-${m}-${d}`);
-  let today = new Date();
-  let diffTime = endDate.getTime() - today.getTime();
-  let remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  let r = rows.find(r => String(r[0]).trim() === v);
 
+  let out = document.getElementById("out");
+  out.style.display = "block";
 
-let remainingText = remainingDays >= 0
-  ? `⏳ المتبقي: <b>${remainingDays}</b> يوم`
-  : `❌ الضمان منتهي`;
+  if(r){
 
-  `= out.innerHTML
-✔️ موجود<br>
+    // حساب الأيام المتبقية
+    let endParts = r[5].trim().split(/[\/\-]/); // يدعم / أو -
+    let endDate = new Date(endParts[2], endParts[1]-1, endParts[0]);
+    let today = new Date();
+    let diffTime = endDate - today;
+    let remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    let remainingText = remainingDays >= 0
+      ? `⏳ المتبقي: <b>${remainingDays}</b> يوم`
+      : `❌ الضمان منتهي`;
+
+    out.innerHTML = `
+✔️ تم العثور على الضمان<br>
 الاسم: ${r[1]}<br>
 الهاتف: ${r[2]}<br>
 النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
+تاريخ البدء: ${r[4]}<br>
+تاريخ الانتهاء: ${r[5]}<br>
 ${remainingText}
 `;
-}else{
-  out.innerHTML = "❌ رقم الفاتورة غير مسجل";
-}
+
+  }else{
+    out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
+  }
 </script>
 
 </body>
