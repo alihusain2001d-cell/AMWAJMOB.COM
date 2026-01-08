@@ -203,15 +203,12 @@ async function sendData(){
   let end=new Date(y, m-1, d);
   end.setDate(end.getDate()+days);
 
-  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+let remainingDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  result.style.display="block";
-  result.innerHTML=`
-✔️ تم تفعيل الضمان<br>
-تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
-⏳ المتبقي: <b>${remaining}</b> يوم
-`;
-
+let remainingText = remainingDays >= 0
+  ? `⏳ المتبقي: <b>${remainingDays + 1}</b> يوم`
+  : `❌ الضمان منتهي`;
+   
   usedInvoices.add(invoice);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
