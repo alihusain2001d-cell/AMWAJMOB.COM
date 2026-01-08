@@ -134,15 +134,19 @@ button{background:#1e88e5;color:#fff;border:none}
 </div>
 
 <script>
-const SHEET="https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
-let usedInvoices=new Set();
+const SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
+let usedInvoices = new Set();
 
 function openAct(){show("activate")}
 function openChk(){show("check")}
 function backHome(){show("home")}
 
 function show(id){
- ["home","activate","check"].forEach(d=>document.getElementById(d).style.display="none");
+ ["home","activate","check"].forEach(d=>{
+   document.getElementById(d).style.display="none";
+ });
  document.getElementById(id).style.display="block";
 }
 
@@ -150,59 +154,92 @@ function formatDate(d){
  let x=new Date(d);
  return String(x.getDate()).padStart(2,'0')+"/"+String(x.getMonth()+1).padStart(2,'0')+"/"+x.getFullYear();
 }
-document.getElementById("start").value=formatDate(new Date());
+document.getElementById("start").value = formatDate(new Date());
 
 async function sendData(){
- const btn=btnActivate,result=document.getElementById("result"),dupMsg=document.getElementById("dupMsg");
- btn.disabled=true;btn.innerText="جاري التفعيل…";dupMsg.style.display="none";
+ const btn=document.getElementById("btnActivate");
+ const result=document.getElementById("result");
+ const dupMsg=document.getElementById("dupMsg");
+
+ btn.disabled=true;
+ btn.innerText="جاري التفعيل…";
+ dupMsg.style.display="none";
+
  try{
-  let name=nameInput=name.value.trim(),
-      phoneVal=phone.value.trim(),
-      invoiceVal=invoice.value.trim(),
-      typeVal=type.value,
-      startVal=start.value;
-  if(!name||!phoneVal||!invoiceVal) throw alert("أكمل جميع الحقول");
-  if(usedInvoices.has(invoiceVal)) throw dupMsg.innerText="⚠️ رقم الفاتورة مفعل مسبقاً",dupMsg.style.display="block";
+  let name=document.getElementById("name").value.trim();
+  let phone=document.getElementById("phone").value.trim();
+  let invoice=document.getElementById("invoice").value.trim();
+  let type=document.getElementById("type").value;
+  let start=document.getElementById("start").value;
 
-  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[0]&&r[0].trim()===invoiceVal))
-    throw dupMsg.innerText="⚠️ رقم الفاتورة موجود مسبقاً",dupMsg.style.display="block";
+  if(!name || !phone || !invoice){
+    alert("أكمل جميع الحقول");
+    throw "stop";
+  }
 
-  let days=typeVal==="screen"?30:365;
-  let [d,m,y]=startVal.split("/");
-  let end=new Date(y,m-1,d); end.setDate(end.getDate()+days);
+  let days = type==="screen" ? 30 : 365;
+  let [d,m,y]=start.split("/");
+  let end=new Date(y, m-1, d);
+  end.setDate(end.getDate()+days);
 
-  let today=new Date(); today.setHours(0,0,0,0); end.setHours(0,0,0,0);
-  let remaining=Math.round((end-today)/(1000*60*60*24))+1;
+  let today=new Date();
+  today.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+
+  let remaining=Math.ceil((end-today)/(1000*60*60*24));
+  if(remaining < 0) remaining = 0;
 
   result.style.display="block";
-  result.innerHTML=`✔️ تم تفعيل الضمان<br>الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم`;
-  usedInvoices.add(invoiceVal);
+  result.innerHTML=`
+✔️ تم تفعيل الضمان<br>
+📅 تاريخ البدء: <b>${start}</b><br>
+📅 تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
+⏳ المتبقي: <b>${remaining}</b> يوم
+`;
 
-  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone:phoneVal,invoice:invoiceVal,type:typeVal,start:startVal,end:formatDate(end)})
-  });
+  btn.innerText="تم ✔️";
+  btn.disabled=false;
 
-  btn.innerText="تم ✔️";btn.disabled=false;
- }catch(e){btn.innerText="تفعيل الضمان";btn.disabled=false;}
+ }catch(e){
+  btn.innerText="تفعيل الضمان";
+  btn.disabled=false;
+ }
 }
 
 async function checkWarranty(){
- let v=inv.value.trim(),out=document.getElementById("out");
- if(!v) return alert("أدخل رقم الفاتورة");
+ let v=document.getElementById("inv").value.trim();
+ let out=document.getElementById("out");
+ if(!v){alert("أدخل رقم الفاتورة");return;}
+
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
- let r=rows.find(r=>r[0]&&r[0].trim()===v);
+ let r=rows.find(r=>r[0] && r[0].trim()===v);
  out.style.display="block";
+
  if(r){
   let [d,m,y]=r[5].split("/");
   let end=new Date(y,m-1,d);
-  let today=new Date(); today.setHours(0,0,0,0); end.setHours(0,0,0,0);
-  let remaining=Math.round((end-today)/(1000*60*60*24))+1;
-  out.innerHTML=`✔️ الضمان موجود<br>الاسم: ${r[1]}<br>الهاتف: ${r[2]}<br>النوع: ${r[3]}<br>البدء: ${r[4]}<br>الانتهاء: ${r[5]}<br>${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}`;
- }else out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+
+  let today=new Date();
+  today.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+
+  let remaining=Math.ceil((end-today)/(1000*60*60*24));
+  if(remaining < 0) remaining = 0;
+
+  out.innerHTML=`
+✔️ الضمان موجود<br>
+الاسم: ${r[1]}<br>
+الهاتف: ${r[2]}<br>
+النوع: ${r[3]}<br>
+تاريخ البدء: ${r[4]}<br>
+تاريخ الانتهاء: ${r[5]}<br>
+⏳ المتبقي: <b>${remaining}</b> يوم
+`;
+ }else{
+  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+ }
 }
 </script>
+
 </body>
 </html>
