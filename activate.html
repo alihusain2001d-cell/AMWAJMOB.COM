@@ -252,10 +252,31 @@ async function checkWarranty(){
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
  let r=rows.find(r=>r[0]==v);
 
- out.style.display="block";
- out.innerHTML=r?
- `✔️ موجود<br>الاسم:${r[1]}<br>الهاتف:${r[2]}<br>النوع:${r[3]}<br>البدء:${r[4]}<br>الانتهاء:${r[5]}`
- :"❌ هذا الرقم غير موجود";
+out.style.display = "block";
+
+if(r){
+  // حساب الأيام المتبقية
+  let [d,m,y] = r[5].split("/");
+  let endDate = new Date(`${y}-${m}-${d}`);
+  let today = new Date();
+  let diffTime = endDate.getTime() - today.getTime();
+  let remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let remainingText = remainingDays >= 0
+    ? `⏳ المتبقي: <b>${remainingDays}</b> يوم`
+    : `❌ الضمان منتهي`;
+
+  out.innerHTML = `
+  ✔️ موجود<br>
+  الاسم: ${r[1]}<br>
+  الهاتف: ${r[2]}<br>
+  النوع: ${r[3]}<br>
+  البدء: ${r[4]}<br>
+  الانتهاء: ${r[5]}<br>
+  ${remainingText}
+  `;
+}else{
+  out.innerHTML = "❌ رقم الفاتورة هذا غير مسجل";
 }
 </script>
 
