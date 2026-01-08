@@ -30,7 +30,6 @@ body{
 .logo{text-align:center;margin-bottom:12px}
 .logo img{width:140px}
 
-/* أزرار البداية */
 .bigbtn{
   width:100%;
   padding:14px;
@@ -109,7 +108,6 @@ button{background:#1e88e5;color:#fff;border:none}
   <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
 
   <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
-  <p>الرجاء إدخال البيانات لتفعيل الضمان:</p>
 
   <label>اسم الزبون</label>
   <input id="name">
@@ -126,8 +124,8 @@ button{background:#1e88e5;color:#fff;border:none}
     <option value="battery">بطارية</option>
   </select>
 
-  <label>تاريخ التركيب (اليوم تلقائياً)</label>
-  <input id="start" readonly style="background:#f7f9ff">
+  <label>تاريخ التركيب</label>
+  <input id="start" readonly>
 
   <div id="dupMsg" class="msg-err"></div>
 
@@ -137,17 +135,17 @@ button{background:#1e88e5;color:#fff;border:none}
 
   <div class="footer">
 📞 للاستفسار:
-<a href="tel:7696" style="font-weight:bold; color:#1e88e5; text-decoration:none;">
-  7696
-</a>
-<br>
-شكراً لاختياركم أمواج لقطع غيار الأجهزة الجوالة 🌊
-    
-  <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
-تواصل عبر واتساب
-  </a>
-</div>
+<a href="tel:7696" style="font-weight:bold;color:#1e88e5;text-decoration:none">7696</a><br>
+شكراً لاختياركم أمواج 🌊
 
+<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
+تواصل عبر واتساب
+</a>
+  </div>
+
+</div> <!-- نهاية activate -->
+
+<!-- التحقق -->
 <div id="check" style="display:none">
 
   <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
@@ -155,7 +153,7 @@ button{background:#1e88e5;color:#fff;border:none}
   <h3>تحقق من الضمان</h3>
 
   <input id="inv" placeholder="أدخل رقم الفاتورة">
-  <button onclick="check()">بحث</button>
+  <button onclick="checkWarranty()">بحث</button>
 
   <div id="out" class="result"></div>
 
@@ -165,117 +163,89 @@ button{background:#1e88e5;color:#fff;border:none}
 const SHEET =
  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
 
-function openAct(){show('activate')}
-function openChk(){show('check')}
-function backHome(){show('home')}
+function openAct(){show("activate")}
+function openChk(){show("check")}
+function backHome(){show("home")}
 
 function show(id){
- document.getElementById("home").style.display="none";
- document.getElementById("activate").style.display="none";
- document.getElementById("check").style.display="none";
+ ["home","activate","check"].forEach(d=>{
+   document.getElementById(d).style.display="none";
+ });
  document.getElementById(id).style.display="block";
 }
 
-// التاريخ اليوم
 function formatDate(d){
- let dt=new Date(d);
- return String(dt.getDate()).padStart(2,'0')+"/"+
-        String(dt.getMonth()+1).padStart(2,'0')+"/"+
-        dt.getFullYear();
+ let x=new Date(d);
+ return String(x.getDate()).padStart(2,'0')+"/"+String(x.getMonth()+1).padStart(2,'0')+"/"+x.getFullYear();
 }
-document.getElementById("start").value = formatDate(new Date());
+document.getElementById("start").value=formatDate(new Date());
 
-// كاش داخلي لمنع إرسال نفس الرقم مرة ثانية
-let usedInvoices = new Set();
+let usedInvoices=new Set();
 
 async function sendData(){
+ try{
+  const btn=document.getElementById("btnActivate");
+  btn.disabled=true; btn.innerText="جاري التفعيل…";
 
- const btn=document.getElementById("btnActivate");
- btn.disabled=true;
- btn.innerText="جاري التفعيل …";
- document.getElementById("dupMsg").style.display="none";
+  const data={
+    name:name.value.trim(),
+    phone:phone.value.trim(),
+    invoice:invoice.value.trim(),
+    type:type.value,
+    start:start.value
+  };
 
- const data={
-   name:document.getElementById("name").value.trim(),
-   phone:document.getElementById("phone").value.trim(),
-   invoice:document.getElementById("invoice").value.trim(),
-   type:document.getElementById("type").value,
-   start:document.getElementById("start").value
- };
+  if(!data.name||!data.phone||!data.invoice){
+    alert("أكمل جميع الحقول"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
+  }
 
- if(!data.name||!data.phone||!data.invoice){
-   alert("الرجاء إدخال جميع الحقول");
-   btn.disabled=false; btn.innerText="تفعيل الضمان";
-   return;
+  if(usedInvoices.has(data.invoice)){
+    showDup("هذا الرقم مستخدم"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
+  }
+
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+  if(rows.find(r=>r[0]==data.invoice)){
+    showDup("الفاتورة مسجلة مسبقاً"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
+  }
+
+  let days=data.type==="screen"?30:365;
+  let [d,m,y]=data.start.split("/");
+  let s=new Date(`${y}-${m}-${d}`);
+  let e=new Date(s); e.setDate(e.getDate()+days);
+
+  result.style.display="block";
+  result.innerHTML=`تم التفعيل ✔️<br>الانتهاء: ${formatDate(e)}`;
+
+  usedInvoices.add(data.invoice);
+
+  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({...data,end:formatDate(e)})
+  });
+
+  btn.innerText="تم ✔️"; btn.disabled=false;
+ }catch(err){
+  alert("خطأ: "+err.message);
  }
-
- // منع الإرسال المكرر فورياً
- if(usedInvoices.has(data.invoice)){
-   showDup("⚠️ هذا الرقم تم إرساله — يرجى عدم التكرار");
-   btn.disabled=false; btn.innerText="تفعيل الضمان";
-   return;
- }
-
- // فحص من الجدول
- let res=await fetch(SHEET);
- let rows=(await res.text()).split("\n").map(r=>r.split(","));
- if(rows.find(r=>String(r[0]).trim()===data.invoice)){
-   showDup("⚠️ هذا رقم الفاتورة مُسجل مسبقاً — لا يمكن تفعيله مرة أخرى");
-   btn.disabled=false; btn.innerText="تفعيل الضمان";
-   return;
- }
-
- // حساب الانتهاء
- let days=data.type==="screen"?30:365;
- let [d,m,y]=data.start.split("/");
- let s=new Date(`${y}-${m}-${d}`);
- let e=new Date(s); e.setDate(e.getDate()+days);
-
- document.getElementById("result").style.display="block";
- document.getElementById("result").innerHTML=
- `⭐ تم تفعيل الضمان بنجاح ⭐<br><br>
-  تاريخ التفعيل: <b>${data.start}</b><br>
-  انتهاء الضمان: <b>${formatDate(e)}</b>`;
-
- // سجل الفاتورة محلياً حتى لا يعاد إرسالها
- usedInvoices.add(data.invoice);
-
- // إرسال
- await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-   method:"POST",
-   headers:{"Content-Type":"application/json"},
-   body:JSON.stringify(data)
- });
-
- btn.innerText="تم الإرسال ✔️";
- btn.disabled=false;
 }
 
-function showDup(msg){
- let d=document.getElementById("dupMsg");
- d.innerHTML=msg;
- d.style.display="block";
+function showDup(m){
+ dupMsg.innerText=m;
+ dupMsg.style.display="block";
 }
 
-// التحقق
-async function check(){
- let v=document.getElementById("inv").value.trim();
- if(!v) return alert("ادخل رقم الفاتورة");
+async function checkWarranty(){
+ let v=inv.value.trim();
+ if(!v) return alert("أدخل رقم الفاتورة");
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
- let r=rows.find(r=>String(r[0]).trim()===v);
+ let r=rows.find(r=>r[0]==v);
 
- let out=document.getElementById("out");
  out.style.display="block";
-
- out.innerHTML = r ?
- `✔️ تم العثور على الضمان<br>
-  الاسم: ${r[1]}<br>
-  الهاتف: ${r[2]}<br>
-  النوع: ${r[3]}<br>
-  تاريخ البدء: ${r[4]}<br>
-  الانتهاء: ${r[5]}`
- : "❌ لم يتم العثور على رقم الفاتورة";
+ out.innerHTML=r?
+ `✔️ موجود<br>الاسم:${r[1]}<br>الهاتف:${r[2]}<br>النوع:${r[3]}<br>البدء:${r[4]}<br>الانتهاء:${r[5]}`
+ :"❌ غير موجود";
 }
 </script>
 
