@@ -136,7 +136,7 @@ button{background:#1e88e5;color:#fff;border:none}
   <div class="footer">
 📞 للاستفسار:
 <a href="tel:7696" style="font-weight:bold;color:#1e88e5;text-decoration:none">7696</a><br>
-شكراً لاختياركم أمواج 🌊
+شكراً لاختياركم أمواج للألكترونيات 🌊
 
 <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">
 تواصل عبر واتساب
@@ -187,25 +187,25 @@ async function sendData(){
   const btn=document.getElementById("btnActivate");
   btn.disabled=true; btn.innerText="جاري التفعيل…";
 
-  const data={
-    name:name.value.trim(),
-    phone:phone.value.trim(),
-    invoice:invoice.value.trim(),
-    type:type.value,
-    start:start.value
-  };
+ const data={
+  name:document.getElementById("name").value.trim(),
+  phone:document.getElementById("phone").value.trim(),
+  invoice:document.getElementById("invoice").value.trim(),
+  type:document.getElementById("type").value,
+  start:document.getElementById("start").value
+};
 
   if(!data.name||!data.phone||!data.invoice){
     alert("أكمل جميع الحقول"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
   }
 
   if(usedInvoices.has(data.invoice)){
-    showDup("هذا الرقم مستخدم"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
+    showDup("رقم الفاتورة مسجل مسبقأ"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
   }
 
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
   if(rows.find(r=>r[0]==data.invoice)){
-    showDup("الفاتورة مسجلة مسبقاً"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
+    showDup("رقم الفاتورة مسجل مسبقاً"); btn.disabled=false; btn.innerText="تفعيل الضمان"; return;
   }
 
   let days=data.type==="screen"?30:365;
@@ -245,7 +245,7 @@ async function checkWarranty(){
  out.style.display="block";
  out.innerHTML=r?
  `✔️ موجود<br>الاسم:${r[1]}<br>الهاتف:${r[2]}<br>النوع:${r[3]}<br>البدء:${r[4]}<br>الانتهاء:${r[5]}`
- :"❌ غير موجود";
+ :"❌ هذا الرقم غير موجود";
 }
 </script>
 
