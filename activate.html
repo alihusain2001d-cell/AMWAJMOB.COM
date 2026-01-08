@@ -75,10 +75,29 @@ button{background:#1e88e5;color:#fff;border:none}
   margin-top:14px;
   text-decoration:none;
 }
+
 </style>
 </head>
-
 <body>
+
+<script>
+function normalizeNumber(str) {
+  if (!str) return "";
+  return str
+    .replace(/٠/g,"0")
+    .replace(/١/g,"1")
+    .replace(/٢/g,"2")
+    .replace(/٣/g,"3")
+    .replace(/٤/g,"4")
+    .replace(/٥/g,"5")
+    .replace(/٦/g,"6")
+    .replace(/٧/g,"7")
+    .replace(/٨/g,"8")
+    .replace(/٩/g,"9");
+}
+</script>
+
+
 <div class="container">
 
 <div class="logo">
@@ -176,7 +195,9 @@ async function sendData(){
  try{
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
-  let invoice=document.getElementById("invoice").value.trim();
+ let invoice = normalizeNumber(
+  document.getElementById("invoice").value.trim()
+);
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
 
@@ -230,12 +251,16 @@ async function sendData(){
 }
 
 async function checkWarranty(){
- let v=document.getElementById("inv").value.trim();
+ let v = normalizeNumber(
+  document.getElementById("inv").value.trim()
+);
  let out=document.getElementById("out");
  if(!v){alert("أدخل رقم الفاتورة");return;}
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
- let r=rows.find(r=>r[0] && r[0].trim()===v);
+let r = rows.find(r =>
+  r[0] && normalizeNumber(r[0].trim()) === v
+);
  out.style.display="block";
 
  if(r){
