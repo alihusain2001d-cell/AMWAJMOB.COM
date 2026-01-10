@@ -272,10 +272,12 @@ try {
       messaging_product: "whatsapp",
       to: waPhone,
       type: "text",
-      text: {
-        body:
-          "شكراً لشرائكم من أمواج للإلكترونيات\n" +
-          "تم تفعيل الضمان بنجاح ✅\
+     text: {
+  body:
+    "شكراً لشرائكم من أمواج للإلكترونيات\n" +
+    "تم تفعيل الضمان بنجاح\n" +
+    "تاريخ الانتهاء: " + formatDate(end)
+}
    
   usedInvoices.add(invoice);
 
