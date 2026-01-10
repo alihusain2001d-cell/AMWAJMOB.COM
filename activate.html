@@ -36,6 +36,7 @@ body{
   font-weight:bold;
   cursor:pointer;
 }
+  
 .big1{background:#1e88e5;color:#fff}
 .big2{background:#6c7d90;color:#fff}
 label{font-weight:bold;font-size:14px}
@@ -75,7 +76,15 @@ button{background:#1e88e5;color:#fff;border:none}
   margin-top:14px;
   text-decoration:none;
 }
-
+.warranty-note{
+  margin-top:10px;
+  padding:8px 12px;
+  background:#fff3cd;   /* أصفر هادئ */
+  color:#856404;        /* واضح ومقروء */
+  border-radius:8px;
+  font-size:14px;
+  text-align:center;
+}
 </style>
 </head>
 <body>
@@ -227,12 +236,24 @@ async function sendData(){
   let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
 
   result.style.display="block";
-  result.innerHTML=`
+result.innerHTML = `
 ✔️ تم تفعيل الضمان<br>
 تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
 ⏳ المتبقي: <b>${remaining}</b> يوم
-`;
 
+<div style="
+  margin-top:10px;
+  padding:8px 12px;
+  background:#fff3cd;
+  color:#856404;
+  border-radius:8px;
+  font-size:14px;
+  text-align:center;
+">
+⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
+</div>
+`;
+   
   usedInvoices.add(invoice);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
