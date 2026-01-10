@@ -254,6 +254,28 @@ result.innerHTML = `
 ⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
 </div>
 `;
+
+// 📲 إرسال رسالة واتساب بعد نجاح التفعيل
+try {
+
+  let waPhone = phone.startsWith("0")
+    ? "964" + phone.slice(1)
+    : phone;
+
+  await fetch("https://graph.facebook.com/v18.0/PHONE_NUMBER_ID/messages", {
+    method: "POST",
+    headers: {
+     "Authorization": "Bearer EAAVZBpkONei0BQaRidbKVvOWh2CVZAlhMB1AOft1CJKI6iiptZBpc3EX7MM2KjBZB8UR5ub66a9L1B8ZCZBQuJoFzKLzveYNFZA6088jO82y8kLTfJXOaZCJUYZCjn8DJLuTmF1kKNKkgvvFZCbVyaVNkrkBwOWgniZAIpxnRqWZCgWSUjnFaxn2L8It6TEyYo3NZADGW5AZDZD",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: waPhone,
+      type: "text",
+      text: {
+        body:
+          "شكراً لشرائكم من أمواج للإلكترونيات\n" +
+          "تم تفعيل الضمان بنجاح ✅\
    
   usedInvoices.add(invoice);
 
