@@ -457,9 +457,10 @@ function renderPrices(){
   console.log("Active brands:", activeBrands);
   console.log("Sheet brands:", pricesData.map(p => p.brand));
 
-  const filtered = pricesData.filter(p =>
-    activeBrands.includes(p.brand)
-  );
+ const filtered = pricesData.filter(p =>
+  activeBrands.map(b => b.toLowerCase().trim())
+    .includes(p.brand.toLowerCase().trim())
+);
 
   if(filtered.length === 0){
     box.innerHTML = "<div class='price-card unavailable'>مواد لهذا البراند غير متوفرة</div>";
