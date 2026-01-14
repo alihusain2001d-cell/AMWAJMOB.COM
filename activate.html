@@ -449,6 +449,7 @@ async function loadPrices(){
 }
 
 /* عرض الأسعار */
+<script>
 function renderPrices(){
   const box = document.getElementById("pricesBox");
   box.innerHTML = "";
@@ -458,7 +459,7 @@ function renderPrices(){
   );
 
   if(filtered.length === 0){
-    box.innerHTML = "<div class='unavailable'>لا توجد أسعار</div>";
+    box.innerHTML = "<div class='price-card unavailable'>لا توجد مواد لهذا البراند</div>";
     return;
   }
 
@@ -466,19 +467,32 @@ function renderPrices(){
     const available = p.qty && Number(p.qty) > 0;
 
     box.innerHTML += `
-      <div class="price-card">
-        <div class="name">${p.name}</div>
-        <div class="type">${p.type}</div>
+      <div class="price-card" style="
+        background:#f5f7fa;
+        border-radius:12px;
+        padding:12px;
+        margin-bottom:10px;
+        border:1px solid #e0e0e0;
+      ">
+        <div style="font-weight:bold;font-size:16px">${p.name}</div>
+        <div style="opacity:.7;font-size:14px">${p.type}</div>
+
         ${
           available
-            ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
-            : `<div class="unavailable">غير متوفر</div>`
+            ? `<div style="color:#1e88e5;font-weight:bold;margin-top:6px">
+                ${Number(p.price).toLocaleString()} د.ع
+              </div>`
+            : `<div style="color:#b10606;font-weight:bold;margin-top:6px">
+                غير متوفر
+              </div>`
         }
-        ${p.notes ? `<div class="notes">${p.notes}</div>` : ""}
+
+        ${p.notes ? `<div style="font-size:13px;margin-top:4px">${p.notes}</div>` : ""}
       </div>
     `;
   });
 }
+
 
 /* ربط الأيقونات */
 document.querySelectorAll(".brand").forEach(el=>{
