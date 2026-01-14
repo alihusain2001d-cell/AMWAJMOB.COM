@@ -381,6 +381,15 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
  }
 }
 </script>
-
+<script>
+/* ربط الضغط على الماركات */
+document.querySelectorAll(".brand").forEach(el=>{
+  el.addEventListener("click",()=>{
+    activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
+    show("prices");
+    renderPrices();
+  });
+});
+</script>
 </body>
 </html>
