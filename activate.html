@@ -237,40 +237,76 @@ function normalizeNumber(str) {
 
 </div>
 <script>
-const PRICES_SHEET =
+const PRICES_اسعار =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
+
+<script>
+/* ====== أسعار الشاشات ====== */
 
 let pricesData = [];
 let activeBrands = [];
 
-// جلب البيانات
-async function loadPrices(){
-  const res = await fetch(PRICES_SHEET);
+async function loadPrices() {
+  const res = await fetch(PRICES_اسعار);
   const text = await res.text();
-  const rows = text.trim().split("\n").map(r=>r.split(","));
+  const rows = text.split("\n").map(r => r.split(","));
+  const headers = rows.shift();
 
-  rows.shift(); // حذف العناوين
-
-  pricesData = rows.map(r=>({
-    brand: r[0]?.trim(),
-    name: r[1]?.trim(),
-    type: r[2]?.trim(),
-    notes: r[3]?.trim(),
-    price: r[4]?.trim(),
-    qty: r[5]?.trim()
-  }));
+  pricesData = rows.map(r => {
+    let o = {};
+    headers.forEach((h,i)=>o[h.trim()] = (r[i]||"").trim());
+    return o;
+  });
 }
 
-// عند الضغط على ماركة
+function renderPrices() {
+  const box = document.getElementById("pricesBox");
+  box.innerHTML = "";
+
+  const filtered = pricesData.filter(p =>
+    activeBrands.includes(p.brand)
+  );
+
+  if(filtered.length === 0){
+    box.innerHTML = `<div class="price-card unavailable">لا توجد نتائج</div>`;
+    return;
+  }
+
+  filtered.forEach(p=>{
+    const available = p.qty && Number(p.qty) > 0;
+    box.innerHTML += `
+      <div class="price-card">
+        <div class="name">${p.name}</div>
+        <div class="type">${p.type}</div>
+        ${
+          available
+          ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
+          : `<div class="unavailable">غير متوفر</div>`
+        }
+        ${p.notes ? `<div class="notes">${p.notes}</div>` : ""}
+      </div>
+    `;
+  });
+}
+
+/* ربط الضغط على الماركات */
 document.querySelectorAll(".brand").forEach(el=>{
-  el.onclick = async ()=>{
-    if(pricesData.length===0) await loadPrices();
-    activeBrands = el.dataset.brand.split(",");
-    document.getElementById("searchInput").value="";
+  el.addEventListener("click", ()=>{
+    activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
+    show("prices");
     renderPrices();
-  };
+  });
 });
 
+loadPrices();
+</script>
+  <script>
+/* ====== نظام الضمان ====== */
+function openAct(){ show("activate"); }
+function openChk(){ show("check"); }
+function openPrices(){ show("prices"); }
+function backHome(){ show("home"); }
+</script>
 // عرض النتائج
 function renderPrices(){
   const q = document.getElementById("searchInput").value.toLowerCase();
