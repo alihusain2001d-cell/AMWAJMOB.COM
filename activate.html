@@ -307,19 +307,21 @@ function renderPrices(){
 // البحث
 document.getElementById("searchInput").addEventListener("input",renderPrices);
 </script>
-  // ربط الضغط على الماركات
+<script>
+/* ===== ربط الماركات بصفحة الأسعار ===== */
+let activeBrands = [];
+
 document.querySelectorAll(".brand").forEach(el => {
   el.addEventListener("click", () => {
-    const brands = el.dataset.brand
+    activeBrands = el.dataset.brand
       .split(",")
       .map(b => b.trim());
 
-    activeBrands = brands;   // خزّن البراندات المختارة
-    show("prices");          // ابقى بصفحة الأسعار
-    renderPrices();          // اعرض النتائج
+    show("prices");
+    renderPrices();
   });
 });
-<script>
+</script>
 const SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
