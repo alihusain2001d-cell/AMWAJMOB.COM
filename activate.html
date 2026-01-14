@@ -307,6 +307,16 @@ let usedInvoices = new Set();
 
 function openAct(){ show("activate"); }
 function openChk(){ show("check"); }
+  function openPrices(){
+  // نخفي الصفحة الرئيسية
+  document.getElementById("home").style.display = "none";
+
+  // نعرض قسم الماركات
+  document.getElementById("brandsSection").style.display = "block";
+
+  // نخفي الأسعار إلى أن يختار ماركة
+  document.getElementById("prices").style.display = "none";
+}
   function backToBrands(){
   document.getElementById("prices").style.display = "none";
   document.getElementById("brandsSection").style.display = "block";
