@@ -424,22 +424,25 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
   <script>
 const SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
+<script>
 let pricesData = [];
 let activeBrands = [];
 
+// تحميل البيانات من Google Sheets
 async function loadPrices(){
   const res = await fetch(SHEET);
   const text = await res.text();
-  const rows = text.trim().split("\n").map(r=>r.split(","));
+  const rows = text.trim().split("\n").map(r => r.split(","));
   const headers = rows.shift();
 
-  pricesData = rows.map(r=>{
+  pricesData = rows.map(r => {
     let o = {};
-    headers.forEach((h,i)=>o[h.trim()] = (r[i]||"").trim());
+    headers.forEach((h,i)=> o[h.trim()] = (r[i]||"").trim());
     return o;
   });
 }
 
+// عرض الأسعار
 function renderPrices(){
   const box = document.getElementById("pricesBox");
   box.innerHTML = "";
@@ -449,8 +452,7 @@ function renderPrices(){
   );
 
   if(filtered.length === 0){
-    box.innerHTML =
-      "<div class='price-card unavailable'>لا يوجد نتائج</div>";
+    box.innerHTML = "<div class='price-card unavailable'>لا توجد أسعار</div>";
     return;
   }
 
@@ -463,15 +465,27 @@ function renderPrices(){
         <div class="type">${p.type}</div>
         ${
           available
-          ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
-          : `<div class="unavailable">غير متوفر</div>`
+            ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
+            : `<div class="unavailable">غير متوفر</div>`
         }
         ${p.notes ? `<div class="notes">${p.notes}</div>` : ""}
       </div>
     `;
   });
 }
+
+// ربط الضغط على الأيقونات
+document.querySelectorAll(".brand").forEach(el=>{
+  el.addEventListener("click",()=>{
+    activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
+    show("prices");
+    renderPrices();
+  });
+});
+
+// تحميل الأسعار عند فتح الصفحة
 loadPrices();
+</script>
   
 /* ربط الضغط على الماركات */
 document.querySelectorAll(".brand").forEach(el=>{
