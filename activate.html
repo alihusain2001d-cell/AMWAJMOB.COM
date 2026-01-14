@@ -179,10 +179,16 @@ function normalizeNumber(str) {
   <div id="out" class="result"></div>
 </div>
 <div id="prices" style="display:none">
-
-  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+ <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
   <h3>أسعار الشاشات</h3>
-
+  
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="بحث عن الموديل..."
+    style="width:100%;margin:10px 0;padding:8px;"
+  >
+  <div id="pricesBox"></div>
 <div class="brands-grid">
 
   <div class="brand" data-brand="Apple">
@@ -381,7 +387,59 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
  }
 }
 </script>
-<script>
+
+  <script>
+const SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
+
+let pricesData = [];
+let activeBrands = [];
+
+async function loadPrices(){
+  const res = await fetch(SHEET);
+  const text = await res.text();
+  const rows = text.trim().split("\n").map(r=>r.split(","));
+  const headers = rows.shift();
+
+  pricesData = rows.map(r=>{
+    let o = {};
+    headers.forEach((h,i)=>o[h.trim()] = (r[i]||"").trim());
+    return o;
+  });
+}
+
+function renderPrices(){
+  const box = document.getElementById("pricesBox");
+  box.innerHTML = "";
+
+  const filtered = pricesData.filter(p =>
+    activeBrands.includes(p.brand)
+  );
+
+  if(filtered.length === 0){
+    box.innerHTML =
+      "<div class='price-card unavailable'>لا يوجد نتائج</div>";
+    return;
+  }
+
+  filtered.forEach(p=>{
+    const available = p.qty && Number(p.qty) > 0;
+
+    box.innerHTML += `
+      <div class="price-card">
+        <div class="name">${p.name}</div>
+        <div class="type">${p.type}</div>
+        ${
+          available
+          ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
+          : `<div class="unavailable">غير متوفر</div>`
+        }
+        ${p.notes ? `<div class="notes">${p.notes}</div>` : ""}
+      </div>
+    `;
+  });
+}
+loadPrices();
+  
 /* ربط الضغط على الماركات */
 document.querySelectorAll(".brand").forEach(el=>{
   el.addEventListener("click",()=>{
