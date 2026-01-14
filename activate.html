@@ -277,6 +277,27 @@ function normalizeNumber(str) {
 </div>
 <script>
 
+let activeBrands = [];
+
+// عند الضغط على ماركة
+document.querySelectorAll(".brand").forEach(el => {
+  el.addEventListener("click", () => {
+    activeBrands = el.dataset.brand.split(",").map(b => b.trim());
+    document.getElementById("brandsSection").style.display = "none";
+    document.getElementById("pricesSection").style.display = "block";
+    renderPrices();
+  });
+});
+
+// زر الرجوع
+function backToBrands(){
+  document.getElementById("pricesSection").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+  document.getElementById("pricesBox").innerHTML = "";
+  document.getElementById("searchInput").value = "";
+}
+</script>
+  
 const SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
