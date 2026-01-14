@@ -211,6 +211,7 @@ function normalizeNumber(str) {
   <button onclick="checkWarranty()">بحث</button>
   <div id="out" class="result"></div>
 </div>
+  
    <div id="pricesBox"></div>
 
     <div class="brands-grid">
@@ -306,7 +307,12 @@ let usedInvoices = new Set();
 
 function openAct(){ show("activate"); }
 function openChk(){ show("check"); }
-function openPrices(){ show("prices"); }
+  function backToBrands(){
+  document.getElementById("prices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+  document.getElementById("pricesBox").innerHTML = "";
+  document.getElementById("searchInput").value = "";
+}
 function backHome(){ show("home"); }
 
 function show(id){
