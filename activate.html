@@ -421,28 +421,34 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 }
 </script>
 
-  <script>
-const SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
-
 <script>
+/* رابط Google Sheets CSV */
+const PRICES_SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
 let pricesData = [];
 let activeBrands = [];
 
-// تحميل البيانات من Google Sheets
+/* تحميل البيانات */
 async function loadPrices(){
-  const res = await fetch(SHEET);
+  const res = await fetch(PRICES_SHEET);
   const text = await res.text();
+
   const rows = text.trim().split("\n").map(r => r.split(","));
-  const headers = rows.shift();
+  const headers = rows.shift(); // brand,name,type,notes,price,qty
 
   pricesData = rows.map(r => {
     let o = {};
-    headers.forEach((h,i)=> o[h.trim()] = (r[i]||"").trim());
+    headers.forEach((h,i)=>{
+      o[h.trim()] = (r[i] || "").trim();
+    });
     return o;
   });
+
+  console.log("Prices Loaded:", pricesData); // للتأكد
 }
 
-// عرض الأسعار
+/* عرض الأسعار */
 function renderPrices(){
   const box = document.getElementById("pricesBox");
   box.innerHTML = "";
@@ -452,7 +458,7 @@ function renderPrices(){
   );
 
   if(filtered.length === 0){
-    box.innerHTML = "<div class='price-card unavailable'>لا توجد أسعار</div>";
+    box.innerHTML = "<div class='unavailable'>لا توجد أسعار</div>";
     return;
   }
 
@@ -474,7 +480,7 @@ function renderPrices(){
   });
 }
 
-// ربط الضغط على الأيقونات
+/* ربط الأيقونات */
 document.querySelectorAll(".brand").forEach(el=>{
   el.addEventListener("click",()=>{
     activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
@@ -483,7 +489,7 @@ document.querySelectorAll(".brand").forEach(el=>{
   });
 });
 
-// تحميل الأسعار عند فتح الصفحة
+/* تحميل الأسعار عند فتح الصفحة */
 loadPrices();
 
 </script>
