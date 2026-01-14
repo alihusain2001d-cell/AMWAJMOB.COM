@@ -419,84 +419,58 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
   out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
  }
 }
-</script>
 
 <script>
-/* رابط Google Sheets CSV */
 const PRICES_SHEET =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
 let pricesData = [];
-let activeBrands = [];
 
-/* تحميل البيانات */
 async function loadPrices(){
   const res = await fetch(PRICES_SHEET);
   const text = await res.text();
-
   const rows = text.trim().split("\n").map(r => r.split(","));
-  const headers = rows.shift(); // brand,name,type,notes,price,qty
+  const headers = rows.shift().map(h => h.trim().toLowerCase());
 
-  pricesData = rows.map(r => {
+  pricesData = rows.map(r=>{
     let o = {};
-    headers.forEach((h,i)=>{
-      o[h.trim()] = (r[i] || "").trim();
-    });
+    headers.forEach((h,i)=> o[h] = (r[i]||"").trim());
     return o;
   });
 
-  console.log("Prices Loaded:", pricesData); // للتأكد
+  console.log("✅ prices loaded", pricesData);
 }
 
-/* عرض الأسعار */
-<script>
-function renderPrices(){
-  const box = document.getElementById("pricesBox");
-  box.innerHTML = "";
-
-  console.log("Active brands:", activeBrands);
-  console.log("Sheet brands:", pricesData.map(p => p.brand));
-
- const filtered = pricesData.filter(p =>
-  activeBrands.map(b => b.toLowerCase().trim())
-    .includes(p.brand.toLowerCase().trim())
-);
-
-  if(filtered.length === 0){
-    box.innerHTML = "<div class='price-card unavailable'>مواد لهذا البراند غير متوفرة</div>";
-    return;
-  }
-
-  filtered.forEach(p=>{
-    const available = p.qty && Number(p.qty) > 0;
-
-    box.innerHTML += `
-      <div class="price-card">
-        <div class="name">${p.name}</div>
-        <div class="type">${p.type}</div>
-        ${
-          available
-            ? `<div class="price">${Number(p.price).toLocaleString()} د.ع</div>`
-            : `<div class="unavailable">غير متوفر</div>`
-        }
-        ${p.notes ? `<div class="notes">${p.notes}</div>` : ""}
-      </div>
-    `;
-  });
-}
-
-/* ربط الأيقونات */
 document.querySelectorAll(".brand").forEach(el=>{
-  el.addEventListener("click",()=>{
-    activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
-    show("prices");
-    renderPrices();
-  });
+  el.onclick = ()=>{
+    const brands = el.dataset.brand.split(",").map(b=>b.trim());
+    console.log("👉 clicked:", brands);
+
+    const box = document.getElementById("pricesBox");
+    box.innerHTML = "";
+
+    const filtered = pricesData.filter(p =>
+      brands.includes(p.brand)
+    );
+
+    if(filtered.length === 0){
+      box.innerHTML = "لا توجد أسعار";
+      return;
+    }
+
+    filtered.forEach(p=>{
+      box.innerHTML += `
+        <div style="padding:10px;border:1px solid #ccc;margin:6px 0">
+          <b>${p.name}</b><br>
+          ${p.type}<br>
+          ${p.qty && Number(p.qty)>0 ? p.price+" د.ع" : "غير متوفر"}
+        </div>
+      `;
+    });
+  };
 });
 
-/* تحميل الأسعار عند فتح الصفحة */
 loadPrices();
-
 </script>
 </body>
 </html>
