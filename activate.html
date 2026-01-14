@@ -485,16 +485,7 @@ document.querySelectorAll(".brand").forEach(el=>{
 
 // تحميل الأسعار عند فتح الصفحة
 loadPrices();
-</script>
-  
-/* ربط الضغط على الماركات */
-document.querySelectorAll(".brand").forEach(el=>{
-  el.addEventListener("click",()=>{
-    activeBrands = el.dataset.brand.split(",").map(b=>b.trim());
-    show("prices");
-    renderPrices();
-  });
-});
+
 </script>
 </body>
 </html>
