@@ -118,8 +118,8 @@ function normalizeNumber(str) {
 <div id="home">
   <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
   <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
+  <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
 </div>
-
 <!-- التفعيل -->
 <div id="activate" style="display:none">
   <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
@@ -185,15 +185,19 @@ const SHEET =
 
 let usedInvoices = new Set();
 
-function openAct(){show("activate")}
-function openChk(){show("check")}
-function backHome(){show("home")}
+function openAct(){ show("activate"); }
+function openChk(){ show("check"); }
+function openPrices(){ show("prices"); }
+function backHome(){ show("home"); }
 
 function show(id){
- ["home","activate","check"].forEach(d=>{
-   document.getElementById(d).style.display="none";
- });
- document.getElementById(id).style.display="block";
+  const sections = ["home","activate","check","prices"];
+  sections.forEach(s=>{
+    const el = document.getElementById(s);
+    if(el) el.style.display="none";
+  });
+  const target = document.getElementById(id);
+  if(target) target.style.display="block";
 }
 
 function formatDate(d){
