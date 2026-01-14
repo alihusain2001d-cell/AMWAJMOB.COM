@@ -101,6 +101,39 @@ button{background:#1e88e5;color:#fff;border:none}
   font-weight:bold;
   color:#1e3a5f;
 }
+  .brand {
+  cursor: pointer;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 18px 10px;
+  text-align: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.brand:hover {
+  background: #e9eef5;
+  transform: scale(1.02);
+}
+
+.brand:active {
+  transform: scale(0.98);
+  background: #dfe6ef;
+}
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.brand small {
+  display: block;
+  font-weight: normal;
+  opacity: 0.7;
+  margin-top: 4px;
+}
 </style>
 </head>
 <body>
