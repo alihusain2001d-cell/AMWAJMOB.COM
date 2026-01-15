@@ -143,6 +143,42 @@ button{background:#1e88e5;color:#fff;border:none}
   opacity: 0.7;
   margin-top: 4px;
 }
+  .contact-bar{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  box-shadow: 0 -4px 12px rgba(0,0,0,.1);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.contact-phone{
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.contact-phone a{
+  color:#1e88e5;
+  text-decoration:none;
+  margin-right:4px;
+}
+
+.contact-whatsapp{
+  background:#25D366;
+  color:#fff;
+  text-align:center;
+  padding:12px;
+  border-radius:12px;
+  font-size:18px;
+  font-weight:bold;
+  text-decoration:none;
+}
 </style>
 </head>
 <body>
@@ -548,5 +584,20 @@ function backToBrands(){
 
 loadPrices();
 </script>
+  <!-- شريط التواصل السفلي -->
+<div class="contact-bar">
+  <div class="contact-phone">
+    📞 <span>للاستفسار:</span>
+    <a href="tel:7696">7696</a>
+  </div>
+
+  <a
+    class="contact-whatsapp"
+    href="https://wa.me/9647709000160"
+    target="_blank"
+  >
+    🟢 تواصل عبر واتساب
+  </a>
+</div>
 </body>
 </html>
