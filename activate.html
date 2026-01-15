@@ -211,6 +211,10 @@ function normalizeNumber(str) {
   <button onclick="checkWarranty()">بحث</button>
   <div id="out" class="result"></div>
 </div>
+
+
+
+  
 <div id="prices" style="display:none">
  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
   <h3>أسعار الشاشات</h3>
@@ -222,6 +226,7 @@ function normalizeNumber(str) {
     style="width:100%;margin:10px 0;padding:8px;"
   >
   <div id="pricesBox"></div>
+  <div id="brandsSection">
 <div class="brands-grid">
 
   <div class="brand" data-brand="Apple">
@@ -265,7 +270,7 @@ function normalizeNumber(str) {
   </div>
 
   <div class="brand" data-brand="Asus,RedMagic,Google">
-    اسوس + ريد ماجك + كوكل
+    ازوز + ريد ماجك + كوكل
     <small>Asus • RedMagic • Google</small>
   </div>
 
@@ -273,7 +278,7 @@ function normalizeNumber(str) {
     ZTE + Alcatel + TCL
     <small>ZTE • Alcatel • TCL • Blackview</small>
   </div>
-
+</div>
 </div>
 <script>
 
@@ -447,8 +452,16 @@ document.querySelectorAll(".brand").forEach(el=>{
     const brands = el.dataset.brand.split(",").map(b=>b.trim());
     console.log("👉 clicked:", brands);
 
-    const box = document.getElementById("pricesBox");
-    box.innerHTML = "";
+   document.getElementById("brandsSection").style.display = "none";
+document.getElementById("brandPrices").style.display = "block";
+
+const box = document.getElementById("brandPricesBox");
+box.innerHTML = "";
+    box.innerHTML = `
+  <h3 style="color:#1e88e5; margin:10px 0;">
+    أسعار ${brands.join(" / ")}
+  </h3>
+`;
 
     const filtered = pricesData.filter(p =>
       brands.includes(p.brand)
@@ -470,7 +483,11 @@ document.querySelectorAll(".brand").forEach(el=>{
     });
   };
 });
-
+  });
+function backToBrands() {
+  document.getElementById("brandPrices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+}
 loadPrices();
 </script>
 </body>
