@@ -475,7 +475,7 @@ function openBrand(el){
     return;
   }
 
-  filtered.forEach(p=>{
+filtered.forEach(p=>{
   box.innerHTML += `
     <div class="price-item" style="
       padding:12px;
@@ -483,31 +483,33 @@ function openBrand(el){
       margin:6px 0;
       border-radius:10px;
     ">
-  <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
-    ${p.name}
-  </div>
+      <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+        ${p.name}
+      </div>
 
-  <div style="margin-top:4px">
-    <b>النوع:</b> ${p.type || "-"}
-  </div>
+      <div style="margin-top:4px">
+        <b>النوع:</b> ${p.type || "-"}
+      </div>
 
-  <div style="margin-top:4px">
-    <b>السعر:</b>
-    ${
-      p.qty && Number(p.qty)>0
-      ? `<span style="color:#1e88e5;font-weight:bold">
-           ${formatPrice(p.price)} د.ع
-         </span>`
-      : `<span style="color:#c62828;font-weight:bold">
-           غير متوفر
-         </span>`
-    }
-  </div>
+      <div style="margin-top:4px">
+        <b>السعر:</b>
+        ${
+          p.qty && Number(p.qty)>0
+          ? `<span style="color:#1e88e5;font-weight:bold">
+               ${formatPrice(p.price)} د.ع
+             </span>`
+          : `<span style="color:#c62828;font-weight:bold">
+               غير متوفر
+             </span>`
+        }
+      </div>
 
-  <div style="margin-top:4px;color:#555">
-    <b>الملاحظات:</b> ${p.notes || "-"}
-  </div>
-</div>
+      <div style="margin-top:4px;color:#555">
+        <b>الملاحظات:</b> ${p.notes || "-"}
+      </div>
+    </div>
+  `;
+});
 
   function openPrices(){
   show("prices");
