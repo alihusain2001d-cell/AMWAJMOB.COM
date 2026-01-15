@@ -229,52 +229,52 @@ function normalizeNumber(str) {
   <div id="brandsSection">
 <div class="brands-grid">
 
-  <div class="brand" data-brand="Apple">
+  <div class="brand" data-brand="Apple"onclick="openBrand(this)">
     ايفون
     <small>iPhone</small>
   </div>
 
-  <div class="brand" data-brand="Samsung">
+  <div class="brand" data-brand="Samsung"onclick="openBrand(this)">
     سامسونج
     <small>Samsung</small>
   </div>
 
-  <div class="brand" data-brand="Huawei">
+  <div class="brand" data-brand="Huawei"onclick="openBrand(this)">
     هواوي
     <small>Huawei</small>
   </div>
 
-  <div class="brand" data-brand="Xiaomi">
+  <div class="brand" data-brand="Xiaomi"onclick="openBrand(this)">
     شاومي
     <small>Xiaomi</small>
   </div>
 
-  <div class="brand" data-brand="Redmi,Poco">
+  <div class="brand" data-brand="Redmi,Poco"onclick="openBrand(this)">
     ريدمي + بوكو
     <small>Redmi & Poco</small>
   </div>
 
-  <div class="brand" data-brand="Infinix,Tecno">
+  <div class="brand" data-brand="Infinix,Tecno"onclick="openBrand(this)">
     انفنكس + تكنو
     <small>Infinix & Tecno</small>
   </div>
 
-  <div class="brand" data-brand="Oppo,Realme">
+  <div class="brand" data-brand="Oppo,Realme"onclick="openBrand(this)">
     اوبو + ريلمي
     <small>Oppo & Realme</small>
   </div>
 
-  <div class="brand" data-brand="Vivo,Wiko">
+  <div class="brand" data-brand="Vivo,Wiko"onclick="openBrand(this)">
     فيفو + ويكو
     <small>Vivo & Wiko</small>
   </div>
 
-  <div class="brand" data-brand="Asus,RedMagic,Google">
+  <div class="brand" data-brand="Asus,RedMagic,Google"onclick="openBrand(this)">
     ازوز + ريد ماجك + كوكل
     <small>Asus • RedMagic • Google</small>
   </div>
 
-  <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview">
+  <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview"onclick="openBrand(this)">
     ZTE + Alcatel + TCL
     <small>ZTE • Alcatel • TCL • Blackview</small>
   </div>
@@ -446,44 +446,39 @@ async function loadPrices(){
 
   console.log("✅ prices loaded", pricesData);
 }
+function openBrand(el){
+  const brands = el.dataset.brand.split(",").map(b=>b.trim());
 
-document.querySelectorAll(".brand").forEach(el=>{
-  el.onclick = ()=>{
-    const brands = el.dataset.brand.split(",").map(b=>b.trim());
-    console.log("👉 clicked:", brands);
+  document.getElementById("prices").style.display = "block";
+  document.getElementById("brandsSection").style.display = "none";
+  document.getElementById("brandPrices").style.display = "block";
 
-   document.getElementById("brandsSection").style.display = "none";
-document.getElementById("brandPrices").style.display = "block";
+  const box = document.getElementById("brandPricesBox");
+  box.innerHTML = `
+    <h3 style="color:#1e88e5; margin:10px 0;">
+      أسعار ${brands.join(" / ")}
+    </h3>
+  `;
 
-const box = document.getElementById("brandPricesBox");
-box.innerHTML = "";
-    box.innerHTML = `
-  <h3 style="color:#1e88e5; margin:10px 0;">
-    أسعار ${brands.join(" / ")}
-  </h3>
-`;
+  const filtered = pricesData.filter(p =>
+    brands.map(b=>b.toLowerCase()).includes(p.brand.toLowerCase())
+  );
 
-    const filtered = pricesData.filter(p =>
-      brands.includes(p.brand)
-    );
+  if(filtered.length === 0){
+    box.innerHTML += "لا توجد أسعار";
+    return;
+  }
 
-    if(filtered.length === 0){
-      box.innerHTML = "لا توجد أسعار";
-      return;
-    }
-
-    filtered.forEach(p=>{
-      box.innerHTML += `
-        <div style="padding:10px;border:1px solid #ccc;margin:6px 0">
-          <b>${p.name}</b><br>
-          ${p.type}<br>
-          ${p.qty && Number(p.qty)>0 ? p.price+" د.ع" : "غير متوفر"}
-        </div>
-      `;
-    });
-  };
-});
+  filtered.forEach(p=>{
+    box.innerHTML += `
+      <div style="padding:10px;border:1px solid #ccc;margin:6px 0">
+        <b>${p.name}</b><br>
+        ${p.type}<br>
+        ${p.qty && Number(p.qty)>0 ? p.price+" د.ع" : "غير متوفر"}
+      </div>
+    `;
   });
+}
 function backToBrands() {
   document.getElementById("prices").style.display = "block";  
   document.getElementById("brandPrices").style.display = "none";
