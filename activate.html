@@ -358,11 +358,11 @@ function show(id){
   const target = document.getElementById(id);
   if(target) target.style.display="block";
 
-  // إخفاء شريط الاتصال فقط في صفحة الأسعار
-  const bar = document.getElementById("contactBar");
-  if(bar){
-    bar.style.display = (id === "prices") ? "none" : "block";
-  }
+ // اظهار شريط التواصل بكل الصفحات
+const bar = document.getElementById("contactBar");
+if(bar){
+  bar.style.display = "block";
+}
 }
 
 function formatDate(d){
@@ -602,7 +602,7 @@ loadPrices();
 }; 
 </script>
   <!-- شريط التواصل السفلي -->
-<div id="contactbar" class="contactbar">
+<div id="contactbar" class="contact-bar">
   <div class="contact-phone">
     📞 <span>للاستفسار:</span>
     <a href="tel:7696">7696</a>
