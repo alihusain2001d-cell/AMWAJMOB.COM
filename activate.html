@@ -226,6 +226,10 @@ function normalizeNumber(str) {
     style="width:100%;margin:10px 0;padding:8px;"
   >
   <div id="pricesBox"></div>
+  <div id="brandPrices" style="display:none">
+  <button onclick="backToBrands()" class="bigbtn big2">⬅ رجوع إلى الماركات</button>
+  <div id="brandPricesBox"></div>
+</div>
   <div id="brandsSection">
 <div class="brands-grid">
 
@@ -449,7 +453,6 @@ async function loadPrices(){
 function openBrand(el){
   const brands = el.dataset.brand.split(",").map(b=>b.trim());
 
-  document.getElementById("prices").style.display = "block";
   document.getElementById("brandsSection").style.display = "none";
   document.getElementById("brandPrices").style.display = "block";
 
@@ -461,17 +464,17 @@ function openBrand(el){
   `;
 
   const filtered = pricesData.filter(p =>
-    brands.map(b=>b.toLowerCase()).includes(p.brand.toLowerCase())
+    brands.map(b=>b.toLowerCase()).includes((p.brand||"").toLowerCase())
   );
 
   if(filtered.length === 0){
-    box.innerHTML += "لا توجد أسعار";
+    box.innerHTML += "<div style='padding:10px'>لا توجد أسعار</div>";
     return;
   }
 
   filtered.forEach(p=>{
     box.innerHTML += `
-      <div style="padding:10px;border:1px solid #ccc;margin:6px 0">
+      <div style="padding:10px;border:1px solid #ccc;margin:6px 0;border-radius:8px">
         <b>${p.name}</b><br>
         ${p.type}<br>
         ${p.qty && Number(p.qty)>0 ? p.price+" د.ع" : "غير متوفر"}
@@ -479,10 +482,17 @@ function openBrand(el){
     `;
   });
 }
-function backToBrands() {
-  document.getElementById("prices").style.display = "block";  
+  function openPrices(){
+  show("prices");
+
+  // نرجّع الأسعار على وضعها الطبيعي
+  document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
-document.getElementById("brandsSection").style.display = "block";
+}
+function backToBrands(){
+  document.getElementById("brandPrices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+}
 
 }
 loadPrices();
