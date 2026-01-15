@@ -450,6 +450,9 @@ async function loadPrices(){
 
   console.log("✅ prices loaded", pricesData);
 }
+  function formatPrice(n){
+  return Number(n).toLocaleString("en-US");
+}
 function openBrand(el){
   const brands = el.dataset.brand.split(",").map(b=>b.trim());
 
@@ -486,14 +489,38 @@ searchInput.oninput = function () {
 
   filtered.forEach(p=>{
     box.innerHTML += `
-      <div class="price-item" style="padding:10px;border:1px solid #ccc;margin:6px 0;border-radius:8px">
-        <b>${p.name}</b><br>
-        ${p.type}<br>
-        ${p.qty && Number(p.qty)>0 ? p.price+" د.ع" : "غير متوفر"}
-      </div>
-    `;
-  });
-}
+   <div class="price-item" style="
+  padding:12px;
+  border:1px solid #d0d7e2;
+  margin:8px 0;
+  border-radius:10px;
+  background:#f9fbfd;
+">
+  <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+    ${p.name}
+  </div>
+
+  <div style="margin-top:4px">
+    <b>النوع:</b> ${p.type || "-"}
+  </div>
+
+  <div style="margin-top:4px">
+    <b>السعر:</b>
+    ${
+      p.qty && Number(p.qty)>0
+      ? `<span style="color:#1e88e5;font-weight:bold">
+           ${formatPrice(p.price)} د.ع
+         </span>`
+      : `<span style="color:#c62828;font-weight:bold">
+           غير متوفر
+         </span>`
+    }
+  </div>
+
+  <div style="margin-top:4px;color:#555">
+    <b>الملاحظات:</b> ${p.notes || "-"}
+  </div>
+</div>
   function openPrices(){
   show("prices");
 
