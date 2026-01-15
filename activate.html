@@ -450,6 +450,9 @@ async function loadPrices(){
 
   console.log("✅ prices loaded", pricesData);
 }
+  function formatPriceIQD(n){
+  return Number(n).toLocaleString("de-DE");
+}
 function openBrand(el){
   const brands = el.dataset.brand.split(",").map(b=>b.trim());
 
@@ -507,7 +510,7 @@ searchInput.oninput = function () {
         ${
           p.qty && Number(p.qty)>0
           ? `<span style="color:#1e88e5;font-weight:bold">
-               ${p.price} د.ع
+              ${formatPriceIQD(p.price)} د.ع
              </span>`
           : `<span style="color:#c62828;font-weight:bold">
                غير متوفر
