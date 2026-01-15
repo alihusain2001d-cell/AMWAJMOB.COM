@@ -347,8 +347,15 @@ function show(id){
     const el = document.getElementById(s);
     if(el) el.style.display="none";
   });
+
   const target = document.getElementById(id);
   if(target) target.style.display="block";
+
+  // إخفاء شريط الاتصال فقط في صفحة الأسعار
+  const bar = document.getElementById("contactBar");
+  if(bar){
+    bar.style.display = (id === "prices") ? "none" : "block";
+  }
 }
 
 function formatDate(d){
@@ -585,7 +592,7 @@ function backToBrands(){
 loadPrices();
 </script>
   <!-- شريط التواصل السفلي -->
-<div class="contact-bar">
+<div class="contact-bar" id="contactBar">
   <div class="contact-phone">
     📞 <span>للاستفسار:</span>
     <a href="tel:7696">7696</a>
