@@ -462,7 +462,19 @@ function openBrand(el){
       أسعار ${brands.join(" / ")}
     </h3>
   `;
+// ربط البحث مع نتائج الماركة
+const searchInput = document.getElementById("searchInput");
+searchInput.value = ""; // تفريغ البحث عند فتح ماركة جديدة
 
+searchInput.oninput = function () {
+  const q = this.value.trim().toLowerCase();
+  const items = box.querySelectorAll(".price-item");
+
+  items.forEach(item => {
+    const text = item.innerText.toLowerCase();
+    item.style.display = text.includes(q) ? "block" : "none";
+  });
+};
   const filtered = pricesData.filter(p =>
     brands.map(b=>b.toLowerCase()).includes((p.brand||"").toLowerCase())
   );
