@@ -205,9 +205,11 @@ function normalizeNumber(str) {
     .replace(/٨/g,"8")
     .replace(/٩/g,"9");
 }
-</script>
+<script>
 
-
+const WARRANTY_API =
+"https://script.google.com/macros/s/AKfycby42AZQl-sbgkUXartnlq2kkQM7IHzLLq1gB2pjxezR_pqdm3kWtZbZGDN-LGbT24Y9/exec";
+  </script>
 <div class="container">
 
 <div class="logo">
@@ -493,34 +495,49 @@ result.innerHTML = `
 }
 
 async function checkWarranty(){
- let v = normalizeNumber(
-  document.getElementById("inv").value.trim()
-);
- let out=document.getElementById("out");
- if(!v){alert("أدخل رقم الفاتورة");return;}
+  let v = normalizeNumber(
+    document.getElementById("inv").value.trim()
+  );
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-let r = rows.find(r =>
-  r[0] && normalizeNumber(r[0].trim()) === v
-);
- out.style.display="block";
+  let out = document.getElementById("out");
+  if(!v){
+    alert("أدخل رقم الفاتورة");
+    return;
+  }
 
- if(r){
-  let [y,m,d]=r[5].split("/");
-  let end=new Date(y,m-1,d);
-  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
-  out.innerHTML=`
+  out.style.display = "block";
+  out.innerHTML = "⏳ جاري التحقق...";
+
+  try{
+    const res = await fetch(
+      WARRANTY_API + "?invoice=" + encodeURIComponent(v)
+    );
+    const data = await res.json();
+
+    if(!data.ok){
+      out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
+      return;
+    }
+
+    let end = new Date(data.end);
+    let remaining = Math.ceil(
+      (end - new Date()) / (1000*60*60*24)
+    );
+
+    out.innerHTML = `
 ✔️ الضمان موجود<br>
-الاسم: ${r[1]}<br>
-الهاتف: ${r[2]}<br>
-النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
-${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
+الاسم: ${data.name}<br>
+الهاتف: ${data.phone}<br>
+النوع: ${data.type}<br>
+البدء: ${data.start}<br>
+الانتهاء: ${data.end}<br>
+${remaining >= 0
+  ? `⏳ المتبقي: <b>${remaining}</b> يوم`
+  : "❌ الضمان منتهي"}
 `;
- }else{
-  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
- }
+  }catch(e){
+    out.innerHTML = "❌ خطأ بالاتصال";
+  }
 }
 </script>
   
