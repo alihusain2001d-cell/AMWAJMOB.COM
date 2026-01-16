@@ -509,15 +509,18 @@ async function checkWarranty(){
   out.innerHTML = "⏳ جاري التحقق...";
 
   try{
-    const res = await fetch(
-      WARRANTY_API + "?invoice=" + encodeURIComponent(v)
-    );
-    const data = await res.json();
+ const text = await (await fetch(WARRANTY_SHEET)).text();
+const rows = text.split("\n").map(r => r.split(","));
 
-    if(!data.ok){
-      out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
-      return;
-    }
+const row = rows.find(r =>
+  r[0] && normalizeNumber(r[0].trim()) === v
+);
+
+if(!row){
+  out.innerHTML = "❌ لم يتم العثور على رقم الفاتورة";
+  return;
+}
+
 
     let end = new Date(data.end);
     let remaining = Math.ceil(
