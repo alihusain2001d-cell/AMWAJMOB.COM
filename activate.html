@@ -479,7 +479,7 @@ result.innerHTML = `
    
   usedInvoices.add(invoice);
 
-  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+ await fetch(WARRANTY_API,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
