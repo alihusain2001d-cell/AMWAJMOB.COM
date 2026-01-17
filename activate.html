@@ -387,11 +387,23 @@ async function sendData(){
 
 
   // منع التكرار من الشيت
- const res = await fetch(WARRANTY_API, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name, phone, invoice, type })
-});
+ const url =
+  WARRANTY_API +
+  "?action=activate" +
+  "&name=" + encodeURIComponent(name) +
+  "&phone=" + encodeURIComponent(phone) +
+  "&invoice=" + encodeURIComponent(invoice) +
+  "&type=" + encodeURIComponent(type);
+
+const res = await fetch(url);
+const data = await res.json();
+
+if (!data.ok) {
+  showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+  btn.innerText = "تفعيل الضمان";
+  btn.disabled = false;
+  return;
+}
 
 const data = await res.json();
 
