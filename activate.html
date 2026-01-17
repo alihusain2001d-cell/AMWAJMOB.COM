@@ -396,18 +396,9 @@ async function sendData(){
   "&type=" + encodeURIComponent(type);
 
 const res = await fetch(url);
-const data = await res.json();
+const resp = await res.json();
 
-if (!data.ok) {
-  showDup("⚠️ رقم الفاتورة موجود مسبقاً");
-  btn.innerText = "تفعيل الضمان";
-  btn.disabled = false;
-  return;
-}
-
-const data = await res.json();
-
-if (!data.ok) {
+if (!resp.ok) {
   showDup("⚠️ رقم الفاتورة موجود مسبقاً");
   btn.innerText = "تفعيل الضمان";
   btn.disabled = false;
