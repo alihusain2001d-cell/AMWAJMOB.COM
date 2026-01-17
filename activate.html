@@ -389,7 +389,6 @@ async function sendData(){
   // منع التكرار من الشيت
   const res = await fetch(WARRANTY_API, {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ name, phone, invoice, type })
 });
 
