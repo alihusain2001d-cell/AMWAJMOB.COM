@@ -392,15 +392,12 @@ result.innerHTML = `
    
   usedInvoices.add(invoice);
 
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    invoice,
-    name,
-    phone,
-    type
-  })
-});
+  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+  });
+
   btn.innerText="تم ✔️";
   btn.disabled=false;
 
