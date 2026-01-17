@@ -405,7 +405,12 @@ if (!data.ok) {
 result.style.display = "block";
 result.innerHTML = "✔️ تم تفعيل الضمان بنجاح";
 
-  
+  let days = type==="screen" ? 30 : 365;
+  let [d,m,y]=start.split("/");
+  let end=new Date(y, m-1, d);
+  end.setDate(end.getDate()+days);
+
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
 
   result.style.display="block";
 result.innerHTML = `
