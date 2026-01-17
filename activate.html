@@ -386,24 +386,19 @@ async function sendData(){
   }
 
 
+ // منع التكرار المحلي
+  if(usedInvoices.has(invoice)){
+    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+    throw "stop";
+  }
+
   // منع التكرار من الشيت
- const url =
-  WARRANTY_API +
-  "?action=activate" +
-  "&name=" + encodeURIComponent(name) +
-  "&phone=" + encodeURIComponent(phone) +
-  "&invoice=" + encodeURIComponent(invoice) +
-  "&type=" + encodeURIComponent(type);
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+    throw "stop";
+  }
 
-const res = await fetch(url);
-const resp = await res.json();
-
-if (!resp.ok) {
-  showDup("⚠️ رقم الفاتورة موجود مسبقاً");
-  btn.innerText = "تفعيل الضمان";
-  btn.disabled = false;
-  return;
-}
 
   let days = type==="screen" ? 30 : 365;
   let [d,m,y]=start.split("/");
