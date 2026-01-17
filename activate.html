@@ -421,15 +421,23 @@ result.innerHTML = `
 </div>
 `;
 
-   
-  usedInvoices.add(invoice);
+   let days = type === "screen" ? 30 : 365;
+let [d, m, y] = start.split("/");
+let end = new Date(y, m - 1, d);
+end.setDate(end.getDate() + days);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
-  });
-
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    name,
+    phone,
+    invoice,
+    type,
+    start,
+    expiry: formatDate(end)
+  })
+});
   btn.innerText="تم ✔️";
   btn.disabled=false;
 
