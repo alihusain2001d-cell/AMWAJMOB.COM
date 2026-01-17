@@ -393,7 +393,7 @@ async function sendData(){
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+ if(rows.find(r => normalizeNumber(r[0]) === invoice)){
     showDup("⚠️ رقم الفاتورة موجود مسبقاً");
     throw "stop";
   }
