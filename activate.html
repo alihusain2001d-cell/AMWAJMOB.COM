@@ -463,17 +463,16 @@ try{
     return;
   }
 
-  let [d,m,y]=data.end.split("/");
-  let end=new Date(y, m-1, d);
-  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+  let end = new Date(data.expiry);
+let remaining = Math.ceil((end - new Date()) / (1000*60*60*24));
 
   out.innerHTML=`
   ✔️ الضمان موجود<br>
   الاسم: ${data.name}<br>
   الهاتف: ${data.phone}<br>
   النوع: ${data.type}<br>
-  البدء: ${data.start}<br>
-  الانتهاء: ${data.end}<br>
+  البدء: ${new Date(data.start).toLocaleDateString()}<br>
+الانتهاء: ${new Date(data.expiry).toLocaleDateString()}<br>
   ${remaining>=0
     ? `⏳ المتبقي: <b>${remaining}</b> يوم`
     : "❌ الضمان منتهي"
