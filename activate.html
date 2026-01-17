@@ -403,8 +403,8 @@ if (!data.ok) {
 
 // نجاح
 result.style.display = "block";
-result.innerHTML = "✔️ تم تفعيل الضمان بنجاح";
-
+result.innerHTML = `
+✔️ تم تفعيل الضمان بنجاح<br>
 
 <div style="
   margin-top:10px;
@@ -416,10 +416,11 @@ result.innerHTML = "✔️ تم تفعيل الضمان بنجاح";
   text-align:center;
   letter-spacing:0.3px;
 ">
-⚠️ <div>الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
-<div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
+⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>
+الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
 </div>
 `;
+
    
   usedInvoices.add(invoice);
 
