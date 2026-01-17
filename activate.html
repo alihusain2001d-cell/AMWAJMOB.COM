@@ -391,13 +391,16 @@ result.innerHTML = `
 `;
    
   usedInvoices.add(invoice);
-
-  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
-  });
-
+await fetch("https://script.google.com/macros/s/AKfycbzOOiRE49prQcsnLEMJaC6G76G8i8jVm5lseLRVjC53Dz3F76aN9vaneExrduoaC9Vg/exec",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({
+    invoice,
+    name,
+    phone,
+    type
+  })
+});
   btn.innerText="تم ✔️";
   btn.disabled=false;
 
