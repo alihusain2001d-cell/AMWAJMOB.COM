@@ -176,42 +176,7 @@ function normalizeNumber(str) {
   <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
   <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
   <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
-<div style="
-  margin-top:14px;
-  text-align:center;
-  font-size:16px;
-  color:#555;
-">
-  📞 للاستفسار:
-  <a href="tel:7696" style="
-    font-weight:bold;
-    color:#1e88e5;
-    text-decoration:none;
-  ">7696</a>
-  <div style="margin-top:6px;">
-     أمواج للإلكترونيات يرحب بكم 🌊
-  </div>
 </div>
-
-<a
-  href="https://wa.me/9647709000160"
-  target="_blank"
-  style="
-    display:block;
-    margin-top:12px;
-    background:#25D366;
-    color:#fff;
-    padding:12px;
-    border-radius:12px;
-    font-size:18px;
-    font-weight:bold;
-    text-decoration:none;
-    text-align:center;
-  "
->
-  🟢 تواصل عبر واتساب
-</a>
-  </div>
 <!-- التفعيل -->
 <div id="activate" style="display:none">
   <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
@@ -360,8 +325,7 @@ function showDup(m){
  dupMsg.innerText=m;
  dupMsg.style.display="block";
 }
-const WARRANTY_API =
-"https://script.google.com/macros/s/AKfycbyrPM38xTJ4c1VnMwTDNwp5rk9FcdBpLQVbpop-oGnJiU8JDaJuWZyppw7iqrQf7G9P/exec";
+
 async function sendData(){
  const btn=document.getElementById("btnActivate");
  const result=document.getElementById("result");
@@ -385,26 +349,31 @@ async function sendData(){
     throw "stop";
   }
 
+  // منع التكرار المحلي
+  if(usedInvoices.has(invoice)){
+    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+    throw "stop";
+  }
 
   // منع التكرار من الشيت
-  const res = await fetch(WARRANTY_API, {
-  method: "POST",
-  body: JSON.stringify({ name, phone, invoice, type })
-});
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+    throw "stop";
+  }
 
-const data = await res.json();
+  let days = type==="screen" ? 30 : 365;
+  let [d,m,y]=start.split("/");
+  let end=new Date(y, m-1, d);
+  end.setDate(end.getDate()+days);
 
-if (!data.ok) {
-  showDup("⚠️ " + data.msg);
-  btn.innerText = "تفعيل الضمان";
-  btn.disabled = false;
-  return;
-}
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
 
-// نجاح
-result.style.display = "block";
+  result.style.display="block";
 result.innerHTML = `
-✔️ تم تفعيل الضمان بنجاح<br>
+✔️ تم تفعيل الضمان<br>
+تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
+⏳ المتبقي: <b>${remaining}</b> يوم
 
 <div style="
   margin-top:10px;
@@ -416,28 +385,19 @@ result.innerHTML = `
   text-align:center;
   letter-spacing:0.3px;
 ">
-⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>
-الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
+⚠️ <div>الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
+<div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
 </div>
 `;
-
-   let days = type === "screen" ? 30 : 365;
-let [d, m, y] = start.split("/");
-let end = new Date(y, m - 1, d);
-end.setDate(end.getDate() + days);
+   
+  usedInvoices.add(invoice);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({
-    name,
-    phone,
-    invoice,
-    type,
-    start,
-    expiry: formatDate(end)
-  })
-});
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+  });
+
   btn.innerText="تم ✔️";
   btn.disabled=false;
 
@@ -454,38 +414,28 @@ async function checkWarranty(){
  let out=document.getElementById("out");
  if(!v){alert("أدخل رقم الفاتورة");return;}
 
-try{
-  const res = await fetch(
-    WARRANTY_API + "?invoice=" + encodeURIComponent(v)
-  );
-  const data = await res.json();
+ let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+let r = rows.find(r =>
+  r[0] && normalizeNumber(r[0].trim()) === v
+);
+ out.style.display="block";
 
-  out.style.display="block";
-
-  if(!data.ok){
-    out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
-    return;
-  }
-
-  let end = new Date(data.expiry);
-let remaining = Math.ceil((end - new Date()) / (1000*60*60*24));
-
+ if(r){
+  let [y,m,d]=r[5].split("/");
+  let end=new Date(y,m-1,d);
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
   out.innerHTML=`
-  ✔️ الضمان موجود<br>
-  الاسم: ${data.name}<br>
-  الهاتف: ${data.phone}<br>
-  النوع: ${data.type}<br>
-  البدء: ${new Date(data.start).toLocaleDateString()}<br>
-الانتهاء: ${new Date(data.expiry).toLocaleDateString()}<br>
-  ${remaining>=0
-    ? `⏳ المتبقي: <b>${remaining}</b> يوم`
-    : "❌ الضمان منتهي"
-  }
-  `;
-}catch(e){
-  out.style.display="block";
-  out.innerHTML="❌ خطأ بالاتصال";
-}
+✔️ الضمان موجود<br>
+الاسم: ${r[1]}<br>
+الهاتف: ${r[2]}<br>
+النوع: ${r[3]}<br>
+البدء: ${r[4]}<br>
+الانتهاء: ${r[5]}<br>
+${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
+`;
+ }else{
+  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+ }
 }
 </script>
   
