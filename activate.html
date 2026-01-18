@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
+<head>  
 <meta charset="UTF-8" />
 <title>أمواج للإلكترونيات</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -15,11 +15,33 @@
 <meta name="apple-mobile-web-app-title" content="أمواج للإلكترونيات">
 <meta name="application-name" content="أمواج للإلكترونيات">
 <meta name="theme-color" content="#1e88e5">
+
 <style>
 body{
   font-family: sans-serif;
   padding: 18px;
   background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
+}
+</style>
+<body>
+
+<div id="loginBox" style="display:none; text-align:center; padding:30px">
+  <h3>تسجيل الدخول</h3>
+  <input id="loginName" placeholder="الاسم"
+         style="display:block;width:90%;margin:10px auto;padding:10px">
+  <input id="loginPhone" placeholder="رقم الموبايل"
+         style="display:block;width:90%;margin:10px auto;padding:10px">
+  <button onclick="register()" style="padding:12px 30px;font-size:18px">
+    تسجيل
+  </button>
+  <p id="loginMsg" style="margin-top:15px;color:red"></p>
+</div>
+<div id="appContent" style="display:none">
+
+  </div>
+  </body>
+</html>
+
 }
 #btnActivate{
   padding: 18px;
