@@ -240,7 +240,6 @@ function normalizeNumber(str) {
   <label>تاريخ التركيب</label>
   <input id="start" readonly>
 
-  <div id="dupMsg" class="msg-err"></div>
 
   <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
   <div id="result" class="result"></div>
@@ -621,6 +620,12 @@ function backToBrands(){
 }
 
 loadPrices();
+  function showDup(m){
+  const dupMsg = document.getElementById("dupMsg");
+  dupMsg.innerText = m;
+  dupMsg.style.display = "block";
+}
 </script>
+  
 </body>
 </html>
