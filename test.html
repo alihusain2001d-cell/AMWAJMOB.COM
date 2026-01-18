@@ -395,14 +395,14 @@ let screenName = document.getElementById("screenName").value.trim();
 }
 
   // منع التكرار المحلي
-  if(usedWarrantycode.has(warrantycode)){
+  if(usedWarrantyCodes.has(warrantycode)){
     showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
   }
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[6] && r[6].trim()===warrantycode)){
+  if(rows.find(r=>r[6] && r[6].trim()===warrantyCode)){
     showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
   }
