@@ -225,11 +225,6 @@ function normalizeNumber(str) {
 
   <label>رقم الفاتورة</label>
   <input id="invoice">
-  <label>كود الضمان</label>
-<input id="warrantyCode" placeholder="اكتب كود الضمان الموجود خلف الشاشة">
-
-<label>اسم الشاشة (اختياري)</label>
-<input id="screenName" placeholder="مثال: iPhone 11 Pro OLED">
 
   <label>نوع القطعة</label>
   <select id="type">
@@ -239,15 +234,10 @@ function normalizeNumber(str) {
 
   <label>تاريخ التركيب</label>
   <input id="start" readonly>
-<div id="dupMsg" class="msg-err" style="display:none"></div>
 
- <button
-  id="btnActivate"
-  type="button"
-  onclick="sendData()"
->
-  تفعيل الضمان
-</button>
+  <div id="dupMsg" class="msg-err"></div>
+
+  <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
   <div id="result" class="result"></div>
 
   <div class="footer">
@@ -366,9 +356,11 @@ function formatDate(d){
 }
 document.getElementById("start").value = formatDate(new Date());
 
+function showDup(m){
+ dupMsg.innerText=m;
+ dupMsg.style.display="block";
+}
 
-
-let usedWarrantyCodes = new Set();
 async function sendData(){
  const btn=document.getElementById("btnActivate");
  const result=document.getElementById("result");
@@ -376,7 +368,7 @@ async function sendData(){
 
  btn.disabled=true;
  btn.innerText="جاري التفعيل…";
-if (dupMsg) dupMsg.style.display = "none";
+ dupMsg.style.display="none";
 
  try{
   let name=document.getElementById("name").value.trim();
@@ -386,24 +378,22 @@ if (dupMsg) dupMsg.style.display = "none";
 );
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
-   let warrantyCode = document.getElementById("warrantyCode").value.trim();
-let screenName = document.getElementById("screenName").value.trim();
 
-  if (!name || !phone || !invoice || !warrantyCode) {
-  alert("أكمل جميع الحقول");
-  throw "stop";
-}
+  if(!name || !phone || !invoice){
+    alert("أكمل جميع الحقول");
+    throw "stop";
+  }
 
   // منع التكرار المحلي
-  if(usedWarrantycode.has(warrantycode)){
-    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+  if(usedInvoices.has(invoice)){
+    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
     throw "stop";
   }
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[6] && r[6].trim()===Warrantycode)){
-    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
     throw "stop";
   }
 
@@ -436,20 +426,11 @@ result.innerHTML = `
 `;
    
   usedInvoices.add(invoice);
-usedWarrantyCodes.add(warrantyCode);
+
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-   body: JSON.stringify({
-  name,
-  phone,
-  invoice,
-  type,
-  start,
-  end: formatDate(end),
-  warrantyCode,
-  screenName
-})
+    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
   });
 
   btn.innerText="تم ✔️";
@@ -462,57 +443,34 @@ usedWarrantyCodes.add(warrantyCode);
 }
 
 async function checkWarranty(){
-  let code = normalizeNumber(
-    document.getElementById("checkCode").value.trim()
-  );
+ let v = normalizeNumber(
+  document.getElementById("inv").value.trim()
+);
+ let out=document.getElementById("out");
+ if(!v){alert("أدخل رقم الفاتورة");return;}
 
-  let out = document.getElementById("out");
-  if(!code){
-    alert("أدخل كود الشاشة");
-    return;
-  }
+ let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+let r = rows.find(r =>
+  r[0] && normalizeNumber(r[0].trim()) === v
+);
+ out.style.display="block";
 
-  let rows = (await (await fetch(SHEET)).text())
-    .split("\n")
-    .map(r => r.split(","));
-
-  // نفترض ترتيب الأعمدة:
-  // 0: invoice
-  // 1: name
-  // 2: phone
-  // 3: type
-  // 4: start
-  // 5: end
-  // 6: warrantyCode
-  // 7: screenName
-
-  let r = rows.find(r =>
-    r[6] && normalizeNumber(r[6].trim()) === code
-  );
-
-  out.style.display = "block";
-
-  if(r){
-    let [d,m,y] = r[5].split("/");
-    let end = new Date(y, m-1, d);
-    let remaining = Math.ceil((end - new Date()) / (1000*60*60*24));
-
-    out.innerHTML = `
+ if(r){
+  let [y,m,d]=r[5].split("/");
+  let end=new Date(y,m-1,d);
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+  out.innerHTML=`
 ✔️ الضمان موجود<br>
-<b>اسم الزبون:</b> ${r[1]}<br>
-<b>الهاتف:</b> ${r[2]}<br>
-<b>كود الشاشة :</b> ${r[6]}<br>
-<b>اسم الشاشة:</b> ${r[7] || "-"}<br>
-<b>تاريخ التفعيل:</b> ${r[4]}<br>
-<b>تاريخ الانتهاء:</b> ${r[5]}<br>
-${remaining >= 0
-  ? `⏳ المتبقي: <b>${remaining}</b> يوم`
-  : "❌ الضمان منتهي"
-}
+الاسم: ${r[1]}<br>
+الهاتف: ${r[2]}<br>
+النوع: ${r[3]}<br>
+البدء: ${r[4]}<br>
+الانتهاء: ${r[5]}<br>
+${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
 `;
-  } else {
-    out.innerHTML = "❌ كود الشاشة غير موجود";
-  }
+ }else{
+  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+ }
 }
 </script>
   
@@ -624,12 +582,6 @@ function backToBrands(){
 }
 
 loadPrices();
-  function showDup(m){
-  const dupMsg = document.getElementById("dupMsg");
-  dupMsg.innerText = m;
-  dupMsg.style.display = "block";
-}
 </script>
-  
 </body>
 </html>
