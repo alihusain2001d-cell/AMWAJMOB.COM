@@ -366,11 +366,9 @@ function formatDate(d){
 }
 document.getElementById("start").value = formatDate(new Date());
 
-function showDup(m){
- dupMsg.innerText=m;
- dupMsg.style.display="block";
-}
 
+}
+let usedWarrantyCodes = new Set();
 async function sendData(){
  const btn=document.getElementById("btnActivate");
  const result=document.getElementById("result");
