@@ -225,6 +225,11 @@ function normalizeNumber(str) {
 
   <label>رقم الفاتورة</label>
   <input id="invoice">
+  <label>كود الضمان</label>
+<input id="warrantyCode" placeholder="اكتب كود الضمان الموجود خلف الشاشة">
+
+<label>اسم الشاشة (اختياري)</label>
+<input id="screenName" placeholder="مثال: iPhone 11 Pro OLED">
 
   <label>نوع القطعة</label>
   <select id="type">
@@ -378,22 +383,24 @@ async function sendData(){
 );
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
+   let warrantyCode = document.getElementById("warrantyCode").value.trim();
+let screenName = document.getElementById("screenName").value.trim();
 
-  if(!name || !phone || !invoice){
-    alert("أكمل جميع الحقول");
-    throw "stop";
-  }
+  if (!name || !phone || !invoice || !warrantyCode) {
+  alert("أكمل جميع الحقول");
+  throw "stop";
+}
 
   // منع التكرار المحلي
-  if(usedInvoices.has(invoice)){
-    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+  if(usedWarrantycode.has(warrantycode)){
+    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
   }
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
-    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+  if(rows.find(r=>r[6] && r[6].trim()===Warrantycode)){
+    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
   }
 
@@ -426,11 +433,20 @@ result.innerHTML = `
 `;
    
   usedInvoices.add(invoice);
-
+usedWarrantyCodes.add(warrantyCode);
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+   body: JSON.stringify({
+  name,
+  phone,
+  invoice,
+  type,
+  start,
+  end: formatDate(end),
+  warrantyCode,
+  screenName
+})
   });
 
   btn.innerText="تم ✔️";
@@ -443,34 +459,57 @@ result.innerHTML = `
 }
 
 async function checkWarranty(){
- let v = normalizeNumber(
-  document.getElementById("inv").value.trim()
-);
- let out=document.getElementById("out");
- if(!v){alert("أدخل رقم الفاتورة");return;}
+  let code = normalizeNumber(
+    document.getElementById("checkCode").value.trim()
+  );
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-let r = rows.find(r =>
-  r[0] && normalizeNumber(r[0].trim()) === v
-);
- out.style.display="block";
+  let out = document.getElementById("out");
+  if(!code){
+    alert("أدخل كود الشاشة");
+    return;
+  }
 
- if(r){
-  let [y,m,d]=r[5].split("/");
-  let end=new Date(y,m-1,d);
-  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
-  out.innerHTML=`
+  let rows = (await (await fetch(SHEET)).text())
+    .split("\n")
+    .map(r => r.split(","));
+
+  // نفترض ترتيب الأعمدة:
+  // 0: invoice
+  // 1: name
+  // 2: phone
+  // 3: type
+  // 4: start
+  // 5: end
+  // 6: warrantyCode
+  // 7: screenName
+
+  let r = rows.find(r =>
+    r[6] && normalizeNumber(r[6].trim()) === code
+  );
+
+  out.style.display = "block";
+
+  if(r){
+    let [d,m,y] = r[5].split("/");
+    let end = new Date(y, m-1, d);
+    let remaining = Math.ceil((end - new Date()) / (1000*60*60*24));
+
+    out.innerHTML = `
 ✔️ الضمان موجود<br>
-الاسم: ${r[1]}<br>
-الهاتف: ${r[2]}<br>
-النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
-${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
+<b>اسم الزبون:</b> ${r[1]}<br>
+<b>الهاتف:</b> ${r[2]}<br>
+<b>كود الشاشة :</b> ${r[6]}<br>
+<b>اسم الشاشة:</b> ${r[7] || "-"}<br>
+<b>تاريخ التفعيل:</b> ${r[4]}<br>
+<b>تاريخ الانتهاء:</b> ${r[5]}<br>
+${remaining >= 0
+  ? `⏳ المتبقي: <b>${remaining}</b> يوم`
+  : "❌ الضمان منتهي"
+}
 `;
- }else{
-  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
- }
+  } else {
+    out.innerHTML = "❌ كود الشاشة غير موجود";
+  }
 }
 </script>
   
