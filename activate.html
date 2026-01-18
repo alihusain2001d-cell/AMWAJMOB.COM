@@ -605,5 +605,76 @@ function backToBrands(){
 
 loadPrices();
 </script>
+  <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyYCFidhBCn8yIo4tdiO8j9JlOt73S6NAlEyg1feCw1dsANFDpba1aW5yhgRHPFBik_/exec";
+
+// عند تحميل الصفحة
+document.addEventListener("DOMContentLoaded", () => {
+  const phone = localStorage.getItem("user_phone");
+  if (phone) {
+    checkStatus(phone);
+  } else {
+    showLogin();
+  }
+});
+
+function showLogin() {
+  document.getElementById("loginBox").style.display = "block";
+  document.getElementById("appContent").style.display = "none";
+}
+
+function openApp() {
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("appContent").style.display = "block";
+}
+
+function register() {
+  const name = document.getElementById("loginName").value.trim();
+  const phone = document.getElementById("loginPhone").value.trim();
+
+  if (!name || !phone) {
+    document.getElementById("loginMsg").innerText = "أدخل الاسم ورقم الموبايل";
+    return;
+  }
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, phone })
+  })
+  .then(r => r.json())
+  .then(res => {
+    localStorage.setItem("user_phone", phone);
+    if (res.status === "approved") {
+      openApp();
+    } else {
+      document.getElementById("loginMsg").innerText =
+        "تم التسجيل، بانتظار موافقة الإدارة";
+      showLogin();
+    }
+  })
+  .catch(() => {
+    document.getElementById("loginMsg").innerText = "خطأ بالاتصال";
+  });
+}
+
+function checkStatus(phone) {
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.status === "approved") {
+      openApp();
+    } else {
+      showLogin();
+      document.getElementById("loginMsg").innerText = "طلبك بانتظار الموافقة";
+    }
+  })
+  .catch(() => showLogin());
+}
+</script>
 </body>
 </html>
