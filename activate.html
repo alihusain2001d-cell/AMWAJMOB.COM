@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -15,963 +16,572 @@
 <meta name="application-name" content="أمواج للإلكترونيات">
 <meta name="theme-color" content="#1e88e5">
 <style>
-
 body{
-
-&nbsp; font-family: sans-serif;
-
-&nbsp; padding: 18px;
-
-&nbsp; background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
-
+  font-family: sans-serif;
+  padding: 18px;
+  background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
 }
-
-\#btnActivate{
-
-&nbsp; padding: 18px;
-
-&nbsp; font-size: 18px;
-
-&nbsp; border-radius: 14px;
-
+#btnActivate{
+  padding: 18px;
+  font-size: 18px;
+  border-radius: 14px;
 }
-
 .container{
-
-&nbsp; max-width:580px;
-
-&nbsp; margin:auto;
-
-&nbsp; background:#fff;
-
-&nbsp; padding:18px;
-
-&nbsp; border-radius:16px;
-
-&nbsp; box-shadow:0 12px 28px rgba(0,0,0,.08);
-
+  max-width:580px;
+  margin:auto;
+  background:#fff;
+  padding:18px;
+  border-radius:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
 }
-
 .logo{text-align:center;margin-bottom:12px}
-
 .logo img{width:140px}
-
 .bigbtn{
-
-&nbsp; width:100%;
-
-&nbsp; padding:14px;
-
-&nbsp; border-radius:12px;
-
-&nbsp; border:0;
-
-&nbsp; margin:8px 0;
-
-&nbsp; font-size:20px;
-
-&nbsp; font-weight:bold;
-
-&nbsp; cursor:pointer;
-
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:0;
+  margin:8px 0;
+  font-size:20px;
+  font-weight:bold;
+  cursor:pointer;
 }
-
-&nbsp; 
-
+  
 .big1{background:#1e88e5;color:#fff}
-
 .big2{background:#6c7d90;color:#fff}
-
 label{font-weight:bold;font-size:14px}
-
 input,select,button{
-
-&nbsp; width:100%;
-
-&nbsp; padding:6px;
-
-&nbsp; margin:6px 0 14px;
-
-&nbsp; border-radius:10px;
-
-&nbsp; border:1px solid #ccd6e6;
-
-&nbsp; font-size:14px;
-
+  width:100%;
+  padding:6px;
+  margin:6px 0 14px;
+  border-radius:10px;
+  border:1px solid #ccd6e6;
+  font-size:14px;
 }
-
 button{background:#1e88e5;color:#fff;border:none}
-
 .result{
-
-&nbsp; background:#e8f4ff;
-
-&nbsp; padding:12px;
-
-&nbsp; border-radius:10px;
-
-&nbsp; display:none;
-
+  background:#e8f4ff;
+  padding:12px;
+  border-radius:10px;
+  display:none;
 }
-
 .msg-err{
-
-&nbsp; display:none;
-
-&nbsp; background:#fde7e7;
-
-&nbsp; color:#b10606;
-
-&nbsp; border:1px solid #f3bcbc;
-
-&nbsp; padding:10px;
-
-&nbsp; border-radius:10px;
-
-&nbsp; margin:10px 0;
-
-&nbsp; font-weight:bold;
-
+  display:none;
+  background:#fde7e7;
+  color:#b10606;
+  border:1px solid #f3bcbc;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+  font-weight:bold;
 }
-
 .footer{text-align:center;margin-top:12px;font-size:16px}
-
 .whatsapp{
-
-&nbsp; background:#25D366;
-
-&nbsp; color:#fff;
-
-&nbsp; padding:10px;
-
-&nbsp; display:block;
-
-&nbsp; text-align:center;
-
-&nbsp; border-radius:10px;
-
-&nbsp; margin-top:14px;
-
-&nbsp; text-decoration:none;
-
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:10px;
+  margin-top:14px;
+  text-decoration:none;
 }
-
 .warranty-note{
-
-&nbsp; margin-top:12px;
-
-&nbsp; padding:10px 14px;
-
-&nbsp; background:#fff3cd;   /\* أصفر هادئ \*/
-
-&nbsp; color:#856404;        /\* واضح ومقروء \*/
-
-&nbsp; border-radius:10px;
-
-&nbsp; font-size:16px;
-
-&nbsp; text-align:center;
-
+  margin-top:12px;
+  padding:10px 14px;
+  background:#fff3cd;   /* أصفر هادئ */
+  color:#856404;        /* واضح ومقروء */
+  border-radius:10px;
+  font-size:16px;
+  text-align:center;
 }
-
-&nbsp; .brands-grid{
-
-&nbsp; display:grid;
-
-&nbsp; grid-template-columns:repeat(2,1fr);
-
-&nbsp; gap:12px;
-
-&nbsp; margin-top:16px;
-
+  .brands-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:16px;
 }
-
-
 
 .brand{
-
-&nbsp; background:#eef4fb;
-
-&nbsp; border-radius:14px;
-
-&nbsp; padding:18px 10px;
-
-&nbsp; text-align:center;
-
-&nbsp; font-weight:bold;
-
-&nbsp; color:#1e3a5f;
-
+  background:#eef4fb;
+  border-radius:14px;
+  padding:18px 10px;
+  text-align:center;
+  font-weight:bold;
+  color:#1e3a5f;
 }
-
-&nbsp; .brand {
-
-&nbsp; cursor: pointer;
-
-&nbsp; background: #f5f7fa;
-
-&nbsp; border-radius: 12px;
-
-&nbsp; padding: 18px 10px;
-
-&nbsp; text-align: center;
-
-&nbsp; font-weight: bold;
-
-&nbsp; transition: all 0.2s ease;
-
-&nbsp; border: 1px solid #e0e0e0;
-
+  .brand {
+  cursor: pointer;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 18px 10px;
+  text-align: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
 }
-
-
 
 .brand:hover {
-
-&nbsp; background: #e9eef5;
-
-&nbsp; transform: scale(1.02);
-
+  background: #e9eef5;
+  transform: scale(1.02);
 }
-
-
 
 .brand:active {
-
-&nbsp; transform: scale(0.98);
-
-&nbsp; background: #dfe6ef;
-
+  transform: scale(0.98);
+  background: #dfe6ef;
 }
-
-
 
 .brands-grid {
-
-&nbsp; display: grid;
-
-&nbsp; grid-template-columns: repeat(2, 1fr);
-
-&nbsp; gap: 12px;
-
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
-
-
 
 .brand small {
-
-&nbsp; display: block;
-
-&nbsp; font-weight: normal;
-
-&nbsp; opacity: 0.7;
-
-&nbsp; margin-top: 4px;
-
+  display: block;
+  font-weight: normal;
+  opacity: 0.7;
+  margin-top: 4px;
 }
-
+</style>
 </head>
 <body>
 
 <script>
-
 function normalizeNumber(str) {
-
-&nbsp; if (!str) return "";
-
-&nbsp; return str
-
-&nbsp;   .replace(/٠/g,"0")
-
-&nbsp;   .replace(/١/g,"1")
-
-&nbsp;   .replace(/٢/g,"2")
-
-&nbsp;   .replace(/٣/g,"3")
-
-&nbsp;   .replace(/٤/g,"4")
-
-&nbsp;   .replace(/٥/g,"5")
-
-&nbsp;   .replace(/٦/g,"6")
-
-&nbsp;   .replace(/٧/g,"7")
-
-&nbsp;   .replace(/٨/g,"8")
-
-&nbsp;   .replace(/٩/g,"9");
-
+  if (!str) return "";
+  return str
+    .replace(/٠/g,"0")
+    .replace(/١/g,"1")
+    .replace(/٢/g,"2")
+    .replace(/٣/g,"3")
+    .replace(/٤/g,"4")
+    .replace(/٥/g,"5")
+    .replace(/٦/g,"6")
+    .replace(/٧/g,"7")
+    .replace(/٨/g,"8")
+    .replace(/٩/g,"9");
 }
-
+</script>
 
 
 <div class="container">
 
 <div class="logo">
-  <img src="1633875906547.jpg">
+  <img src="1633875906547.jpg">
 </div>
 
 <!-- الرئيسية -->
 <div id="home">
-  <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
-  <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
-  <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
+  <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
+  <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
+  <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
 <div style="
-  margin-top:14px;
-  text-align:center;
-  font-size:16px;
-  color:#555;
+  margin-top:14px;
+  text-align:center;
+  font-size:16px;
+  color:#555;
 ">
-  📞 للاستفسار:
-  <a href="tel:7696" style="
-    font-weight:bold;
-    color:#1e88e5;
-    text-decoration:none;
-  ">7696</a>
-  <div style="margin-top:6px;">
-     أمواج للإلكترونيات يرحب بكم 🌊
-  </div>
+  📞 للاستفسار:
+  <a href="tel:7696" style="
+    font-weight:bold;
+    color:#1e88e5;
+    text-decoration:none;
+  ">7696</a>
+  <div style="margin-top:6px;">
+     أمواج للإلكترونيات يرحب بكم 🌊
+  </div>
 </div>
 
 <a
-  href="https://wa.me/9647709000160"
-  target="_blank"
-  style="
-    display:block;
-    margin-top:12px;
-    background:#25D366;
-    color:#fff;
-    padding:12px;
-    border-radius:12px;
-    font-size:18px;
-    font-weight:bold;
-    text-decoration:none;
-    text-align:center;
-  "
+  href="https://wa.me/9647709000160"
+  target="_blank"
+  style="
+    display:block;
+    margin-top:12px;
+    background:#25D366;
+    color:#fff;
+    padding:12px;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    text-decoration:none;
+    text-align:center;
+  "
 >
-  🟢 تواصل عبر واتساب
+  🟢 تواصل عبر واتساب
 </a>
-  </div>
+  </div>
 <!-- التفعيل -->
 <div id="activate" style="display:none">
-  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
 
-  <label>اسم الزبون</label>
-  <input id="name">
+  <label>اسم الزبون</label>
+  <input id="name">
 
-  <label>رقم الهاتف</label>
-  <input id="phone">
+  <label>رقم الهاتف</label>
+  <input id="phone">
 
-  <label>رقم الفاتورة</label>
-  <input id="invoice">
+  <label>رقم الفاتورة</label>
+  <input id="invoice">
 
-  <label>نوع القطعة</label>
-  <select id="type">
-    <option value="screen">شاشة</option>
-    <option value="battery">بطارية</option>
-  </select>
+  <label>نوع القطعة</label>
+  <select id="type">
+    <option value="screen">شاشة</option>
+    <option value="battery">بطارية</option>
+  </select>
 
-  <label>تاريخ التركيب</label>
-  <input id="start" readonly>
+  <label>تاريخ التركيب</label>
+  <input id="start" readonly>
 
-  <div id="dupMsg" class="msg-err"></div>
+  <div id="dupMsg" class="msg-err"></div>
 
-  <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
-  <div id="result" class="result"></div>
+  <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
+  <div id="result" class="result"></div>
 
-  <div class="footer">
+  <div class="footer">
 📞 للاستفسار:
 <a href="tel:7696" style="font-weight:bold;color:#1e88e5;text-decoration:none">7696</a><br>
 شكراً لاختياركم أمواج للألكترونيات 🌊
-<a class="whatsapp" href="https://wa.me/9647709000160" target="\_blank">تواصل عبر واتساب</a>
-  </div>
-  </div>
+<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
+  </div>
+  </div>
 <!-- التحقق -->
 <div id="check" style="display:none">
-  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-  <h3>تحقق من الضمان</h3>
-  <input id="inv" placeholder="أدخل رقم الفاتورة">
-  <button onclick="checkWarranty()">بحث</button>
-  <div id="out" class="result"></div>
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>تحقق من الضمان</h3>
+  <input id="inv" placeholder="أدخل رقم الفاتورة">
+  <button onclick="checkWarranty()">بحث</button>
+  <div id="out" class="result"></div>
 </div>
 
 
 
- 
+  
 <div id="prices" style="display:none">
- <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-  <h3>أسعار الشاشات</h3>
- 
-  <input
-    type="text"
-    id="searchInput"
-    placeholder="بحث عن الموديل..."
-    style="width:100%;margin:10px 0;padding:8px;"
-  >
-  <div id="pricesBox"></div>
-  <div id="brandPrices" style="display:none">
-  <button onclick="backToBrands()" class="bigbtn big2">⬅ رجوع إلى الماركات</button>
-  <div id="brandPricesBox"></div>
+ <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>أسعار الشاشات</h3>
+  
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="بحث عن الموديل..."
+    style="width:100%;margin:10px 0;padding:8px;"
+  >
+  <div id="pricesBox"></div>
+  <div id="brandPrices" style="display:none">
+  <button onclick="backToBrands()" class="bigbtn big2">⬅ رجوع إلى الماركات</button>
+  <div id="brandPricesBox"></div>
 </div>
-  <div id="brandsSection">
+  <div id="brandsSection">
 <div class="brands-grid">
 
-  <div class="brand" data-brand="Apple"onclick="openBrand(this)">
-    ايفون
-    <small>iPhone</small>
-  </div>
+  <div class="brand" data-brand="Apple"onclick="openBrand(this)">
+    ايفون
+    <small>iPhone</small>
+  </div>
 
-  <div class="brand" data-brand="Samsung"onclick="openBrand(this)">
-    سامسونج
-    <small>Samsung</small>
-  </div>
+  <div class="brand" data-brand="Samsung"onclick="openBrand(this)">
+    سامسونج
+    <small>Samsung</small>
+  </div>
 
-  <div class="brand" data-brand="Huawei"onclick="openBrand(this)">
-    هواوي
-    <small>Huawei</small>
-  </div>
+  <div class="brand" data-brand="Huawei"onclick="openBrand(this)">
+    هواوي
+    <small>Huawei</small>
+  </div>
 
-  <div class="brand" data-brand="Xiaomi"onclick="openBrand(this)">
-    شاومي
-    <small>Xiaomi</small>
-  </div>
+  <div class="brand" data-brand="Xiaomi"onclick="openBrand(this)">
+    شاومي
+    <small>Xiaomi</small>
+  </div>
 
-  <div class="brand" data-brand="Redmi,Poco"onclick="openBrand(this)">
-    ريدمي + بوكو
-    <small>Redmi & Poco</small>
-  </div>
+  <div class="brand" data-brand="Redmi,Poco"onclick="openBrand(this)">
+    ريدمي + بوكو
+    <small>Redmi & Poco</small>
+  </div>
 
-  <div class="brand" data-brand="Infinix,Tecno"onclick="openBrand(this)">
-    انفنكس + تكنو
-    <small>Infinix & Tecno</small>
-  </div>
+  <div class="brand" data-brand="Infinix,Tecno"onclick="openBrand(this)">
+    انفنكس + تكنو
+    <small>Infinix & Tecno</small>
+  </div>
 
-  <div class="brand" data-brand="Oppo,Realme"onclick="openBrand(this)">
-    اوبو + ريلمي
-    <small>Oppo & Realme</small>
-  </div>
+  <div class="brand" data-brand="Oppo,Realme"onclick="openBrand(this)">
+    اوبو + ريلمي
+    <small>Oppo & Realme</small>
+  </div>
 
-  <div class="brand" data-brand="Vivo,Wiko"onclick="openBrand(this)">
-    فيفو + ويكو
-    <small>Vivo & Wiko</small>
-  </div>
+  <div class="brand" data-brand="Vivo,Wiko"onclick="openBrand(this)">
+    فيفو + ويكو
+    <small>Vivo & Wiko</small>
+  </div>
 
-  <div class="brand" data-brand="Asus,RedMagic,Google"onclick="openBrand(this)">
-    ازوز + ريد ماجك + كوكل
-    <small>Asus • RedMagic • Google</small>
-  </div>
+  <div class="brand" data-brand="Asus,RedMagic,Google"onclick="openBrand(this)">
+    ازوز + ريد ماجك + كوكل
+    <small>Asus • RedMagic • Google</small>
+  </div>
 
-  <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview"onclick="openBrand(this)">
-    ZTE + Alcatel + TCL
-    <small>ZTE • Alcatel • TCL • Blackview</small>
-  </div>
+  <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview"onclick="openBrand(this)">
+    ZTE + Alcatel + TCL
+    <small>ZTE • Alcatel • TCL • Blackview</small>
+  </div>
 </div>
 </div>
 <script>
 
-
-
 const SHEET =
-
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
-
-
 
 let usedInvoices = new Set();
 
-
-
 function openAct(){ show("activate"); }
-
 function openChk(){ show("check"); }
-
 function openPrices(){ show("prices"); }
-
 function backHome(){ show("home"); }
 
-
-
 function show(id){
-
-&nbsp; const sections = \["home","activate","check","prices"];
-
-&nbsp; sections.forEach(s=>{
-
-&nbsp;   const el = document.getElementById(s);
-
-&nbsp;   if(el) el.style.display="none";
-
-&nbsp; });
-
-&nbsp; const target = document.getElementById(id);
-
-&nbsp; if(target) target.style.display="block";
-
+  const sections = ["home","activate","check","prices"];
+  sections.forEach(s=>{
+    const el = document.getElementById(s);
+    if(el) el.style.display="none";
+  });
+  const target = document.getElementById(id);
+  if(target) target.style.display="block";
 }
-
-
 
 function formatDate(d){
-
-&nbsp;let x=new Date(d);
-
-&nbsp;return String(x.getDate()).padStart(2,'0')+"/"+String(x.getMonth()+1).padStart(2,'0')+"/"+x.getFullYear();
-
+ let x=new Date(d);
+ return String(x.getDate()).padStart(2,'0')+"/"+String(x.getMonth()+1).padStart(2,'0')+"/"+x.getFullYear();
 }
-
 document.getElementById("start").value = formatDate(new Date());
 
-
-
 function showDup(m){
-
-&nbsp;dupMsg.innerText=m;
-
-&nbsp;dupMsg.style.display="block";
-
+ dupMsg.innerText=m;
+ dupMsg.style.display="block";
 }
-
-
 
 async function sendData(){
+ const btn=document.getElementById("btnActivate");
+ const result=document.getElementById("result");
+ const dupMsg=document.getElementById("dupMsg");
 
-&nbsp;const btn=document.getElementById("btnActivate");
+ btn.disabled=true;
+ btn.innerText="جاري التفعيل…";
+ dupMsg.style.display="none";
 
-&nbsp;const result=document.getElementById("result");
-
-&nbsp;const dupMsg=document.getElementById("dupMsg");
-
-
-
-&nbsp;btn.disabled=true;
-
-&nbsp;btn.innerText="جاري التفعيل…";
-
-&nbsp;dupMsg.style.display="none";
-
-
-
-&nbsp;try{
-
-&nbsp; let name=document.getElementById("name").value.trim();
-
-&nbsp; let phone=document.getElementById("phone").value.trim();
-
-&nbsp;let invoice = normalizeNumber(
-
-&nbsp; document.getElementById("invoice").value.trim()
-
+ try{
+  let name=document.getElementById("name").value.trim();
+  let phone=document.getElementById("phone").value.trim();
+ let invoice = normalizeNumber(
+  document.getElementById("invoice").value.trim()
 );
+  let type=document.getElementById("type").value;
+  let start=document.getElementById("start").value;
 
-&nbsp; let type=document.getElementById("type").value;
+  if(!name || !phone || !invoice){
+    alert("أكمل جميع الحقول");
+    throw "stop";
+  }
 
-&nbsp; let start=document.getElementById("start").value;
+  // منع التكرار المحلي
+  if(usedInvoices.has(invoice)){
+    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+    throw "stop";
+  }
 
+  // منع التكرار من الشيت
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+    throw "stop";
+  }
 
+  let days = type==="screen" ? 30 : 365;
+  let [d,m,y]=start.split("/");
+  let end=new Date(y, m-1, d);
+  end.setDate(end.getDate()+days);
 
-&nbsp; if(!name || !phone || !invoice){
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
 
-&nbsp;   alert("أكمل جميع الحقول");
-
-&nbsp;   throw "stop";
-
-&nbsp; }
-
-
-
-&nbsp; // منع التكرار المحلي
-
-&nbsp; if(usedInvoices.has(invoice)){
-
-&nbsp;   showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
-
-&nbsp;   throw "stop";
-
-&nbsp; }
-
-
-
-&nbsp; // منع التكرار من الشيت
-
-&nbsp; let rows=(await (await fetch(SHEET)).text()).split("\\n").map(r=>r.split(","));
-
-&nbsp; if(rows.find(r=>r\[0] \&\& r\[0].trim()===invoice)){
-
-&nbsp;   showDup("⚠️ رقم الفاتورة موجود مسبقاً");
-
-&nbsp;   throw "stop";
-
-&nbsp; }
-
-
-
-&nbsp; let days = type==="screen" ? 30 : 365;
-
-&nbsp; let \[d,m,y]=start.split("/");
-
-&nbsp; let end=new Date(y, m-1, d);
-
-&nbsp; end.setDate(end.getDate()+days);
-
-
-
-&nbsp; let remaining=Math.ceil((end-new Date())/(1000\*60\*60\*24));
-
-
-
-&nbsp; result.style.display="block";
-
+  result.style.display="block";
 result.innerHTML = `
-
 ✔️ تم تفعيل الضمان<br>
-
 تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
-
 ⏳ المتبقي: <b>${remaining}</b> يوم
 
-
-
 <div style="
-
-&nbsp; margin-top:10px;
-
-&nbsp; padding:8px 12px;
-
-&nbsp; background:#fff3cd;
-
-&nbsp; color:#856404;
-
-&nbsp; border-radius:8px;
-
-&nbsp; font-size:16px;
-
-&nbsp; text-align:center;
-
-&nbsp; letter-spacing:0.3px;
-
+  margin-top:10px;
+  padding:8px 12px;
+  background:#fff3cd;
+  color:#856404;
+  border-radius:8px;
+  font-size:16px;
+  text-align:center;
+  letter-spacing:0.3px;
 ">
-
 ⚠️ <div>الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
-
 <div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
-
 </div>
-
 `;
+   
+  usedInvoices.add(invoice);
 
-&nbsp;  
+  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+  });
 
-&nbsp; usedInvoices.add(invoice);
+  btn.innerText="تم ✔️";
+  btn.disabled=false;
 
-
-
-&nbsp; await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
-
-&nbsp;   method:"POST",
-
-&nbsp;   headers:{"Content-Type":"application/json"},
-
-&nbsp;   body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
-
-&nbsp; });
-
-
-
-&nbsp; btn.innerText="تم ✔️";
-
-&nbsp; btn.disabled=false;
-
-
-
-&nbsp;}catch(e){
-
-&nbsp; btn.innerText="تفعيل الضمان";
-
-&nbsp; btn.disabled=false;
-
-&nbsp;}
-
+ }catch(e){
+  btn.innerText="تفعيل الضمان";
+  btn.disabled=false;
+ }
 }
-
-
 
 async function checkWarranty(){
-
-&nbsp;let v = normalizeNumber(
-
-&nbsp; document.getElementById("inv").value.trim()
-
+ let v = normalizeNumber(
+  document.getElementById("inv").value.trim()
 );
+ let out=document.getElementById("out");
+ if(!v){alert("أدخل رقم الفاتورة");return;}
 
-&nbsp;let out=document.getElementById("out");
-
-&nbsp;if(!v){alert("أدخل رقم الفاتورة");return;}
-
-
-
-&nbsp;let rows=(await (await fetch(SHEET)).text()).split("\\n").map(r=>r.split(","));
-
+ let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
 let r = rows.find(r =>
-
-&nbsp; r\[0] \&\& normalizeNumber(r\[0].trim()) === v
-
+  r[0] && normalizeNumber(r[0].trim()) === v
 );
+ out.style.display="block";
 
-&nbsp;out.style.display="block";
-
-
-
-&nbsp;if(r){
-
-&nbsp; let \[y,m,d]=r\[5].split("/");
-
-&nbsp; let end=new Date(y,m-1,d);
-
-&nbsp; let remaining=Math.ceil((end-new Date())/(1000\*60\*60\*24));
-
-&nbsp; out.innerHTML=`
-
+ if(r){
+  let [y,m,d]=r[5].split("/");
+  let end=new Date(y,m-1,d);
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+  out.innerHTML=`
 ✔️ الضمان موجود<br>
-
-الاسم: ${r\[1]}<br>
-
-الهاتف: ${r\[2]}<br>
-
-النوع: ${r\[3]}<br>
-
-البدء: ${r\[4]}<br>
-
-الانتهاء: ${r\[5]}<br>
-
+الاسم: ${r[1]}<br>
+الهاتف: ${r[2]}<br>
+النوع: ${r[3]}<br>
+البدء: ${r[4]}<br>
+الانتهاء: ${r[5]}<br>
 ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
-
 `;
-
-&nbsp;}else{
-
-&nbsp; out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
-
-&nbsp;}
-
+ }else{
+  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+ }
 }
-
- 
+</script>
+  
 <script>
+const PRICES_SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
-const PRICES\_SHEET =
-
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD\_xh07\_EvIF\_-3xhfdEYp\_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
-
-
-
-let pricesData = \[];
-
-
+let pricesData = [];
 
 async function loadPrices(){
+  const res = await fetch(PRICES_SHEET);
+  const text = await res.text();
+  const rows = text.trim().split("\n").map(r => r.split(","));
+  const headers = rows.shift().map(h => h.trim().toLowerCase());
 
-&nbsp; const res = await fetch(PRICES\_SHEET);
+  pricesData = rows.map(r=>{
+    let o = {};
+    headers.forEach((h,i)=> o[h] = (r[i]||"").trim());
+    return o;
+  });
 
-&nbsp; const text = await res.text();
-
-&nbsp; const rows = text.trim().split("\\n").map(r => r.split(","));
-
-&nbsp; const headers = rows.shift().map(h => h.trim().toLowerCase());
-
-
-
-&nbsp; pricesData = rows.map(r=>{
-
-&nbsp;   let o = {};
-
-&nbsp;   headers.forEach((h,i)=> o\[h] = (r\[i]||"").trim());
-
-&nbsp;   return o;
-
-&nbsp; });
-
-
-
-&nbsp; console.log("✅ prices loaded", pricesData);
-
+  console.log("✅ prices loaded", pricesData);
 }
-
-&nbsp; function formatPriceIQD(n){
-
-&nbsp; return Number(n).toLocaleString("de-DE");
-
+  function formatPriceIQD(n){
+  return Number(n).toLocaleString("de-DE");
 }
-
 function openBrand(el){
+  const brands = el.dataset.brand.split(",").map(b=>b.trim());
 
-&nbsp; const brands = el.dataset.brand.split(",").map(b=>b.trim());
+  document.getElementById("brandsSection").style.display = "none";
+  document.getElementById("brandPrices").style.display = "block";
 
-
-
-&nbsp; document.getElementById("brandsSection").style.display = "none";
-
-&nbsp; document.getElementById("brandPrices").style.display = "block";
-
-
-
-&nbsp; const box = document.getElementById("brandPricesBox");
-
-&nbsp; box.innerHTML = `
-
-&nbsp;   <h3 style="color:#1e88e5; margin:10px 0;">
-
-&nbsp;     أسعار ${brands.join(" / ")}
-
-&nbsp;   </h3>
-
-&nbsp; `;
-
+  const box = document.getElementById("brandPricesBox");
+  box.innerHTML = `
+    <h3 style="color:#1e88e5; margin:10px 0;">
+      أسعار ${brands.join(" / ")}
+    </h3>
+  `;
 // ربط البحث مع نتائج الماركة
-
 const searchInput = document.getElementById("searchInput");
-
 searchInput.value = ""; // تفريغ البحث عند فتح ماركة جديدة
 
-
-
 searchInput.oninput = function () {
+  const q = this.value.trim().toLowerCase();
+  const items = box.querySelectorAll(".price-item");
 
-&nbsp; const q = this.value.trim().toLowerCase();
-
-&nbsp; const items = box.querySelectorAll(".price-item");
-
-
-
-&nbsp; items.forEach(item => {
-
-&nbsp;   const text = item.innerText.toLowerCase();
-
-&nbsp;   item.style.display = text.includes(q) ? "block" : "none";
-
-&nbsp; });
-
+  items.forEach(item => {
+    const text = item.innerText.toLowerCase();
+    item.style.display = text.includes(q) ? "block" : "none";
+  });
 };
+  const filtered = pricesData.filter(p =>
+    brands.map(b=>b.toLowerCase()).includes((p.brand||"").toLowerCase())
+  );
 
-&nbsp; const filtered = pricesData.filter(p =>
+  if(filtered.length === 0){
+    box.innerHTML += "<div style='padding:10px'>لا توجد أسعار</div>";
+    return;
+  }
 
-&nbsp;   brands.map(b=>b.toLowerCase()).includes((p.brand||"").toLowerCase())
+ filtered.forEach(p=>{
+  box.innerHTML += `
+    <div class="price-item" style="
+      padding:12px;
+      border:1px solid #ccc;
+      margin:8px 0;
+      border-radius:10px;
+      background:#f9fbff
+    ">
+      <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+      <div style="margin-top:4px">
+       <b>الاسم:</b> ${p.name}
+      </div>
 
-&nbsp; );
+      <div style="margin-top:4px">
+        <b>النوع:</b> ${p.type || "-"}
+      </div>
 
+      <div style="margin-top:4px">
+        <b>السعر:</b>
+        ${
+          p.qty && Number(p.qty)>0
+          ? `<span style="color:#1e88e5;font-weight:bold">
+              ${formatPriceIQD(p.price)} د.ع
+             </span>`
+          : `<span style="color:#c62828;font-weight:bold">
+               غير متوفر
+             </span>`
+        }
+      </div>
 
-
-&nbsp; if(filtered.length === 0){
-
-&nbsp;   box.innerHTML += "<div style='padding:10px'>لا توجد أسعار</div>";
-
-&nbsp;   return;
-
-&nbsp; }
-
-
-
-&nbsp;filtered.forEach(p=>{
-
-&nbsp; box.innerHTML += `
-
-&nbsp;   <div class="price-item" style="
-
-&nbsp;     padding:12px;
-
-&nbsp;     border:1px solid #ccc;
-
-&nbsp;     margin:8px 0;
-
-&nbsp;     border-radius:10px;
-
-&nbsp;     background:#f9fbff
-
-&nbsp;   ">
-
-&nbsp;     <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
-
-&nbsp;     <div style="margin-top:4px">
-
-&nbsp;      <b>الاسم:</b> ${p.name}
-
-&nbsp;     </div>
-
-
-
-&nbsp;     <div style="margin-top:4px">
-
-&nbsp;       <b>النوع:</b> ${p.type || "-"}
-
-&nbsp;     </div>
-
-
-
-&nbsp;     <div style="margin-top:4px">
-
-&nbsp;       <b>السعر:</b>
-
-&nbsp;       ${
-
-&nbsp;         p.qty \&\& Number(p.qty)>0
-
-&nbsp;         ? `<span style="color:#1e88e5;font-weight:bold">
-
-&nbsp;             ${formatPriceIQD(p.price)} د.ع
-
-&nbsp;            </span>`
-
-&nbsp;         : `<span style="color:#c62828;font-weight:bold">
-
-&nbsp;              غير متوفر
-
-&nbsp;            </span>`
-
-&nbsp;       }
-
-&nbsp;     </div>
-
-
-
-&nbsp;     <div style="margin-top:6px;color:#555;font-size:14px">
-
-&nbsp;       <b>الملاحظات:</b> ${p.notes \&\& p.notes.trim() ? p.notes : "—"}
-
-&nbsp;     </div>
-
-&nbsp;   </div>
-
-&nbsp; `;
-
+      <div style="margin-top:6px;color:#555;font-size:14px">
+        <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
+      </div>
+    </div>
+  `;
 });
-
 }
+  function openPrices(){
+  show("prices");
 
-&nbsp; function openPrices(){
-
-&nbsp; show("prices");
-
-
-
-&nbsp; // نرجّع الأسعار على وضعها الطبيعي
-
-&nbsp; document.getElementById("brandsSection").style.display = "block";
-
-&nbsp; document.getElementById("brandPrices").style.display = "none";
-
+  // نرجّع الأسعار على وضعها الطبيعي
+  document.getElementById("brandsSection").style.display = "block";
+  document.getElementById("brandPrices").style.display = "none";
 }
-
 function backToBrands(){
-
-&nbsp; document.getElementById("brandPrices").style.display = "none";
-
-&nbsp; document.getElementById("brandsSection").style.display = "block";
-
+  document.getElementById("brandPrices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
 }
-
-
 
 loadPrices();
-
+</script>
 </body>
 </html>
