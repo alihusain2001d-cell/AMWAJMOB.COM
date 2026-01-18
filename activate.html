@@ -372,7 +372,7 @@ async function sendData(){
 
  btn.disabled=true;
  btn.innerText="جاري التفعيل…";
- dupMsg.style.display="none";
+if (dupMsg) dupMsg.style.display = "none";
 
  try{
   let name=document.getElementById("name").value.trim();
