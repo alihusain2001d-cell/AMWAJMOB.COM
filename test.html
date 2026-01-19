@@ -455,21 +455,21 @@ async function checkWarranty(){
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
 let r = rows.find(r =>
-  r[0] && normalizeNumber(r[0].trim()) === v
+  r[1] && normalizeNumber(r[1].trim()) === v
 );
  out.style.display="block";
 
  if(r){
-  let [y,m,d]=r[5].split("/");
+  let [y,m,d]=r[6].split("/");
   let end=new Date(y,m-1,d);
   let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
   out.innerHTML=`
 ✔️ الضمان موجود<br>
-الاسم: ${r[1]}<br>
-الهاتف: ${r[2]}<br>
-النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
+الاسم: ${r[2]}<br>
+الهاتف: ${r[3]}<br>
+النوع: ${r[4]}<br>
+البدء: ${r[5]}<br>
+الانتهاء: ${r[6]}<br>
 ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
 `;
  }else{
