@@ -360,8 +360,9 @@ function formatDate(d){
 document.getElementById("start").value = formatDate(new Date());
 
 function showDup(m){
- dupMsg.innerText=m;
- dupMsg.style.display="block";
+  const dupMsg = document.getElementById("dupMsg");
+  dupMsg.innerText = m;
+  dupMsg.style.display = "block";
 }
 
 async function sendData(){
