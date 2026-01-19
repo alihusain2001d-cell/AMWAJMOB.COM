@@ -400,10 +400,7 @@ let screenCode = document.getElementById("screenCode").value.trim();
   showDup("⚠️ كود الشاشة مستخدم مسبقاً");
   throw "stop";
 }
-    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
-    throw "stop";
-  }
-
+   
   let days = type==="screen" ? 30 : 365;
   let [d,m,y]=start.split("/");
   let end=new Date(y, m-1, d);
