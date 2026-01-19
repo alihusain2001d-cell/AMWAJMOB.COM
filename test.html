@@ -378,12 +378,16 @@ async function sendData(){
  try{
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
-   let screenName = document.getElementById("screenName").value.trim();
+   nName = document.getElementById("screenName").value.trim();
 let invoice = normalizeNumber(
   document.getElementById("invoice").value.trim()
    
 );
-   let screenCode = document.getElementById("screenCode").value.trim();
+  let screenCode = document
+  .getElementById("screenCode")
+  .value
+  .trim()
+  .toLowerCase();   // 🔴 المهم
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
 
@@ -399,12 +403,14 @@ let invoice = normalizeNumber(
   }
 
   // منع التكرار من الشيت
-  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-    if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
-  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+let rows = (await (await fetch(SHEET)).text())
+  .split("\n")
+  .map(r => r.split(","));
+
+if ( rows.find(r =>r[2] && r[2].trim().toLowerCase() === screenCode )
+) {showDup("⚠️ هذا الكود مفعل مسبقاً");
   throw "stop";
 }
-   
   let days = type==="screen" ? 30 : 365;
   let [d,m,y]=start.split("/");
   let end=new Date(y, m-1, d);
