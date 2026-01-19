@@ -1,64 +1,590 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>اختبار تفعيل الضمان</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<title>أمواج للإلكترونيات</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <style>
-    body{
-      font-family: sans-serif;
-      background:#f2f6ff;
-      padding:20px;
-    }
-    .box{
-      max-width:400px;
-      margin:auto;
-      background:#fff;
-      padding:20px;
-      border-radius:12px;
-      box-shadow:0 10px 20px rgba(0,0,0,.1);
-    }
-    label{font-weight:bold}
-    input,button{
-      width:100%;
-      padding:10px;
-      margin:8px 0;
-      border-radius:8px;
-      border:1px solid #ccc;
-      font-size:16px;
-    }
-    button{
-      background:#1e88e5;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-    }
-  </style>
+<!-- أيقونة التبويب -->
+<link rel="icon" type="image/png" href="LOGO%20MOB.png">
+
+<!-- أيقونة إضافة للشاشة الرئيسية (iPhone / Android) -->
+<link rel="apple-touch-icon" href="LOGO%20MOB.png">
+
+<meta name="apple-mobile-web-app-title" content="أمواج للإلكترونيات">
+<meta name="application-name" content="أمواج للإلكترونيات">
+<meta name="theme-color" content="#1e88e5">
+<style>
+body{
+  font-family: sans-serif;
+  padding: 18px;
+  background: linear-gradient(135deg,#e6f6ff,#cfefff,#e6f6ff);
+}
+#btnActivate{
+  padding: 18px;
+  font-size: 18px;
+  border-radius: 14px;
+}
+.container{
+  max-width:580px;
+  margin:auto;
+  background:#fff;
+  padding:18px;
+  border-radius:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
+}
+.logo{text-align:center;margin-bottom:12px}
+.logo img{width:140px}
+.bigbtn{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:0;
+  margin:8px 0;
+  font-size:20px;
+  font-weight:bold;
+  cursor:pointer;
+}
+  
+.big1{background:#1e88e5;color:#fff}
+.big2{background:#6c7d90;color:#fff}
+label{font-weight:bold;font-size:14px}
+input,select,button{
+  width:100%;
+  padding:6px;
+  margin:6px 0 14px;
+  border-radius:10px;
+  border:1px solid #ccd6e6;
+  font-size:14px;
+}
+button{background:#1e88e5;color:#fff;border:none}
+.result{
+  background:#e8f4ff;
+  padding:12px;
+  border-radius:10px;
+  display:none;
+}
+.msg-err{
+  display:none;
+  background:#fde7e7;
+  color:#b10606;
+  border:1px solid #f3bcbc;
+  padding:10px;
+  border-radius:10px;
+  margin:10px 0;
+  font-weight:bold;
+}
+.footer{text-align:center;margin-top:12px;font-size:16px}
+.whatsapp{
+  background:#25D366;
+  color:#fff;
+  padding:10px;
+  display:block;
+  text-align:center;
+  border-radius:10px;
+  margin-top:14px;
+  text-decoration:none;
+}
+.warranty-note{
+  margin-top:12px;
+  padding:10px 14px;
+  background:#fff3cd;   /* أصفر هادئ */
+  color:#856404;        /* واضح ومقروء */
+  border-radius:10px;
+  font-size:16px;
+  text-align:center;
+}
+  .brands-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-top:16px;
+}
+
+.brand{
+  background:#eef4fb;
+  border-radius:14px;
+  padding:18px 10px;
+  text-align:center;
+  font-weight:bold;
+  color:#1e3a5f;
+}
+  .brand {
+  cursor: pointer;
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 18px 10px;
+  text-align: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.brand:hover {
+  background: #e9eef5;
+  transform: scale(1.02);
+}
+
+.brand:active {
+  transform: scale(0.98);
+  background: #dfe6ef;
+}
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.brand small {
+  display: block;
+  font-weight: normal;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+</style>
 </head>
-
 <body>
 
-<div class="box">
-  <h3>اختبار تفعيل الضمان</h3>
+<script>
+function normalizeNumber(str) {
+  if (!str) return "";
+  return str
+    .replace(/٠/g,"0")
+    .replace(/١/g,"1")
+    .replace(/٢/g,"2")
+    .replace(/٣/g,"3")
+    .replace(/٤/g,"4")
+    .replace(/٥/g,"5")
+    .replace(/٦/g,"6")
+    .replace(/٧/g,"7")
+    .replace(/٨/g,"8")
+    .replace(/٩/g,"9");
+}
+</script>
+
+
+<div class="container">
+
+<div class="logo">
+  <img src="1633875906547.jpg">
+</div>
+
+<!-- الرئيسية -->
+<div id="home">
+  <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
+  <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
+  <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
+<div style="
+  margin-top:14px;
+  text-align:center;
+  font-size:16px;
+  color:#555;
+">
+  📞 للاستفسار:
+  <a href="tel:7696" style="
+    font-weight:bold;
+    color:#1e88e5;
+    text-decoration:none;
+  ">7696</a>
+  <div style="margin-top:6px;">
+     أمواج للإلكترونيات يرحب بكم 🌊
+  </div>
+</div>
+
+<a
+  href="https://wa.me/9647709000160"
+  target="_blank"
+  style="
+    display:block;
+    margin-top:12px;
+    background:#25D366;
+    color:#fff;
+    padding:12px;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:bold;
+    text-decoration:none;
+    text-align:center;
+  "
+>
+  🟢 تواصل عبر واتساب
+</a>
+  </div>
+<!-- التفعيل -->
+<div id="activate" style="display:none">
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>تفعيل ضمان أمواج للإلكترونيات</h3>
 
   <label>اسم الزبون</label>
   <input id="name">
 
+  <label>رقم الهاتف</label>
+  <input id="phone">
+
   <label>رقم الفاتورة</label>
   <input id="invoice">
 
-  <button onclick="testClick()">اضغط هنا</button>
+  <label>كود الضمان</label>
+<input id="warrantyCode" placeholder="اكتب كود الضمان الموجود خلف الشاشة">
+
+  <label>نوع القطعة</label>
+  <select id="type">
+    <option value="screen">شاشة</option>
+    <option value="battery">بطارية</option>
+  </select>
+
+  <label>تاريخ التركيب</label>
+  <input id="start" readonly>
+
+  <div id="dupMsg" class="msg-err"></div>
+
+  <button id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
+  <div id="result" class="result"></div>
+
+  <div class="footer">
+📞 للاستفسار:
+<a href="tel:7696" style="font-weight:bold;color:#1e88e5;text-decoration:none">7696</a><br>
+شكراً لاختياركم أمواج للألكترونيات 🌊
+<a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
+  </div>
+  </div>
+<!-- التحقق -->
+<div id="check" style="display:none">
+  <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>تحقق من الضمان</h3>
+  <input id="inv" placeholder="أدخل رقم الفاتورة">
+  <button onclick="checkWarranty()">بحث</button>
+  <div id="out" class="result"></div>
 </div>
 
-<script>
-function testClick(){
-  const name = document.getElementById("name").value;
-  const invoice = document.getElementById("invoice").value;
 
-  alert("شغال ✅\nالاسم: " + name + "\nالفاتورة: " + invoice);
+
+  
+<div id="prices" style="display:none">
+ <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+  <h3>أسعار الشاشات</h3>
+  
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="بحث عن الموديل..."
+    style="width:100%;margin:10px 0;padding:8px;"
+  >
+  <div id="pricesBox"></div>
+  <div id="brandPrices" style="display:none">
+  <button onclick="backToBrands()" class="bigbtn big2">⬅ رجوع إلى الماركات</button>
+  <div id="brandPricesBox"></div>
+</div>
+  <div id="brandsSection">
+<div class="brands-grid">
+
+  <div class="brand" data-brand="Apple"onclick="openBrand(this)">
+    ايفون
+    <small>iPhone</small>
+  </div>
+
+  <div class="brand" data-brand="Samsung"onclick="openBrand(this)">
+    سامسونج
+    <small>Samsung</small>
+  </div>
+
+  <div class="brand" data-brand="Huawei"onclick="openBrand(this)">
+    هواوي
+    <small>Huawei</small>
+  </div>
+
+  <div class="brand" data-brand="Xiaomi"onclick="openBrand(this)">
+    شاومي
+    <small>Xiaomi</small>
+  </div>
+
+  <div class="brand" data-brand="Redmi,Poco"onclick="openBrand(this)">
+    ريدمي + بوكو
+    <small>Redmi & Poco</small>
+  </div>
+
+  <div class="brand" data-brand="Infinix,Tecno"onclick="openBrand(this)">
+    انفنكس + تكنو
+    <small>Infinix & Tecno</small>
+  </div>
+
+  <div class="brand" data-brand="Oppo,Realme"onclick="openBrand(this)">
+    اوبو + ريلمي
+    <small>Oppo & Realme</small>
+  </div>
+
+  <div class="brand" data-brand="Vivo,Wiko"onclick="openBrand(this)">
+    فيفو + ويكو
+    <small>Vivo & Wiko</small>
+  </div>
+
+  <div class="brand" data-brand="Asus,RedMagic,Google"onclick="openBrand(this)">
+    ازوز + ريد ماجك + كوكل
+    <small>Asus • RedMagic • Google</small>
+  </div>
+
+  <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview"onclick="openBrand(this)">
+    ZTE + Alcatel + TCL
+    <small>ZTE • Alcatel • TCL • Blackview</small>
+  </div>
+</div>
+</div>
+<script>
+
+const SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
+let usedInvoices = new Set();
+
+function openAct(){ show("activate"); }
+function openChk(){ show("check"); }
+function openPrices(){ show("prices"); }
+function backHome(){ show("home"); }
+
+function show(id){
+  const sections = ["home","activate","check","prices"];
+  sections.forEach(s=>{
+    const el = document.getElementById(s);
+    if(el) el.style.display="none";
+  });
+  const target = document.getElementById(id);
+  if(target) target.style.display="block";
+}
+
+function formatDate(d){
+ let x=new Date(d);
+ return String(x.getDate()).padStart(2,'0')+"/"+String(x.getMonth()+1).padStart(2,'0')+"/"+x.getFullYear();
+}
+document.getElementById("start").value = formatDate(new Date());
+
+function showDup(m){
+ dupMsg.innerText=m;
+ dupMsg.style.display="block";
+}
+
+async function sendData(){
+ const btn=document.getElementById("btnActivate");
+ const result=document.getElementById("result");
+ const dupMsg=document.getElementById("dupMsg");
+
+ btn.disabled=true;
+ btn.innerText="جاري التفعيل…";
+ dupMsg.style.display="none";
+
+ try{
+  let name=document.getElementById("name").value.trim();
+  let phone=document.getElementById("phone").value.trim();
+ let invoice = normalizeNumber(
+  document.getElementById("invoice").value.trim()
+);
+  let type=document.getElementById("type").value;
+  let start=document.getElementById("start").value;
+
+  if(!name || !phone || !invoice){
+    alert("أكمل جميع الحقول");
+    throw "stop";
+  }
+
+  // منع التكرار المحلي
+  if(usedInvoices.has(invoice)){
+    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+    throw "stop";
+  }
+
+  // منع التكرار من الشيت
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
+    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
+    throw "stop";
+  }
+
+  let days = type==="screen" ? 30 : 365;
+  let [d,m,y]=start.split("/");
+  let end=new Date(y, m-1, d);
+  end.setDate(end.getDate()+days);
+
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+
+  result.style.display="block";
+result.innerHTML = `
+✔️ تم تفعيل الضمان<br>
+تاريخ الانتهاء: <b>${formatDate(end)}</b><br>
+⏳ المتبقي: <b>${remaining}</b> يوم
+
+<div style="
+  margin-top:10px;
+  padding:8px 12px;
+  background:#fff3cd;
+  color:#856404;
+  border-radius:8px;
+  font-size:16px;
+  text-align:center;
+  letter-spacing:0.3px;
+">
+⚠️ <div>الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ
+<div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
+</div>
+`;
+   
+  usedInvoices.add(invoice);
+
+  await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+  });
+
+  btn.innerText="تم ✔️";
+  btn.disabled=false;
+
+ }catch(e){
+  btn.innerText="تفعيل الضمان";
+  btn.disabled=false;
+ }
+}
+
+async function checkWarranty(){
+ let v = normalizeNumber(
+  document.getElementById("inv").value.trim()
+);
+ let out=document.getElementById("out");
+ if(!v){alert("أدخل رقم الفاتورة");return;}
+
+ let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+let r = rows.find(r =>
+  r[0] && normalizeNumber(r[0].trim()) === v
+);
+ out.style.display="block";
+
+ if(r){
+  let [y,m,d]=r[5].split("/");
+  let end=new Date(y,m-1,d);
+  let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
+  out.innerHTML=`
+✔️ الضمان موجود<br>
+الاسم: ${r[1]}<br>
+الهاتف: ${r[2]}<br>
+النوع: ${r[3]}<br>
+البدء: ${r[4]}<br>
+الانتهاء: ${r[5]}<br>
+${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
+`;
+ }else{
+  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+ }
 }
 </script>
+  
+<script>
+const PRICES_SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 
+let pricesData = [];
+
+async function loadPrices(){
+  const res = await fetch(PRICES_SHEET);
+  const text = await res.text();
+  const rows = text.trim().split("\n").map(r => r.split(","));
+  const headers = rows.shift().map(h => h.trim().toLowerCase());
+
+  pricesData = rows.map(r=>{
+    let o = {};
+    headers.forEach((h,i)=> o[h] = (r[i]||"").trim());
+    return o;
+  });
+
+  console.log("✅ prices loaded", pricesData);
+}
+  function formatPriceIQD(n){
+  return Number(n).toLocaleString("de-DE");
+}
+function openBrand(el){
+  const brands = el.dataset.brand.split(",").map(b=>b.trim());
+
+  document.getElementById("brandsSection").style.display = "none";
+  document.getElementById("brandPrices").style.display = "block";
+
+  const box = document.getElementById("brandPricesBox");
+  box.innerHTML = `
+    <h3 style="color:#1e88e5; margin:10px 0;">
+      أسعار ${brands.join(" / ")}
+    </h3>
+  `;
+// ربط البحث مع نتائج الماركة
+const searchInput = document.getElementById("searchInput");
+searchInput.value = ""; // تفريغ البحث عند فتح ماركة جديدة
+
+searchInput.oninput = function () {
+  const q = this.value.trim().toLowerCase();
+  const items = box.querySelectorAll(".price-item");
+
+  items.forEach(item => {
+    const text = item.innerText.toLowerCase();
+    item.style.display = text.includes(q) ? "block" : "none";
+  });
+};
+  const filtered = pricesData.filter(p =>
+    brands.map(b=>b.toLowerCase()).includes((p.brand||"").toLowerCase())
+  );
+
+  if(filtered.length === 0){
+    box.innerHTML += "<div style='padding:10px'>لا توجد أسعار</div>";
+    return;
+  }
+
+ filtered.forEach(p=>{
+  box.innerHTML += `
+    <div class="price-item" style="
+      padding:12px;
+      border:1px solid #ccc;
+      margin:8px 0;
+      border-radius:10px;
+      background:#f9fbff
+    ">
+      <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+      <div style="margin-top:4px">
+       <b>الاسم:</b> ${p.name}
+      </div>
+
+      <div style="margin-top:4px">
+        <b>النوع:</b> ${p.type || "-"}
+      </div>
+
+      <div style="margin-top:4px">
+        <b>السعر:</b>
+        ${
+          p.qty && Number(p.qty)>0
+          ? `<span style="color:#1e88e5;font-weight:bold">
+              ${formatPriceIQD(p.price)} د.ع
+             </span>`
+          : `<span style="color:#c62828;font-weight:bold">
+               غير متوفر
+             </span>`
+        }
+      </div>
+
+      <div style="margin-top:6px;color:#555;font-size:14px">
+        <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
+      </div>
+    </div>
+  `;
+});
+}
+  function openPrices(){
+  show("prices");
+
+  // نرجّع الأسعار على وضعها الطبيعي
+  document.getElementById("brandsSection").style.display = "block";
+  document.getElementById("brandPrices").style.display = "none";
+}
+function backToBrands(){
+  document.getElementById("brandPrices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+}
+
+loadPrices();
+</script>
 </body>
 </html>
