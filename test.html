@@ -376,9 +376,11 @@ async function sendData(){
  try{
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
- let invoice = normalizeNumber(
+let invoice = normalizeNumber(
   document.getElementById("invoice").value.trim()
-   let screenCode = document.getElementById("screenCode").value.trim();
+);
+
+let screenCode = document.getElementById("screenCode").value.trim();
 );
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
