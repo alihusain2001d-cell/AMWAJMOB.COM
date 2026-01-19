@@ -452,14 +452,14 @@ result.innerHTML = `
 
 async function checkWarranty(){
  let v = normalizeNumber(
-  document.getElementById("inv").value.trim()
+  document.getElementById("inv").value.trim().toLowerCase()
 );
  let out=document.getElementById("out");
- if(!v){alert("أدخل رقم الفاتورة");return;}
+ if(!v){alert("أدخل كود الشاشة");return;}
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
 let r = rows.find(r =>
-  r[2] && normalizeNumber(r[2].trim()) === v
+  r[2] && normalizeNumber(r[2].trim().toLowerCase()) === v
 );
  out.style.display="block";
 
