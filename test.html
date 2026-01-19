@@ -592,6 +592,22 @@ function backToBrands(){
 }
 
 loadPrices();
+
+  <script>
+function show(id){
+  const sections = ["home","activate","check","prices"];
+  sections.forEach(s=>{
+    const el = document.getElementById(s);
+    if(el) el.style.display = "none";
+  });
+  const target = document.getElementById(id);
+  if(target) target.style.display = "block";
+}
+
+function openAct(){ show("activate"); }
+function openChk(){ show("check"); }
+function openPrices(){ show("prices"); }
+function backHome(){ show("home"); }
 </script>
 </body>
 </html>
