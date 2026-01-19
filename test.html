@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -366,11 +367,6 @@ function showDup(m){
  dupMsg.style.display="block";
 }
 
-<script>
-function normalizeCode(code){
-  if(!code) return "";
-  return code.trim().toLowerCase();
-}
 async function sendData(){
  const btn=document.getElementById("btnActivate");
  const result=document.getElementById("result");
@@ -383,14 +379,16 @@ async function sendData(){
  try{
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
-   let Name = document.getElementById("screenName").value.trim();
+   nName = document.getElementById("screenName").value.trim();
 let invoice = normalizeNumber(
   document.getElementById("invoice").value.trim()
    
 );
-  let screenCode = normalizeCode(
-  document.getElementById("screenCode").value
-);
+  let screenCode = document
+  .getElementById("screenCode")
+  .value
+  .trim()
+  .toLowerCase();   // 🔴 المهم
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
 
@@ -410,8 +408,8 @@ let rows = (await (await fetch(SHEET)).text())
   .split("\n")
   .map(r => r.split(","));
 
-if (rows.find(r => r[2] && normalizeCode(r[2]) === screenCode)) {
-  showDup("⚠️ هذا الكود مفعل مسبقًا");
+if ( rows.find(r =>r[2] && r[2].trim().toLowerCase() === screenCode )
+) {showDup("⚠️ هذا الكود مفعل مسبقاً");
   throw "stop";
 }
   let days = type==="screen" ? 30 : 365;
@@ -457,19 +455,18 @@ result.innerHTML = `
   btn.innerText="تفعيل الضمان";
   btn.disabled=false;
  }
-
-
-
 }
+
 async function checkWarranty(){
-let v = normalizeCode(
-  document.getElementById("inv").value
+ let v = normalizeNumber(
+  document.getElementById("inv").value.trim().toLowerCase()
 );
  let out=document.getElementById("out");
  if(!v){alert("أدخل كود الشاشة");return;}
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-let r = rows.find(r => r[2] && normalizeCode(r[2]) === v
+let r = rows.find(r =>
+  r[2] && normalizeNumber(r[2].trim().toLowerCase()) === v
 );
  out.style.display="block";
 
