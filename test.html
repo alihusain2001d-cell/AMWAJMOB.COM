@@ -389,14 +389,13 @@ let screenCode = document.getElementById("screenCode").value.trim();
   }
 
   // منع التكرار المحلي
-  if(usedInvoices.has(invoice)){
-    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+  if(usedInvoices.has(screenCode)){
+    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
   }
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
     if(rows.find(r=>r[6] && r[6].trim()===screenCode)){
   showDup("⚠️ كود الشاشة مستخدم مسبقاً");
   throw "stop";
@@ -433,7 +432,7 @@ result.innerHTML = `
 </div>
 `;
    
-  usedInvoices.add(invoice);
+  usedScreenCodes.add(screenCode);
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
