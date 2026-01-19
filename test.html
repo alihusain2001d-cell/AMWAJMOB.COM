@@ -406,8 +406,8 @@ let rows = (await (await fetch(SHEET)).text())
   .split("\n")
   .map(r => r.split(","));
 
-if(rows.find(r => r[2] && normalizeCode(r[2]) === screenCode)){
-) {showDup("⚠️ هذا الكود مفعل مسبقاً");
+if (rows.find(r => r[2] && normalizeCode(r[2]) === screenCode)) {
+  showDup("⚠️ هذا الكود مفعل مسبقًا");
   throw "stop";
 }
   let days = type==="screen" ? 30 : 365;
