@@ -381,8 +381,8 @@ async function sendData(){
 );
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
-
-  if(!name || !phone || !invoice){
+let warrantyCode = document.getElementById("warrantyCode").value.trim();
+  if(!name || !phone || !invoice || !warrantyCode){
     alert("أكمل جميع الحقول");
     throw "stop";
   }
