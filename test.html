@@ -377,9 +377,11 @@ async function sendData(){
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
 let invoice = normalizeNumber(
+  document.getElementById("invoice").value.trim()
   let screenCode = document.getElementById("screenCode").value.trim();
+   
 );
-   document.getElementById("invoice").value.trim()
+   
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
 
@@ -396,7 +398,7 @@ let invoice = normalizeNumber(
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-    if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
+    if(rows.find(r=>r[1] && r[1].trim()===screenCode)){
   showDup("⚠️ كود الشاشة مستخدم مسبقاً");
   throw "stop";
 }
