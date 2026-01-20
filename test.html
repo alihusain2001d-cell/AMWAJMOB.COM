@@ -391,7 +391,7 @@ let invoice = normalizeNumber(
 
  if(!name || !phone || !invoice || !screenCode){
     alert("أكمل جميع الحقول");
-    throw "stop";
+    return "stop";
   }
 
   // منع التكرار المحلي
