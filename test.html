@@ -185,9 +185,19 @@ function normalizeNumber(str) {
 <div class="logo">
   <img src="1633875906547.jpg">
 </div>
+<div id="loginBox">
+  <h3>طلب دخول</h3>
 
+  <input id="loginName" placeholder="اسم الزبون">
+  <input id="loginShop" placeholder="اسم المتجر">
+  <input id="loginPhone" placeholder="رقم الموبايل" inputmode="numeric">
+
+  <button onclick="sendLoginRequest()">إرسال الطلب</button>
+
+  <div id="loginMsg"></div>
+</div>
 <!-- الرئيسية -->
-<div id="home">
+<div id="home" style="display:none">
   <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
   <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
   <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
@@ -508,7 +518,9 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
  }
 }
 </script>
-<script>
+
+ // تسجيل الدخول 
+  <script>
  async function isDuplicateInSheet(invoice, screenCode) {
   const rows = await getWarrantyRows();
 
@@ -521,7 +533,46 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 
   return sheetCode === sc;
 });
-</script>  
+</script> 
+  <script> 
+  async function sendLoginRequest(){
+  const name  = document.getElementById("loginName").value.trim();
+  const shop  = document.getElementById("loginShop").value.trim();
+  const phone = document.getElementById("loginPhone").value.trim();
+  const msg   = document.getElementById("loginMsg");
+
+  if(!name || !shop || !phone){
+    msg.innerText = "يرجى ملء جميع الحقول";
+    return;
+  }
+
+  const data = {
+    name,
+    shop,
+    phone,
+    status: "pending",
+    date: new Date().toLocaleString()
+  };
+
+  // 🔔 إشعار واتساب للإدارة (رقمك الخاص)
+  await fetch("PUT_YOUR_PIPEDREAM_WEBHOOK_HERE", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      text:
+`📥 طلب دخول جديد
+👤 الاسم: ${name}
+🏪 المتجر: ${shop}
+📞 الهاتف: ${phone}
+
+الرجاء الموافقة من لوحة الإدارة`
+    })
+  });
+
+  // ⬅️ هنا لاحقاً نربط Google Sheet
+  msg.innerText = "✅ تم إرسال الطلب، بانتظار الموافقة";
+}
+  </script>  
 <script>
 const PRICES_SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
