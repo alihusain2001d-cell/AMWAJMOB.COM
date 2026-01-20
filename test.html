@@ -470,9 +470,9 @@ result.innerHTML = `
 }
 
 async function checkWarranty(){
- let v = normalizeNumber(
-  document.getElementById("inv").value.trim().toLowerCase()
-);
+let v = normalizeNumber(
+  document.getElementById("inv").value
+).trim().toUpperCase();
  let out=document.getElementById("out");
  if(!v){alert("أدخل كود الشاشة");return;}
 
