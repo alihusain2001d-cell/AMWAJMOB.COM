@@ -483,15 +483,13 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 }
 </script>
 <script>
-  async function isDuplicateInSheet(invoice, screenCode) {
+ async function isDuplicateInSheet(invoice, screenCode) {
   const rows = await getWarrantyRows();
 
-  invoice = invoice.trim();
-  screenCode = screenCode.trim();
+  const sc = screenCode.trim().toUpperCase();
 
   return rows.some(r =>
-    r.invoice === invoice &&
-    r.screenCode === screenCode
+    (r.screenCode || "").trim().toUpperCase() === sc
   );
 }
 </script>  
