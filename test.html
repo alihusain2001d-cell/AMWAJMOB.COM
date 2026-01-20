@@ -391,27 +391,21 @@ let invoice = normalizeNumber(
 
  if(!name || !phone || !invoice || !screenCode){
     alert("أكمل جميع الحقول");
-    return "stop";
+    throw "stop";
   }
 
-  // منع التكرار المحلي
-  //if(usedInvoices.has(screenCode)){
-  //  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
-  //  throw "stop";
-  
+   منع التكرار المحلي
+  if(usedInvoices.has(screenCode)){
+    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+    throw "stop";
+  }
 
-  // منع التكرار من الشيت
- // let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-   // if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
-//  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
- // throw "stop";
-alert("وصلنا لمرحلة الفحص");
+   منع التكرار من الشيت
+  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+    if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
+  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+ throw "stop";
 
-if (await isDuplicateInSheet(invoice, screenCode)) {
-  alert("⚠️ كود الشاشة مستخدم مسبقًا");
-  return;
-
-alert("الكود غير مكرر – راح نكمل الحفظ");
 }
   
 
