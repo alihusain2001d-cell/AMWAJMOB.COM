@@ -444,7 +444,7 @@ result.innerHTML = `
     headers:{"Content-Type":"application/json"},
    body:JSON.stringify({name,phone,invoice,screenCode,screenName,type,start,end:formatDate(end)})
   });
- setTimeout(() => location.reload(), 1500);
+ setTimeout(() => location.reload(), 3000);
 
   btn.innerText="تم ✔️";
   btn.disabled=false;
