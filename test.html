@@ -482,7 +482,7 @@ let v = normalizeNumber(
 
  let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
 let r = rows.find(r =>
-  r[2] && normalizeNumber(r[2].trim().toLowerCase()) === v
+  r[2] && normalizeNumber(r[2].trim().toUpperCase()) === v
 );
  out.style.display="block";
 
