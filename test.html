@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -430,6 +431,7 @@ let invoice = normalizeNumber(
 
 }
   
+
    
   let days = type==="screen" ? 30 : 365;
   let [d,m,y]=start.split("/");
@@ -474,7 +476,7 @@ result.innerHTML = `
   btn.innerText="تفعيل الضمان";
   btn.disabled=false;
  }
-
+}
 
 async function checkWarranty(){
 let v = normalizeNumber(
@@ -514,7 +516,7 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
    setTimeout(() => {
   document.getElementById("checkNote").style.display = "none";
 }, 10000);
-
+}
 }
 </script>
 <script>
