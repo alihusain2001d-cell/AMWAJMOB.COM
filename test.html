@@ -405,9 +405,14 @@ let invoice = normalizeNumber(
    // if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
 //  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
  // throw "stop";
+alert("وصلنا لمرحلة الفحص");
+
 if (await isDuplicateInSheet(invoice, screenCode)) {
-  showDup("⚠️ كود الشاشة مستخدم مسبقًا");
+  alert("⚠️ كود الشاشة مستخدم مسبقًا");
   return;
+}
+
+alert("الكود غير مكرر – راح نكمل الحفظ");
 }
   
 
