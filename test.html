@@ -462,10 +462,10 @@ result.innerHTML = `
     headers:{"Content-Type":"application/json"},
    body:JSON.stringify({name,phone,invoice,screenCode,screenName,type,start,end:formatDate(end)})
   });
- setTimeout(() => location.reload(), 4000);
+ //setTimeout(() => location.reload(), 4000);
 
   btn.innerText="تم ✔️";
-  btn.disabled=false;
+  btn.disabled=true;
 
  }catch(e){
   btn.innerText="تفعيل الضمان";
