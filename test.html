@@ -535,6 +535,12 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 });
 </script> 
   <script> 
+
+    
+const USERS_SHEET =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+
+    
   async function sendLoginRequest(){
   const name  = document.getElementById("loginName").value.trim();
   const shop  = document.getElementById("loginShop").value.trim();
