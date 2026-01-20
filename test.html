@@ -437,14 +437,14 @@ result.innerHTML = `
 <div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
 </div>
 `;
-   
-
+  
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
    body:JSON.stringify({name,phone,invoice,screenCode,screenName,type,start,end:formatDate(end)})
   });
+ setTimeout(() => location.reload(), 1500);
 
   btn.innerText="تم ✔️";
   btn.disabled=false;
