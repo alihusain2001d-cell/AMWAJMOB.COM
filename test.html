@@ -480,7 +480,9 @@ let v = normalizeNumber(
  let out=document.getElementById("out");
  if(!v){alert("أدخل كود الشاشة");return;}
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+let rows = (await (await fetch(SHEET + "&_=" + Date.now())).text())
+  .split("\n")
+  .map(r => r.split(","));
 let r = rows.find(r =>
   r[2] && normalizeNumber(r[2].trim().toUpperCase()) === v
 );
