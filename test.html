@@ -416,7 +416,11 @@ let invoice = normalizeNumber(
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-    if(rows.find(r=>r[2] && r[2].trim()===screenCode)){
+  if (rows.find(r =>
+  normalizeNumber(r[2] || "")
+    .trim()
+    .toUpperCase() === screenCode
+)) {
   showDup("⚠️ كود الشاشة مستخدم مسبقاً");
  throw "stop";
 
