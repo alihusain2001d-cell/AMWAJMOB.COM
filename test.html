@@ -398,7 +398,7 @@ let invoice = normalizeNumber(
   if(usedInvoices.has(screenCode)){
     showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
-  }
+ 
 
    منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
