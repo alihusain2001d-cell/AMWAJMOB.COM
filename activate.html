@@ -150,17 +150,31 @@ button{background:#1e88e5;color:#fff;border:none}
 <script>
 function normalizeNumber(str) {
   if (!str) return "";
+
   return str
-    .replace(/٠/g,"0")
-    .replace(/١/g,"1")
-    .replace(/٢/g,"2")
-    .replace(/٣/g,"3")
-    .replace(/٤/g,"4")
-    .replace(/٥/g,"5")
-    .replace(/٦/g,"6")
-    .replace(/٧/g,"7")
-    .replace(/٨/g,"8")
-    .replace(/٩/g,"9");
+    // أرقام عربية
+    .replace(/٠/g, "0")
+    .replace(/١/g, "1")
+    .replace(/٢/g, "2")
+    .replace(/٣/g, "3")
+    .replace(/٤/g, "4")
+    .replace(/٥/g, "5")
+    .replace(/٦/g, "6")
+    .replace(/٧/g, "7")
+    .replace(/٨/g, "8")
+    .replace(/٩/g, "9")
+
+    // أرقام فارسية (Safari / iPhone)
+    .replace(/۰/g, "0")
+    .replace(/۱/g, "1")
+    .replace(/۲/g, "2")
+    .replace(/۳/g, "3")
+    .replace(/۴/g, "4")
+    .replace(/۵/g, "5")
+    .replace(/۶/g, "6")
+    .replace(/۷/g, "7")
+    .replace(/۸/g, "8")
+    .replace(/۹/g, "9");
 }
 </script>
 
@@ -225,7 +239,12 @@ function normalizeNumber(str) {
 
   <label>رقم الفاتورة</label>
   <input id="invoice">
-
+  
+<label>كود الشاشة</label>
+<input id="screenCode" placeholder="الكود الموجود خلف الشاشة">
+ <label>اسم الشاشة (اختياري)</label>
+<input id="screenName" placeholder="مثال: iPhone 11 Pro" />
+  
   <label>نوع القطعة</label>
   <select id="type">
     <option value="screen">شاشة</option>
@@ -251,7 +270,7 @@ function normalizeNumber(str) {
 <div id="check" style="display:none">
   <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
   <h3>تحقق من الضمان</h3>
-  <input id="inv" placeholder="أدخل رقم الفاتورة">
+  <input id="inv" placeholder="أدخل كود الفاتورة">
   <button onclick="checkWarranty()">بحث</button>
   <div id="out" class="result"></div>
 </div>
@@ -373,30 +392,42 @@ async function sendData(){
  try{
   let name=document.getElementById("name").value.trim();
   let phone=document.getElementById("phone").value.trim();
- let invoice = normalizeNumber(
+   let screenName = document.getElementById("screenName").value.trim();
+let invoice = normalizeNumber(
   document.getElementById("invoice").value.trim()
+   
 );
+ let screenCode = normalizeNumber(
+  document.getElementById("screenCode").value
+).trim().toUpperCase();
   let type=document.getElementById("type").value;
   let start=document.getElementById("start").value;
 
-  if(!name || !phone || !invoice){
+ if(!name || !phone || !invoice || !screenCode){
     alert("أكمل جميع الحقول");
     throw "stop";
   }
 
-  // منع التكرار المحلي
-  if(usedInvoices.has(invoice)){
-    showDup("⚠️ رقم الفاتورة مفعل مسبقاً");
+   //منع التكرار المحلي
+  if(usedInvoices.has(screenCode)){
+    showDup("⚠️ كود الشاشة مستخدم مسبقاً");
     throw "stop";
-  }
+ }
 
   // منع التكرار من الشيت
   let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
-  if(rows.find(r=>r[0] && r[0].trim()===invoice)){
-    showDup("⚠️ رقم الفاتورة موجود مسبقاً");
-    throw "stop";
-  }
+  if (rows.find(r =>
+  normalizeNumber(r[2] || "")
+    .trim()
+    .toUpperCase() === screenCode
+)) {
+  showDup("⚠️ كود الشاشة مستخدم مسبقاً");
+ throw "stop";
 
+}
+  
+
+   
   let days = type==="screen" ? 30 : 365;
   let [d,m,y]=start.split("/");
   let end=new Date(y, m-1, d);
@@ -424,17 +455,17 @@ result.innerHTML = `
 <div>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها
 </div>
 `;
-   
-  usedInvoices.add(invoice);
+  
 
   await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({name,phone,invoice,type,start,end:formatDate(end)})
+   body:JSON.stringify({name,phone,invoice,screenCode,screenName,type,start,end:formatDate(end)})
   });
+ setTimeout(() => location.reload(), 12000);
 
   btn.innerText="تم ✔️";
-  btn.disabled=false;
+  btn.disabled=true;
 
  }catch(e){
   btn.innerText="تفعيل الضمان";
@@ -443,37 +474,53 @@ result.innerHTML = `
 }
 
 async function checkWarranty(){
- let v = normalizeNumber(
-  document.getElementById("inv").value.trim()
-);
+let v = normalizeNumber(
+  document.getElementById("inv").value
+).trim().toUpperCase();
  let out=document.getElementById("out");
- if(!v){alert("أدخل رقم الفاتورة");return;}
+ if(!v){alert("أدخل كود الشاشة");return;}
 
- let rows=(await (await fetch(SHEET)).text()).split("\n").map(r=>r.split(","));
+let rows = (await (await fetch(SHEET + "&_=" + Date.now())).text())
+  .split("\n")
+  .map(r => r.split(","));
 let r = rows.find(r =>
-  r[0] && normalizeNumber(r[0].trim()) === v
+  r[2] && normalizeNumber(r[2].trim().toUpperCase()) === v
 );
  out.style.display="block";
 
  if(r){
-  let [y,m,d]=r[5].split("/");
+  let [y,m,d]=r[7].split("/");
   let end=new Date(y,m-1,d);
   let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
   out.innerHTML=`
 ✔️ الضمان موجود<br>
-الاسم: ${r[1]}<br>
-الهاتف: ${r[2]}<br>
-النوع: ${r[3]}<br>
-البدء: ${r[4]}<br>
-الانتهاء: ${r[5]}<br>
+الاسم: ${r[0]}<br>
+الهاتف: ${r[4]}<br>
+اسم الشاشة: ${r[3]}<br>
+النوع: ${r[5]}<br>
+البدء: ${r[6]}<br>
+الانتهاء: ${r[7]}<br>
 ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
 `;
  }else{
-  out.innerHTML="❌ لم يتم العثور على رقم الفاتورة";
+  out.innerHTML="❌ لم يتم العثور على كود الشاشة";
  }
 }
 </script>
-  
+<script>
+ async function isDuplicateInSheet(invoice, screenCode) {
+  const rows = await getWarrantyRows();
+
+  const sc = screenCode.trim().toUpperCase();
+
+  return rows.some(r => {
+  const sheetCode = normalizeNumber(r.screenCode || "")
+    .trim()
+    .toUpperCase();
+
+  return sheetCode === sc;
+});
+</script>  
 <script>
 const PRICES_SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
