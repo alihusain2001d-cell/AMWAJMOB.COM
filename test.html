@@ -481,8 +481,19 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
   out.innerHTML="❌ لم يتم العثور على كود الشاشة";
  }
 }
-</script>
-  
+<script>
+  async function isDuplicateInSheet(invoice, screenCode) {
+  const rows = await getWarrantyRows();
+
+  invoice = invoice.trim();
+  screenCode = screenCode.trim();
+
+  return rows.some(r =>
+    r.invoice === invoice &&
+    r.screenCode === screenCode
+  );
+}
+</script>  
 <script>
 const PRICES_SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
