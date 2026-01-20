@@ -272,6 +272,10 @@ function normalizeNumber(str) {
   <h3>تحقق من الضمان</h3>
   <input id="inv" placeholder="أدخل كود الفاتورة">
   <button onclick="checkWarranty()">بحث</button>
+  <div id="checkNote" style="display:none; margin-top:8px; font-size:14px; color:#777; text-align:center;">
+🔄 ملاحظة: إذا تم تفعيل الضمان قبل قليل، قد يستغرق التحقق ثوانٍ قليلة.<br>
+يرجى الانتظار ثم إعادة المحاولة.
+</div>
   <div id="out" class="result"></div>
 </div>
 
@@ -487,8 +491,11 @@ let r = rows.find(r =>
   r[2] && normalizeNumber(r[2].trim().toUpperCase()) === v
 );
  out.style.display="block";
+  
 
  if(r){
+   document.getElementById("checkNote").style.display = "none";
+ 
   let [y,m,d]=r[7].split("/");
   let end=new Date(y,m-1,d);
   let remaining=Math.ceil((end-new Date())/(1000*60*60*24));
@@ -502,9 +509,13 @@ let r = rows.find(r =>
 الانتهاء: ${r[7]}<br>
 ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضمان منتهي"}
 `;
- }else{
-  out.innerHTML="❌ لم يتم العثور على كود الشاشة";
- }
+ else {
+  out.innerHTML = "❌ لم يتم العثور على كود الشاشة";
+  document.getElementById("checkNote").style.display = "block";
+   setTimeout(() => {
+  document.getElementById("checkNote").style.display = "none";
+}, 10000);
+}
 }
 </script>
 <script>
