@@ -536,7 +536,7 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 </script> 
 
 
-    // تسجيل الدخول 
+    
  
 <script>
 const LOGIN_WEBHOOK = "https://eoka3v4pod17nwl.m.pipedream.net";
@@ -582,10 +582,7 @@ const LOGIN_WEBHOOK = "https://eoka3v4pod17nwl.m.pipedream.net";
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
-    await fetch(LOGIN_WEBHOOK, {
-  method: "POST",
-  body: JSON.stringify(data)
-});
+ 
 
 localStorage.setItem("loginPhone", phone);
 
@@ -699,10 +696,10 @@ function backToBrands(){
   document.getElementById("brandPrices").style.display = "none";
   document.getElementById("brandsSection").style.display = "block";
 }
-
+<script>
 loadPrices();
-<script>
-<script>
+
+
 async function autoLoginIfApproved() {
   const phone = localStorage.getItem("loginPhone");
   if (!phone) return;
