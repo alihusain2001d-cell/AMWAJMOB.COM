@@ -554,6 +554,7 @@ const LOGIN_WEBHOOK = "https://script.google.com/macros/s/AKfycbz_cwGukmJ_TIFhw4
   }
 
   const data = {
+    type: "login",
     name,
     shop,
     phone,
@@ -562,7 +563,7 @@ const LOGIN_WEBHOOK = "https://script.google.com/macros/s/AKfycbz_cwGukmJ_TIFhw4
   };
 
   // 🔔 إشعار واتساب للإدارة (رقمك الخاص)
-  await fetch("PUT_YOUR_PIPEDREAM_WEBHOOK_HERE", {
+//  await fetch("PUT_YOUR_PIPEDREAM_WEBHOOK_HERE", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify({
@@ -577,7 +578,7 @@ const LOGIN_WEBHOOK = "https://script.google.com/macros/s/AKfycbz_cwGukmJ_TIFhw4
   });
 
   // ⬅️ هنا لاحقاً نربط Google Sheet
-         await fetch(LOGIN_WEBHOOK, {
+         await fetch(WARRANTY_WEBHOOK, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(data)
