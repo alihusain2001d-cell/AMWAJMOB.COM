@@ -186,7 +186,7 @@ function normalizeNumber(str) {
   <img src="1633875906547.jpg">
 </div>
 <div id="loginBox">
-  <h3>طلب دخول</h3>
+  <h3>تسجيل الدخول </h3>
 
   <input id="loginName" placeholder="اسم الزبون">
   <input id="loginShop" placeholder="اسم المتجر">
@@ -534,13 +534,14 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
   return sheetCode === sc;
 });
 </script> 
-  <script> 
+
 
     
-const USERS_SHEET =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
+<script>
+const LOGIN_WEBHOOK = "https://script.google.com/macros/s/AKfycbz_cwGukmJ_TIFhw4ipae_gX7E0SRZ0USgpm1ZtLzEexEWc39OyUqogYuR5BusY6TAG/exec";
+</script>
 
-    
+      <script> 
   async function sendLoginRequest(){
   const name  = document.getElementById("loginName").value.trim();
   const shop  = document.getElementById("loginShop").value.trim();
@@ -576,8 +577,14 @@ const USERS_SHEET =
   });
 
   // ⬅️ هنا لاحقاً نربط Google Sheet
+         await fetch(LOGIN_WEBHOOK, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+});
   msg.innerText = "✅ تم إرسال الطلب، بانتظار الموافقة";
 }
+   
   </script>  
 <script>
 const PRICES_SHEET =
