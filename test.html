@@ -694,6 +694,33 @@ function backToBrands(){
 }
 
 loadPrices();
+  <script>
+async function autoLoginIfApproved() {
+  const phone = localStorage.getItem("loginPhone");
+  if (!phone) return;
+
+  const res = await fetch(
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTBTn0X-gGrF5y5EpQNbcXX9Ip59R2G4DBr3PuhnAkLpgmRKkwrrn7rp9fixj6t9fYHK9w_S6YHr18/pub?output=csv"
+  );
+  const text = await res.text();
+
+  const rows = text.trim().split("\n").map(r => r.split(","));
+  const headers = rows.shift();
+
+  const phoneI  = headers.indexOf("phone");
+  const statusI = headers.indexOf("status");
+
+  const row = rows.find(r => r[phoneI] === phone);
+  if (!row) return;
+
+  if (row[statusI] === "approved") {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("home").style.display = "block";
+  }
+}
+
+autoLoginIfApproved();
+
 </script>
 </body>
 </html>
