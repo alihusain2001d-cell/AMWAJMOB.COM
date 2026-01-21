@@ -699,40 +699,41 @@ function backToBrands(){
 
 loadPrices();
 
+<script>
 async function autoLoginIfApproved() {
   const phone = localStorage.getItem("loginPhone");
   if (!phone) return;
 
-  // رابط الشيت بصيغة CSV (مهم)
-  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTBTn0X-gGrF5y5EpQNbcXX9Ip59R2G4DBr3PuhnAkLpgmRKkwrrn7rp9fixj6t9fYHK9w_S6YHr18/pub?output=csv";
+  const SHEET_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTBTn0X-gGrF5y5EpQNbcXX9Ip59R2G4DBr3PuhnAkLpgmRKkwrrn7rp9fixj6t9fYHK9w_S6YHr18/pub?output=csv";
 
-  const res = await fetch(SHEET_URL);
-  const text = await res.text();
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
 
-  const rows = text.trim().split("\n").map(r => r.split(","));
-  const headers = rows.shift();
+    const rows = text.trim().split("\n").map(r => r.split(","));
+    const headers = rows.shift();
 
-  const phoneI = headers.indexOf("phone");
-  const statusI = headers.indexOf("status");
+    const phoneI  = headers.indexOf("phone");
+    const statusI = headers.indexOf("status");
+    if (phoneI === -1 || statusI === -1) return;
 
-  if (phoneI === -1 || statusI === -1) return;
+    const clean = p => (p || "").replace(/\D/g, "");
+    const row = rows.find(r => clean(r[phoneI]) === clean(phone));
+    if (!row) return;
 
-  // تنظيف رقم الهاتف (حتى لا يصير اختلاف)
-  const clean = p => p.replace(/\D/g, "");
-
-  const row = rows.find(r => clean(r[phoneI]) === clean(phone));
-  if (!row) return;
-
-  if (row[statusI].trim() === "approved") {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("home").style.display = "block";
+    if (row[statusI].trim().toLowerCase() === "approved") {
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("home").style.display = "block";
+    }
+  } catch (e) {
+    console.log("auto login error", e);
   }
+}
 
-
-// نادِ الدالة أول ما الصفحة تفتح
+// تشغيل تلقائي
 autoLoginIfApproved();
-window.loginWatcher = setInterval(autoLoginIfApproved, 3000);
-<script>
+setInterval(autoLoginIfApproved, 3000);
 </script>
 </body>
 </html>
