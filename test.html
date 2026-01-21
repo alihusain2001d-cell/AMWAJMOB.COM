@@ -735,7 +735,7 @@ async function autoLoginIfApproved() {
 
 // نادِ الدالة أول ما الصفحة تفتح
 autoLoginIfApproved();
-
+window.loginWatcher = setInterval(autoLoginIfApproved, 3000);
 
 </script>
 </body>
