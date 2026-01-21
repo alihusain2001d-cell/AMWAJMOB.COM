@@ -562,18 +562,17 @@ const LOGIN_WEBHOOK = "https://script.google.com/macros/s/AKfycbz_cwGukmJ_TIFhw4
 
   // 🔔 إشعار واتساب للإدارة (رقمك الخاص)
 //  await fetch("PUT_YOUR_PIPEDREAM_WEBHOOK_HERE", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      text:
-`📥 طلب دخول جديد
-👤 الاسم: ${name}
-🏪 المتجر: ${shop}
-📞 الهاتف: ${phone}
+ //   method: "POST",
+ //   headers: {"Content-Type":"application/json"},
+  //  body: JSON.stringify({
+  //    text:
+//`📥 طلب دخول جديد
+//👤 الاسم: ${name}
+//🏪 المتجر: ${shop}
+//📞 الهاتف: ${phone}
 
-الرجاء الموافقة من لوحة الإدارة`
-    })
-  });
+  //  })
+ // });
 
   // ⬅️ هنا لاحقاً نربط Google Sheet
          await fetch(WARRANTY_WEBHOOK, {
