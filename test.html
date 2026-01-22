@@ -672,43 +672,38 @@ loadPrices();
 
 
 
-function sendLoginRequest(){
+
+async function sendLoginRequest() {
 
   const name  = document.getElementById("loginName").value.trim();
   const shop  = document.getElementById("loginShop").value.trim();
   const phone = document.getElementById("loginPhone").value.trim();
 
-  if(!name || !shop || !phone){
+  if (!name || !shop || !phone) {
     alert("يرجى ملء جميع الحقول");
     return;
   }
 
-  // إنشاء فورم مخفي
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = "https://script.google.com/macros/s/AKfycbz_BnDhxam6VVpWHmqWMUep51xUopkVyse0FMpB_yNDD6V6l3gjr_B7b8y28NZpLDW8/exec";
-  form.target = "hidden_iframe";
+  try {
+    await fetch("https://eo9txe5hkh3d1yk.m.pipedream.net", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name,
+        shop,
+        phone
+      })
+    });
 
-  const fields = { name, shop, phone };
+    alert("✅ تم إرسال طلب تسجيل الدخول\nبانتظار موافقة الإدارة");
 
-  for (let key in fields) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = key;
-    input.value = fields[key];
-    form.appendChild(input);
+  } catch (e) {
+    alert("❌ فشل الإرسال");
   }
-
-  document.body.appendChild(form);
-  form.submit();
-
-  alert("✅ تم إرسال طلب تسجيل الدخول\nبانتظار موافقة الإدارة");
-
-  form.remove();
 }
 </script>
-
-<iframe name="hidden_iframe" style="display:none"></iframe>
   
 </body>
 </html>
