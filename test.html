@@ -186,8 +186,45 @@ function normalizeNumber(str) {
   <img src="1633875906547.jpg">
 </div>
 
+<!-- تسجيل الدخول -->
+<div id="login" style="display:block">
+
+  <h3 style="text-align:center">تسجيل الدخول</h3>
+
+  <label>اسم الزبون الثلاثي</label>
+  <input id="loginName" placeholder="الاسم الكامل">
+
+  <label>اسم المتجر</label>
+  <input id="loginShop" placeholder="اسم المتجر">
+
+  <label>رقم الموبايل</label>
+  <input id="loginPhone" placeholder="رقم الموبايل" inputmode="numeric">
+
+  <button onclick="sendLoginRequest()">إرسال طلب تسجيل الدخول</button>
+
+  <div style="
+    margin-top:10px;
+    padding:10px;
+    background:#fff3cd;
+    color:#856404;
+    border-radius:10px;
+    font-size:15px;
+    text-align:center;
+  ">
+    ℹ️ سوف يصلك كود التحقق بعد موافقة الإدارة
+  </div>
+
+  <hr style="margin:18px 0">
+
+  <label>كود التحقق</label>
+  <input id="loginCode" placeholder="أدخل كود التحقق">
+
+  <button onclick="verifyCode()">دخول</button>
+
+</div>
+  
 <!-- الرئيسية -->
-<div id="home">
+<div id="home" style="display:none">
   <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
   <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
   <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
@@ -630,6 +667,41 @@ function backToBrands(){
 }
 
 loadPrices();
+
+
+  
+<script>
+// إرسال طلب تسجيل الدخول (واجهة فقط حالياً)
+function sendLoginRequest(){
+  const name  = document.getElementById("loginName").value.trim();
+  const shop  = document.getElementById("loginShop").value.trim();
+  const phone = document.getElementById("loginPhone").value.trim();
+
+  if(!name || !shop || !phone){
+    alert("يرجى ملء جميع الحقول");
+    return;
+  }
+
+  alert("تم إرسال طلب تسجيل الدخول ✅\nبانتظار موافقة الإدارة");
+
+  // لاحقاً: نربط Pipedream هنا
+}
+
+// التحقق بالكود (وهمي حالياً)
+function verifyCode(){
+  const code = document.getElementById("loginCode").value.trim();
+
+  if(!code){
+    alert("أدخل كود التحقق");
+    return;
+  }
+
+  // حالياً أي كود يدخل (اختبار واجهة فقط)
+  document.getElementById("login").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
 </script>
+
+  
 </body>
 </html>
