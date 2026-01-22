@@ -185,19 +185,9 @@ function normalizeNumber(str) {
 <div class="logo">
   <img src="1633875906547.jpg">
 </div>
-<div id="loginBox">
-  <h3>تسجيل الدخول </h3>
 
-  <input id="loginName" placeholder="اسم الزبون">
-  <input id="loginShop" placeholder="اسم المتجر">
-  <input id="loginPhone" placeholder="رقم الموبايل" inputmode="numeric">
-
-  <button onclick="sendLoginRequest()">إرسال الطلب</button>
-
-  <div id="loginMsg"></div>
-</div>
 <!-- الرئيسية -->
-<div id="home" style="display:none">
+<div id="home">
   <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
   <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
   <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
@@ -518,8 +508,7 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
  }
 }
 </script>
-
-  <script>
+<script>
  async function isDuplicateInSheet(invoice, screenCode) {
   const rows = await getWarrantyRows();
 
@@ -532,64 +521,7 @@ ${remaining>=0?`⏳ المتبقي: <b>${remaining}</b> يوم`:"❌ الضما�
 
   return sheetCode === sc;
 });
-}   
-</script> 
-
-
-    
- 
-<script>
-const LOGIN_WEBHOOK = "https://eoka3v4pod17nwl.m.pipedream.net";
-</script>
-  <script>
-  async function sendLoginRequest(){
-  const name  = document.getElementById("loginName").value.trim();
-  const shop  = document.getElementById("loginShop").value.trim();
-  const phone = document.getElementById("loginPhone").value.trim();
-  const msg   = document.getElementById("loginMsg");
-
-  if(!name || !shop || !phone){
-    msg.innerText = "يرجى ملء جميع الحقول";
-    return;
-  }
-
-  const data = {
-    type: "login",
-    name,
-    shop,
-    phone,
-    status: "pending",
-    date: new Date().toLocaleString()
-  };
-
- //  🔔 إشعار واتساب للإدارة (رقمك الخاص)
- // await fetch("PUT_YOUR_PIPEDREAM_WEBHOOK_HERE", {
- //  method: "POST",
-  //  headers: {"Content-Type":"application/json"},
-  //  body: JSON.stringify({
-  //  text:
-   //  `📥 طلب دخول جديد
- //  👤 الاسم: ${name}
-//  🏪 المتجر: ${shop}
- //   📞 الهاتف: ${phone}
-
-  //  })
-//  });
-
- //  ⬅️ هنا لاحقاً نربط Google Sheet
-         await fetch(LOGIN_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
- 
-
-localStorage.setItem("loginPhone", phone);
-
- msg.innerText = "✅ تم إرسال الطلب، بانتظار الموافقة";
-}
-   
-  </script>  
+</script>  
 <script>
 const PRICES_SHEET =
 "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
@@ -698,42 +630,6 @@ function backToBrands(){
 }
 
 loadPrices();
-
-
-async function autoLoginIfApproved() {
-  const phone = localStorage.getItem("loginPhone");
-  if (!phone) return;
-
-  const SHEET_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTBTn0X-gGrF5y5EpQNbcXX9Ip59R2G4DBr3PuhnAkLpgmRKkwrrn7rp9fixj6t9fYHK9w_S6YHr18/pub?output=csv";
-
-  try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
-
-    const rows = text.trim().split("\n").map(r => r.split(","));
-    const headers = rows.shift();
-
-    const phoneI  = headers.indexOf("phone");
-    const statusI = headers.indexOf("status");
-    if (phoneI === -1 || statusI === -1) return;
-
-    const clean = p => (p || "").replace(/\D/g, "");
-    const row = rows.find(r => clean(r[phoneI]) === clean(phone));
-    if (!row) return;
-
-    if (row[statusI].trim().toLowerCase() === "approved") {
-      document.getElementById("loginBox").style.display = "none";
-      document.getElementById("home").style.display = "block";
-    }
-  } catch (e) {
-    console.log("auto login error", e);
-  }
-}
-
-// تشغيل تلقائي
-autoLoginIfApproved();
-setInterval(autoLoginIfApproved, 3000);
 </script>
 </body>
 </html>
