@@ -687,6 +687,7 @@ function sendLoginRequest(){
 }
 
 // التحقق بالكود (وهمي حالياً)
+<script>
 function verifyCode(){
   const code = document.getElementById("loginCode").value.trim();
 
@@ -695,12 +696,17 @@ function verifyCode(){
     return;
   }
 
-  // حالياً أي كود يدخل (اختبار واجهة فقط)
+  // مؤقتاً: أي كود يعتبر صحيح
+  // تخزين حالة الدخول (دائم)
+  localStorage.setItem("amwaj_logged", "yes");
+
+  // إخفاء صفحة الدخول
   document.getElementById("login").style.display = "none";
+
+  // إظهار الصفحة الرئيسية
   document.getElementById("home").style.display = "block";
 }
 </script>
-
   
 </body>
 </html>
