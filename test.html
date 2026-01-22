@@ -670,8 +670,11 @@ loadPrices();
 
 
 
-// إرسال طلب تسجيل الدخول (واجهة فقط حالياً)
-function sendLoginRequest(){
+
+const LOGIN_API =
+"https://script.google.com/macros/s/AKfycbz_BnDhxam6VVpWHmqWMUep51xUopkVyse0FMpB_yNDD6V6l3gjr_B7b8y28NZpLDW8/exec";
+
+async function sendLoginRequest(){
   const name  = document.getElementById("loginName").value.trim();
   const shop  = document.getElementById("loginShop").value.trim();
   const phone = document.getElementById("loginPhone").value.trim();
@@ -681,30 +684,24 @@ function sendLoginRequest(){
     return;
   }
 
-  alert("تم إرسال طلب تسجيل الدخول ✅\nبانتظار موافقة الإدارة");
+  try{
+    const res = await fetch(LOGIN_API,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ name, shop, phone })
+    });
 
-  // لاحقاً: نربط Pipedream هنا
-}
+    const data = await res.json();
 
-// التحقق بالكود (وهمي حالياً)
-
-function verifyCode(){
-  const code = document.getElementById("loginCode").value.trim();
-
-  if(!code){
-    alert("أدخل كود التحقق");
-    return;
+    if(data.success){
+      alert("✅ تم إرسال طلب تسجيل الدخول\nبانتظار موافقة الإدارة");
+    }else{
+      alert("❌ حدث خطأ، حاول مرة أخرى");
+    }
+  }catch(err){
+    alert("⚠️ فشل الاتصال بالخادم");
+    console.error(err);
   }
-
-  // مؤقتاً: أي كود يعتبر صحيح
-  // تخزين حالة الدخول (دائم)
-  localStorage.setItem("amwaj_logged", "yes");
-
-  // إخفاء صفحة الدخول
-  document.getElementById("login").style.display = "none";
-
-  // إظهار الصفحة الرئيسية
-  document.getElementById("home").style.display = "block";
 }
 </script>
   
