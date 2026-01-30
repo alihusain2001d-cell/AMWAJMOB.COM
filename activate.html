@@ -181,22 +181,6 @@ button:disabled{background:#ccc;cursor:not-allowed;}
     </div>
   </div>
 
-  <!-- ========== رسالة: الجهاز مسجل برقم آخر ========== -->
-  <div id="deviceBlockedPage" style="display:none">
-    <h2 class="section-title" style="color:#c62828;">⚠️ تنبيه</h2>
-    <div class="result error" style="font-size:16px;text-align:center;padding:20px;">
-      هذا الجهاز مسجل برقم هاتف آخر.<br><br>
-      لا يمكن استخدام أكثر من حساب على نفس الجهاز.<br><br>
-      للمساعدة تواصل معنا:
-    </div>
-    <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">
-      🟢 تواصل عبر واتساب
-    </a>
-    <div class="info-box" style="margin-top:20px;">
-      📞 للاستفسار: <a href="tel:7696" style="font-weight:bold;color:#1e88e5;">7696</a>
-    </div>
-  </div>
-
   <!-- ========== الصفحة الرئيسية (بعد الدخول) ========== -->
   <div id="homePage" style="display:none">
     <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
@@ -328,16 +312,6 @@ const WARRANTY_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-
 const PRICES_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
 const ACTIVATE_WEBHOOK = "https://eo9txe5hkh3d1yk.m.pipedream.net";
 
-// ==================== توليد Device ID فريد ====================
-function getDeviceId() {
-  let deviceId = localStorage.getItem("amwaj_device_id");
-  if (!deviceId) {
-    deviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem("amwaj_device_id", deviceId);
-  }
-  return deviceId;
-}
-
 // ==================== تحويل الأرقام ====================
 function normalizeNumber(str) {
   if (!str) return "";
@@ -360,7 +334,7 @@ function normalizePhone(phone) {
 
 // ==================== التنقل بين الصفحات ====================
 function showPage(pageId) {
-  const pages = ["registerPage", "loginPage", "homePage", "activatePage", "checkPage", "pricesPage", "deviceBlockedPage"];
+  const pages = ["registerPage", "loginPage", "homePage", "activatePage", "checkPage", "pricesPage"];
   pages.forEach(p => {
     const el = document.getElementById(p);
     if (el) el.style.display = "none";
@@ -369,26 +343,8 @@ function showPage(pageId) {
   if (target) target.style.display = "block";
 }
 
-function showRegisterPage() { 
-  // تحقق إذا الجهاز مسجل برقم آخر
-  const savedPhone = localStorage.getItem("amwaj_phone");
-  if (savedPhone) {
-    showPage("deviceBlockedPage");
-    return;
-  }
-  showPage("registerPage"); 
-}
-
-function showLoginPage() { 
-  // تحقق إذا الجهاز مسجل برقم آخر
-  const savedPhone = localStorage.getItem("amwaj_phone");
-  if (savedPhone) {
-    // إذا مسجل، حاول الدخول التلقائي
-    document.getElementById("loginPhone").value = savedPhone;
-  }
-  showPage("loginPage"); 
-}
-
+function showRegisterPage() { showPage("registerPage"); }
+function showLoginPage() { showPage("loginPage"); }
 function backHome() { showPage("homePage"); }
 
 function openAct() {
@@ -410,14 +366,6 @@ async function submitRegistration() {
   const name = document.getElementById("regName").value.trim();
   const shop = document.getElementById("regShop").value.trim();
   const phone = normalizePhone(document.getElementById("regPhone").value);
-  const deviceId = getDeviceId();
-
-  // تحقق إذا الجهاز مسجل برقم آخر
-  const savedPhone = localStorage.getItem("amwaj_phone");
-  if (savedPhone && savedPhone !== phone) {
-    result.innerHTML = '<div class="result error">❌ هذا الجهاز مسجل برقم هاتف آخر</div>';
-    return;
-  }
 
   if (!name || !shop || !phone) {
     result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>';
@@ -433,7 +381,7 @@ async function submitRegistration() {
   btn.innerText = "جاري الإرسال...";
 
   try {
-    // التحقق من عدم وجود الرقم مسبقاً
+    // التحقق من عدم وجود الرقم مسبقاً بالجدول
     const rows = await fetchCustomers();
     const existing = rows.find(r => normalizePhone(r.phone) === phone);
     
@@ -443,6 +391,7 @@ async function submitRegistration() {
         localStorage.setItem("amwaj_phone", phone);
         result.innerHTML = '<div class="result success">✅ رقمك مسجل ومفعل! يمكنك تسجيل الدخول</div>';
       } else if (existing.status === "pending") {
+        localStorage.setItem("amwaj_phone", phone);
         result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر الموافقة</div>';
       } else {
         result.innerHTML = '<div class="result error">❌ تم رفض طلبك سابقاً، تواصل معنا للمزيد</div>';
@@ -462,13 +411,12 @@ async function submitRegistration() {
         name,
         shop,
         phone,
-        deviceId,
         date,
         status: "pending"
       })
     });
 
-    // حفظ الرقم بالجهاز حتى لو pending
+    // حفظ الرقم بالجهاز
     localStorage.setItem("amwaj_phone", phone);
 
     result.innerHTML = `
@@ -499,13 +447,6 @@ async function checkLogin() {
   const result = document.getElementById("loginResult");
   const phone = normalizePhone(document.getElementById("loginPhone").value);
 
-  // تحقق إذا الجهاز مسجل برقم آخر
-  const savedPhone = localStorage.getItem("amwaj_phone");
-  if (savedPhone && savedPhone !== phone) {
-    result.innerHTML = '<div class="result error">❌ هذا الجهاز مسجل برقم هاتف آخر<br>لا يمكن الدخول برقم مختلف</div>';
-    return;
-  }
-
   if (!phone || phone.length < 11) {
     result.innerHTML = '<div class="result error">❌ أدخل رقم هاتف صحيح</div>';
     return;
@@ -530,7 +471,6 @@ async function checkLogin() {
       showPage("homePage");
       result.innerHTML = "";
     } else if (user.status === "pending") {
-      // حفظ الرقم حتى لو pending
       localStorage.setItem("amwaj_phone", phone);
       result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>';
     } else {
@@ -547,9 +487,9 @@ async function checkLogin() {
 
 // ==================== تسجيل الخروج ====================
 function logout() {
-  // ملاحظة: ما نمسح amwaj_phone حتى يبقى الجهاز مربوط بالرقم
   localStorage.removeItem("amwaj_user");
-  document.getElementById("loginPhone").value = localStorage.getItem("amwaj_phone") || "";
+  localStorage.removeItem("amwaj_phone");
+  document.getElementById("loginPhone").value = "";
   document.getElementById("loginResult").innerHTML = "";
   showPage("loginPage");
 }
@@ -584,24 +524,27 @@ async function checkAutoLogin() {
         showPage("homePage");
         return;
       } else if (user && user.status === "pending") {
-        // المستخدم pending - اعرض صفحة الدخول مع رسالة
+        // المستخدم pending
         document.getElementById("loginPhone").value = savedPhone;
         showPage("loginPage");
         document.getElementById("loginResult").innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة</div>';
         return;
       } else if (user && user.status === "rejected") {
         // المستخدم مرفوض
+        localStorage.removeItem("amwaj_phone");
+        localStorage.removeItem("amwaj_user");
         showPage("loginPage");
-        document.getElementById("loginResult").innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمساعدة</div>';
+        return;
+      } else {
+        // المستخدم محذوف من الجدول - امسح البيانات المحفوظة واسمحله يسجل من جديد
+        localStorage.removeItem("amwaj_phone");
+        localStorage.removeItem("amwaj_user");
+        showPage("registerPage");
         return;
       }
     } catch (e) {
       console.error(e);
     }
-    // إذا الرقم موجود بس ما لقينا المستخدم، اعرض صفحة الدخول
-    document.getElementById("loginPhone").value = savedPhone;
-    showPage("loginPage");
-    return;
   }
   
   // لا يوجد رقم محفوظ - اعرض صفحة التسجيل
