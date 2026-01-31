@@ -35,7 +35,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #0a4d68 0%, #088395 75%, #05BFDB 100%);
+  background: linear-gradient(135deg, #0a4d68 0%, #088395 50%, #05BFDB 100%);
   z-index: -1;
 }
 
@@ -78,7 +78,7 @@ body {
 .container {
   max-width: 580px;
   margin: auto;
-  background: rgba(255, 255, 255, 100);
+  background: rgba(255, 255, 255, 0.75);
   padding: 18px;
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
@@ -867,6 +867,8 @@ async function loadPrices() {
       return o;
     });
     console.log("✅ prices loaded", pricesData.length);
+    console.log("📋 Headers:", headers);
+    console.log("📋 Sample data:", pricesData[0]);
   } catch (e) {
     console.error("Error loading prices:", e);
   }
@@ -913,7 +915,7 @@ function openBrand(el) {
           <div style="margin-top:4px"><b>الاسم:</b> ${p.name}</div>
           <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
           <div style="margin-top:4px"><b>السعر:</b>
-            ${p.qty && Number(p.qty) > 0
+            ${p.qty && p.qty.toString().trim() !== "" && Number(p.qty) > 0
               ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(p.price)} د.ع</span>`
               : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`
             }
