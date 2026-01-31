@@ -858,14 +858,35 @@ async function loadPrices() {
   try {
     const res = await fetch(PRICES_SHEET);
     const text = await res.text();
-    const rows = text.trim().split("\n").map(r => r.split(","));
-    const headers = rows.shift().map(h => h.trim().toLowerCase());
-
-    pricesData = rows.map(r => {
-      let o = {};
-      headers.forEach((h, i) => o[h] = (r[i] || "").trim());
-      return o;
-    });
+    
+    // قراءة CSV بشكل صحيح (يتعامل مع الفواصل داخل الأرقام)
+    const lines = text.trim().split("\n");
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    
+    pricesData = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let c of line) {
+        if (c === '"') {
+          inQuotes = !inQuotes;
+        } else if (c === ',' && !inQuotes) {
+          values.push(current.trim().replace(/"/g, '').replace(/,/g, ''));
+          current = '';
+        } else {
+          current += c;
+        }
+      }
+      values.push(current.trim().replace(/"/g, '').replace(/,/g, ''));
+      
+      const obj = {};
+      headers.forEach((h, idx) => obj[h] = values[idx] || '');
+      pricesData.push(obj);
+    }
+    
     console.log("✅ prices loaded", pricesData.length);
     console.log("📋 Headers:", headers);
     console.log("📋 Sample data:", pricesData[0]);
