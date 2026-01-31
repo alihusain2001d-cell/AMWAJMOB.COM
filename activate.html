@@ -547,6 +547,63 @@ function openPrices() {
   showPage("pricesPage");
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
+  
+  // تفعيل البحث العام
+  const searchInput = document.getElementById("searchInput");
+  searchInput.value = "";
+  
+  searchInput.oninput = function() {
+    const q = this.value.trim().toLowerCase();
+    
+    if (q.length < 2) {
+      // إذا أقل من حرفين، اعرض الماركات
+      document.getElementById("brandsSection").style.display = "block";
+      document.getElementById("brandPrices").style.display = "none";
+      return;
+    }
+    
+    // ابحث بكل الأسعار
+    document.getElementById("brandsSection").style.display = "none";
+    document.getElementById("brandPrices").style.display = "block";
+    
+    const box = document.getElementById("brandPricesBox");
+    box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
+    
+    const filtered = pricesData.filter(p => 
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.brand && p.brand.toLowerCase().includes(q))
+    );
+    
+    if (filtered.length === 0) {
+      box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>";
+      return;
+    }
+    
+    filtered.slice(0, 50).forEach(p => {
+      box.innerHTML += `
+        <div class="price-item" style="padding:12px;border:1px solid #ccc;margin:8px 0;border-radius:10px;background:#f9fbff">
+          <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+            <div style="margin-top:4px"><b>الماركة:</b> ${p.brand}</div>
+            <div style="margin-top:4px"><b>الاسم:</b> ${p.name}</div>
+            <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
+            <div style="margin-top:4px"><b>السعر:</b>
+              ${p.qty && p.qty.toString().trim() !== "" && Number(p.qty) > 0
+                ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(p.price)} د.ع</span>`
+                : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`
+              }
+            </div>
+            <div style="margin-top:6px;color:#555;font-size:14px">
+              <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    if (filtered.length > 50) {
+      box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
+    }
+  };
 }
 
 // ==================== تسجيل حساب جديد ====================
