@@ -465,10 +465,9 @@ document.addEventListener('keydown', function(e) {
     <!-- ========== صفحة الأسعار (محمية) ========== -->
     <div id="pricesPage" style="display:none">
       <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title">🔒 أسعار الشاشات (محمي)</h3>
       
-      <div style="background:#fff3cd;padding:8px;border-radius:8px;margin:10px 0;font-size:13px;text-align:center;">
-        ⚠️ الأسعار للاطلاع فقط - النسخ والمشاركة ممنوعة
+      
+      
       </div>
       
       <input type="text" id="searchInput" placeholder="بحث عن الموديل..." style="width:100%;margin:10px 0;padding:12px;">
@@ -609,7 +608,9 @@ createParticles();
 // تحويل الأرقام
 // ==========================================
 function normalizeNumber(str) {
-  if (!str) return "";
+  if (!str && str !== 0) return "";
+  // تحويل لـ string أولاً
+  str = String(str);
   return str
     .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
     .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
