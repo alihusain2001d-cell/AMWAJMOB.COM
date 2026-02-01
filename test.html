@@ -974,17 +974,33 @@ async function checkWarranty() {
     const r = warranties.find(w => normalizeNumber(w.screencode || "").trim().toUpperCase() === v);
 
     if (r) {
+      // التحقق من وجود تاريخ الانتهاء
+      if (!r.end || r.end === '') {
+        out.innerHTML = `
+          <div class="result success">
+            ✔️ الضمان موجود<br>
+            الاسم: ${r.name || "-"}<br>
+            الهاتف: ${r.phone || "-"}<br>
+            اسم الشاشة: ${r.screenname || "-"}<br>
+            النوع: ${r.type || "-"}<br>
+            البدء: ${r.start || "-"}<br>
+            ⚠️ تاريخ الانتهاء غير محدد
+          </div>
+        `;
+        return;
+      }
+      
       let [d, m, y] = r.end.split("/");
       let end = new Date(y, m - 1, d);
       let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
       out.innerHTML = `
         <div class="result success">
           ✔️ الضمان موجود<br>
-          الاسم: ${r.name}<br>
-          الهاتف: ${r.phone}<br>
+          الاسم: ${r.name || "-"}<br>
+          الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
-          النوع: ${r.type}<br>
-          البدء: ${r.start}<br>
+          النوع: ${r.type || "-"}<br>
+          البدء: ${r.start || "-"}<br>
           الانتهاء: ${r.end}<br>
           ${remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : "❌ الضمان منتهي"}
         </div>
