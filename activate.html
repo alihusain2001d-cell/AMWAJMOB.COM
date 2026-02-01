@@ -322,12 +322,13 @@ button:disabled {
       </div>
 
       <div class="info-box">
-    📞 للاستفسار:<br>
-    <div style="margin-top:5px;">
-        <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
-        <a href="tel:07709000160" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 07709000160</a>
+        📞 للاستفسار:<br>
+        <div style="margin-top:5px;">
+          <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
+          <a href="tel:07709000160" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 07709000160</a>
+        </div>
+      </div>
     </div>
-</div>
 
     <!-- ========== صفحة تسجيل الدخول ========== -->
     <div id="loginPage" style="display:none">
@@ -689,7 +690,6 @@ async function submitRegistration() {
 
 // ==================== تسجيل الدخول ====================
 async function checkLogin() {
-  const btn = document.getElementById("btnLogin");
   const result = document.getElementById("loginResult");
   const phone = normalizePhone(document.getElementById("loginPhone").value);
 
@@ -698,14 +698,23 @@ async function checkLogin() {
     return;
   }
 
-  btn.disabled = true;
-  btn.innerText = "جاري التحقق...";
+  // عرض شاشة التحميل
+  showPage("loadingPage");
+  
+  // timeout للأمان (10 ثواني)
+  const timeoutId = setTimeout(() => {
+    showPage("loginPage");
+    result.innerHTML = '<div class="result error">❌ انتهت المهلة، حاول مرة أخرى</div>';
+  }, 10000);
 
   try {
     const rows = await fetchCustomers();
+    clearTimeout(timeoutId); // إلغاء الـ timeout إذا نجحت العملية
+    
     const user = rows.find(r => normalizePhone(r.phone) === phone);
 
     if (!user) {
+      showPage("loginPage");
       result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>';
     } else if (user.status === "approved") {
       localStorage.setItem("amwaj_user", JSON.stringify(user));
@@ -716,17 +725,18 @@ async function checkLogin() {
       result.innerHTML = "";
     } else if (user.status === "pending") {
       localStorage.setItem("amwaj_phone", phone);
+      showPage("loginPage");
       result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>';
     } else {
+      showPage("loginPage");
       result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>';
     }
   } catch (e) {
+    clearTimeout(timeoutId);
     console.error(e);
+    showPage("loginPage");
     result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>';
   }
-
-  btn.disabled = false;
-  btn.innerText = "دخول";
 }
 
 // ==================== تسجيل الخروج ====================
