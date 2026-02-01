@@ -1018,8 +1018,10 @@ function formatPriceIQD(n) {
 }
 
 function createPriceItem(p) {
-  // تحويل السعر لرقم صحيح
-  const price = Number(p.price) || 0;
+  // تنظيف السعر: إزالة الفواصل والنقاط والمسافات
+  let priceStr = String(p.price || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
+  const price = Number(priceStr) || 0;
+  
   const qty = Number(p.qty) || 0;
   
   return `
