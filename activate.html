@@ -2,18 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<title>أمواج للإلكترونيات</title>
+<title>أمواج للإلكترونيات - نظام آمن</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
 <!-- أيقونة التبويب -->
 <link rel="icon" type="image/png" href="LOGO%20MOB.png">
 
-<!-- أيقونة إضافة للشاشة الرئيسية (iPhone / Android) -->
+<!-- أيقونة إضافة للشاشة الرئيسية -->
 <link rel="apple-touch-icon" href="LOGO%20MOB.png">
 
 <meta name="apple-mobile-web-app-title" content="أمواج للإلكترونيات">
 <meta name="application-name" content="أمواج للإلكترونيات">
 <meta name="theme-color" content="#0a4d68">
+
+<!-- منع النسخ في الأسعار -->
 <style>
 * {
   margin: 0;
@@ -26,6 +28,14 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+}
+
+/* منع تحديد النص في صفحة الأسعار */
+#pricesPage * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* ========== الخلفية المتحركة ========== */
@@ -78,7 +88,7 @@ body {
 .container {
   max-width: 580px;
   margin: auto;
-  background: rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.75);
   padding: 18px;
   border-radius: 16px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
@@ -91,7 +101,7 @@ body {
 }
 
 .logo img {
-  width: 150px;
+  width: 140px;
 }
 
 .bigbtn {
@@ -249,11 +259,6 @@ button:disabled {
   text-align: center;
 }
 
-#loadingPage img {
-  width: 180px;
-  margin-bottom: 20px;
-}
-
 .loading-spinner {
   border: 4px solid #e0e0e0;
   border-top: 4px solid #1e88e5;
@@ -274,9 +279,37 @@ button:disabled {
   font-size: 18px;
   margin-top: 10px;
 }
+
+/* حماية من النسخ والطباعة */
+@media print {
+  #pricesPage {
+    display: none !important;
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- منع النسخ بالماوس اليمين -->
+<script>
+// منع النسخ في صفحة الأسعار
+document.addEventListener('contextmenu', function(e) {
+  if (document.getElementById('pricesPage').style.display !== 'none') {
+    e.preventDefault();
+    return false;
+  }
+});
+
+// منع Ctrl+C, Ctrl+A في صفحة الأسعار
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('pricesPage').style.display !== 'none') {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'a' || e.key === 'p')) {
+      e.preventDefault();
+      return false;
+    }
+  }
+});
+</script>
 
 <!-- ========== الخلفية المتحركة ========== -->
 <div id="particles-bg"></div>
@@ -293,12 +326,12 @@ button:disabled {
       <div class="loading-text">جاري التحميل...</div>
     </div>
 
-    <!-- ========== صفحة التسجيل (للزبائن الجدد) ========== -->
+    <!-- ========== صفحة التسجيل ========== -->
     <div id="registerPage" style="display:none">
-      <h2 class="section-title">تسجيل حساب </h2>
+      <h2 class="section-title">تسجيل حساب</h2>
       <p class="welcome-text">
-         أهلاً بك في أمواج للإلكترونيات<br>
-          سجل بياناتك للحصول على خدمات الضمان
+        أهلاً بك في أمواج للإلكترونيات<br>
+        سجل بياناتك للحصول على خدمات الضمان
       </p>
 
       <label>الاسم الثلاثي</label>
@@ -334,14 +367,14 @@ button:disabled {
     <div id="loginPage" style="display:none">
       <h2 class="section-title">تسجيل الدخول</h2>
       <p class="welcome-text">
-         أهلاً بك مجدداً<br>
+        أهلاً بك مجدداً<br>
         🌊 أدخل رقم هاتفك للدخول
       </p>
 
       <label>رقم الهاتف</label>
       <input type="tel" id="loginPhone" placeholder="07xxxxxxxxx">
 
-      <button class="bigbtn big1" id="btnLogin" onclick="checkLogin()">
+      <button class="bigbtn big1" onclick="checkLogin()">
         دخول
       </button>
 
@@ -353,7 +386,7 @@ button:disabled {
       </div>
     </div>
 
-    <!-- ========== الصفحة الرئيسية (بعد الدخول) ========== -->
+    <!-- ========== الصفحة الرئيسية ========== -->
     <div id="homePage" style="display:none">
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
       
@@ -362,13 +395,13 @@ button:disabled {
       <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
       
       <div class="info-box">
-  📞 للاستفسار:<br>
-  <div style="margin-top:5px;">
-    <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
-    <a href="tel:07709000160" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 07709000160</a>
-  </div>
-  <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
-</div>
+        📞 للاستفسار:<br>
+        <div style="margin-top:5px;">
+          <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
+          <a href="tel:07709000160" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 07709000160</a>
+        </div>
+        <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
+      </div>
 
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">
         🟢 تواصل عبر واتساب
@@ -429,10 +462,14 @@ button:disabled {
       <div id="out"></div>
     </div>
 
-    <!-- ========== صفحة الأسعار ========== -->
+    <!-- ========== صفحة الأسعار (محمية) ========== -->
     <div id="pricesPage" style="display:none">
       <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title">أسعار الشاشات</h3>
+      <h3 class="section-title">🔒 أسعار الشاشات (محمي)</h3>
+      
+      <div style="background:#fff3cd;padding:8px;border-radius:8px;margin:10px 0;font-size:13px;text-align:center;">
+        ⚠️ الأسعار للاطلاع فقط - النسخ والمشاركة ممنوعة
+      </div>
       
       <input type="text" id="searchInput" placeholder="بحث عن الموديل..." style="width:100%;margin:10px 0;padding:12px;">
       
@@ -481,7 +518,59 @@ button:disabled {
 </div>
 
 <script>
-// ==================== إنشاء النقاط المتحركة ====================
+// ==========================================
+// 🔐 إعدادات الأمان
+// ==========================================
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbx1s3DR8Xo3V37RCcpYLwghhrwK2RVVbmyEfthRoHdKx7xpRhpZDh21jOjjFodw6yLp_w/exec", // ضع رابط الـ API هنا
+  API_KEY: "AMWAJ_beb59c6b-5315-4dcd-a9a7-73c09fc9b734", // ضع الـ API Key هنا
+  DEVICE_ID: generateDeviceId()
+};
+
+// توليد معرف فريد للجهاز
+function generateDeviceId() {
+  let deviceId = localStorage.getItem('amwaj_device_id');
+  if (!deviceId) {
+    deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(7);
+    localStorage.setItem('amwaj_device_id', deviceId);
+  }
+  return deviceId;
+}
+
+// ==========================================
+// دالة الاتصال بالـ API الآمن
+// ==========================================
+async function secureApiCall(action, data = {}) {
+  try {
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        apiKey: CONFIG.API_KEY,
+        action: action,
+        identifier: CONFIG.DEVICE_ID,
+        ...data
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'حدث خطأ');
+    }
+    
+    return result.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+// ==========================================
+// إنشاء النقاط المتحركة
+// ==========================================
 function createParticles() {
   const bg = document.getElementById('particles-bg');
   const particleCount = 50;
@@ -494,7 +583,6 @@ function createParticles() {
     particle.style.animationDelay = Math.random() * 15 + 's';
     particle.style.animationDuration = (10 + Math.random() * 10) + 's';
     
-    // أحجام مختلفة للنقاط
     const size = 2 + Math.random() * 4;
     particle.style.width = size + 'px';
     particle.style.height = size + 'px';
@@ -503,17 +591,11 @@ function createParticles() {
   }
 }
 
-// تشغيل النقاط
 createParticles();
 
-// ==================== إعدادات ====================
-const CUSTOMERS_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTBTn0X-gGrF5y5EpQNbcXX9Ip59R2G4DBr3PuhnAkLpgmRKkwrrn7rp9fixj6t9fYHK9w_S6YHr18/pub?output=csv";
-const REGISTER_WEBHOOK = "https://eonov82349jxvhr.m.pipedream.net";
-const WARRANTY_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTraFUR-pqdM1dR-syL2zyxSNuQvDhNRnk95BkjBecronw6tB0jvAISLAMRuZpTIrLSp2DkeX-ElqUQ/pub?output=csv";
-const PRICES_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBLpZxNyrMjBM4164sntYUpq1f4pJxBisHgD_xh07_EvIF_-3xhfdEYp_L39DvLhAvUBQu2VPfXAh5/pub?output=csv";
-const ACTIVATE_WEBHOOK = "https://eo9txe5hkh3d1yk.m.pipedream.net";
-
-// ==================== تحويل الأرقام ====================
+// ==========================================
+// تحويل الأرقام
+// ==========================================
 function normalizeNumber(str) {
   if (!str) return "";
   return str
@@ -530,7 +612,9 @@ function normalizePhone(phone) {
   return p;
 }
 
-// ==================== التنقل بين الصفحات ====================
+// ==========================================
+// التنقل بين الصفحات
+// ==========================================
 function showPage(pageId) {
   const pages = ["loadingPage", "registerPage", "loginPage", "homePage", "activatePage", "checkPage", "pricesPage"];
   pages.forEach(p => {
@@ -550,12 +634,17 @@ function openAct() {
   document.getElementById("start").value = formatDate(new Date());
 }
 function openChk() { showPage("checkPage"); }
-function openPrices() {
+
+async function openPrices() {
   showPage("pricesPage");
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
   
-  // تفعيل البحث العام
+  // تحميل الأسعار بشكل آمن
+  if (!window.pricesData || window.pricesData.length === 0) {
+    await loadPrices();
+  }
+  
   const searchInput = document.getElementById("searchInput");
   searchInput.value = "";
   
@@ -563,13 +652,11 @@ function openPrices() {
     const q = this.value.trim().toLowerCase();
     
     if (q.length < 2) {
-      // إذا أقل من حرفين، اعرض الماركات
       document.getElementById("brandsSection").style.display = "block";
       document.getElementById("brandPrices").style.display = "none";
       return;
     }
     
-    // ابحث بكل الأسعار
     document.getElementById("brandsSection").style.display = "none";
     document.getElementById("brandPrices").style.display = "block";
     
@@ -587,24 +674,7 @@ function openPrices() {
     }
     
     filtered.slice(0, 50).forEach(p => {
-      box.innerHTML += `
-        <div class="price-item" style="padding:12px;border:1px solid #ccc;margin:8px 0;border-radius:10px;background:#f9fbff">
-          <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
-            <div style="margin-top:4px"><b>الماركة:</b> ${p.brand}</div>
-            <div style="margin-top:4px"><b>الاسم:</b> ${p.name}</div>
-            <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
-            <div style="margin-top:4px"><b>السعر:</b>
-              ${p.qty && p.qty.toString().trim() !== "" && Number(p.qty) > 0
-                ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(p.price)} د.ع</span>`
-                : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`
-              }
-            </div>
-            <div style="margin-top:6px;color:#555;font-size:14px">
-              <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
-            </div>
-          </div>
-        </div>
-      `;
+      box.innerHTML += createPriceItem(p);
     });
     
     if (filtered.length > 50) {
@@ -613,7 +683,9 @@ function openPrices() {
   };
 }
 
-// ==================== تسجيل حساب جديد ====================
+// ==========================================
+// تسجيل حساب جديد
+// ==========================================
 async function submitRegistration() {
   const btn = document.getElementById("btnRegister");
   const result = document.getElementById("regResult");
@@ -636,8 +708,9 @@ async function submitRegistration() {
   btn.innerText = "جاري الإرسال...";
 
   try {
-    const rows = await fetchCustomers();
-    const existing = rows.find(r => normalizePhone(r.phone) === phone);
+    // التحقق من الزبائن الموجودين
+    const customers = await secureApiCall('getCustomers');
+    const existing = customers.find(r => normalizePhone(r.phone) === phone);
     
     if (existing) {
       if (existing.status === "approved") {
@@ -654,18 +727,14 @@ async function submitRegistration() {
       return;
     }
 
+    // إضافة زبون جديد
     const date = formatDate(new Date());
-    await fetch(REGISTER_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "register",
-        name,
-        shop,
-        phone,
-        date,
-        status: "pending"
-      })
+    await secureApiCall('addCustomer', {
+      name,
+      shop,
+      phone,
+      date,
+      status: 'pending'
     });
 
     localStorage.setItem("amwaj_phone", phone);
@@ -684,14 +753,16 @@ async function submitRegistration() {
 
   } catch (e) {
     console.error(e);
-    result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>';
+    result.innerHTML = '<div class="result error">❌ حدث خطأ: ' + e.message + '</div>';
   }
 
   btn.disabled = false;
   btn.innerText = "إرسال طلب التسجيل";
 }
 
-// ==================== تسجيل الدخول ====================
+// ==========================================
+// تسجيل الدخول
+// ==========================================
 async function checkLogin() {
   const result = document.getElementById("loginResult");
   const phone = normalizePhone(document.getElementById("loginPhone").value);
@@ -701,20 +772,18 @@ async function checkLogin() {
     return;
   }
 
-  // عرض شاشة التحميل
   showPage("loadingPage");
   
-  // timeout للأمان (10 ثواني)
   const timeoutId = setTimeout(() => {
     showPage("loginPage");
     result.innerHTML = '<div class="result error">❌ انتهت المهلة، حاول مرة أخرى</div>';
   }, 10000);
 
   try {
-    const rows = await fetchCustomers();
-    clearTimeout(timeoutId); // إلغاء الـ timeout إذا نجحت العملية
+    const customers = await secureApiCall('getCustomers');
+    clearTimeout(timeoutId);
     
-    const user = rows.find(r => normalizePhone(r.phone) === phone);
+    const user = customers.find(r => normalizePhone(r.phone) === phone);
 
     if (!user) {
       showPage("loginPage");
@@ -738,11 +807,13 @@ async function checkLogin() {
     clearTimeout(timeoutId);
     console.error(e);
     showPage("loginPage");
-    result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>';
+    result.innerHTML = '<div class="result error">❌ حدث خطأ: ' + e.message + '</div>';
   }
 }
 
-// ==================== تسجيل الخروج ====================
+// ==========================================
+// تسجيل الخروج
+// ==========================================
 function logout() {
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
@@ -751,22 +822,9 @@ function logout() {
   showPage("loginPage");
 }
 
-// ==================== جلب بيانات الزبائن ====================
-async function fetchCustomers() {
-  const res = await fetch(CUSTOMERS_SHEET + "&_=" + Date.now());
-  const text = await res.text();
-  const lines = text.trim().split("\n");
-  const headers = lines[0].split(",").map(h => h.trim().toLowerCase());
-  
-  return lines.slice(1).map(line => {
-    const values = line.split(",");
-    const obj = {};
-    headers.forEach((h, i) => obj[h] = (values[i] || "").trim());
-    return obj;
-  });
-}
-
-// ==================== التحقق من الدخول عند فتح الصفحة ====================
+// ==========================================
+// التحقق من الدخول عند فتح الصفحة
+// ==========================================
 async function checkAutoLogin() {
   showPage("loadingPage");
   
@@ -774,8 +832,8 @@ async function checkAutoLogin() {
   
   if (savedPhone) {
     try {
-      const rows = await fetchCustomers();
-      const user = rows.find(r => normalizePhone(r.phone) === savedPhone);
+      const customers = await secureApiCall('getCustomers');
+      const user = customers.find(r => normalizePhone(r.phone) === savedPhone);
       
       if (user && user.status === "approved") {
         localStorage.setItem("amwaj_user", JSON.stringify(user));
@@ -808,7 +866,9 @@ async function checkAutoLogin() {
   showPage("registerPage");
 }
 
-// ==================== دوال الضمان ====================
+// ==========================================
+// دوال الضمان
+// ==========================================
 function formatDate(d) {
   let x = new Date(d);
   return String(x.getDate()).padStart(2, '0') + "/" + String(x.getMonth() + 1).padStart(2, '0') + "/" + x.getFullYear();
@@ -845,8 +905,9 @@ async function sendData() {
       throw "stop";
     }
 
-    let rows = (await (await fetch(WARRANTY_SHEET)).text()).split("\n").map(r => r.split(","));
-    if (rows.find(r => normalizeNumber(r[2] || "").trim().toUpperCase() === screenCode)) {
+    // التحقق من الضمانات الموجودة
+    const warranties = await secureApiCall('getWarranties');
+    if (warranties.find(r => normalizeNumber(r.screencode || "").trim().toUpperCase() === screenCode)) {
       dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً";
       dupMsg.style.display = "block";
       throw "stop";
@@ -871,10 +932,8 @@ async function sendData() {
       </div>
     `;
 
-    await fetch(ACTIVATE_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end) })
+    await secureApiCall('addWarranty', {
+      warranty: { name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end) }
     });
 
     usedInvoices.add(screenCode);
@@ -898,73 +957,47 @@ async function checkWarranty() {
 
   out.innerHTML = '<div class="result pending">جاري البحث...</div>';
 
-  let rows = (await (await fetch(WARRANTY_SHEET + "&_=" + Date.now())).text())
-    .split("\n")
-    .map(r => r.split(","));
-  let r = rows.find(r => r[2] && normalizeNumber(r[2].trim().toUpperCase()) === v);
+  try {
+    const warranties = await secureApiCall('getWarranties');
+    const r = warranties.find(w => normalizeNumber(w.screencode || "").trim().toUpperCase() === v);
 
-  if (r) {
-    let [y, m, d] = r[7].split("/");
-    let end = new Date(y, m - 1, d);
-    let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
-    out.innerHTML = `
-      <div class="result success">
-        ✔️ الضمان موجود<br>
-        الاسم: ${r[0]}<br>
-        الهاتف: ${r[4]}<br>
-        اسم الشاشة: ${r[3]}<br>
-        النوع: ${r[5]}<br>
-        البدء: ${r[6]}<br>
-        الانتهاء: ${r[7]}<br>
-        ${remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : "❌ الضمان منتهي"}
-      </div>
-    `;
-  } else {
-    out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
+    if (r) {
+      let [d, m, y] = r.end.split("/");
+      let end = new Date(y, m - 1, d);
+      let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+      out.innerHTML = `
+        <div class="result success">
+          ✔️ الضمان موجود<br>
+          الاسم: ${r.name}<br>
+          الهاتف: ${r.phone}<br>
+          اسم الشاشة: ${r.screenname || "-"}<br>
+          النوع: ${r.type}<br>
+          البدء: ${r.start}<br>
+          الانتهاء: ${r.end}<br>
+          ${remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : "❌ الضمان منتهي"}
+        </div>
+      `;
+    } else {
+      out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
+    }
+  } catch (e) {
+    console.error(e);
+    out.innerHTML = '<div class="result error">❌ حدث خطأ: ' + e.message + '</div>';
   }
 }
 
-// ==================== دوال الأسعار ====================
+// ==========================================
+// دوال الأسعار المحمية
+// ==========================================
 let pricesData = [];
 
 async function loadPrices() {
   try {
-    const res = await fetch(PRICES_SHEET);
-    const text = await res.text();
-    
-    // قراءة CSV بشكل صحيح (يتعامل مع الفواصل داخل الأرقام)
-    const lines = text.trim().split("\n");
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    
-    pricesData = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i];
-      const values = [];
-      let current = '';
-      let inQuotes = false;
-      
-      for (let c of line) {
-        if (c === '"') {
-          inQuotes = !inQuotes;
-        } else if (c === ',' && !inQuotes) {
-          values.push(current.trim().replace(/"/g, '').replace(/,/g, ''));
-          current = '';
-        } else {
-          current += c;
-        }
-      }
-      values.push(current.trim().replace(/"/g, '').replace(/,/g, ''));
-      
-      const obj = {};
-      headers.forEach((h, idx) => obj[h] = values[idx] || '');
-      pricesData.push(obj);
-    }
-    
-    console.log("✅ prices loaded", pricesData.length);
-    console.log("📋 Headers:", headers);
-    console.log("📋 Sample data:", pricesData[0]);
+    pricesData = await secureApiCall('getPrices');
+    console.log("✅ Prices loaded securely:", pricesData.length);
   } catch (e) {
     console.error("Error loading prices:", e);
+    alert("حدث خطأ في تحميل الأسعار");
   }
 }
 
@@ -972,7 +1005,28 @@ function formatPriceIQD(n) {
   return Number(n).toLocaleString("de-DE");
 }
 
-function openBrand(el) {
+function createPriceItem(p) {
+  return `
+    <div class="price-item" style="padding:12px;border:1px solid #ccc;margin:8px 0;border-radius:10px;background:#f9fbff">
+      <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
+        <div style="margin-top:4px"><b>الماركة:</b> ${p.brand || "-"}</div>
+        <div style="margin-top:4px"><b>الاسم:</b> ${p.name || "-"}</div>
+        <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
+        <div style="margin-top:4px"><b>السعر:</b>
+          ${p.qty && p.qty.toString().trim() !== "" && Number(p.qty) > 0
+            ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(p.price)} د.ع</span>`
+            : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`
+          }
+        </div>
+        <div style="margin-top:6px;color:#555;font-size:14px">
+          <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function openBrand(el) {
   const brands = el.dataset.brand.split(",").map(b => b.trim());
 
   document.getElementById("brandsSection").style.display = "none";
@@ -1003,23 +1057,7 @@ function openBrand(el) {
   }
 
   filtered.forEach(p => {
-    box.innerHTML += `
-      <div class="price-item" style="padding:12px;border:1px solid #ccc;margin:8px 0;border-radius:10px;background:#f9fbff">
-        <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
-          <div style="margin-top:4px"><b>الاسم:</b> ${p.name}</div>
-          <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
-          <div style="margin-top:4px"><b>السعر:</b>
-            ${p.qty && p.qty.toString().trim() !== "" && Number(p.qty) > 0
-              ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(p.price)} د.ع</span>`
-              : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`
-            }
-          </div>
-          <div style="margin-top:6px;color:#555;font-size:14px">
-            <b>الملاحظات:</b> ${p.notes && p.notes.trim() ? p.notes : "—"}
-          </div>
-        </div>
-      </div>
-    `;
+    box.innerHTML += createPriceItem(p);
   });
 }
 
@@ -1028,9 +1066,10 @@ function backToBrands() {
   document.getElementById("brandsSection").style.display = "block";
 }
 
-// ==================== تشغيل عند فتح الصفحة ====================
+// ==========================================
+// تشغيل عند فتح الصفحة
+// ==========================================
 checkAutoLogin();
-loadPrices();
 </script>
 
 </body>
