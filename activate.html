@@ -329,7 +329,7 @@ document.addEventListener('keydown', function(e) {
 
     <!-- ========== صفحة التسجيل (للزبائن الجدد) ========== -->
     <div id="registerPage" style="display:none">
-      <h2 class="section-title">تسجيل حساب </h2>
+      <h2 class="section-title">تسجيل حساب جديد</h2>
       <p class="welcome-text">
          أهلاً بك في أمواج للإلكترونيات<br>
           سجل بياناتك للحصول على خدمات الضمان
@@ -544,7 +544,7 @@ createParticles();
 
 // ==================== إعدادات الأمان ====================
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycby_K-k47gF6vWeZjmMOkYBeciMKBpVKjFO4vMqfwooRAbnmHKOGfQbKkX_q0ehAIC90/exec", // ضع رابط API هنا
+  API_URL: "https://script.google.com/macros/s/AKfycby_K-k47gF6vWeZjmMOkYBeciMKBpVKjFO4vMqfwooRAbnmHKOGfQbKkX_q0ehAIC90/exec",
   API_KEY: "AMWAJ_73538d34-3510-4469-85a2-62d330baf47c",
   DEVICE_ID: generateDeviceId()
 };
@@ -584,9 +584,6 @@ async function secureApiCall(action, data = {}) {
     throw error;
   }
 }
-
-// Webhooks القديمة (للتفعيل فقط)
-const ACTIVATE_WEBHOOK = "https://eo9txe5hkh3d1yk.m.pipedream.net";
 
 // ==================== تحويل الأرقام ====================
 function normalizeNumber(str) {
@@ -911,10 +908,16 @@ async function sendData() {
       </div>
     `;
 
-    await fetch(ACTIVATE_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end) })
+    // ✅ إرسال لـ Apps Script بدلاً من Pipedream
+    await secureApiCall('addWarranty', {
+      name,
+      phone,
+      invoice,
+      screenCode,
+      screenName,
+      type,
+      start,
+      end: formatDate(end)
     });
 
     usedInvoices.add(screenCode);
