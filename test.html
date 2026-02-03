@@ -526,32 +526,32 @@ async function checkWarranty() {
     console.log("🔍 Found warranty:", JSON.stringify(r));
 
     if (r) {
-      let endDate = null;
+      let expiryDate = null;
       let startDate = null;
 
       // قراء تاريخ البدء
-      if (r.start) {
-        if (typeof r.start === 'string' && r.start.includes('/')) {
-          let [d, m, y] = r.start.split("/");
+      if (r.start_date) {
+        if (typeof r.start_date === 'string' && r.start_date.includes('/')) {
+          let [d, m, y] = r.start_date.split("/");
           startDate = new Date(y, m - 1, d);
-        } else if (typeof r.start === 'number') {
-          startDate = new Date((r.start - 25569) * 86400 * 1000);
-        } else { startDate = new Date(r.start); }
+        } else if (typeof r.start_date === 'number') {
+          startDate = new Date((r.start_date - 25569) * 86400 * 1000);
+        } else { startDate = new Date(r.start_date); }
       }
 
       // قراء تاريخ الانتهاء
-      if (r.end) {
-        if (typeof r.end === 'string' && r.end.includes('/')) {
-          let [d, m, y] = r.end.split("/");
-          endDate = new Date(y, m - 1, d);
-        } else if (typeof r.end === 'number') {
-          endDate = new Date((r.end - 25569) * 86400 * 1000);
-        } else { endDate = new Date(r.end); }
+      if (r.expiry) {
+        if (typeof r.end === 'string' && r.expiry.includes('/')) {
+          let [d, m, y] = r.expiry.split("/");
+          expiryDate = new Date(y, m - 1, d);
+        } else if (typeof r.expiry === 'number') {
+          expiryDate = new Date((r.expiry - 25569) * 86400 * 1000);
+        } else { expiryDate = new Date(r.expiry); }
       }
 
-      let remaining = endDate ? Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24)) : null;
-      let startDateStr = startDate ? formatDate(startDate) : (r.start || "-");
-      let endDateStr = endDate ? formatDate(endDate) : (r.end || "-");
+      let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24)) : null;
+      let startDateStr = startDate ? formatDate(startDate) : (r.start_date || "-");
+      let endDateStr = expiryDate ? formatDate(expiryDate) : (r.expiry || "-");
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
