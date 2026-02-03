@@ -501,7 +501,7 @@ async function sendData() {
     if (warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
     let days = type === "screen" ? 30 : 365;
     let [d, m, y] = start.split("/");
-    let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days);
+    let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days-1);
     let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
     result.className = "result success"; result.style.display = "block";
     result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:14px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div>`;
