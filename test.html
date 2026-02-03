@@ -561,7 +561,7 @@ async function checkWarranty() {
           اسم الشاشة: ${r.screenname || "-"}<br>
           النوع: ${r.type || "-"}<br>
           البدء: ${startDateStr}<br>
-          الانتهاء: ${endDateStr}<br>
+          الانتهاء: ${expiryDateStr}<br>
           ${remaining !== null ? (remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : `⏳ منتهي منذ <b>${Math.abs(remaining)}</b> يوم`) : ''}
         </div>`;
     } else {
