@@ -171,7 +171,7 @@ document.addEventListener('keydown', function(e) {
 <div class="main-wrapper">
   <div class="container">
     <div class="logo">
-      <img src="1622010668024.png" alt="أمواج للإلكترونيات">
+      <img src="1646237145252.png" alt="أمواج للإلكترونيات">
     </div>
 
     <!-- شاشة التحميل -->
@@ -501,7 +501,7 @@ async function sendData() {
     if (warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
     let days = type === "screen" ? 30 : 365;
     let [d, m, y] = start.split("/");
-    let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days-1);
+    let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days - 1);
     let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
     result.className = "result success"; result.style.display = "block";
     result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:14px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div>`;
@@ -510,7 +510,7 @@ async function sendData() {
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
 
-// ✅ checkWarranty المصلحة
+// ==================== التحقق من الضمان (المصلحة كامل) ====================
 async function checkWarranty() {
   let v = normalizeNumber(document.getElementById("inv").value).trim().toUpperCase();
   let out = document.getElementById("out");
@@ -518,10 +518,8 @@ async function checkWarranty() {
   out.innerHTML = '<div class="result pending">جاري البحث...</div>';
   try {
     const warranties = await secureApiCall('getWarranties');
-    
-    // debug: شوف شنو يطلع من API
-    console.log("🔍 All warranties:", JSON.stringify(warranties.slice(0,3)));
-    
+    console.log("🔍 All warranties:", warranties);
+
     const r = warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === v);
     console.log("🔍 Found warranty:", JSON.stringify(r));
 
@@ -536,17 +534,21 @@ async function checkWarranty() {
           startDate = new Date(y, m - 1, d);
         } else if (typeof r.start_date === 'number') {
           startDate = new Date((r.start_date - 25569) * 86400 * 1000);
-        } else { startDate = new Date(r.start_date); }
+        } else {
+          startDate = new Date(r.start_date);
+        }
       }
 
-      // قراء تاريخ الانتهاء
+      // قراء تاريخ الانتهاء ✅ كل شي r.expiry
       if (r.expiry) {
-        if (typeof r.end === 'string' && r.expiry.includes('/')) {
+        if (typeof r.expiry === 'string' && r.expiry.includes('/')) {
           let [d, m, y] = r.expiry.split("/");
           expiryDate = new Date(y, m - 1, d);
         } else if (typeof r.expiry === 'number') {
           expiryDate = new Date((r.expiry - 25569) * 86400 * 1000);
-        } else { expiryDate = new Date(r.expiry); }
+        } else {
+          expiryDate = new Date(r.expiry);
+        }
       }
 
       let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24)) : null;
@@ -561,7 +563,7 @@ async function checkWarranty() {
           اسم الشاشة: ${r.screenname || "-"}<br>
           النوع: ${r.type || "-"}<br>
           البدء: ${startDateStr}<br>
-          الانتهاء: ${expiry}<br>
+          الانتهاء: ${endDateStr}<br>
           ${remaining !== null ? (remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : `⏳ منتهي منذ <b>${Math.abs(remaining)}</b> يوم`) : ''}
         </div>`;
     } else {
