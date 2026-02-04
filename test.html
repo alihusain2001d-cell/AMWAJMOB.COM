@@ -203,23 +203,9 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   padding: 12px;
   margin: 8px 0;
   border-radius: 10px;
-  position: relative;
 }
 .cart-item-info {
-  padding-right: 50px;
-}
-.remove-item {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 10px;
-  white-space: nowrap;
+  width: 100%;
 }
 
 @media print { #pricesPage { display: none !important; } }
@@ -862,17 +848,28 @@ function renderCart() {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     total += price;
     
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;margin:8px 0;';
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-item';
+    removeBtn.textContent = 'حذف';
+    removeBtn.onclick = () => removeFromCart(index);
+    removeBtn.style.cssText = 'position:absolute;top:-8px;left:8px;z-index:10;background:#f44336;color:white;border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;box-shadow:0 2px 8px rgba(244,67,54,0.4);';
+    
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
-      <button class="remove-item" onclick="removeFromCart(${index})">حذف</button>
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
       </div>
     `;
-    container.appendChild(div);
+    
+    wrapper.appendChild(removeBtn);
+    wrapper.appendChild(div);
+    container.appendChild(wrapper);
   });
   
   totalEl.textContent = formatPriceIQD(total) + ' د.ع';
