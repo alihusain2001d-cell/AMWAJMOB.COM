@@ -216,12 +216,17 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   background: #f44336;
   color: white;
   border: none;
-  padding: 3px 8px;
+  padding: 8px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 16px;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media print { #pricesPage { display: none !important; } }
@@ -872,7 +877,7 @@ function renderCart() {
         <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
       </div>
-      <button class="remove-item" onclick="removeFromCart(${index})">حذف</button>
+      <button class="remove-item" onclick="removeFromCart(${index})">🗑️</button>
     `;
     container.appendChild(div);
   });
