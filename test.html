@@ -608,9 +608,20 @@ async function sendData() {
     let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days - 1);
     let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
     result.className = "result success"; result.style.display = "block";
-    result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:14px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div>`;
+    result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:14px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div><div style="margin-top:10px;padding:8px;background:#e3f2fd;color:#1565c0;border-radius:8px;font-size:13px;">سيتم إفراغ الحقول بعد قليل...</div>`;
     await secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end) });
-    usedInvoices.add(screenCode); btn.innerText = "تم ✔️";
+    usedInvoices.add(screenCode); 
+    
+    setTimeout(() => {
+      document.getElementById("name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("invoice").value = "";
+      document.getElementById("screenCode").value = "";
+      document.getElementById("screenName").value = "";
+      document.getElementById("start").value = "";
+      result.innerHTML = "";
+      btn.innerText = "تفعيل الضمان";
+    }, 30000); // 30 ثانية
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
 
