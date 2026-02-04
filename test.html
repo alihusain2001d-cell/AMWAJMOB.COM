@@ -906,6 +906,12 @@ async function submitOrder() {
     return;
   }
   
+  // تعطيل جميع الأزرار
+  const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
+  const clearBtn = document.getElementById('clearCartBtn');
+  submitBtn.disabled = true;
+  if (clearBtn) clearBtn.disabled = true;
+  
   localStorage.setItem('amwaj_address', address);
   
   let message = `🛒 *طلب شراء جديد*\n\n`;
@@ -957,6 +963,8 @@ async function submitOrder() {
   } catch (e) {
     console.error(e);
     result.innerHTML = '<div class="result error">❌ حدث خطأ في الإرسال، حاول مرة أخرى</div>';
+    submitBtn.disabled = false;
+    if (clearBtn) clearBtn.disabled = false;
   }
 }
 
