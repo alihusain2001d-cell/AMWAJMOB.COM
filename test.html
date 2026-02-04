@@ -621,6 +621,7 @@ async function sendData() {
       document.getElementById("start").value = "";
       result.innerHTML = "";
       btn.innerText = "تفعيل الضمان";
+      btn.disabled = false;
     }, 30000); // 30 ثانية
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
