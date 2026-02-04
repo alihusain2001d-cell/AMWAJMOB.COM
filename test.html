@@ -206,15 +206,22 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+.cart-item-info {
+  flex: 1;
+  min-width: 0;
 }
 .remove-item {
   background: #f44336;
   color: white;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @media print { #pricesPage { display: none !important; } }
@@ -771,10 +778,12 @@ function addToCart(product) {
     return;
   }
   
-  const exists = cart.find(item => 
-    item.brand === product.brand && 
-    item.name === product.name
-  );
+  // التحقق من التكرار: نفس الاسم + نفس السعر
+  const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
+  const exists = cart.find(item => {
+    const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    return item.name === product.name && itemPrice === price;
+  });
   
   if (exists) {
     alert('هذا المنتج موجود في السلة بالفعل');
@@ -858,10 +867,10 @@ function renderCart() {
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
-      <div>
-        <div style="font-weight:bold;">${item.name || '-'}</div>
-        <div style="font-size:13px;color:#666;">${item.brand || '-'}</div>
-        <div style="color:#1e88e5;font-weight:bold;margin-top:4px;">${formatPriceIQD(price)} د.ع</div>
+      <div class="cart-item-info">
+        <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
+        <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
+        <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
       </div>
       <button class="remove-item" onclick="removeFromCart(${index})">حذف</button>
     `;
@@ -927,7 +936,7 @@ async function submitOrder() {
     const data = await response.json();
     
     if (data.idMessage) {
-      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سنتواصل معك قريباً 📞</div>';
+      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
       
       setTimeout(() => {
         cart = [];
