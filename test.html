@@ -852,13 +852,17 @@ function renderCart() {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     total += price;
     
+    const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:4px 8px;border-radius:5px;font-size:11px;color:#856404;margin-top:4px;">📝 ${item.notes}</div>` : '';
+    
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
+        <div style="font-size:12px;color:#555;margin-top:2px;">النوع: ${item.type || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
+        ${notesHtml}
         <button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button>
       </div>
     `;
@@ -904,7 +908,11 @@ async function submitOrder() {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     total += price;
     message += `${i+1}. ${item.name} (${item.brand})\n`;
+    message += `   النوع: ${item.type || '-'}\n`;
     message += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
+    if (item.notes) {
+      message += `   📝 ملاحظة: ${item.notes}\n`;
+    }
   });
   
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
