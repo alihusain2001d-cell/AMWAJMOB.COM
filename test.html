@@ -852,7 +852,7 @@ function renderCart() {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     total += price;
     
-    const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:4px 8px;border-radius:5px;font-size:11px;color:#856404;margin-top:4px;">📝 ${item.notes}</div>` : '';
+    const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:15px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
     
     const div = document.createElement('div');
     div.className = 'cart-item';
@@ -932,13 +932,13 @@ async function submitOrder() {
     const data = await response.json();
     
     if (data.idMessage) {
-      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦<br><small style="color:#666;font-size:12px;">سيتم إغلاق السلة بعد قليل...</small></div>';
       
       setTimeout(() => {
         cart = [];
         saveCart();
         closeCart();
-      }, 2000);
+      }, 30000); // 30 ثانية
     } else {
       throw new Error('فشل الإرسال');
     }
