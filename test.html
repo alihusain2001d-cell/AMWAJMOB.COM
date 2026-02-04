@@ -203,25 +203,23 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   padding: 12px;
   margin: 8px 0;
   border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  position: relative;
 }
 .cart-item-info {
-  flex: 1;
-  min-width: 0;
+  padding-right: 50px;
 }
 .remove-item {
+  position: absolute;
+  top: 8px;
+  left: 8px;
   background: #f44336;
   color: white;
   border: none;
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 @media print { #pricesPage { display: none !important; } }
@@ -867,12 +865,12 @@ function renderCart() {
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
+      <button class="remove-item" onclick="removeFromCart(${index})">حذف</button>
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
       </div>
-      <button class="remove-item" onclick="removeFromCart(${index})">حذف</button>
     `;
     container.appendChild(div);
   });
