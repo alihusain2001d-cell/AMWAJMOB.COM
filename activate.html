@@ -931,13 +931,15 @@ function renderCart() {
           <input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;">
           <label for="warranty_${index}" style="font-size:15px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;min-width:30px;">−</button>
-            <span style="font-size:15px;font-weight:bold;min-width:50px;text-align:center;background:#f0f0f0;padding:4px 8px;border-radius:5px;">العدد: ${quantity}</span>
-            <button onclick="changeQuantity(${index}, 1)" style="background:#4caf50;color:white;border:none;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;min-width:30px;">+</button>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:15px;font-weight:bold;color:#333;">العدد: ${quantity}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➖</button>
+              <button onclick="changeQuantity(${index}, 1)" style="background:#4caf50;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➕</button>
+            </div>
           </div>
-          <span style="flex:1;text-align:left;color:#1e88e5;font-weight:bold;font-size:15px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</span>
+          <div style="color:#1e88e5;font-weight:bold;font-size:15px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</div>
         </div>
         <button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button>
       </div>
