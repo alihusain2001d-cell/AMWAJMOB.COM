@@ -685,14 +685,14 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ انتهى الضمان'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
           النوع: ${r.type || "-"}<br>
-          البدء: ${startDateStr}<br>
-          الانتهاء: ${endDateStr}<br>
-          ${remaining !== null && remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : ''}
+          تاريخ البدء: ${startDateStr}<br>
+          تاريخ الانتهاء: ${endDateStr}<br>
+          ${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}
         </div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
