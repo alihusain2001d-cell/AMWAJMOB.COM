@@ -685,7 +685,7 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
@@ -916,6 +916,8 @@ function renderCart() {
     
     const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:15px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
     
+    const warrantyChecked = item.hasWarranty ? 'checked' : '';
+    
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
@@ -925,6 +927,10 @@ function renderCart() {
         <div style="font-size:12px;color:#555;margin-top:2px;">النوع: ${item.type || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:#e8f5e9;border-radius:8px;">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;">
+          <label for="warranty_${index}" style="font-size:15px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label>
+        </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
           <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;">−</button>
           <span style="font-size:16px;font-weight:bold;min-width:60px;text-align:center;">العدد: ${quantity}</span>
@@ -961,6 +967,14 @@ function changeQuantity(index, change) {
   cart[index].quantity = newQty;
   saveCart();
   renderCart();
+}
+
+function toggleWarranty(index) {
+  if (!cart[index]) return;
+  
+  const checkbox = document.getElementById(`warranty_${index}`);
+  cart[index].hasWarranty = checkbox.checked;
+  saveCart();
 }
 
 async function submitOrder() {
@@ -1010,6 +1024,7 @@ async function submitOrder() {
     message += `   النوع: ${item.type || '-'}\n`;
     message += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
     message += `   الكمية: ${quantity}\n`;
+    message += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
     message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
     if (item.notes) {
       message += `   📝 ملاحظة: ${item.notes}\n`;
@@ -1050,6 +1065,7 @@ async function submitOrder() {
         customerMessage += `   النوع: ${item.type || '-'}\n`;
         customerMessage += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
         customerMessage += `   الكمية: ${quantity}\n`;
+        customerMessage += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
         customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
         if (item.notes) {
           customerMessage += `   📝 ${item.notes}\n`;
