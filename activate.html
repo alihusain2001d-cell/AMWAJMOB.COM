@@ -685,14 +685,14 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ انتهى الضمان'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
           النوع: ${r.type || "-"}<br>
-          البدء: ${startDateStr}<br>
-          الانتهاء: ${endDateStr}<br>
-          ${remaining !== null && remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : ''}
+          تاريخ البدء: ${startDateStr}<br>
+          تاريخ الانتهاء: ${endDateStr}<br>
+          ${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}
         </div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
@@ -821,19 +821,24 @@ function addToCart(product) {
     return;
   }
   
-  // التحقق من التكرار: نفس الاسم + نفس السعر
+  // التحقق من التكرار: نفس الاسم + نفس السعر + نفس الملاحظة
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
-  const exists = cart.find(item => {
+  const existingIndex = cart.findIndex(item => {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
-    return item.name === product.name && itemPrice === price;
+    return item.name === product.name && 
+           itemPrice === price && 
+           (item.notes || '') === (product.notes || '');
   });
   
-  if (exists) {
-    alert('هذا المنتج موجود في السلة بالفعل');
-    return;
+  if (existingIndex !== -1) {
+    // إذا موجود، زيد الكمية
+    cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+  } else {
+    // إذا جديد، أضفه مع كمية = 1
+    product.quantity = 1;
+    cart.push(product);
   }
   
-  cart.push(product);
   saveCart();
   
   const msg = document.createElement('div');
@@ -905,7 +910,9 @@ function renderCart() {
   
   cart.forEach((item, index) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
-    total += price;
+    const quantity = item.quantity || 1;
+    const itemTotal = price * quantity;
+    total += itemTotal;
     
     const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:15px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
     
@@ -916,8 +923,14 @@ function renderCart() {
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
         <div style="font-size:12px;color:#555;margin-top:2px;">النوع: ${item.type || '-'}</div>
-        <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">${formatPriceIQD(price)} د.ع</div>
+        <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
+          <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;">−</button>
+          <span style="font-size:16px;font-weight:bold;min-width:60px;text-align:center;">العدد: ${quantity}</span>
+          <button onclick="changeQuantity(${index}, 1)" style="background:#4caf50;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;">+</button>
+          <span style="flex:1;text-align:left;color:#1e88e5;font-weight:bold;font-size:15px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</span>
+        </div>
         <button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button>
       </div>
     `;
@@ -925,6 +938,29 @@ function renderCart() {
   });
   
   totalEl.textContent = formatPriceIQD(total) + ' د.ع';
+}
+
+function changeQuantity(index, change) {
+  if (!cart[index]) return;
+  
+  const newQty = (cart[index].quantity || 1) + change;
+  
+  if (newQty < 1) {
+    // إذا صار العدد أقل من 1، احذف المنتج
+    if (confirm('هل تريد حذف هذا المنتج؟')) {
+      removeFromCart(index);
+    }
+    return;
+  }
+  
+  if (newQty > 99) {
+    alert('الحد الأقصى 99 قطعة');
+    return;
+  }
+  
+  cart[index].quantity = newQty;
+  saveCart();
+  renderCart();
 }
 
 async function submitOrder() {
@@ -967,10 +1003,14 @@ async function submitOrder() {
   let total = 0;
   cart.forEach((item, i) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
-    total += price;
+    const quantity = item.quantity || 1;
+    const itemTotal = price * quantity;
+    total += itemTotal;
     message += `${i+1}. ${item.name} (${item.brand})\n`;
     message += `   النوع: ${item.type || '-'}\n`;
     message += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
+    message += `   الكمية: ${quantity}\n`;
+    message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
     if (item.notes) {
       message += `   📝 ملاحظة: ${item.notes}\n`;
     }
@@ -1003,10 +1043,14 @@ async function submitOrder() {
       
       cart.forEach((item, i) => {
         const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+        const quantity = item.quantity || 1;
+        const itemTotal = price * quantity;
         customerMessage += `${i+1}. ${item.name}\n`;
         customerMessage += `   الماركة: ${item.brand}\n`;
         customerMessage += `   النوع: ${item.type || '-'}\n`;
         customerMessage += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
+        customerMessage += `   الكمية: ${quantity}\n`;
+        customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
         if (item.notes) {
           customerMessage += `   📝 ${item.notes}\n`;
         }
