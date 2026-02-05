@@ -496,11 +496,28 @@ function openPrices() {
     document.getElementById("brandsSection").style.display = "none";
     document.getElementById("brandPrices").style.display = "block";
     const box = document.getElementById("brandPricesBox");
-    box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
-    const filtered = pricesData.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
-    if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
-    filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
-    if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
+    
+    // رسالة التحميل
+    box.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div class="loading-spinner"></div>
+        <div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري البحث...</div>
+      </div>
+    `;
+    
+    // انتظار قصير ثم عرض النتائج
+    setTimeout(() => {
+      if (pricesData.length === 0) {
+        box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
+        return;
+      }
+      
+      box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
+      const filtered = pricesData.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
+      if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
+      filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
+      if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
+    }, 300);
   };
 }
 
@@ -668,14 +685,14 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ انتهى الضمان'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
           النوع: ${r.type || "-"}<br>
           البدء: ${startDateStr}<br>
           الانتهاء: ${endDateStr}<br>
-          ${remaining !== null ? (remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : `⏳ منتهي منذ <b>${Math.abs(remaining)}</b> يوم`) : ''}
+          ${remaining !== null && remaining >= 0 ? `⏳ المتبقي: <b>${remaining}</b> يوم` : ''}
         </div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
@@ -729,15 +746,41 @@ function openBrand(el) {
   document.getElementById("brandsSection").style.display = "none";
   document.getElementById("brandPrices").style.display = "block";
   const box = document.getElementById("brandPricesBox");
-  box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">أسعار ${brands.join(" / ")}</h3>`;
+  
+  // رسالة التحميل
+  box.innerHTML = `
+    <div style="text-align:center;padding:40px 20px;">
+      <div class="loading-spinner"></div>
+      <div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري تحميل الأسعار...</div>
+    </div>
+  `;
+  
   const searchInput = document.getElementById("searchInput"); searchInput.value = "";
-  searchInput.oninput = function() {
-    const q = this.value.trim().toLowerCase();
-    box.querySelectorAll(".price-item").forEach(item => { item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none"; });
+  
+  // انتظار تحميل الأسعار
+  const checkPrices = () => {
+    if (pricesData.length === 0) {
+      setTimeout(checkPrices, 500); // تحقق كل نص ثانية
+      return;
+    }
+    
+    // عرض الأسعار
+    box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">أسعار ${brands.join(" / ")}</h3>`;
+    
+    searchInput.oninput = function() {
+      const q = this.value.trim().toLowerCase();
+      box.querySelectorAll(".price-item").forEach(item => { item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none"; });
+    };
+    
+    const filtered = pricesData.filter(p => brands.map(b => b.toLowerCase()).includes((p.brand || "").toLowerCase()));
+    if (filtered.length === 0) { 
+      box.innerHTML += "<div style='padding:20px;text-align:center;color:#666;'>لا توجد أسعار</div>"; 
+      return; 
+    }
+    filtered.forEach(p => { box.innerHTML += createPriceItem(p); });
   };
-  const filtered = pricesData.filter(p => brands.map(b => b.toLowerCase()).includes((p.brand || "").toLowerCase()));
-  if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px'>لا توجد أسعار</div>"; return; }
-  filtered.forEach(p => { box.innerHTML += createPriceItem(p); });
+  
+  checkPrices();
 }
 
 function backToBrands() { document.getElementById("brandPrices").style.display = "none"; document.getElementById("brandsSection").style.display = "block"; }
