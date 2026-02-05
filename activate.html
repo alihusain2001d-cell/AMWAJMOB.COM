@@ -685,7 +685,7 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
@@ -1080,8 +1080,20 @@ async function submitOrder() {
       setTimeout(() => {
         cart = [];
         saveCart();
-        closeCart();
-      }, 30000); // 30 ثانية
+        
+        // مسح رسالة النجاح وتفعيل الأزرار
+        result.innerHTML = '';
+        submitBtn.disabled = false;
+        if (clearBtn) clearBtn.disabled = false;
+        
+        // إذا السلة مفتوحة، حدّث العرض
+        if (document.getElementById('cartPage').style.display !== 'none') {
+          renderCart();
+        } else {
+          // إذا مغلقة، أغلقها
+          closeCart();
+        }
+      }, 20000); // 20 ثانية
     } else {
       throw new Error('فشل الإرسال');
     }
