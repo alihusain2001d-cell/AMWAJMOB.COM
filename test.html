@@ -92,6 +92,7 @@ body {
 .big1 { background: #1e88e5; color: #fff; }
 .big2 { background: #6c7d90; color: #fff; }
 .big3 { background: #25D366; color: #fff; }
+.big4 { background: #f39c12; color: #fff; }
 
 label { font-weight: bold; font-size: 14px; display: block; margin-top: 10px; }
 
@@ -288,7 +289,8 @@ document.addEventListener('keydown', function(e) {
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
       <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
       <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
-      <button class="bigbtn big1" onclick="openPrices()">أسعار الشاشات</button>
+      <button class="bigbtn big1" onclick="openPrices('screens')">أسعار الشاشات 🖥️</button>
+      <button class="bigbtn big4" onclick="openPrices('batteries')">أسعار البطاريات 🔋</button>
       <div class="info-box">
         📞 للاستفسار:<br>
         <div style="margin-top:5px;">
@@ -344,20 +346,11 @@ document.addEventListener('keydown', function(e) {
     <!-- صفحة الأسعار -->
     <div id="pricesPage" style="display:none">
       <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title">🔒 أسعار الشاشات</h3>
+      <h3 class="section-title" id="pricesTitle">🔒 أسعار الشاشات</h3>
       <input type="text" id="searchInput" placeholder="بحث عن الموديل..." style="width:100%;margin:10px 0;padding:12px;">
       <div id="brandsSection">
-        <div class="brands-grid">
-          <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>iPhone</small></div>
-          <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-          <div class="brand" data-brand="Huawei" onclick="openBrand(this)">هواوي<small>Huawei</small></div>
-          <div class="brand" data-brand="Xiaomi" onclick="openBrand(this)">شاومي<small>Xiaomi</small></div>
-          <div class="brand" data-brand="Redmi,Poco" onclick="openBrand(this)">ريدمي + بوكو<small>Redmi & Poco</small></div>
-          <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix & Tecno</small></div>
-          <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo & Realme</small></div>
-          <div class="brand" data-brand="Vivo,Wiko" onclick="openBrand(this)">فيفو + ويكو<small>Vivo & Wiko</small></div>
-          <div class="brand" data-brand="Asus,RedMagic,Google" onclick="openBrand(this)">ازوز + ريد ماجك + كوكل<small>Asus • RedMagic • Google</small></div>
-          <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview" onclick="openBrand(this)">ZTE + Alcatel + TCL<small>ZTE • Alcatel • TCL • Blackview</small></div>
+        <div class="brands-grid" id="brandsGrid">
+          <!-- سيتم ملؤها ديناميكياً -->
         </div>
       </div>
       <div id="brandPrices" style="display:none">
@@ -468,6 +461,38 @@ function normalizePhone(phone) {
   return p;
 }
 
+// ==================== استخراج الماركة ====================
+function extractBrand(name) {
+  const nameUpper = (name || '').toUpperCase();
+  
+  // ترتيب الماركات حسب الأولوية (الأطول أولاً لتجنب التداخل)
+  const brands = {
+    'GOOGLE': 'Google',
+    'HUAWEI': 'Huawei', 
+    'HONOR': 'Honor',
+    'SAMSUNG': 'Samsung',
+    'XIAOMI': 'Xiaomi',
+    'REDMI': 'Redmi',
+    'POCO': 'Poco',
+    'REALME': 'Realme',
+    'INFINIX': 'Infinix',
+    'TECNO': 'Tecno',
+    'OPPO': 'Oppo',
+    'VIVO': 'Vivo',
+    'ASUS': 'Asus',
+    'IPHONE': 'Apple',
+    'APPLE': 'Apple'
+  };
+  
+  for (let key in brands) {
+    if (nameUpper.includes(key)) {
+      return brands[key];
+    }
+  }
+  
+  return 'أخرى';
+}
+
 // ==================== التنقل ====================
 function showPage(pageId) {
   ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage"].forEach(p => {
@@ -484,20 +509,39 @@ function backHome() { showPage("homePage"); }
 function openAct() { showPage("activatePage"); document.getElementById("start").value = formatDate(new Date()); }
 function openChk() { showPage("checkPage"); }
 
-function openPrices() {
+let currentPriceType = 'screens'; // screens or batteries
+
+function openPrices(type) {
+  currentPriceType = type;
   showPage("pricesPage");
+  
+  // تغيير العنوان
+  const title = document.getElementById("pricesTitle");
+  if (type === 'batteries') {
+    title.innerHTML = "🔋 أسعار البطاريات";
+  } else {
+    title.innerHTML = "🖥️ أسعار الشاشات";
+  }
+  
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
+  
+  // ملء أزرار الماركات
+  renderBrandsGrid(type);
+  
   const searchInput = document.getElementById("searchInput");
   searchInput.value = "";
   searchInput.oninput = function() {
     const q = this.value.trim().toLowerCase();
-    if (q.length < 2) { document.getElementById("brandsSection").style.display = "block"; document.getElementById("brandPrices").style.display = "none"; return; }
+    if (q.length < 2) { 
+      document.getElementById("brandsSection").style.display = "block"; 
+      document.getElementById("brandPrices").style.display = "none"; 
+      return; 
+    }
     document.getElementById("brandsSection").style.display = "none";
     document.getElementById("brandPrices").style.display = "block";
     const box = document.getElementById("brandPricesBox");
     
-    // رسالة التحميل
     box.innerHTML = `
       <div style="text-align:center;padding:40px 20px;">
         <div class="loading-spinner"></div>
@@ -505,20 +549,53 @@ function openPrices() {
       </div>
     `;
     
-    // انتظار قصير ثم عرض النتائج
     setTimeout(() => {
-      if (pricesData.length === 0) {
+      const dataToSearch = type === 'batteries' ? batteriesData : pricesData;
+      
+      if (dataToSearch.length === 0) {
         box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
         return;
       }
       
       box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
-      const filtered = pricesData.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
+      const filtered = dataToSearch.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
       if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
       filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
       if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
     }, 300);
   };
+}
+
+function renderBrandsGrid(type) {
+  const grid = document.getElementById("brandsGrid");
+  
+  if (type === 'batteries') {
+    // ماركات البطاريات
+    grid.innerHTML = `
+      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
+      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
+      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
+      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
+      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
+      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
+      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
+    `;
+  } else {
+    // ماركات الشاشات (الأصلية)
+    grid.innerHTML = `
+      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>iPhone</small></div>
+      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+      <div class="brand" data-brand="Huawei" onclick="openBrand(this)">هواوي<small>Huawei</small></div>
+      <div class="brand" data-brand="Xiaomi" onclick="openBrand(this)">شاومي<small>Xiaomi</small></div>
+      <div class="brand" data-brand="Redmi,Poco" onclick="openBrand(this)">ريدمي + بوكو<small>Redmi & Poco</small></div>
+      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix & Tecno</small></div>
+      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo & Realme</small></div>
+      <div class="brand" data-brand="Vivo,Wiko" onclick="openBrand(this)">فيفو + ويكو<small>Vivo & Wiko</small></div>
+      <div class="brand" data-brand="Asus,RedMagic,Google" onclick="openBrand(this)">ازوز + ريد ماجك + كوكل<small>Asus • RedMagic • Google</small></div>
+      <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview" onclick="openBrand(this)">ZTE + Alcatel + TCL<small>ZTE • Alcatel • TCL • Blackview</small></div>
+    `;
+  }
 }
 
 // ==================== تسجيل حساب جديد ====================
@@ -639,7 +716,7 @@ async function sendData() {
       result.innerHTML = "";
       btn.innerText = "تفعيل الضمان";
       btn.disabled = false;
-    }, 30000); // 30 ثانية
+    }, 30000);
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
 
@@ -685,7 +762,7 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
@@ -702,10 +779,36 @@ async function checkWarranty() {
 
 // ==================== دوال الأسعار ====================
 let pricesData = [];
+let batteriesData = [];
 
 async function loadPrices() {
-  try { pricesData = await secureApiCall('getPrices'); console.log("✅ Prices loaded:", pricesData.length); }
-  catch (e) { console.error("Error loading prices:", e); }
+  try { 
+    pricesData = await secureApiCall('getPrices'); 
+    console.log("✅ Screens loaded:", pricesData.length); 
+  }
+  catch (e) { console.error("Error loading screens:", e); }
+}
+
+async function loadBatteries() {
+  try {
+    const rawData = await secureApiCall('getBatteries');
+    
+    // إضافة الماركة والنوع لكل بطارية
+    batteriesData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'بطارية',
+      // تنسيق الحقول للتوافق مع createPriceItem
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    
+    console.log("✅ Batteries loaded:", batteriesData.length);
+  } catch (e) {
+    console.error("Error loading batteries:", e);
+  }
 }
 
 function formatPriceIQD(n) {
@@ -747,7 +850,6 @@ function openBrand(el) {
   document.getElementById("brandPrices").style.display = "block";
   const box = document.getElementById("brandPricesBox");
   
-  // رسالة التحميل
   box.innerHTML = `
     <div style="text-align:center;padding:40px 20px;">
       <div class="loading-spinner"></div>
@@ -755,35 +857,46 @@ function openBrand(el) {
     </div>
   `;
   
-  const searchInput = document.getElementById("searchInput"); searchInput.value = "";
+  const searchInput = document.getElementById("searchInput"); 
+  searchInput.value = "";
   
-  // انتظار تحميل الأسعار
+  // اختيار البيانات حسب النوع
+  const dataToUse = currentPriceType === 'batteries' ? batteriesData : pricesData;
+  
   const checkPrices = () => {
-    if (pricesData.length === 0) {
-      setTimeout(checkPrices, 500); // تحقق كل نص ثانية
+    if (dataToUse.length === 0) {
+      setTimeout(checkPrices, 500);
       return;
     }
     
-    // عرض الأسعار
     box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">أسعار ${brands.join(" / ")}</h3>`;
     
     searchInput.oninput = function() {
       const q = this.value.trim().toLowerCase();
-      box.querySelectorAll(".price-item").forEach(item => { item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none"; });
+      box.querySelectorAll(".price-item").forEach(item => { 
+        item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none"; 
+      });
     };
     
-    const filtered = pricesData.filter(p => brands.map(b => b.toLowerCase()).includes((p.brand || "").toLowerCase()));
+    const filtered = dataToUse.filter(p => 
+      brands.map(b => b.toLowerCase()).includes((p.brand || "").toLowerCase())
+    );
+    
     if (filtered.length === 0) { 
       box.innerHTML += "<div style='padding:20px;text-align:center;color:#666;'>لا توجد أسعار</div>"; 
       return; 
     }
+    
     filtered.forEach(p => { box.innerHTML += createPriceItem(p); });
   };
   
   checkPrices();
 }
 
-function backToBrands() { document.getElementById("brandPrices").style.display = "none"; document.getElementById("brandsSection").style.display = "block"; }
+function backToBrands() { 
+  document.getElementById("brandPrices").style.display = "none"; 
+  document.getElementById("brandsSection").style.display = "block"; 
+}
 
 // ==================== نظام السلة ====================
 let cart = [];
@@ -821,7 +934,6 @@ function addToCart(product) {
     return;
   }
   
-  // التحقق من التكرار: نفس الاسم + نفس السعر + نفس الملاحظة
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(item => {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -831,10 +943,8 @@ function addToCart(product) {
   });
   
   if (existingIndex !== -1) {
-    // إذا موجود، زيد الكمية
     cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
   } else {
-    // إذا جديد، أضفه مع كمية = 1
     product.quantity = 1;
     cart.push(product);
   }
@@ -916,20 +1026,30 @@ function renderCart() {
     
     const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:15px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
     
+    const warrantyChecked = item.hasWarranty ? 'checked' : '';
+    
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
-        <div style="font-size:13px;color:#666;margin-top:2px;">${item.brand || '-'}</div>
-        <div style="font-size:12px;color:#555;margin-top:2px;">النوع: ${item.type || '-'}</div>
+        <div style="font-size:13px;color:#000;margin-top:2px;font-weight:bold;">${item.brand || '-'}</div>
+        <div style="font-size:12px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
-          <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;">−</button>
-          <span style="font-size:16px;font-weight:bold;min-width:60px;text-align:center;">العدد: ${quantity}</span>
-          <button onclick="changeQuantity(${index}, 1)" style="background:#4caf50;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:bold;">+</button>
-          <span style="flex:1;text-align:left;color:#1e88e5;font-weight:bold;font-size:15px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:#e8f5e9;border-radius:8px;">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;">
+          <label for="warranty_${index}" style="font-size:15px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:15px;font-weight:bold;color:#333;">العدد: ${quantity}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="changeQuantity(${index}, -1)" style="background:#ff9800;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➖</button>
+              <button onclick="changeQuantity(${index}, 1)" style="background:#4caf50;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➕</button>
+            </div>
+          </div>
+          <div style="color:#1e88e5;font-weight:bold;font-size:15px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</div>
         </div>
         <button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button>
       </div>
@@ -946,7 +1066,6 @@ function changeQuantity(index, change) {
   const newQty = (cart[index].quantity || 1) + change;
   
   if (newQty < 1) {
-    // إذا صار العدد أقل من 1، احذف المنتج
     if (confirm('هل تريد حذف هذا المنتج؟')) {
       removeFromCart(index);
     }
@@ -961,6 +1080,14 @@ function changeQuantity(index, change) {
   cart[index].quantity = newQty;
   saveCart();
   renderCart();
+}
+
+function toggleWarranty(index) {
+  if (!cart[index]) return;
+  
+  const checkbox = document.getElementById(`warranty_${index}`);
+  cart[index].hasWarranty = checkbox.checked;
+  saveCart();
 }
 
 async function submitOrder() {
@@ -985,7 +1112,6 @@ async function submitOrder() {
     return;
   }
   
-  // تعطيل جميع الأزرار
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
   submitBtn.disabled = true;
@@ -1010,6 +1136,7 @@ async function submitOrder() {
     message += `   النوع: ${item.type || '-'}\n`;
     message += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
     message += `   الكمية: ${quantity}\n`;
+    message += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
     message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
     if (item.notes) {
       message += `   📝 ملاحظة: ${item.notes}\n`;
@@ -1035,7 +1162,6 @@ async function submitOrder() {
     if (data.idMessage) {
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦<br><small style="color:#666;font-size:12px;">سيتم إغلاق السلة بعد قليل...</small></div>';
       
-      // إرسال رسالة تأكيد للزبون
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\n`;
       customerMessage += `مرحباً *${name}*،\n\n`;
       customerMessage += `شكراً لطلبك من أمواج للإلكترونيات 🌊\n\n`;
@@ -1050,6 +1176,7 @@ async function submitOrder() {
         customerMessage += `   النوع: ${item.type || '-'}\n`;
         customerMessage += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
         customerMessage += `   الكمية: ${quantity}\n`;
+        customerMessage += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
         customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
         if (item.notes) {
           customerMessage += `   📝 ${item.notes}\n`;
@@ -1067,7 +1194,6 @@ async function submitOrder() {
       customerMessage += `شكراً لثقتكم 🌊\n`;
       customerMessage += `*أمواج للإلكترونيات*`;
       
-      // إرسال للزبون
       fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1080,8 +1206,16 @@ async function submitOrder() {
       setTimeout(() => {
         cart = [];
         saveCart();
-        closeCart();
-      }, 30000); // 30 ثانية
+        result.innerHTML = '';
+        submitBtn.disabled = false;
+        if (clearBtn) clearBtn.disabled = false;
+        
+        if (document.getElementById('cartPage').style.display !== 'none') {
+          renderCart();
+        } else {
+          closeCart();
+        }
+      }, 20000);
     } else {
       throw new Error('فشل الإرسال');
     }
@@ -1096,6 +1230,7 @@ async function submitOrder() {
 // ==================== تشغيل ====================
 checkAutoLogin();
 loadPrices();
+loadBatteries();
 loadCart();
 </script>
 </body>
