@@ -471,6 +471,7 @@ function extractBrand(name) {
     'HUAWEI': 'Huawei', 
     'HONOR': 'Honor',
     'SAMSUNG': 'Samsung',
+    'SAM': 'Samsung', // اختصار سامسونج
     'XIAOMI': 'Xiaomi',
     'REDMI': 'Redmi',
     'POCO': 'Poco',
@@ -481,16 +482,34 @@ function extractBrand(name) {
     'VIVO': 'Vivo',
     'ASUS': 'Asus',
     'IPHONE': 'Apple',
-    'APPLE': 'Apple'
+    'IPAD': 'Apple',
+    'APPLE': 'Apple',
+    'NOKIA': 'Nokia',
+    'ONEPLUS': 'OnePlus',
+    'NOTHING': 'Nothing',
+    'SONY': 'Sony',
+    'LG': 'LG',
+    'MOTOROLA': 'Motorola',
+    'LENOVO': 'Lenovo',
+    'ZTE': 'ZTE',
+    'ALCATEL': 'Alcatel',
+    'TCL': 'TCL',
+    'BLACKVIEW': 'Blackview',
+    'WIKO': 'Wiko'
   };
   
+  // نبحث عن أطول تطابق أولاً
+  let foundBrand = 'أخرى';
+  let maxLength = 0;
+  
   for (let key in brands) {
-    if (nameUpper.includes(key)) {
-      return brands[key];
+    if (nameUpper.includes(key) && key.length > maxLength) {
+      foundBrand = brands[key];
+      maxLength = key.length;
     }
   }
   
-  return 'أخرى';
+  return foundBrand;
 }
 
 // ==================== التنقل ====================
