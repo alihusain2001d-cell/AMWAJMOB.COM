@@ -289,8 +289,8 @@ document.addEventListener('keydown', function(e) {
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
       <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
       <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
-      <button class="bigbtn big1" onclick="openPrices('screens')">أسعار الشاشات 🖥️</button>
-      <button class="bigbtn big4" onclick="openPrices('batteries')">أسعار البطاريات 🔋</button>
+      <button class="bigbtn big1" onclick="openPrices('screens')">الشاشات 🖥️</button>
+      <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
       <div class="info-box">
         📞 للاستفسار:<br>
         <div style="margin-top:5px;">
@@ -346,7 +346,7 @@ document.addEventListener('keydown', function(e) {
     <!-- صفحة الأسعار -->
     <div id="pricesPage" style="display:none">
       <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title" id="pricesTitle">🔒 أسعار الشاشات</h3>
+      <h3 class="section-title" id="pricesTitle">🔒 الشاشات</h3>
       <input type="text" id="searchInput" placeholder="بحث عن الموديل..." style="width:100%;margin:10px 0;padding:12px;">
       <div id="brandsSection">
         <div class="brands-grid" id="brandsGrid">
@@ -518,9 +518,9 @@ function openPrices(type) {
   // تغيير العنوان
   const title = document.getElementById("pricesTitle");
   if (type === 'batteries') {
-    title.innerHTML = "🔋 أسعار البطاريات";
+    title.innerHTML = "🔋 البطاريات";
   } else {
-    title.innerHTML = "🖥️ أسعار الشاشات";
+    title.innerHTML = "🖥️ الشاشات";
   }
   
   document.getElementById("brandsSection").style.display = "block";
@@ -1028,6 +1028,20 @@ function renderCart() {
     
     const warrantyChecked = item.hasWarranty ? 'checked' : '';
     
+    // مربع الضمان يظهر فقط للشاشات
+    const isScreen = (item.type || '').includes('شاشة') || (item.type || '').toLowerCase().includes('screen');
+    const warrantyBox = isScreen ? `
+      <div style="margin-top:8px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#e8f5e9;border-radius:8px;">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;">
+          <label for="warranty_${index}" style="font-size:15px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label>
+        </div>
+        <div id="warrantyNote_${index}" style="display:${warrantyChecked ? 'block' : 'none'};background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:14px;color:#856404;margin-top:8px;border-left:4px solid #ffc107;">
+          ⚠️ علما ان سعر الشاشة يتغير عند طلب الضمان
+        </div>
+      </div>
+    ` : '';
+    
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
@@ -1037,10 +1051,7 @@ function renderCart() {
         <div style="font-size:12px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px;background:#e8f5e9;border-radius:8px;">
-          <input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;">
-          <label for="warranty_${index}" style="font-size:15px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label>
-        </div>
+        ${warrantyBox}
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:15px;font-weight:bold;color:#333;">العدد: ${quantity}</span>
@@ -1086,7 +1097,15 @@ function toggleWarranty(index) {
   if (!cart[index]) return;
   
   const checkbox = document.getElementById(`warranty_${index}`);
+  const note = document.getElementById(`warrantyNote_${index}`);
+  
   cart[index].hasWarranty = checkbox.checked;
+  
+  // إظهار/إخفاء الملاحظة
+  if (note) {
+    note.style.display = checkbox.checked ? 'block' : 'none';
+  }
+  
   saveCart();
 }
 
@@ -1132,11 +1151,22 @@ async function submitOrder() {
     const quantity = item.quantity || 1;
     const itemTotal = price * quantity;
     total += itemTotal;
+    
+    const isScreen = (item.type || '').includes('شاشة') || (item.type || '').toLowerCase().includes('screen');
+    
     message += `${i+1}. ${item.name} (${item.brand})\n`;
     message += `   النوع: ${item.type || '-'}\n`;
     message += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
     message += `   الكمية: ${quantity}\n`;
-    message += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
+    
+    if (isScreen) {
+      if (item.hasWarranty) {
+        message += `   ✅ مع ضمان 🛡️ (السعر يتغير)\n`;
+      } else {
+        message += `   ⚪ بدون ضمان\n`;
+      }
+    }
+    
     message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
     if (item.notes) {
       message += `   📝 ملاحظة: ${item.notes}\n`;
@@ -1171,12 +1201,23 @@ async function submitOrder() {
         const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
         const quantity = item.quantity || 1;
         const itemTotal = price * quantity;
+        
+        const isScreen = (item.type || '').includes('شاشة') || (item.type || '').toLowerCase().includes('screen');
+        
         customerMessage += `${i+1}. ${item.name}\n`;
         customerMessage += `   الماركة: ${item.brand}\n`;
         customerMessage += `   النوع: ${item.type || '-'}\n`;
         customerMessage += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
         customerMessage += `   الكمية: ${quantity}\n`;
-        customerMessage += `   ${item.hasWarranty ? '✅ مع ضمان 🛡️' : '⚪ بدون ضمان'}\n`;
+        
+        if (isScreen) {
+          if (item.hasWarranty) {
+            customerMessage += `   ✅ مع ضمان 🛡️ (السعر يتغير)\n`;
+          } else {
+            customerMessage += `   ⚪ بدون ضمان\n`;
+          }
+        }
+        
         customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
         if (item.notes) {
           customerMessage += `   📝 ${item.notes}\n`;
