@@ -1252,6 +1252,21 @@ async function submitOrder() {
     const data = await response.json();
     
     if (data.idMessage) {
+      // حفظ الطلب في Google Sheets للطباعة التلقائية
+      try {
+        await secureApiCall('saveOrder', {
+          name: name,
+          shop: shop,
+          phone: user.phone,
+          address: address,
+          items: cart,
+          total: total
+        });
+        console.log('✅ Order saved to sheets');
+      } catch (e) {
+        console.error('❌ Failed to save order:', e);
+      }
+      
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦<br><small style="color:#666;font-size:12px;">سيتم إغلاق السلة بعد قليل...</small></div>';
       
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\n`;
