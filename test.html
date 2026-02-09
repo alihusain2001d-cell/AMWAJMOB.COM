@@ -292,6 +292,7 @@ document.addEventListener('keydown', function(e) {
       <button class="bigbtn big1" onclick="openPrices('screens')">الشاشات 🖥️</button>
       <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
       <button class="bigbtn big1" onclick="openPrices('chargeboards')">بورد شحن 🔌</button>
+      <button class="bigbtn big4" onclick="openPrices('flatmain')">شريط ناقل ⚡</button>
       <div class="info-box">
         📞 للاستفسار:<br>
         <div style="margin-top:5px;">
@@ -529,7 +530,7 @@ function backHome() { showPage("homePage"); }
 function openAct() { showPage("activatePage"); document.getElementById("start").value = formatDate(new Date()); }
 function openChk() { showPage("checkPage"); }
 
-let currentPriceType = 'screens'; // screens or batteries or chargeboards
+let currentPriceType = 'screens'; // screens or batteries or chargeboards or flatmain
 
 function openPrices(type) {
   currentPriceType = type;
@@ -541,6 +542,8 @@ function openPrices(type) {
     title.innerHTML = "🔋 البطاريات";
   } else if (type === 'chargeboards') {
     title.innerHTML = "🔌 بورد شحن";
+  } else if (type === 'flatmain') {
+    title.innerHTML = "⚡ شريط ناقل";
   } else {
     title.innerHTML = "🖥️ الشاشات";
   }
@@ -572,7 +575,7 @@ function openPrices(type) {
     `;
     
     setTimeout(() => {
-      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : pricesData;
+      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatmain' ? flatmainData : pricesData;
       
       if (dataToSearch.length === 0) {
         box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
@@ -614,6 +617,18 @@ function renderBrandsGrid(type) {
       <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
       <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
       <div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>
+    `;
+  } else if (type === 'flatmain') {
+    // ماركات شريط ناقل
+    grid.innerHTML = `
+      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
+      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
+      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
+      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
+      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
+      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
+      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
     `;
   } else {
     // ماركات الشاشات (الأصلية)
@@ -815,6 +830,7 @@ async function checkWarranty() {
 let pricesData = [];
 let batteriesData = [];
 let chargeboardsData = [];
+let flatmainData = [];
 
 async function loadPrices() {
   try { 
@@ -868,6 +884,28 @@ async function loadChargeboards() {
   }
 }
 
+async function loadFlatMain() {
+  try {
+    const rawData = await secureApiCall('getFlatMain');
+    
+    // إضافة الماركة والنوع لكل شريط ناقل
+    flatmainData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'شريط ناقل',
+      // تنسيق الحقول للتوافق مع createPriceItem
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    
+    console.log("✅ Flat main loaded:", flatmainData.length);
+  } catch (e) {
+    console.error("Error loading flat main:", e);
+  }
+}
+
 function formatPriceIQD(n) {
   let priceStr = String(n || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
   return (Number(priceStr) || 0).toLocaleString("de-DE");
@@ -918,7 +956,7 @@ function openBrand(el) {
   searchInput.value = "";
   
   // اختيار البيانات حسب النوع
-  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : pricesData;
+  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatmain' ? flatmainData : pricesData;
   
   const checkPrices = () => {
     if (dataToUse.length === 0) {
@@ -1350,6 +1388,7 @@ checkAutoLogin();
 loadPrices();
 loadBatteries();
 loadChargeboards();
+loadFlatMain();
 loadCart();
 </script>
 </body>
