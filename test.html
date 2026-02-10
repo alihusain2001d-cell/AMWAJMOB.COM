@@ -292,7 +292,7 @@ document.addEventListener('keydown', function(e) {
       <button class="bigbtn big1" onclick="openPrices('screens')">الشاشات 🖥️</button>
       <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
       <button class="bigbtn big1" onclick="openPrices('chargeboards')">بورد شحن 🔌</button>
-      <button class="bigbtn big4" onclick="openPrices('flatmain')">شريط ناقل ⚡</button>
+      <button class="bigbtn big4" onclick="openPrices('flatmain')">شريط ⚡</button>
       <button class="bigbtn big1" onclick="openPrices('backcover')">باك كفر 📱</button>
       <div class="info-box">
         📞 للاستفسار:<br>
@@ -396,6 +396,28 @@ document.addEventListener('keydown', function(e) {
     </div>
 
   </div>
+  
+  <!-- زر الرجوع العائم -->
+  <button id="backToTopBtn" onclick="backToBrands()" style="
+    display: none;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 9999;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  ">
+    ⬆️
+  </button>
+
 </div>
 
 <script>
@@ -537,6 +559,9 @@ function openPrices(type) {
   currentPriceType = type;
   showPage("pricesPage");
   
+  // إخفاء زر الرجوع
+  hideBackButton();
+  
   // تغيير العنوان
   const title = document.getElementById("pricesTitle");
   if (type === 'batteries') {
@@ -544,7 +569,7 @@ function openPrices(type) {
   } else if (type === 'chargeboards') {
     title.innerHTML = "🔌 بورد شحن";
   } else if (type === 'flatmain') {
-    title.innerHTML = "⚡ شريط ناقل";
+    title.innerHTML = "⚡ شريط";
   } else if (type === 'backcover') {
     title.innerHTML = "📱 باك كفر";
   } else {
@@ -904,11 +929,11 @@ async function loadFlatMain() {
   try {
     const rawData = await secureApiCall('getFlatMain');
     
-    // إضافة الماركة والنوع لكل شريط ناقل
+    // إضافة الماركة والنوع لكل شريط
     flatmainData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
-      type: 'شريط ناقل',
+      type: 'شريط',
       // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
@@ -969,7 +994,6 @@ function createPriceItem(p) {
     <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
       <div style="margin-top:4px"><b>الماركة:</b> ${p.brand || "-"}</div>
       <div style="margin-top:4px"><b>الاسم:</b> ${p.name || "-"}</div>
-      <div style="margin-top:4px"><b>النوع:</b> ${p.type || "-"}</div>
       <div style="margin-top:4px"><b>السعر:</b> ${availableText}</div>
       ${notesText}
     </div>
@@ -982,6 +1006,9 @@ function openBrand(el) {
   document.getElementById("brandsSection").style.display = "none";
   document.getElementById("brandPrices").style.display = "block";
   const box = document.getElementById("brandPricesBox");
+  
+  // إظهار زر الرجوع
+  showBackButton();
   
   box.innerHTML = `
     <div style="text-align:center;padding:40px 20px;">
@@ -1186,7 +1213,6 @@ function renderCart() {
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#000;margin-top:2px;font-weight:bold;">${item.brand || '-'}</div>
-        <div style="font-size:12px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type || '-'}</div>
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
         ${warrantyBox}
@@ -1419,6 +1445,28 @@ async function submitOrder() {
     submitBtn.disabled = false;
     if (clearBtn) clearBtn.disabled = false;
   }
+}
+
+// ==================== زر الرجوع العائم ====================
+function backToBrands() {
+  document.getElementById("brandPrices").style.display = "none";
+  document.getElementById("brandsSection").style.display = "block";
+  
+  // إخفاء الزر
+  document.getElementById("backToTopBtn").style.display = "none";
+  
+  // الرجوع للأعلى
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showBackButton() {
+  const btn = document.getElementById("backToTopBtn");
+  btn.style.display = "block";
+}
+
+function hideBackButton() {
+  const btn = document.getElementById("backToTopBtn");
+  btn.style.display = "none";
 }
 
 // ==================== تشغيل ====================
