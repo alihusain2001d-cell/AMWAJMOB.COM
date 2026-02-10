@@ -401,8 +401,8 @@ document.addEventListener('keydown', function(e) {
   <button id="backToTopBtn" onclick="backToBrands()" style="
     display: none;
     position: fixed;
-    bottom: 80px;
-    right: 20px;
+    top: 80px;
+    left: 20px;
     z-index: 9999;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -415,7 +415,7 @@ document.addEventListener('keydown', function(e) {
     cursor: pointer;
     transition: all 0.3s ease;
   ">
-    ⬆️
+    ➡️
   </button>
 
 </div>
@@ -986,6 +986,9 @@ function createPriceItem(p) {
   
   const notesText = notes ? `<div style="margin-top:6px;background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:15px;font-weight:600;color:#856404;border-left:4px solid #ffc107;">📝 ${notes}</div>` : '';
   
+  // إظهار النوع للشاشات فقط
+  const typeText = currentPriceType === 'screens' && p.type ? `<div style="margin-top:4px"><b>النوع:</b> ${p.type}</div>` : '';
+  
   const cartBtn = qty > 0 && price > 0 
     ? `<button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&#39;")})'>🛒 إضافة للسلة</button>` 
     : '';
@@ -994,6 +997,7 @@ function createPriceItem(p) {
     <div style="font-weight:bold;font-size:16px;color:#1e3a5f">
       <div style="margin-top:4px"><b>الماركة:</b> ${p.brand || "-"}</div>
       <div style="margin-top:4px"><b>الاسم:</b> ${p.name || "-"}</div>
+      ${typeText}
       <div style="margin-top:4px"><b>السعر:</b> ${availableText}</div>
       ${notesText}
     </div>
@@ -1213,6 +1217,7 @@ function renderCart() {
       <div class="cart-item-info">
         <div style="font-weight:bold;font-size:15px;">${item.name || '-'}</div>
         <div style="font-size:13px;color:#000;margin-top:2px;font-weight:bold;">${item.brand || '-'}</div>
+        ${item.itemType === 'screens' && item.type ? `<div style="font-size:12px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type}</div>` : ''}
         <div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:14px;">السعر: ${formatPriceIQD(price)} د.ع</div>
         ${notesHtml}
         ${warrantyBox}
