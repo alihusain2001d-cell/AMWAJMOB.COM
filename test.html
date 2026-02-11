@@ -362,7 +362,6 @@ document.addEventListener('keydown', function(e) {
 
     <!-- صفحة السلة -->
     <div id="cartPage" style="display:none">
-      <button onclick="closeCart()" class="bigbtn big2">⬅ رجوع</button>
       <h3 class="section-title">🛒 سلة المشتريات</h3>
       
       <div id="cartItems"></div>
@@ -400,7 +399,7 @@ document.addEventListener('keydown', function(e) {
     display: none;
     position: fixed;
     top: 80px;
-    left: 20px;
+    right: 20px;
     z-index: 9999;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -1148,6 +1147,7 @@ function openCart() {
   }
   
   showPage('cartPage');
+  showBackButton(); // إظهار زر الرجوع
   renderCart();
   
   document.getElementById('orderName').value = user.name || '';
@@ -1454,10 +1454,16 @@ async function submitOrder() {
 function backToBrands() {
   const brandsSection = document.getElementById("brandsSection");
   const brandPrices = document.getElementById("brandPrices");
+  const cartPage = document.getElementById("cartPage");
   const btn = document.getElementById("backToTopBtn");
   
+  // إذا في صفحة السلة، ارجع للصفحة الرئيسية
+  if (cartPage.style.display === "block") {
+    showPage("homePage");
+    btn.style.display = "none";
+  }
   // إذا في صفحة المنتجات، ارجع للماركات
-  if (brandPrices.style.display === "block") {
+  else if (brandPrices.style.display === "block") {
     brandPrices.style.display = "none";
     brandsSection.style.display = "block";
     window.scrollTo({ top: 0, behavior: 'smooth' });
