@@ -287,16 +287,61 @@ document.addEventListener('keydown', function(e) {
     <!-- الصفحة الرئيسية -->
     <div id="homePage" style="display:none">
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
-      <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
-      <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
-      <button class="bigbtn big1" onclick="openPrices('screens')">الشاشات 🖥️</button>
-      <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
-      <button class="bigbtn big1" onclick="openPrices('chargeboards')">بورد شحن 🔌</button>
-      <button class="bigbtn big4" onclick="openPrices('flatcharging')">شريط شحن + شاشة ⚡</button>
-      <button class="bigbtn big1" onclick="openPrices('flatpower')">شريط بور + صوت + منوعة 🔊</button>
-      <button class="bigbtn big4" onclick="openPrices('backcover')">باك كفر 📱</button>
-      <button class="bigbtn big1" onclick="openPrices('housing')">شاصي 🏠</button>
-      <div class="info-box">
+      
+      <!-- مربعات الضمان -->
+      <div class="brands-grid" style="margin-bottom:20px;">
+        <div class="brand" onclick="openAct()" style="cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:8px;">✅</div>
+          <div style="font-weight:bold;font-size:16px;">تفعيل الضمان</div>
+          <small style="color:#666;">Activate Warranty</small>
+        </div>
+        <div class="brand" onclick="openChk()" style="cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+          <div style="font-weight:bold;font-size:16px;">التحقق من الضمان</div>
+          <small style="color:#666;">Check Warranty</small>
+        </div>
+      </div>
+      
+      <!-- مربعات المنتجات -->
+      <div class="brands-grid">
+        <div class="brand" onclick="openPrices('screens')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🖥️</div>
+          <div style="font-weight:bold;font-size:16px;">الشاشات</div>
+          <small style="color:#666;">Screens</small>
+        </div>
+        <div class="brand" onclick="openPrices('batteries')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔋</div>
+          <div style="font-weight:bold;font-size:16px;">البطاريات</div>
+          <small style="color:#666;">Batteries</small>
+        </div>
+        <div class="brand" onclick="openPrices('chargeboards')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔌</div>
+          <div style="font-weight:bold;font-size:16px;">بورد شحن</div>
+          <small style="color:#666;">Charge Board</small>
+        </div>
+        <div class="brand" onclick="openPrices('flatcharging')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+          <div style="font-weight:bold;font-size:16px;">شريط شحن + شاشة</div>
+          <small style="color:#666;">Charging Flex</small>
+        </div>
+        <div class="brand" onclick="openPrices('flatpower')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔊</div>
+          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت</div>
+          <small style="color:#666;">Power & Sound</small>
+        </div>
+        <div class="brand" onclick="openPrices('backcover')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">📱</div>
+          <div style="font-weight:bold;font-size:16px;">باك كفر</div>
+          <small style="color:#666;">Back Cover</small>
+        </div>
+        <div class="brand" onclick="openPrices('housing')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🏠</div>
+          <div style="font-weight:bold;font-size:16px;">شاصي</div>
+          <small style="color:#666;">Housing</small>
+        </div>
+      </div>
+      
+      <div class="info-box" style="margin-top:20px;">
         📞 للاستفسار:<br>
         <div style="margin-top:5px;">
           <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
@@ -304,8 +349,8 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر واتساب</a>
-      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل خروج</button>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 تواصل عبر واتساب</a>
+      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل الخروج</button>
     </div>
 
     <!-- صفحة التفعيل -->
@@ -878,7 +923,7 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
