@@ -287,15 +287,61 @@ document.addEventListener('keydown', function(e) {
     <!-- الصفحة الرئيسية -->
     <div id="homePage" style="display:none">
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
-      <button class="bigbtn big1" onclick="openAct()">تفعيل الضمان</button>
-      <button class="bigbtn big2" onclick="openChk()">التحقق من الضمان</button>
-      <button class="bigbtn big1" onclick="openPrices('screens')">الشاشات 🖥️</button>
-      <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
-      <button class="bigbtn big1" onclick="openPrices('chargeboards')">بورد شحن 🔌</button>
-      <button class="bigbtn big4" onclick="openPrices('flatmain')">شريط ⚡</button>
-      <button class="bigbtn big1" onclick="openPrices('backcover')">باك كفر 📱</button>
-      <button class="bigbtn big4" onclick="openPrices('housing')">شاصي 🏠</button>
-      <div class="info-box">
+      
+      <!-- مربعات الضمان -->
+      <div class="brands-grid" style="margin-bottom:20px;">
+        <div class="brand" onclick="openAct()" style="cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:8px;">✅</div>
+          <div style="font-weight:bold;font-size:16px;">تفعيل الضمان</div>
+          <small style="color:#666;">Activate Warranty</small>
+        </div>
+        <div class="brand" onclick="openChk()" style="cursor:pointer;">
+          <div style="font-size:24px;margin-bottom:8px;">🔍</div>
+          <div style="font-weight:bold;font-size:16px;">التحقق من الضمان</div>
+          <small style="color:#666;">Check Warranty</small>
+        </div>
+      </div>
+      
+      <!-- مربعات المنتجات -->
+      <div class="brands-grid">
+        <div class="brand" onclick="openPrices('screens')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🖥️</div>
+          <div style="font-weight:bold;font-size:16px;">الشاشات</div>
+          <small style="color:#666;">Screens</small>
+        </div>
+        <div class="brand" onclick="openPrices('batteries')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔋</div>
+          <div style="font-weight:bold;font-size:16px;">البطاريات</div>
+          <small style="color:#666;">Batteries</small>
+        </div>
+        <div class="brand" onclick="openPrices('chargeboards')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔌</div>
+          <div style="font-weight:bold;font-size:16px;">بورد شحن</div>
+          <small style="color:#666;">Charge Board</small>
+        </div>
+        <div class="brand" onclick="openPrices('flatcharging')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+          <div style="font-weight:bold;font-size:16px;">شريط شحن + شاشة</div>
+          <small style="color:#666;">Charging Flex</small>
+        </div>
+        <div class="brand" onclick="openPrices('flatpower')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🔊</div>
+          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت</div>
+          <small style="color:#666;">Power & Sound</small>
+        </div>
+        <div class="brand" onclick="openPrices('backcover')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">📱</div>
+          <div style="font-weight:bold;font-size:16px;">باك كفر</div>
+          <small style="color:#666;">Back Cover</small>
+        </div>
+        <div class="brand" onclick="openPrices('housing')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">🏠</div>
+          <div style="font-weight:bold;font-size:16px;">شاصي</div>
+          <small style="color:#666;">Housing</small>
+        </div>
+      </div>
+      
+      <div class="info-box" style="margin-top:20px;">
         📞 للاستفسار:<br>
         <div style="margin-top:5px;">
           <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
@@ -402,14 +448,14 @@ document.addEventListener('keydown', function(e) {
     top: 80px;
     right: 20px;
     z-index: 9999;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
     color: white;
     border: none;
     border-radius: 50px;
     width: 60px;
     height: 60px;
     font-size: 24px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
   ">
@@ -566,8 +612,10 @@ function openPrices(type) {
     title.innerHTML = "🔋 البطاريات";
   } else if (type === 'chargeboards') {
     title.innerHTML = "🔌 بورد شحن";
-  } else if (type === 'flatmain') {
-    title.innerHTML = "⚡ شريط";
+  } else if (type === 'flatcharging') {
+    title.innerHTML = "⚡ شريط شحن + شاشة";
+  } else if (type === 'flatpower') {
+    title.innerHTML = "🔊 شريط بور + صوت + منوعة";
   } else if (type === 'backcover') {
     title.innerHTML = "📱 باك كفر";
   } else if (type === 'housing') {
@@ -603,7 +651,7 @@ function openPrices(type) {
     `;
     
     setTimeout(() => {
-      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatmain' ? flatmainData : type === 'backcover' ? backcoverData : type === 'housing' ? housingData : pricesData;
+      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatcharging' ? flatchargingData : type === 'flatpower' ? flatpowerData : type === 'backcover' ? backcoverData : type === 'housing' ? housingData : pricesData;
       
       if (dataToSearch.length === 0) {
         box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
@@ -646,8 +694,20 @@ function renderBrandsGrid(type) {
       <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
       <div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>
     `;
-  } else if (type === 'flatmain') {
-    // ماركات شريط ناقل
+  } else if (type === 'flatcharging') {
+    // ماركات شريط شحن + شاشة
+    grid.innerHTML = `
+      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
+      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
+      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
+      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
+      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
+      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
+      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
+    `;
+  } else if (type === 'flatpower') {
+    // ماركات شريط بور + صوت + منوعة
     grid.innerHTML = `
       <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
       <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
@@ -882,7 +942,8 @@ async function checkWarranty() {
 let pricesData = [];
 let batteriesData = [];
 let chargeboardsData = [];
-let flatmainData = [];
+let flatchargingData = [];
+let flatpowerData = [];
 let backcoverData = [];
 let housingData = [];
 
@@ -942,19 +1003,32 @@ async function loadFlatMain() {
   try {
     const rawData = await secureApiCall('getFlatMain');
     
-    // إضافة الماركة والنوع لكل شريط
-    flatmainData = rawData.map(item => ({
+    // تقسيم البيانات حسب النوع
+    const allFlatData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
-      type: 'شريط',
-      // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
       qty: item.qty || item.العدد || 0,
       notes: item.notes || item.ملاحظات || ''
     }));
     
-    console.log("✅ Flat main loaded:", flatmainData.length);
+    // شريط شحن + شاشة: فقط LCD و MAIN
+    flatchargingData = allFlatData.filter(item => {
+      const nameUpper = item.name.toUpperCase();
+      return nameUpper.includes('FLAT LCD') || 
+             nameUpper.includes('FLAT MAIN');
+    }).map(item => ({...item, type: 'شريط شحن/شاشة'}));
+    
+    // شريط بور + صوت + منوعة: كل الباقي
+    flatpowerData = allFlatData.filter(item => {
+      const nameUpper = item.name.toUpperCase();
+      return !nameUpper.includes('FLAT LCD') && 
+             !nameUpper.includes('FLAT MAIN');
+    }).map(item => ({...item, type: 'شريط بور/صوت/منوعة'}));
+    
+    console.log("✅ Flat charging (LCD+MAIN) loaded:", flatchargingData.length);
+    console.log("✅ Flat power (others) loaded:", flatpowerData.length);
   } catch (e) {
     console.error("Error loading flat main:", e);
   }
@@ -1060,7 +1134,7 @@ function openBrand(el) {
   searchInput.value = "";
   
   // اختيار البيانات حسب النوع
-  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatmain' ? flatmainData : currentPriceType === 'backcover' ? backcoverData : currentPriceType === 'housing' ? housingData : pricesData;
+  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatcharging' ? flatchargingData : currentPriceType === 'flatpower' ? flatpowerData : currentPriceType === 'backcover' ? backcoverData : currentPriceType === 'housing' ? housingData : pricesData;
   
   const checkPrices = () => {
     if (dataToUse.length === 0) {
