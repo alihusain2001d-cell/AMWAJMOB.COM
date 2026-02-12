@@ -304,8 +304,8 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 تواصل عبر واتساب</a>
-      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل الخروج</button>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر واتساب</a>
+      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل خروج</button>
     </div>
 
     <!-- صفحة التفعيل -->
@@ -403,14 +403,14 @@ document.addEventListener('keydown', function(e) {
     top: 80px;
     right: 20px;
     z-index: 9999;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
     color: white;
     border: none;
     border-radius: 50px;
     width: 60px;
     height: 60px;
     font-size: 24px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
   ">
@@ -878,7 +878,7 @@ async function checkWarranty() {
 
       out.innerHTML = `
         <div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">
-          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>
+          ${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>
           الاسم: ${r.name || "-"}<br>
           الهاتف: ${r.phone || "-"}<br>
           اسم الشاشة: ${r.screenname || "-"}<br>
