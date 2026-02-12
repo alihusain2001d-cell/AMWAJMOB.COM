@@ -293,7 +293,7 @@ document.addEventListener('keydown', function(e) {
       <button class="bigbtn big4" onclick="openPrices('batteries')">البطاريات 🔋</button>
       <button class="bigbtn big1" onclick="openPrices('chargeboards')">بورد شحن 🔌</button>
       <button class="bigbtn big4" onclick="openPrices('flatcharging')">شريط شحن + شاشة ⚡</button>
-      <button class="bigbtn big1" onclick="openPrices('flatpower')">شريط بور + صوت 🔊</button>
+      <button class="bigbtn big1" onclick="openPrices('flatpower')">شريط بور + صوت + منوعة 🔊</button>
       <button class="bigbtn big4" onclick="openPrices('backcover')">باك كفر 📱</button>
       <button class="bigbtn big1" onclick="openPrices('housing')">شاصي 🏠</button>
       <div class="info-box">
@@ -304,8 +304,8 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢التواصل عبر واتساب</a>
-      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل خروج</button>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 تواصل عبر واتساب</a>
+      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل الخروج</button>
     </div>
 
     <!-- صفحة التفعيل -->
@@ -570,7 +570,7 @@ function openPrices(type) {
   } else if (type === 'flatcharging') {
     title.innerHTML = "⚡ شريط شحن + شاشة";
   } else if (type === 'flatpower') {
-    title.innerHTML = "🔊 شريط بور + صوت";
+    title.innerHTML = "🔊 شريط بور + صوت + منوعة";
   } else if (type === 'backcover') {
     title.innerHTML = "📱 باك كفر";
   } else if (type === 'housing') {
@@ -662,7 +662,7 @@ function renderBrandsGrid(type) {
       <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
     `;
   } else if (type === 'flatpower') {
-    // ماركات شريط بور + صوت
+    // ماركات شريط بور + صوت + منوعة
     grid.innerHTML = `
       <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
       <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
@@ -968,30 +968,22 @@ async function loadFlatMain() {
       notes: item.notes || item.ملاحظات || ''
     }));
     
-    // شريط شحن + شاشة: BATTERY, FINGER, FLASH, HOME
+    // شريط شحن + شاشة: فقط LCD و MAIN
     flatchargingData = allFlatData.filter(item => {
       const nameUpper = item.name.toUpperCase();
-      return nameUpper.includes('BATTERY') || 
-             nameUpper.includes('FINGER') || 
-             nameUpper.includes('FLASH') || 
-             nameUpper.includes('HOME');
+      return nameUpper.includes('FLAT LCD') || 
+             nameUpper.includes('FLAT MAIN');
     }).map(item => ({...item, type: 'شريط شحن/شاشة'}));
     
-    // شريط بور + صوت: POWER, SOUND, VOLUME (وكل شي ثاني)
+    // شريط بور + صوت + منوعة: كل الباقي
     flatpowerData = allFlatData.filter(item => {
       const nameUpper = item.name.toUpperCase();
-      return nameUpper.includes('POWER') || 
-             nameUpper.includes('SOUND') || 
-             nameUpper.includes('VOLUME') ||
-             nameUpper.includes('AUDIO') ||
-             (!nameUpper.includes('BATTERY') && 
-              !nameUpper.includes('FINGER') && 
-              !nameUpper.includes('FLASH') && 
-              !nameUpper.includes('HOME'));
-    }).map(item => ({...item, type: 'شريط بور/صوت'}));
+      return !nameUpper.includes('FLAT LCD') && 
+             !nameUpper.includes('FLAT MAIN');
+    }).map(item => ({...item, type: 'شريط بور/صوت/منوعة'}));
     
-    console.log("✅ Flat charging loaded:", flatchargingData.length);
-    console.log("✅ Flat power loaded:", flatpowerData.length);
+    console.log("✅ Flat charging (LCD+MAIN) loaded:", flatchargingData.length);
+    console.log("✅ Flat power (others) loaded:", flatpowerData.length);
   } catch (e) {
     console.error("Error loading flat main:", e);
   }
