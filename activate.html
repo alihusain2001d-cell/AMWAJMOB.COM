@@ -346,6 +346,11 @@ document.addEventListener('keydown', function(e) {
           <div style="font-weight:bold;font-size:16px;">شاصي</div>
           <small style="color:#666;">Housing</small>
         </div>
+        <div class="brand" onclick="openPrices('lens')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">📷</div>
+          <div style="font-weight:bold;font-size:16px;">عدسة كاميرا</div>
+          <small style="color:#666;">Lens Camera</small>
+        </div>
       </div>
       
       <div class="info-box" style="margin-top:20px;">
@@ -356,7 +361,7 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر واتساب</a>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر الواتساب</a>
       <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل خروج</button>
     </div>
 
@@ -627,6 +632,8 @@ function openPrices(type) {
     title.innerHTML = "📱 باك كفر";
   } else if (type === 'housing') {
     title.innerHTML = "🏠 شاصي";
+  } else if (type === 'lens') {
+    title.innerHTML = "📷 عدسة كاميرا";
   } else {
     title.innerHTML = "🖥️ الشاشات";
   }
@@ -658,7 +665,7 @@ function openPrices(type) {
     `;
     
     setTimeout(() => {
-      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatcharging' ? flatchargingData : type === 'flatpower' ? flatpowerData : type === 'backcover' ? backcoverData : type === 'housing' ? housingData : pricesData;
+      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatcharging' ? flatchargingData : type === 'flatpower' ? flatpowerData : type === 'backcover' ? backcoverData : type === 'housing' ? housingData : type === 'lens' ? lensData : pricesData;
       
       if (dataToSearch.length === 0) {
         box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
@@ -739,6 +746,18 @@ function renderBrandsGrid(type) {
     `;
   } else if (type === 'housing') {
     // ماركات شاصي
+    grid.innerHTML = `
+      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
+      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
+      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
+      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
+      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
+      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
+      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
+    `;
+  } else if (type === 'lens') {
+    // ماركات عدسة كاميرا
     grid.innerHTML = `
       <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
       <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
@@ -953,6 +972,7 @@ let flatchargingData = [];
 let flatpowerData = [];
 let backcoverData = [];
 let housingData = [];
+let lensData = [];
 
 async function loadPrices() {
   try { 
@@ -1085,6 +1105,28 @@ async function loadHousing() {
   }
 }
 
+async function loadLens() {
+  try {
+    const rawData = await secureApiCall('getLens');
+    
+    // إضافة الماركة والنوع لكل عدسة
+    lensData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'عدسة كاميرا',
+      // تنسيق الحقول للتوافق مع createPriceItem
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    
+    console.log("✅ Lens loaded:", lensData.length);
+  } catch (e) {
+    console.error("Error loading lens:", e);
+  }
+}
+
 function formatPriceIQD(n) {
   let priceStr = String(n || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
   return (Number(priceStr) || 0).toLocaleString("de-DE");
@@ -1141,7 +1183,7 @@ function openBrand(el) {
   searchInput.value = "";
   
   // اختيار البيانات حسب النوع
-  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatcharging' ? flatchargingData : currentPriceType === 'flatpower' ? flatpowerData : currentPriceType === 'backcover' ? backcoverData : currentPriceType === 'housing' ? housingData : pricesData;
+  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatcharging' ? flatchargingData : currentPriceType === 'flatpower' ? flatpowerData : currentPriceType === 'backcover' ? backcoverData : currentPriceType === 'housing' ? housingData : currentPriceType === 'lens' ? lensData : pricesData;
   
   const checkPrices = () => {
     if (dataToUse.length === 0) {
@@ -1664,6 +1706,7 @@ loadChargeboards();
 loadFlatMain();
 loadBackCover();
 loadHousing();
+loadLens();
 loadCart();
 
 // ==================== PWA Service Worker ====================
