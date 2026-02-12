@@ -326,7 +326,7 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div class="brand" onclick="openPrices('flatpower')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">🔊</div>
-          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت</div>
+          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت + منوع</div>
           <small style="color:#666;">Power & Sound</small>
         </div>
         <div class="brand" onclick="openPrices('backcover')" style="cursor:pointer;">
@@ -1596,6 +1596,57 @@ function showBackButton() {
 function hideBackButton() {
   const btn = document.getElementById("backToTopBtn");
   btn.style.display = "none";
+}
+
+// ==================== Swipe Gestures (iOS Style) ====================
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+document.addEventListener('touchstart', function(e) {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, false);
+
+document.addEventListener('touchend', function(e) {
+  touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
+  handleSwipe();
+}, false);
+
+function handleSwipe() {
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  
+  // سحب أفقي (يمين أو يسار)
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    // سحب من اليسار لليمين (Swipe Right) = رجوع
+    if (diffX > 50) {
+      // تحديد الصفحة الحالية والرجوع
+      const brandsSection = document.getElementById("brandsSection");
+      const brandPrices = document.getElementById("brandPrices");
+      const cartPage = document.getElementById("cartPage");
+      const pricesPage = document.getElementById("pricesPage");
+      
+      // إذا في صفحة المنتجات، ارجع للماركات
+      if (brandPrices && brandPrices.style.display === "block") {
+        backToBrands();
+      }
+      // إذا في صفحة الماركات، ارجع للصفحة الرئيسية
+      else if (brandsSection && brandsSection.style.display === "block") {
+        backToBrands();
+      }
+      // إذا في السلة، ارجع للصفحة الرئيسية
+      else if (cartPage && cartPage.style.display === "block") {
+        backToBrands();
+      }
+      // إذا في أي صفحة أخرى، ارجع للصفحة الرئيسية
+      else if (!document.getElementById("homePage") || document.getElementById("homePage").style.display !== "block") {
+        showPage("homePage");
+      }
+    }
+  }
 }
 
 // ==================== تشغيل ====================
