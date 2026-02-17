@@ -383,6 +383,11 @@ document.addEventListener('keydown', function(e) {
         <span class="btn-label">باب سيم كارت</span>
         <span class="btn-sub">DOOR SIM</span>
       </div>
+      <div class="flatpower-btn" onclick="openFlatSub('FINGERPRINT', 'بصمة', '👆')">
+        <span class="btn-icon">👆</span>
+        <span class="btn-label">بصمة</span>
+        <span class="btn-sub">FINGERPRINT</span>
+      </div>
       <div class="flatpower-btn" onclick="openFlatSub('OTHER', 'منوعة', '📦')">
         <span class="btn-icon">📦</span>
         <span class="btn-label">منوعة</span>
@@ -508,7 +513,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera & Lens</small>
+          <small style="color:#666;">Camera </small>
         </div>
       </div>
       
@@ -780,6 +785,7 @@ function getFlatSubData(subType) {
     case 'BUZZER':       return buzzerData;
     case 'EAR SPEAKER':  return earSpeakerData;
     case 'DOOR SIM':     return doorSimData;
+    case 'FINGERPRINT':  return fingerprintData;
     case 'CAMERA':       return cameraData;
     case 'OTHER':        return miscData;
     default: return [];
@@ -1155,6 +1161,7 @@ let cameraData = [];
 let buzzerData = [];
 let earSpeakerData = [];
 let doorSimData = [];
+let fingerprintData = [];
 let miscData = [];
 
 async function loadPrices() {
@@ -1337,6 +1344,22 @@ async function loadDoorSim() {
     }));
     console.log("✅ Door Sim loaded:", doorSimData.length);
   } catch (e) { console.error("Error loading door sim:", e); }
+}
+
+async function loadFingerprint() {
+  try {
+    const rawData = await secureApiCall('getFingerprint');
+    fingerprintData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'بصمة',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Fingerprint loaded:", fingerprintData.length);
+  } catch (e) { console.error("Error loading fingerprint:", e); }
 }
 
 async function loadMisc() {
@@ -1851,6 +1874,7 @@ loadCamera();
 loadBuzzer();
 loadEarSpeaker();
 loadDoorSim();
+loadFingerprint();
 loadMisc();
 loadCart();
 
