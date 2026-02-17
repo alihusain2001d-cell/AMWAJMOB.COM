@@ -356,7 +356,7 @@ document.addEventListener('keydown', function(e) {
 <div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
   <div class="flatpower-sheet" onclick="event.stopPropagation()">
     <div class="flatpower-handle"></div>
-    <div class="flatpower-title">🔊 اختر القسم</div>
+    <div class="flatpower-title">🔧 قطع غيار منوعة</div>
     <div class="flatpower-grid">
       <div class="flatpower-btn" onclick="openFlatSub('FLAT POWER', 'فلات بور', '⚡')">
         <span class="btn-icon">⚡</span>
@@ -383,10 +383,20 @@ document.addEventListener('keydown', function(e) {
         <span class="btn-label">باب سيم كارت</span>
         <span class="btn-sub">DOOR SIM</span>
       </div>
+      <div class="flatpower-btn" onclick="openFlatSub('FINGERPRINT', 'بصمة', '👆')">
+        <span class="btn-icon">👆</span>
+        <span class="btn-label">بصمة</span>
+        <span class="btn-sub">FINGERPRINT</span>
+      </div>
       <div class="flatpower-btn" onclick="openFlatSub('OTHER', 'منوعة', '📦')">
         <span class="btn-icon">📦</span>
         <span class="btn-label">منوعة</span>
         <span class="btn-sub">OTHER</span>
+      </div>
+      <div class="flatpower-btn" onclick="openLensFromModal()">
+        <span class="btn-icon">📷</span>
+        <span class="btn-label">عدسة كاميرا</span>
+        <span class="btn-sub">LENS CAMERA</span>
       </div>
     </div>
     <button class="flatpower-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
@@ -484,11 +494,11 @@ document.addEventListener('keydown', function(e) {
           <div style="font-weight:bold;font-size:16px;">شريط شحن + شاشة</div>
           <small style="color:#666;">Charging Flex</small>
         </div>
-        <!-- زر بور + صوت - يفتح موديل التقسيمات -->
+        <!-- زر قطع غيار منوعة - يفتح موديل التقسيمات -->
         <div class="brand" onclick="openFlatpowerModal()" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">🔊</div>
-          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت + منوع</div>
-          <small style="color:#666;">Power & Sound</small>
+          <div style="font-weight:bold;font-size:16px;">قطع غيار منوعة</div>
+          <small style="color:#666;">Power & Sound & Misc</small>
         </div>
         <div class="brand" onclick="openPrices('backcover')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📱</div>
@@ -500,10 +510,10 @@ document.addEventListener('keydown', function(e) {
           <div style="font-weight:bold;font-size:16px;">شاصي</div>
           <small style="color:#666;">Housing</small>
         </div>
-        <div class="brand" onclick="openPrices('lens')" style="cursor:pointer;">
+        <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
-          <div style="font-weight:bold;font-size:16px;">عدسة كاميرا</div>
-          <small style="color:#666;">Lens Camera</small>
+          <div style="font-weight:bold;font-size:16px;">كاميرا</div>
+          <small style="color:#666;">Camera </small>
         </div>
       </div>
       
@@ -761,18 +771,28 @@ function closeFlatpowerModal(event) {
   }
 }
 
-// الكيوورد لكل قسم
-const FLAT_KEYWORDS = {
-  'FLAT POWER':   ['FLAT POWER'],
-  'FLAT VOLUME':  ['FLAT VOLUME'],
-  'BUZZER':       ['BUZZER'],
-  'EAR SPEAKER':  ['EAR SPEAKER', 'EARPHONE', 'EAR PIECE'],
-  'DOOR SIM':     ['DOOR SIM', 'SIM DOOR', 'SIM TRAY'],
-  'OTHER':        null  // كل ما لا ينطبق عليه الباقي
-};
+function openLensFromModal() {
+  document.getElementById('flatpowerModal').classList.remove('active');
+  document.body.style.overflow = '';
+  openPrices('camera');
+}
+
+// خريطة كل قسم → البيانات المستقلة
+function getFlatSubData(subType) {
+  switch(subType) {
+    case 'FLAT POWER':   return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT POWER'));
+    case 'FLAT VOLUME':  return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT VOLUME'));
+    case 'BUZZER':       return buzzerData;
+    case 'EAR SPEAKER':  return earSpeakerData;
+    case 'DOOR SIM':     return doorSimData;
+    case 'FINGERPRINT':  return fingerprintData;
+    case 'CAMERA':       return cameraData;
+    case 'OTHER':        return miscData;
+    default: return [];
+  }
+}
 
 function openFlatSub(subType, labelAr, icon) {
-  // إغلاق الموديل
   document.getElementById('flatpowerModal').classList.remove('active');
   document.body.style.overflow = '';
 
@@ -782,14 +802,10 @@ function openFlatSub(subType, labelAr, icon) {
   showPage("pricesPage");
   showBackButton();
 
-  // عنوان الصفحة
-  const title = document.getElementById("pricesTitle");
-  title.innerHTML = `${icon} ${labelAr}`;
-
+  document.getElementById("pricesTitle").innerHTML = `${icon} ${labelAr}`;
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
 
-  // ملء الماركات
   renderBrandsGrid('flatpower');
 
   const searchInput = document.getElementById("searchInput");
@@ -804,12 +820,12 @@ function openFlatSub(subType, labelAr, icon) {
     document.getElementById("brandsSection").style.display = "none";
     document.getElementById("brandPrices").style.display = "block";
     const box = document.getElementById("brandPricesBox");
-
     box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div></div>`;
 
     setTimeout(() => {
-      const filtered = getFilteredFlatData(subType).filter(p => 
-        (p.name && p.name.toLowerCase().includes(q)) || 
+      const data = getFlatSubData(subType);
+      const filtered = data.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
         (p.brand && p.brand.toLowerCase().includes(q))
       );
       box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج: "${q}" - ${labelAr}</h3>`;
@@ -822,29 +838,6 @@ function openFlatSub(subType, labelAr, icon) {
 
 // متغير لتخزين القسم الفرعي الحالي
 let currentFlatSubType = null;
-
-// فلترة البيانات حسب القسم الفرعي
-function getFilteredFlatData(subType) {
-  const keywords = FLAT_KEYWORDS[subType];
-  
-  if (subType === 'OTHER') {
-    // كل ما لا ينطبق عليه أي كيوورد
-    const allKeywords = Object.values(FLAT_KEYWORDS)
-      .filter(k => k !== null)
-      .flat()
-      .map(k => k.toUpperCase());
-    
-    return flatpowerData.filter(item => {
-      const nameUpper = item.name.toUpperCase();
-      return !allKeywords.some(kw => nameUpper.includes(kw));
-    });
-  }
-  
-  return flatpowerData.filter(item => {
-    const nameUpper = item.name.toUpperCase();
-    return keywords.some(kw => nameUpper.includes(kw));
-  });
-}
 
 // ==================== التنقل ====================
 function showPage(pageId) {
@@ -884,6 +877,8 @@ function openPrices(type) {
     title.innerHTML = "🏠 شاصي";
   } else if (type === 'lens') {
     title.innerHTML = "📷 عدسة كاميرا";
+  } else if (type === 'camera') {
+    title.innerHTML = "📸 كاميرا";
   } else {
     title.innerHTML = "🖥️ الشاشات";
   }
@@ -934,6 +929,7 @@ function getDataForType(type) {
     case 'backcover':    return backcoverData;
     case 'housing':      return housingData;
     case 'lens':         return lensData;
+    case 'camera':       return cameraData;
     default:             return pricesData;
   }
 }
@@ -966,6 +962,8 @@ function renderBrandsGrid(type) {
     `;
   } else if (type === 'chargeboards') {
     grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>`;
+  } else if (type === 'camera') {
+    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google • Blackview</small></div>`;
   } else {
     grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>`;
   }
@@ -1159,6 +1157,12 @@ let flatpowerData = [];
 let backcoverData = [];
 let housingData = [];
 let lensData = [];
+let cameraData = [];
+let buzzerData = [];
+let earSpeakerData = [];
+let doorSimData = [];
+let fingerprintData = [];
+let miscData = [];
 
 async function loadPrices() {
   try { 
@@ -1278,6 +1282,102 @@ async function loadLens() {
   } catch (e) { console.error("Error loading lens:", e); }
 }
 
+async function loadCamera() {
+  try {
+    const rawData = await secureApiCall('getCamera');
+    cameraData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'كاميرا',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Camera loaded:", cameraData.length);
+  } catch (e) { console.error("Error loading camera:", e); }
+}
+
+async function loadBuzzer() {
+  try {
+    const rawData = await secureApiCall('getBuzzer');
+    buzzerData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'سماعة جرس',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Buzzer loaded:", buzzerData.length);
+  } catch (e) { console.error("Error loading buzzer:", e); }
+}
+
+async function loadEarSpeaker() {
+  try {
+    const rawData = await secureApiCall('getEarSpeaker');
+    earSpeakerData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'سماعة اتصال',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Ear Speaker loaded:", earSpeakerData.length);
+  } catch (e) { console.error("Error loading ear speaker:", e); }
+}
+
+async function loadDoorSim() {
+  try {
+    const rawData = await secureApiCall('getDoorSim');
+    doorSimData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'باب سيم كارت',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Door Sim loaded:", doorSimData.length);
+  } catch (e) { console.error("Error loading door sim:", e); }
+}
+
+async function loadFingerprint() {
+  try {
+    const rawData = await secureApiCall('getFingerprint');
+    fingerprintData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'بصمة',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Fingerprint loaded:", fingerprintData.length);
+  } catch (e) { console.error("Error loading fingerprint:", e); }
+}
+
+async function loadMisc() {
+  try {
+    const rawData = await secureApiCall('getMisc');
+    miscData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'منوع',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Misc loaded:", miscData.length);
+  } catch (e) { console.error("Error loading misc:", e); }
+}
+
 function formatPriceIQD(n) {
   let priceStr = String(n || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
   return (Number(priceStr) || 0).toLocaleString("de-DE");
@@ -1330,7 +1430,7 @@ function openBrand(el) {
   const checkPrices = () => {
     let dataToUse;
     if (currentPriceType === 'flatpower' && currentFlatSubType) {
-      dataToUse = getFilteredFlatData(currentFlatSubType);
+      dataToUse = getFlatSubData(currentFlatSubType);
     } else {
       dataToUse = getDataForType(currentPriceType);
     }
@@ -1770,6 +1870,12 @@ loadFlatMain();
 loadBackCover();
 loadHousing();
 loadLens();
+loadCamera();
+loadBuzzer();
+loadEarSpeaker();
+loadDoorSim();
+loadFingerprint();
+loadMisc();
 loadCart();
 
 // ==================== PWA Service Worker ====================
