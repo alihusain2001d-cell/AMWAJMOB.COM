@@ -8,6 +8,13 @@
 <link rel="apple-touch-icon" href="LOGO%20MOB.png">
 <meta name="apple-mobile-web-app-title" content="أمواج للإلكترونيات">
 <meta name="application-name" content="أمواج للإلكترونيات">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17a2b8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a4d68">
 <style>
 * {
@@ -209,6 +216,118 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   width: 100%;
 }
 
+/* ==================== موديل التقسيمات ==================== */
+#flatpowerModal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 9000;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+#flatpowerModal.active {
+  display: flex;
+}
+
+.flatpower-sheet {
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 580px;
+  animation: slideUp 0.3s ease;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.flatpower-handle {
+  width: 40px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.flatpower-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #1e3a5f;
+  margin-bottom: 20px;
+}
+
+.flatpower-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.flatpower-btn {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  border: 2px solid #e0e8f0;
+  border-radius: 16px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+  color: #1e3a5f;
+}
+
+.flatpower-btn:hover {
+  background: linear-gradient(135deg, #1e88e5 0%, #0d6efd 100%);
+  color: white;
+  border-color: #1e88e5;
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(30,136,229,0.35);
+}
+
+.flatpower-btn:active {
+  transform: scale(0.97);
+}
+
+.flatpower-btn .btn-icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.flatpower-btn .btn-label {
+  font-size: 15px;
+  font-weight: bold;
+  display: block;
+}
+
+.flatpower-btn .btn-sub {
+  font-size: 12px;
+  opacity: 0.65;
+  display: block;
+  margin-top: 4px;
+  font-weight: normal;
+}
+
+.flatpower-close {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 @media print { #pricesPage { display: none !important; } }
 </style>
 </head>
@@ -231,6 +350,52 @@ document.addEventListener('keydown', function(e) {
 <div id="cartBadge" class="cart-badge" onclick="openCart()">
   🛒
   <span id="cartCount" class="cart-count">0</span>
+</div>
+
+<!-- ==================== موديل تقسيمات بور + صوت ==================== -->
+<div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
+  <div class="flatpower-sheet" onclick="event.stopPropagation()">
+    <div class="flatpower-handle"></div>
+    <div class="flatpower-title">🔧 قطع غيار منوعة</div>
+    <div class="flatpower-grid">
+      <div class="flatpower-btn" onclick="openFlatSub('FLAT POWER', 'فلات بور', '⚡')">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-label">فلات بور</span>
+        <span class="btn-sub">FLAT POWER</span>
+      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('FLAT VOLUME', 'فلات صوت', '🔉')">
+        <span class="btn-icon">🔉</span>
+        <span class="btn-label">فلات صوت</span>
+        <span class="btn-sub">FLAT VOLUME</span>
+      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('BUZZER', 'سماعة جرس', '🔔')">
+        <span class="btn-icon">🔔</span>
+        <span class="btn-label">سماعة جرس</span>
+        <span class="btn-sub">BUZZER</span>
+      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('EAR SPEAKER', 'سماعة اتصال', '📞')">
+        <span class="btn-icon">📞</span>
+        <span class="btn-label">سماعة اتصال</span>
+        <span class="btn-sub">EAR SPEAKER</span>
+      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('DOOR SIM', 'باب سيم كارت', '💳')">
+        <span class="btn-icon">💳</span>
+        <span class="btn-label">باب سيم كارت</span>
+        <span class="btn-sub">DOOR SIM</span>
+      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('OTHER', 'منوعة', '📦')">
+        <span class="btn-icon">📦</span>
+        <span class="btn-label">منوعة</span>
+        <span class="btn-sub">OTHER</span>
+      </div>
+      <div class="flatpower-btn" onclick="openLensFromModal()">
+        <span class="btn-icon">📷</span>
+        <span class="btn-label">عدسة كاميرا</span>
+        <span class="btn-sub">LENS CAMERA</span>
+      </div>
+    </div>
+    <button class="flatpower-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
+  </div>
 </div>
 
 <div class="main-wrapper">
@@ -324,10 +489,11 @@ document.addEventListener('keydown', function(e) {
           <div style="font-weight:bold;font-size:16px;">شريط شحن + شاشة</div>
           <small style="color:#666;">Charging Flex</small>
         </div>
-        <div class="brand" onclick="openPrices('flatpower')" style="cursor:pointer;">
+        <!-- زر قطع غيار منوعة - يفتح موديل التقسيمات -->
+        <div class="brand" onclick="openFlatpowerModal()" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">🔊</div>
-          <div style="font-weight:bold;font-size:16px;">شريط بور + صوت + منوع</div>
-          <small style="color:#666;">Power & Sound</small>
+          <div style="font-weight:bold;font-size:16px;">قطع غيار منوعة</div>
+          <small style="color:#666;">Power & Sound & Misc</small>
         </div>
         <div class="brand" onclick="openPrices('backcover')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📱</div>
@@ -339,6 +505,11 @@ document.addEventListener('keydown', function(e) {
           <div style="font-weight:bold;font-size:16px;">شاصي</div>
           <small style="color:#666;">Housing</small>
         </div>
+        <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
+          <div style="font-size:28px;margin-bottom:8px;">📷</div>
+          <div style="font-weight:bold;font-size:16px;">كاميرا</div>
+          <small style="color:#666;">Camera & Lens</small>
+        </div>
       </div>
       
       <div class="info-box" style="margin-top:20px;">
@@ -349,8 +520,8 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:8px;color:#555;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 تواصل عبر واتساب</a>
-      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل الخروج</button>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر الواتساب</a>
+      <button class="bigbtn" style="background:#f44336;margin-top:15px;" onclick="logout()">تسجيل خروج</button>
     </div>
 
     <!-- صفحة التفعيل -->
@@ -534,13 +705,12 @@ function normalizePhone(phone) {
 function extractBrand(name) {
   const nameUpper = (name || '').toUpperCase();
   
-  // ترتيب الماركات حسب الأولوية (الأطول أولاً لتجنب التداخل)
   const brands = {
     'GOOGLE': 'Google',
     'HUAWEI': 'Huawei', 
     'HONOR': 'Honor',
     'SAMSUNG': 'Samsung',
-    'SAM': 'Samsung', // اختصار سامسونج
+    'SAM': 'Samsung',
     'XIAOMI': 'Xiaomi',
     'REDMI': 'Redmi',
     'POCO': 'Poco',
@@ -567,7 +737,6 @@ function extractBrand(name) {
     'WIKO': 'Wiko'
   };
   
-  // نبحث عن أطول تطابق أولاً
   let foundBrand = 'أخرى';
   let maxLength = 0;
   
@@ -580,6 +749,89 @@ function extractBrand(name) {
   
   return foundBrand;
 }
+
+// ==================== موديل الفلات بور ==================== 
+function openFlatpowerModal() {
+  const modal = document.getElementById('flatpowerModal');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFlatpowerModal(event) {
+  // إذا ضغط على الخلفية (مش الشيت نفسه) أو زر الإغلاق
+  if (!event || event.target === document.getElementById('flatpowerModal')) {
+    const modal = document.getElementById('flatpowerModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+function openLensFromModal() {
+  document.getElementById('flatpowerModal').classList.remove('active');
+  document.body.style.overflow = '';
+  openPrices('camera');
+}
+
+// خريطة كل قسم → البيانات المستقلة
+function getFlatSubData(subType) {
+  switch(subType) {
+    case 'FLAT POWER':   return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT POWER'));
+    case 'FLAT VOLUME':  return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT VOLUME'));
+    case 'BUZZER':       return buzzerData;
+    case 'EAR SPEAKER':  return earSpeakerData;
+    case 'DOOR SIM':     return doorSimData;
+    case 'CAMERA':       return cameraData;
+    case 'OTHER':        return miscData;
+    default: return [];
+  }
+}
+
+function openFlatSub(subType, labelAr, icon) {
+  document.getElementById('flatpowerModal').classList.remove('active');
+  document.body.style.overflow = '';
+
+  currentPriceType = 'flatpower';
+  currentFlatSubType = subType;
+
+  showPage("pricesPage");
+  showBackButton();
+
+  document.getElementById("pricesTitle").innerHTML = `${icon} ${labelAr}`;
+  document.getElementById("brandsSection").style.display = "block";
+  document.getElementById("brandPrices").style.display = "none";
+
+  renderBrandsGrid('flatpower');
+
+  const searchInput = document.getElementById("searchInput");
+  searchInput.value = "";
+  searchInput.oninput = function() {
+    const q = this.value.trim().toLowerCase();
+    if (q.length < 2) { 
+      document.getElementById("brandsSection").style.display = "block"; 
+      document.getElementById("brandPrices").style.display = "none"; 
+      return; 
+    }
+    document.getElementById("brandsSection").style.display = "none";
+    document.getElementById("brandPrices").style.display = "block";
+    const box = document.getElementById("brandPricesBox");
+    box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div></div>`;
+
+    setTimeout(() => {
+      const data = getFlatSubData(subType);
+      const filtered = data.filter(p =>
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.brand && p.brand.toLowerCase().includes(q))
+      );
+      box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج: "${q}" - ${labelAr}</h3>`;
+      if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
+      filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
+      if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
+    }, 300);
+  };
+}
+
+// متغير لتخزين القسم الفرعي الحالي
+let currentFlatSubType = null;
 
 // ==================== التنقل ====================
 function showPage(pageId) {
@@ -597,16 +849,15 @@ function backHome() { showPage("homePage"); }
 function openAct() { showPage("activatePage"); document.getElementById("start").value = formatDate(new Date()); }
 function openChk() { showPage("checkPage"); }
 
-let currentPriceType = 'screens'; // screens or batteries or chargeboards or flatmain or backcover
+let currentPriceType = 'screens';
 
 function openPrices(type) {
   currentPriceType = type;
+  currentFlatSubType = null;
   showPage("pricesPage");
   
-  // إظهار زر الرجوع
   showBackButton();
   
-  // تغيير العنوان
   const title = document.getElementById("pricesTitle");
   if (type === 'batteries') {
     title.innerHTML = "🔋 البطاريات";
@@ -614,12 +865,14 @@ function openPrices(type) {
     title.innerHTML = "🔌 بورد شحن";
   } else if (type === 'flatcharging') {
     title.innerHTML = "⚡ شريط شحن + شاشة";
-  } else if (type === 'flatpower') {
-    title.innerHTML = "🔊 شريط بور + صوت + منوعة";
   } else if (type === 'backcover') {
     title.innerHTML = "📱 باك كفر";
   } else if (type === 'housing') {
     title.innerHTML = "🏠 شاصي";
+  } else if (type === 'lens') {
+    title.innerHTML = "📷 عدسة كاميرا";
+  } else if (type === 'camera') {
+    title.innerHTML = "📸 كاميرا";
   } else {
     title.innerHTML = "🖥️ الشاشات";
   }
@@ -627,7 +880,6 @@ function openPrices(type) {
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
   
-  // ملء أزرار الماركات
   renderBrandsGrid(type);
   
   const searchInput = document.getElementById("searchInput");
@@ -643,15 +895,10 @@ function openPrices(type) {
     document.getElementById("brandPrices").style.display = "block";
     const box = document.getElementById("brandPricesBox");
     
-    box.innerHTML = `
-      <div style="text-align:center;padding:40px 20px;">
-        <div class="loading-spinner"></div>
-        <div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري البحث...</div>
-      </div>
-    `;
+    box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري البحث...</div></div>`;
     
     setTimeout(() => {
-      const dataToSearch = type === 'batteries' ? batteriesData : type === 'chargeboards' ? chargeboardsData : type === 'flatcharging' ? flatchargingData : type === 'flatpower' ? flatpowerData : type === 'backcover' ? backcoverData : type === 'housing' ? housingData : pricesData;
+      const dataToSearch = getDataForType(type);
       
       if (dataToSearch.length === 0) {
         box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`;
@@ -667,83 +914,34 @@ function openPrices(type) {
   };
 }
 
+function getDataForType(type) {
+  switch(type) {
+    case 'batteries':    return batteriesData;
+    case 'chargeboards': return chargeboardsData;
+    case 'flatcharging': return flatchargingData;
+    case 'flatpower':    return flatpowerData;
+    case 'backcover':    return backcoverData;
+    case 'housing':      return housingData;
+    case 'lens':         return lensData;
+    case 'camera':       return cameraData;
+    default:             return pricesData;
+  }
+}
+
 function renderBrandsGrid(type) {
   const grid = document.getElementById("brandsGrid");
   
-  if (type === 'batteries') {
-    // ماركات البطاريات
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
-    `;
-  } else if (type === 'chargeboards') {
-    // ماركات بورد الشحن
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>
-    `;
-  } else if (type === 'flatcharging') {
-    // ماركات شريط شحن + شاشة
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
-    `;
-  } else if (type === 'flatpower') {
-    // ماركات شريط بور + صوت + منوعة
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
-    `;
-  } else if (type === 'backcover') {
-    // ماركات باك كفر
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
-    `;
-  } else if (type === 'housing') {
-    // ماركات شاصي
-    grid.innerHTML = `
-      <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-      <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-      <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-      <div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>
-    `;
-  } else {
-    // ماركات الشاشات (الأصلية)
+  const commonBrands = `
+    <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
+    <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
+    <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
+    <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
+    <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
+    <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
+    <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
+  `;
+  
+  if (type === 'screens') {
     grid.innerHTML = `
       <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>iPhone</small></div>
       <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
@@ -756,6 +954,12 @@ function renderBrandsGrid(type) {
       <div class="brand" data-brand="Asus,RedMagic,Google" onclick="openBrand(this)">ازوز + ريد ماجك + كوكل<small>Asus • RedMagic • Google</small></div>
       <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview" onclick="openBrand(this)">ZTE + Alcatel + TCL<small>ZTE • Alcatel • TCL • Blackview</small></div>
     `;
+  } else if (type === 'chargeboards') {
+    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>`;
+  } else if (type === 'camera') {
+    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google • Blackview</small></div>`;
+  } else {
+    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>`;
   }
 }
 
@@ -946,6 +1150,12 @@ let flatchargingData = [];
 let flatpowerData = [];
 let backcoverData = [];
 let housingData = [];
+let lensData = [];
+let cameraData = [];
+let buzzerData = [];
+let earSpeakerData = [];
+let doorSimData = [];
+let miscData = [];
 
 async function loadPrices() {
   try { 
@@ -958,52 +1168,39 @@ async function loadPrices() {
 async function loadBatteries() {
   try {
     const rawData = await secureApiCall('getBatteries');
-    
-    // إضافة الماركة والنوع لكل بطارية
     batteriesData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
       type: 'بطارية',
-      // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
       qty: item.qty || item.العدد || 0,
       notes: item.notes || item.ملاحظات || ''
     }));
-    
     console.log("✅ Batteries loaded:", batteriesData.length);
-  } catch (e) {
-    console.error("Error loading batteries:", e);
-  }
+  } catch (e) { console.error("Error loading batteries:", e); }
 }
 
 async function loadChargeboards() {
   try {
     const rawData = await secureApiCall('getChargeboards');
-    
-    // إضافة الماركة والنوع لكل بورد شحن
     chargeboardsData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
       type: 'بورد شحن',
-      // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
       qty: item.qty || item.العدد || 0,
       notes: item.notes || item.ملاحظات || ''
     }));
-    
     console.log("✅ Charge boards loaded:", chargeboardsData.length);
-  } catch (e) {
-    console.error("Error loading charge boards:", e);
-  }
+  } catch (e) { console.error("Error loading charge boards:", e); }
 }
 
 async function loadFlatMain() {
   try {
     const rawData = await secureApiCall('getFlatMain');
     
-    // تقسيم البيانات حسب النوع
     const allFlatData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
@@ -1016,66 +1213,146 @@ async function loadFlatMain() {
     // شريط شحن + شاشة: فقط LCD و MAIN
     flatchargingData = allFlatData.filter(item => {
       const nameUpper = item.name.toUpperCase();
-      return nameUpper.includes('FLAT LCD') || 
-             nameUpper.includes('FLAT MAIN');
+      return nameUpper.includes('FLAT LCD') || nameUpper.includes('FLAT MAIN');
     }).map(item => ({...item, type: 'شريط شحن/شاشة'}));
     
     // شريط بور + صوت + منوعة: كل الباقي
     flatpowerData = allFlatData.filter(item => {
       const nameUpper = item.name.toUpperCase();
-      return !nameUpper.includes('FLAT LCD') && 
-             !nameUpper.includes('FLAT MAIN');
+      return !nameUpper.includes('FLAT LCD') && !nameUpper.includes('FLAT MAIN');
     }).map(item => ({...item, type: 'شريط بور/صوت/منوعة'}));
     
-    console.log("✅ Flat charging (LCD+MAIN) loaded:", flatchargingData.length);
-    console.log("✅ Flat power (others) loaded:", flatpowerData.length);
-  } catch (e) {
-    console.error("Error loading flat main:", e);
-  }
+    console.log("✅ Flat charging loaded:", flatchargingData.length);
+    console.log("✅ Flat power loaded:", flatpowerData.length);
+  } catch (e) { console.error("Error loading flat main:", e); }
 }
 
 async function loadBackCover() {
   try {
     const rawData = await secureApiCall('getBackCover');
-    
-    // إضافة الماركة والنوع لكل باك كفر
     backcoverData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
       type: 'باك كفر',
-      // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
       qty: item.qty || item.العدد || 0,
       notes: item.notes || item.ملاحظات || ''
     }));
-    
     console.log("✅ Back cover loaded:", backcoverData.length);
-  } catch (e) {
-    console.error("Error loading back cover:", e);
-  }
+  } catch (e) { console.error("Error loading back cover:", e); }
 }
 
 async function loadHousing() {
   try {
     const rawData = await secureApiCall('getHousing');
-    
-    // إضافة الماركة والنوع لكل شاصي
     housingData = rawData.map(item => ({
       ...item,
       brand: extractBrand(item.name || item.الاسم),
       type: 'شاصي',
-      // تنسيق الحقول للتوافق مع createPriceItem
       name: item.name || item.الاسم || '-',
       price: item.price || item.السعر || 0,
       qty: item.qty || item.العدد || 0,
       notes: item.notes || item.ملاحظات || ''
     }));
-    
     console.log("✅ Housing loaded:", housingData.length);
-  } catch (e) {
-    console.error("Error loading housing:", e);
-  }
+  } catch (e) { console.error("Error loading housing:", e); }
+}
+
+async function loadLens() {
+  try {
+    const rawData = await secureApiCall('getLens');
+    lensData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'عدسة كاميرا',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Lens loaded:", lensData.length);
+  } catch (e) { console.error("Error loading lens:", e); }
+}
+
+async function loadCamera() {
+  try {
+    const rawData = await secureApiCall('getCamera');
+    cameraData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'كاميرا',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Camera loaded:", cameraData.length);
+  } catch (e) { console.error("Error loading camera:", e); }
+}
+
+async function loadBuzzer() {
+  try {
+    const rawData = await secureApiCall('getBuzzer');
+    buzzerData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'سماعة جرس',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Buzzer loaded:", buzzerData.length);
+  } catch (e) { console.error("Error loading buzzer:", e); }
+}
+
+async function loadEarSpeaker() {
+  try {
+    const rawData = await secureApiCall('getEarSpeaker');
+    earSpeakerData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'سماعة اتصال',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Ear Speaker loaded:", earSpeakerData.length);
+  } catch (e) { console.error("Error loading ear speaker:", e); }
+}
+
+async function loadDoorSim() {
+  try {
+    const rawData = await secureApiCall('getDoorSim');
+    doorSimData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'باب سيم كارت',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Door Sim loaded:", doorSimData.length);
+  } catch (e) { console.error("Error loading door sim:", e); }
+}
+
+async function loadMisc() {
+  try {
+    const rawData = await secureApiCall('getMisc');
+    miscData = rawData.map(item => ({
+      ...item,
+      brand: extractBrand(item.name || item.الاسم),
+      type: 'منوع',
+      name: item.name || item.الاسم || '-',
+      price: item.price || item.السعر || 0,
+      qty: item.qty || item.العدد || 0,
+      notes: item.notes || item.ملاحظات || ''
+    }));
+    console.log("✅ Misc loaded:", miscData.length);
+  } catch (e) { console.error("Error loading misc:", e); }
 }
 
 function formatPriceIQD(n) {
@@ -1095,7 +1372,6 @@ function createPriceItem(p) {
   
   const notesText = notes ? `<div style="margin-top:6px;background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:15px;font-weight:600;color:#856404;border-left:4px solid #ffc107;">📝 ${notes}</div>` : '';
   
-  // إظهار النوع للشاشات فقط
   const typeText = currentPriceType === 'screens' && p.type ? `<div style="margin-top:4px"><b>النوع:</b> ${p.type}</div>` : '';
   
   const cartBtn = qty > 0 && price > 0 
@@ -1120,23 +1396,22 @@ function openBrand(el) {
   document.getElementById("brandPrices").style.display = "block";
   const box = document.getElementById("brandPricesBox");
   
-  // إظهار زر الرجوع
   showBackButton();
   
-  box.innerHTML = `
-    <div style="text-align:center;padding:40px 20px;">
-      <div class="loading-spinner"></div>
-      <div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري تحميل الأسعار...</div>
-    </div>
-  `;
+  box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><div style="color:#1e88e5;font-size:16px;margin-top:15px;">جاري تحميل الأسعار...</div></div>`;
   
   const searchInput = document.getElementById("searchInput"); 
   searchInput.value = "";
   
-  // اختيار البيانات حسب النوع
-  const dataToUse = currentPriceType === 'batteries' ? batteriesData : currentPriceType === 'chargeboards' ? chargeboardsData : currentPriceType === 'flatcharging' ? flatchargingData : currentPriceType === 'flatpower' ? flatpowerData : currentPriceType === 'backcover' ? backcoverData : currentPriceType === 'housing' ? housingData : pricesData;
-  
+  // اختيار البيانات: إذا flatpower نستخدم الفلتر الفرعي
   const checkPrices = () => {
+    let dataToUse;
+    if (currentPriceType === 'flatpower' && currentFlatSubType) {
+      dataToUse = getFlatSubData(currentFlatSubType);
+    } else {
+      dataToUse = getDataForType(currentPriceType);
+    }
+    
     if (dataToUse.length === 0) {
       setTimeout(checkPrices, 500);
       return;
@@ -1207,9 +1482,8 @@ function addToCart(product) {
     return;
   }
   
-  // تحديد إذا المنتج شاشة أو بطارية بناءً على الصفحة الحالية
   if (!product.itemType) {
-    product.itemType = currentPriceType; // 'screens' or 'batteries'
+    product.itemType = currentPriceType;
   }
   
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1259,7 +1533,7 @@ function openCart() {
   }
   
   showPage('cartPage');
-  showBackButton(); // إظهار زر الرجوع
+  showBackButton();
   renderCart();
   
   document.getElementById('orderName').value = user.name || '';
@@ -1307,7 +1581,6 @@ function renderCart() {
     
     const warrantyChecked = item.hasWarranty ? 'checked' : '';
     
-    // مربع الضمان يظهر فقط للشاشات (بناءً على itemType)
     const isScreen = item.itemType === 'screens';
     const warrantyBox = isScreen ? `
       <div style="margin-top:8px;">
@@ -1352,21 +1625,12 @@ function renderCart() {
 
 function changeQuantity(index, change) {
   if (!cart[index]) return;
-  
   const newQty = (cart[index].quantity || 1) + change;
-  
   if (newQty < 1) {
-    if (confirm('هل تريد حذف هذا المنتج؟')) {
-      removeFromCart(index);
-    }
+    if (confirm('هل تريد حذف هذا المنتج؟')) { removeFromCart(index); }
     return;
   }
-  
-  if (newQty > 99) {
-    alert('الحد الأقصى 99 قطعة');
-    return;
-  }
-  
+  if (newQty > 99) { alert('الحد الأقصى 99 قطعة'); return; }
   cart[index].quantity = newQty;
   saveCart();
   renderCart();
@@ -1374,41 +1638,24 @@ function changeQuantity(index, change) {
 
 function toggleWarranty(index) {
   if (!cart[index]) return;
-  
   const checkbox = document.getElementById(`warranty_${index}`);
   const note = document.getElementById(`warrantyNote_${index}`);
-  
   cart[index].hasWarranty = checkbox.checked;
-  
-  // إظهار/إخفاء الملاحظة
-  if (note) {
-    note.style.display = checkbox.checked ? 'block' : 'none';
-  }
-  
+  if (note) { note.style.display = checkbox.checked ? 'block' : 'none'; }
   saveCart();
 }
 
 async function submitOrder() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) {
-    alert('يرجى تسجيل الدخول');
-    return;
-  }
+  if (!user) { alert('يرجى تسجيل الدخول'); return; }
   
   const name = document.getElementById('orderName').value.trim();
   const shop = document.getElementById('orderShop').value.trim();
   const address = document.getElementById('orderAddress').value.trim();
   const result = document.getElementById('orderResult');
   
-  if (!name || !shop || !address) {
-    result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>';
-    return;
-  }
-  
-  if (cart.length === 0) {
-    result.innerHTML = '<div class="result error">❌ السلة فارغة</div>';
-    return;
-  }
+  if (!name || !shop || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
+  if (cart.length === 0) { result.innerHTML = '<div class="result error">❌ السلة فارغة</div>'; return; }
   
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
@@ -1439,17 +1686,11 @@ async function submitOrder() {
     message += `   الكمية: ${quantity}\n`;
     
     if (isScreen) {
-      if (item.hasWarranty) {
-        message += `   ✅ مع ضمان 🛡️ (السعر يتغير)\n`;
-      } else {
-        message += `   ⚪ بدون ضمان\n`;
-      }
+      message += item.hasWarranty ? `   ✅ مع ضمان 🛡️ (السعر يتغير)\n` : `   ⚪ بدون ضمان\n`;
     }
     
     message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
-    if (item.notes) {
-      message += `   📝 ملاحظة: ${item.notes}\n`;
-    }
+    if (item.notes) { message += `   📝 ملاحظة: ${item.notes}\n`; }
   });
   
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
@@ -1460,29 +1701,16 @@ async function submitOrder() {
     const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chatId: '9647709000160@c.us',
-        message: message
-      })
+      body: JSON.stringify({ chatId: '9647709000160@c.us', message: message })
     });
     
     const data = await response.json();
     
     if (data.idMessage) {
-      // حفظ الطلب في Google Sheets للطباعة التلقائية
       try {
-        await secureApiCall('saveOrder', {
-          name: name,
-          shop: shop,
-          phone: user.phone,
-          address: address,
-          items: cart,
-          total: total
-        });
+        await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total });
         console.log('✅ Order saved to sheets');
-      } catch (e) {
-        console.error('❌ Failed to save order:', e);
-      }
+      } catch (e) { console.error('❌ Failed to save order:', e); }
       
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦<br><small style="color:#666;font-size:12px;">سيتم إغلاق السلة بعد قليل...</small></div>';
       
@@ -1495,7 +1723,6 @@ async function submitOrder() {
         const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
         const quantity = item.quantity || 1;
         const itemTotal = price * quantity;
-        
         const isScreen = item.itemType === 'screens';
         
         customerMessage += `${i+1}. ${item.name}\n`;
@@ -1503,39 +1730,22 @@ async function submitOrder() {
         customerMessage += `   النوع: ${item.type || '-'}\n`;
         customerMessage += `   السعر: ${formatPriceIQD(price)} د.ع\n`;
         customerMessage += `   الكمية: ${quantity}\n`;
-        
-        if (isScreen) {
-          if (item.hasWarranty) {
-            customerMessage += `   ✅ مع ضمان 🛡️ (السعر يتغير)\n`;
-          } else {
-            customerMessage += `   ⚪ بدون ضمان\n`;
-          }
-        }
-        
+        if (isScreen) { customerMessage += item.hasWarranty ? `   ✅ مع ضمان 🛡️ (السعر يتغير)\n` : `   ⚪ بدون ضمان\n`; }
         customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
-        if (item.notes) {
-          customerMessage += `   📝 ${item.notes}\n`;
-        }
+        if (item.notes) { customerMessage += `   📝 ${item.notes}\n`; }
         customerMessage += `\n`;
       });
       
       customerMessage += `💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع\n\n`;
       customerMessage += `📍 *عنوان التوصيل:* ${address}\n\n`;
       customerMessage += `📝 *ملاحظة:* سيتم تجهيز طلبك قريباً\n\n`;
-      customerMessage += `للاستفسار:\n`;
-      customerMessage += `📞 7696\n`;
-      customerMessage += `📞 07709000160\n\n`;
-      customerMessage += `ــــــــــــــــــــــــ\n\n`;
-      customerMessage += `شكراً لثقتكم 🌊\n`;
-      customerMessage += `*أمواج للإلكترونيات*`;
+      customerMessage += `للاستفسار:\n📞 7696\n📞 07709000160\n\n`;
+      customerMessage += `ــــــــــــــــــــــــ\n\nشكراً لثقتكم 🌊\n*أمواج للإلكترونيات*`;
       
       fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chatId: user.phone.replace(/^0/, '964') + '@c.us',
-          message: customerMessage
-        })
+        body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error('خطأ في إرسال رسالة التأكيد:', err));
       
       setTimeout(() => {
@@ -1544,12 +1754,7 @@ async function submitOrder() {
         result.innerHTML = '';
         submitBtn.disabled = false;
         if (clearBtn) clearBtn.disabled = false;
-        
-        if (document.getElementById('cartPage').style.display !== 'none') {
-          renderCart();
-        } else {
-          closeCart();
-        }
+        if (document.getElementById('cartPage').style.display !== 'none') { renderCart(); } else { closeCart(); }
       }, 20000);
     } else {
       throw new Error('فشل الإرسال');
@@ -1569,36 +1774,36 @@ function backToBrands() {
   const cartPage = document.getElementById("cartPage");
   const btn = document.getElementById("backToTopBtn");
   
-  // إذا في صفحة السلة، ارجع للصفحة الرئيسية
   if (cartPage.style.display === "block") {
     showPage("homePage");
     btn.style.display = "none";
-  }
-  // إذا في صفحة المنتجات، ارجع للماركات
-  else if (brandPrices.style.display === "block") {
+  } else if (brandPrices.style.display === "block") {
     brandPrices.style.display = "none";
     brandsSection.style.display = "block";
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // الزر يبقى ظاهر للرجوع للصفحة الرئيسية
-  } 
-  // إذا في صفحة الماركات، ارجع للصفحة الرئيسية
-  else if (brandsSection.style.display === "block") {
-    showPage("homePage");
-    btn.style.display = "none";
+  } else if (brandsSection.style.display === "block") {
+    // إذا جاي من flatpower submenu، ارجع للموديل
+    if (currentFlatSubType) {
+      showPage("homePage");
+      btn.style.display = "none";
+      // اختياري: يمكن إعادة فتح الموديل
+      // openFlatpowerModal();
+    } else {
+      showPage("homePage");
+      btn.style.display = "none";
+    }
   }
 }
 
 function showBackButton() {
-  const btn = document.getElementById("backToTopBtn");
-  btn.style.display = "block";
+  document.getElementById("backToTopBtn").style.display = "block";
 }
 
 function hideBackButton() {
-  const btn = document.getElementById("backToTopBtn");
-  btn.style.display = "none";
+  document.getElementById("backToTopBtn").style.display = "none";
 }
 
-// ==================== Swipe Gestures (iOS Style) ====================
+// ==================== Swipe Gestures ====================
 let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
@@ -1619,32 +1824,16 @@ function handleSwipe() {
   const diffX = touchEndX - touchStartX;
   const diffY = touchEndY - touchStartY;
   
-  // سحب أفقي (يمين أو يسار)
   if (Math.abs(diffX) > Math.abs(diffY)) {
-    // سحب من اليسار لليمين (Swipe Right) = رجوع
-    if (diffX > 50) {
-      // تحديد الصفحة الحالية والرجوع
+    if (diffX < -50) {
       const brandsSection = document.getElementById("brandsSection");
       const brandPrices = document.getElementById("brandPrices");
       const cartPage = document.getElementById("cartPage");
-      const pricesPage = document.getElementById("pricesPage");
       
-      // إذا في صفحة المنتجات، ارجع للماركات
-      if (brandPrices && brandPrices.style.display === "block") {
-        backToBrands();
-      }
-      // إذا في صفحة الماركات، ارجع للصفحة الرئيسية
-      else if (brandsSection && brandsSection.style.display === "block") {
-        backToBrands();
-      }
-      // إذا في السلة، ارجع للصفحة الرئيسية
-      else if (cartPage && cartPage.style.display === "block") {
-        backToBrands();
-      }
-      // إذا في أي صفحة أخرى، ارجع للصفحة الرئيسية
-      else if (!document.getElementById("homePage") || document.getElementById("homePage").style.display !== "block") {
-        showPage("homePage");
-      }
+      if (brandPrices && brandPrices.style.display === "block") { backToBrands(); }
+      else if (brandsSection && brandsSection.style.display === "block") { backToBrands(); }
+      else if (cartPage && cartPage.style.display === "block") { backToBrands(); }
+      else if (!document.getElementById("homePage") || document.getElementById("homePage").style.display !== "block") { showPage("homePage"); }
     }
   }
 }
@@ -1657,7 +1846,22 @@ loadChargeboards();
 loadFlatMain();
 loadBackCover();
 loadHousing();
+loadLens();
+loadCamera();
+loadBuzzer();
+loadEarSpeaker();
+loadDoorSim();
+loadMisc();
 loadCart();
+
+// ==================== PWA Service Worker ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => console.log('✅ PWA: Service Worker registered'))
+      .catch(err => console.log('❌ PWA: Service Worker registration failed', err));
+  });
+}
 </script>
 </body>
 </html>
