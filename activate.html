@@ -524,7 +524,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera</small>
+          <small style="color:#666;">Camera & Lens</small>
         </div>
       </div>
       
@@ -1115,6 +1115,18 @@ function handleGlobalSearch(event) {
     const priceText = available ? formatPriceIQD(price) + ' د.ع' : 'غير متوفر';
     const priceColor = available ? '#1e88e5' : '#c62828';
     
+    // تحديد نوع الشاشة إذا كان من الشاشات
+    let screenTypeLabel = '';
+    if (item.source === 'شاشات' && item.type) {
+      const typeLabels = {
+        'أصلي وكالة': '🟢',
+        'أصلي صيني': '🔵', 
+        'TFT': '🟡'
+      };
+      const icon = typeLabels[item.type] || '';
+      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;margin-right:6px;display:inline-block;">${icon} ${item.type}</span>`;
+    }
+    
     // زر إضافة للسلة
     const cartBtn = available 
       ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` 
@@ -1128,6 +1140,7 @@ function handleGlobalSearch(event) {
         <div style="font-size:12px;color:#666;margin-top:4px;">
           القسم: ${item.source} • الماركة: ${item.brand || '-'}
         </div>
+        ${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}
         <div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">
           ${priceText}
         </div>
