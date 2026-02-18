@@ -524,7 +524,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera </small>
+          <small style="color:#666;">Camera</small>
         </div>
       </div>
       
@@ -1115,6 +1115,11 @@ function handleGlobalSearch(event) {
     const priceText = available ? formatPriceIQD(price) + ' د.ع' : 'غير متوفر';
     const priceColor = available ? '#1e88e5' : '#c62828';
     
+    // زر إضافة للسلة
+    const cartBtn = available 
+      ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` 
+      : '';
+    
     html += `
       <div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;">
         <div style="font-weight:bold;font-size:14px;color:#1e3a5f;">
@@ -1126,6 +1131,7 @@ function handleGlobalSearch(event) {
         <div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">
           ${priceText}
         </div>
+        ${cartBtn}
       </div>
     `;
   });
@@ -1135,6 +1141,39 @@ function handleGlobalSearch(event) {
   }
   
   resultsDiv.innerHTML = html;
+}
+
+// إضافة منتج للسلة من نتائج البحث
+function addToCartFromSearch(product) {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) {
+    alert('يرجى تسجيل الدخول أولاً');
+    showLoginPage();
+    return;
+  }
+  
+  // تحديد itemType بناءً على المصدر
+  const sourceTypeMap = {
+    'شاشات': 'screens',
+    'بطاريات': 'batteries',
+    'بورد شحن': 'chargeboards',
+    'شريط شحن': 'flatcharging',
+    'فلات بور/صوت': 'flatpower',
+    'باك كفر': 'backcover',
+    'شاصي': 'housing',
+    'كاميرا': 'camera',
+    'سماعة جرس': 'flatpower',
+    'سماعة اتصال': 'flatpower',
+    'باب سيم': 'flatpower',
+    'بصمة': 'flatpower',
+    'عدسة كاميرا': 'lens',
+    'منوع': 'flatpower'
+  };
+  
+  product.itemType = sourceTypeMap[product.source] || 'screens';
+  
+  // استخدام دالة addToCart العادية
+  addToCart(product);
 }
 
 // ==================== بحث Google (نصي وصوري) ====================
