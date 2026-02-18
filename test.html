@@ -513,7 +513,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera </small>
+          <small style="color:#666;">Camera & Lens</small>
         </div>
       </div>
       
@@ -774,7 +774,7 @@ function closeFlatpowerModal(event) {
 function openLensFromModal() {
   document.getElementById('flatpowerModal').classList.remove('active');
   document.body.style.overflow = '';
-  openPrices('camera');
+  openPrices('lens');
 }
 
 // خريطة كل قسم → البيانات المستقلة
