@@ -235,7 +235,7 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 .flatpower-sheet {
   background: white;
   border-radius: 24px 24px 0 0;
-  padding: 24px 20px 40px;
+  padding: 20px 16px 30px;
   width: 100%;
   max-width: 580px;
   animation: slideUp 0.3s ease;
@@ -253,28 +253,28 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   height: 4px;
   background: #ddd;
   border-radius: 2px;
-  margin: 0 auto 20px;
+  margin: 0 auto 16px;
 }
 
 .flatpower-title {
   text-align: center;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   color: #1e3a5f;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .flatpower-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .flatpower-btn {
   background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
   border: 2px solid #e0e8f0;
   border-radius: 16px;
-  padding: 20px 12px;
+  padding: 14px 10px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -295,29 +295,29 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 }
 
 .flatpower-btn .btn-icon {
-  font-size: 28px;
+  font-size: 24px;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .flatpower-btn .btn-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
   display: block;
 }
 
 .flatpower-btn .btn-sub {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.65;
   display: block;
-  margin-top: 4px;
+  margin-top: 3px;
   font-weight: normal;
 }
 
 .flatpower-close {
   display: block;
   width: 100%;
-  margin-top: 18px;
+  margin-top: 14px;
   padding: 12px;
   background: #f44336;
   color: white;
@@ -472,6 +472,17 @@ document.addEventListener('keydown', function(e) {
         </div>
       </div>
       
+      <!-- مربع البحث العام -->
+      <div style="background:#fff;padding:16px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:24px;">🔍</span>
+          <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" 
+                 style="flex:1;padding:12px;border:2px solid #e0e8f0;border-radius:10px;font-size:16px;margin:0;"
+                 onkeyup="handleGlobalSearch(event)">
+        </div>
+        <div id="globalSearchResults" style="margin-top:12px;display:none;"></div>
+      </div>
+      
       <!-- مربعات المنتجات -->
       <div class="brands-grid">
         <div class="brand" onclick="openPrices('screens')" style="cursor:pointer;">
@@ -513,7 +524,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera & Lens</small>
+          <small style="color:#666;">Camera </small>
         </div>
       </div>
       
@@ -1025,6 +1036,78 @@ function logout() {
   showPage("loginPage"); 
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
+
+// ==================== البحث العام في كل الأقسام ====================
+function handleGlobalSearch(event) {
+  const query = event.target.value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('globalSearchResults');
+  
+  if (query.length < 2) {
+    resultsDiv.style.display = 'none';
+    resultsDiv.innerHTML = '';
+    return;
+  }
+  
+  // البحث في كل مصادر البيانات
+  const allData = [
+    ...pricesData.map(i => ({...i, source: 'شاشات', icon: '🖥️'})),
+    ...batteriesData.map(i => ({...i, source: 'بطاريات', icon: '🔋'})),
+    ...chargeboardsData.map(i => ({...i, source: 'بورد شحن', icon: '🔌'})),
+    ...flatchargingData.map(i => ({...i, source: 'شريط شحن', icon: '⚡'})),
+    ...flatpowerData.map(i => ({...i, source: 'فلات بور/صوت', icon: '🔊'})),
+    ...backcoverData.map(i => ({...i, source: 'باك كفر', icon: '📱'})),
+    ...housingData.map(i => ({...i, source: 'شاصي', icon: '🏠'})),
+    ...cameraData.map(i => ({...i, source: 'كاميرا', icon: '📷'})),
+    ...buzzerData.map(i => ({...i, source: 'سماعة جرس', icon: '🔔'})),
+    ...earSpeakerData.map(i => ({...i, source: 'سماعة اتصال', icon: '📞'})),
+    ...doorSimData.map(i => ({...i, source: 'باب سيم', icon: '💳'})),
+    ...fingerprintData.map(i => ({...i, source: 'بصمة', icon: '👆'})),
+    ...lensData.map(i => ({...i, source: 'عدسة كاميرا', icon: '📷'})),
+    ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'}))
+  ];
+  
+  const results = allData.filter(item => 
+    (item.name && item.name.toLowerCase().includes(query)) ||
+    (item.brand && item.brand.toLowerCase().includes(query))
+  );
+  
+  resultsDiv.style.display = 'block';
+  
+  if (results.length === 0) {
+    resultsDiv.innerHTML = '<div style="padding:12px;color:#666;text-align:center;">لا توجد نتائج</div>';
+    return;
+  }
+  
+  let html = `<div style="font-weight:bold;color:#1e88e5;margin-bottom:8px;">النتائج (${results.length}):</div>`;
+  
+  results.slice(0, 20).forEach(item => {
+    const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    const qty = Number(item.qty) || 0;
+    const available = qty > 0 && price > 0;
+    const priceText = available ? formatPriceIQD(price) + ' د.ع' : 'غير متوفر';
+    const priceColor = available ? '#1e88e5' : '#c62828';
+    
+    html += `
+      <div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;">
+        <div style="font-weight:bold;font-size:14px;color:#1e3a5f;">
+          ${item.icon} ${item.name}
+        </div>
+        <div style="font-size:12px;color:#666;margin-top:4px;">
+          القسم: ${item.source} • الماركة: ${item.brand || '-'}
+        </div>
+        <div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">
+          ${priceText}
+        </div>
+      </div>
+    `;
+  });
+  
+  if (results.length > 20) {
+    html += `<div style="padding:8px;color:#666;text-align:center;font-size:13px;">... و ${results.length - 20} نتيجة أخرى</div>`;
+  }
+  
+  resultsDiv.innerHTML = html;
+}
 
 // ==================== auto login ====================
 async function checkAutoLogin() {
