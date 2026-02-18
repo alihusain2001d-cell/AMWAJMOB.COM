@@ -483,6 +483,34 @@ document.addEventListener('keydown', function(e) {
         <div id="globalSearchResults" style="margin-top:12px;display:none;"></div>
       </div>
       
+      <!-- بحث Google (نصي + صورة) -->
+      <div style="background:linear-gradient(135deg, #4285f4 0%, #34a853 100%);padding:16px;border-radius:12px;margin-bottom:20px;box-shadow:0 4px 12px rgba(66,133,244,0.3);">
+        <div style="color:white;font-weight:bold;font-size:16px;margin-bottom:12px;text-align:center;">
+          🌐 بحث Google
+        </div>
+        
+        <!-- بحث نصي -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input type="text" id="googleTextSearch" placeholder="ابحث في Google (مثال: Samsung A10 screen)" 
+                 style="flex:1;padding:12px;border:none;border-radius:10px;font-size:15px;"
+                 onkeypress="if(event.key==='Enter') searchGoogle()">
+          <button onclick="searchGoogle()" 
+                  style="background:#fff;color:#4285f4;padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;width:auto;margin:0;">
+            بحث
+          </button>
+        </div>
+        
+        <!-- بحث بالصورة -->
+        <div style="background:rgba(255,255,255,0.2);padding:12px;border-radius:10px;text-align:center;">
+          <input type="file" id="googleImageInput" accept="image/*" style="display:none;" onchange="searchGoogleByImage(this)">
+          <button onclick="document.getElementById('googleImageInput').click()" 
+                  style="background:#fff;color:#34a853;padding:12px 20px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;width:100%;margin:0;">
+            📷 بحث بالصورة (Google Lens)
+          </button>
+          <div id="imageSearchStatus" style="color:#fff;font-size:13px;margin-top:8px;"></div>
+        </div>
+      </div>
+      
       <!-- مربعات المنتجات -->
       <div class="brands-grid">
         <div class="brand" onclick="openPrices('screens')" style="cursor:pointer;">
@@ -524,7 +552,7 @@ document.addEventListener('keydown', function(e) {
         <div class="brand" onclick="openPrices('camera')" style="cursor:pointer;">
           <div style="font-size:28px;margin-bottom:8px;">📷</div>
           <div style="font-weight:bold;font-size:16px;">كاميرا</div>
-          <small style="color:#666;">Camera </small>
+          <small style="color:#666;">Camera & Lens</small>
         </div>
       </div>
       
@@ -1107,6 +1135,68 @@ function handleGlobalSearch(event) {
   }
   
   resultsDiv.innerHTML = html;
+}
+
+// ==================== بحث Google (نصي وصوري) ====================
+function searchGoogle() {
+  const query = document.getElementById('googleTextSearch').value.trim();
+  if (!query) {
+    alert('يرجى كتابة نص للبحث');
+    return;
+  }
+  
+  // فتح Google في تاب جديد
+  const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  window.open(googleUrl, '_blank');
+  
+  // إفراغ الحقل
+  document.getElementById('googleTextSearch').value = '';
+}
+
+function searchGoogleByImage(input) {
+  const file = input.files[0];
+  const statusDiv = document.getElementById('imageSearchStatus');
+  
+  if (!file) {
+    statusDiv.textContent = '';
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    statusDiv.textContent = '❌ يرجى اختيار صورة';
+    return;
+  }
+  
+  statusDiv.textContent = '⏳ جاري تحضير الصورة...';
+  
+  // تحويل الصورة إلى base64
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Google Lens URL - يفتح صفحة رفع صورة
+    // للأسف Google Lens ما عنده API مباشر، بس نقدر نفتح صفحة البحث بالصورة
+    const googleLensUrl = 'https://lens.google.com/uploadbyurl?url=';
+    
+    // الطريقة البديلة: نستخدم Google Images reverse search
+    // نفتح صفحة Google Images ونخلي المستخدم يرفع الصورة يدوياً
+    const googleImagesUrl = 'https://images.google.com/';
+    
+    statusDiv.textContent = '✅ افتح Google Images ← اضغط على أيقونة الكاميرا 📷 ← ارفع الصورة';
+    
+    window.open(googleImagesUrl, '_blank');
+    
+    // إعادة تعيين input
+    input.value = '';
+    
+    setTimeout(() => {
+      statusDiv.textContent = '';
+    }, 5000);
+  };
+  
+  reader.onerror = function() {
+    statusDiv.textContent = '❌ خطأ في قراءة الصورة';
+  };
+  
+  reader.readAsDataURL(file);
 }
 
 // ==================== auto login ====================
