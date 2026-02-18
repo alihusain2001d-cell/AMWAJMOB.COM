@@ -1127,6 +1127,12 @@ function handleGlobalSearch(event) {
       screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;margin-right:6px;display:inline-block;">${icon} ${item.type}</span>`;
     }
     
+    // عرض الملاحظات إذا موجودة
+    let notesHtml = '';
+    if (item.notes && item.notes.trim()) {
+      notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:12px;color:#e65100;">📝 ${item.notes}</div>`;
+    }
+    
     // زر إضافة للسلة
     const cartBtn = available 
       ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` 
@@ -1141,6 +1147,7 @@ function handleGlobalSearch(event) {
           القسم: ${item.source} • الماركة: ${item.brand || '-'}
         </div>
         ${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}
+        ${notesHtml}
         <div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">
           ${priceText}
         </div>
