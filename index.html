@@ -1,48 +1,10 @@
-<script>
-
-const SHEET = 
- "https://docs.google.com/spreadsheets/d/1BiV0ZxQN_ClD1tA7w8W5rfmY1bXfs9oax7Q3oqeXq38/export?format=csv";
-
-async function getRows(){
-  const res = await fetch(SHEET);
-  const text = await res.text();
-
-  const lines = text.trim().split("\n").map(r=>r.split(","));
-  const headers = lines.shift();
-
-  return lines.map(r=>{
-    let o={};
-    headers.forEach((h,i)=>o[h]=r[i]);
-    return o;
-  });
-}
-
-async function checkWarranty() {
-
-  const invoice = document.getElementById("invoiceSearch").value.trim();
-
-  if(!invoice){
-    alert("ادخل رقم الفاتورة");
-    return;
-  }
-
-  const rows = await getRows();
-  const found = rows.find(r => r.invoice == invoice);
-
-  if(!found){
-    document.getElementById("result").innerHTML =
-      `<p style="color:red">❌ لا يوجد ضمان بهذا الرقم</p>`;
-    return;
-  }
-
-  document.getElementById("result").innerHTML = `
-    ✔ <b>الضمان فعال</b><br><br>
-    الاسم: ${found.name}<br>
-    الهاتف: ${found.phone}<br>
-    النوع: ${found.type}<br>
-    تاريخ التركيب: ${found.start || found.start_date}<br>
-    انتهاء الضمان: <b>${found.expiry}</b>
-  `;
-}
-
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="refresh" content="0; url=/activate.html">
+<link rel="canonical" href="https://www.amwajmob.com/activate.html">
+</head>
+<body>
+<script>window.location.replace('/activate.html');</script>
+</body>
+</html>
