@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🚗 بوابة المندوب - أمواج</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
+  :root {
+    --primary: #1a1a2e;
+    --accent: #e94560;
+    --accent2: #0f3460;
+    --ready-color: #00b894;
+    --picked-color: #fdcb6e;
+    --card-bg: #16213e;
+    --text: #eaeaea;
+    --text-dim: #8892a4;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--primary);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* خلفية متحركة */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    right: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(233,69,96,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(15,52,96,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px 100px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== شاشة الدخول ===== */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+  }
+
+  .login-logo {
+    font-size: 56px;
+    margin-bottom: 8px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .login-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .login-subtitle {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+  }
+
+  .login-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 30px 24px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .field-label {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .field-input {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: 'Tajawal', sans-serif;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  .field-input:focus { border-color: var(--accent); }
+  .field-input::placeholder { letter-spacing: 0; color: var(--text-dim); }
+
+  .btn-login {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), #c0392b);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(233,69,96,0.4);
+  }
+  .btn-login:active { transform: scale(0.97); }
+
+  .login-error {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(233,69,96,0.15);
+    border: 1px solid rgba(233,69,96,0.3);
+    border-radius: 10px;
+    color: #ff6b81;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+  }
+
+  /* ===== الهيدر ===== */
+  #mainScreen { display: none; }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .top-bar-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .top-bar-title span { color: var(--accent); }
+
+  .btn-logout {
+    background: rgba(233,69,96,0.15);
+    border: 1px solid rgba(233,69,96,0.3);
+    border-radius: 10px;
+    color: var(--accent);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ===== التبويبات ===== */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--card-bg);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .tab-btn.active {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .tab-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  /* ===== بطاقة الطلب ===== */
+  .order-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .order-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+  }
+  .order-card.status-ready::before  { background: var(--ready-color); }
+  .order-card.status-picked::before { background: var(--picked-color); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .order-id {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .badge-ready  { background: rgba(0,184,148,0.2);  color: var(--ready-color); border: 1px solid rgba(0,184,148,0.3); }
+  .badge-picked { background: rgba(253,203,110,0.2); color: var(--picked-color); border: 1px solid rgba(253,203,110,0.3); }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .info-row strong { color: var(--text); font-weight: 600; }
+  .info-icon { font-size: 15px; min-width: 20px; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .items-list {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .item-row {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .item-row:last-child { border: none; }
+
+  .total-row {
+    font-size: 15px;
+    font-weight: 700;
+    color: #5dade2;
+    margin-top: 8px;
+  }
+
+  /* ===== أزرار الإجراء ===== */
+  .action-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .btn-action {
+    flex: 1;
+    padding: 13px 8px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-action:active { transform: scale(0.96); }
+
+  .btn-pickup {
+    background: linear-gradient(135deg, #00b894, #00a381);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,184,148,0.3);
+  }
+  .btn-deliver {
+    background: linear-gradient(135deg, #fdcb6e, #e17055);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(253,203,110,0.3);
+  }
+  .btn-call {
+    flex: 0 0 50px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    font-size: 20px;
+    border-radius: 12px;
+  }
+
+  /* ===== تأكيد ===== */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    display: none;
+  }
+  .confirm-overlay.show { display: flex; }
+
+  .confirm-sheet {
+    background: #1a1a2e;
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .confirm-icon { font-size: 44px; text-align: center; margin-bottom: 12px; }
+  .confirm-title { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+  .confirm-sub   { font-size: 14px; color: var(--text-dim); text-align: center; margin-bottom: 24px; }
+
+  .confirm-btns { display: flex; gap: 10px; }
+  .btn-confirm-yes {
+    flex: 2;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+  }
+  .btn-confirm-no {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: transparent;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+
+  /* ===== لا طلبات ===== */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .empty-icon { font-size: 52px; margin-bottom: 14px; }
+  .empty-state p { font-size: 16px; }
+
+  /* ===== Loading ===== */
+  .loading-wrap {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-dim);
+  }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #2d3436;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* زر تحديث */
+  .btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dim);
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: 'Tajawal', sans-serif;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== شاشة الدخول ===== -->
+<div id="loginScreen">
+  <div class="login-logo">🚗</div>
+  <div class="login-title">بوابة المندوب</div>
+  <div class="login-subtitle">أمواج للإلكترونيات</div>
+
+  <div class="login-card">
+    <div class="field-label">كلمة السر</div>
+    <input type="password" id="passInput" class="field-input" placeholder="أدخل كلمة السر" autocomplete="off">
+    <button class="btn-login" onclick="doLogin()">دخول 🔐</button>
+    <div class="login-error" id="loginError">❌ كلمة السر غير صحيحة</div>
+  </div>
+</div>
+
+<!-- ===== الشاشة الرئيسية ===== -->
+<div id="mainScreen">
+  <div class="container">
+
+    <div class="top-bar">
+      <div class="top-bar-title">🚗 <span>المندوب</span></div>
+      <button class="btn-logout" onclick="doLogout()">تسجيل خروج</button>
+    </div>
+
+    <!-- تبويبات -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-ready" onclick="switchTab('ready')">
+        ✅ جاهزة للاستلام
+        <span class="tab-badge" id="badge-ready" style="display:none"></span>
+      </button>
+      <button class="tab-btn" id="tab-picked" onclick="switchTab('picked')">
+        🚗 في الطريق
+        <span class="tab-badge" id="badge-picked" style="display:none"></span>
+      </button>
+    </div>
+
+    <button class="btn-refresh" onclick="loadOrders()">🔄 تحديث</button>
+
+    <div id="ordersContainer">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <div>جاري التحميل...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== نافذة التأكيد ===== -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-sheet">
+    <div class="confirm-icon" id="confirmIcon">✅</div>
+    <div class="confirm-title" id="confirmTitle">تأكيد</div>
+    <div class="confirm-sub" id="confirmSub"></div>
+    <div class="confirm-btns">
+      <button class="btn-confirm-yes" id="confirmYes" onclick="confirmAction()">تأكيد</button>
+      <button class="btn-confirm-no" onclick="closeConfirm()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==========================================
+// الإعدادات
+// ==========================================
+const CONFIG = {
+  API_URL:      "https://script.google.com/macros/s/AKfycbwHckW5szEk1Bi5s4BndOPUeO5vwd2ilMXxjYjv7WxJUeWH09H19vzl1oyUo2zf0SXDUQ/exec",
+  API_KEY:      "AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22",
+  DELIVERY_KEY: "AMWAJ_DELIVERY_2024",   // ← نفس الكلمة في Code.gs
+  LOGIN_PASS:   "AMWAJdelivery2024",     // ← كلمة سر دخول المندوب (غيّرها)
+  STORAGE_KEY:  "amwaj_delivery_auth"
+};
+
+let allOrders    = [];
+let currentTab   = 'ready';
+let pendingAction = null; // { orderId, newStatus }
+
+// ==========================================
+// تسجيل الدخول
+// ==========================================
+function doLogin() {
+  const pass = document.getElementById('passInput').value.trim();
+  const errEl = document.getElementById('loginError');
+  if (pass === CONFIG.LOGIN_PASS) {
+    localStorage.setItem(CONFIG.STORAGE_KEY, '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainScreen').style.display  = 'block';
+    errEl.style.display = 'none';
+    loadOrders();
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('passInput').value = '';
+    document.getElementById('passInput').focus();
+  }
+}
+
+function doLogout() {
+  if (!confirm('تريد تسجيل الخروج؟')) return;
+  localStorage.removeItem(CONFIG.STORAGE_KEY);
+  location.reload();
+}
+
+// Enter يدخل
+document.getElementById('passInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// تحقق الدخول عند فتح الصفحة
+(function checkAuth() {
+  if (localStorage.getItem(CONFIG.STORAGE_KEY) === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainScreen').style.display  = 'block';
+    loadOrders();
+  }
+})();
+
+// ==========================================
+// API
+// ==========================================
+async function apiCall(action, data = {}) {
+  const res = await fetch(CONFIG.API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      apiKey:     CONFIG.API_KEY,
+      adminKey:   CONFIG.DELIVERY_KEY,
+      action:     action,
+      identifier: 'delivery',
+      ...data
+    })
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'خطأ');
+  return json.data;
+}
+
+// ==========================================
+// تحميل الطلبات
+// ==========================================
+async function loadOrders() {
+  document.getElementById('ordersContainer').innerHTML = `
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div>جاري التحميل...</div>
+    </div>`;
+  try {
+    const orders = await apiCall('getAllOrders');
+    allOrders = (orders || []).filter(o => o.status === 'ready' || o.status === 'picked');
+    updateBadges();
+    renderTab();
+  } catch(e) {
+    document.getElementById('ordersContainer').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div><p>تعذر التحميل<br><small>${e.message}</small></p></div>`;
+  }
+}
+
+function updateBadges() {
+  const readyCount  = allOrders.filter(o => o.status === 'ready').length;
+  const pickedCount = allOrders.filter(o => o.status === 'picked').length;
+
+  const br = document.getElementById('badge-ready');
+  const bp = document.getElementById('badge-picked');
+
+  if (readyCount > 0)  { br.textContent = readyCount;  br.style.display = 'block'; }
+  else                 { br.style.display = 'none'; }
+  if (pickedCount > 0) { bp.textContent = pickedCount; bp.style.display = 'block'; }
+  else                 { bp.style.display = 'none'; }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  renderTab();
+}
+
+function renderTab() {
+  const filtered = allOrders.filter(o => o.status === currentTab);
+  const container = document.getElementById('ordersContainer');
+
+  if (filtered.length === 0) {
+    const msg = currentTab === 'ready' ? 'لا توجد طلبات جاهزة للاستلام' : 'لا توجد طلبات في الطريق';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">${currentTab==='ready'?'✅':'🚗'}</div><p>${msg}</p></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(o => buildCard(o)).join('');
+}
+
+// ==========================================
+// بناء بطاقة الطلب
+// ==========================================
+function buildCard(o) {
+  const items = Array.isArray(o.items) ? o.items : [];
+  const itemsHtml = items.slice(0,5).map(it =>
+    `<div class="item-row">• ${it.name||'-'} × ${it.quantity||1}</div>`
+  ).join('') + (items.length>5 ? `<div class="item-row" style="color:#636e72;">... و ${items.length-5} منتجات أخرى</div>` : '');
+
+  const total = Number(o.total||0).toLocaleString('de-DE');
+
+  const isReady  = o.status === 'ready';
+  const isPicked = o.status === 'picked';
+
+  const actionBtns = isReady
+    ? `<div class="action-btns">
+        <button class="btn-action btn-pickup" onclick="askConfirm('${o.orderId}','picked')">✅ استلمت الطلب</button>
+        <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
+       </div>`
+    : `<div class="action-btns">
+        <button class="btn-action btn-deliver" onclick="askConfirm('${o.orderId}','delivered')">📦 سلّمت للزبون</button>
+        <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
+       </div>`;
+
+  const badgeHtml = isReady
+    ? `<span class="status-badge badge-ready">✅ جاهز</span>`
+    : `<span class="status-badge badge-picked">🚗 في الطريق</span>`;
+
+  return `
+  <div class="order-card status-${o.status}">
+    <div class="card-top">
+      <div class="order-id">${o.orderId}</div>
+      ${badgeHtml}
+    </div>
+    <div class="info-row"><span class="info-icon">👤</span><span><strong>${o.name}</strong> — ${o.shop}</span></div>
+    <div class="info-row"><span class="info-icon">📍</span><span>${o.address}</span></div>
+    <div class="info-row"><span class="info-icon">📱</span><span dir="ltr">${o.phone}</span></div>
+    <div class="divider"></div>
+    <div class="items-list">${itemsHtml}</div>
+    <div class="total-row">💰 المجموع: ${total} د.ع</div>
+    ${actionBtns}
+  </div>`;
+}
+
+// ==========================================
+// الاتصال بالزبون
+// ==========================================
+function callCustomer(phone) {
+  let p = String(phone).replace(/[^0-9]/g,'');
+  if (p.startsWith('0')) p = p;
+  window.location.href = 'tel:' + p;
+}
+
+// ==========================================
+// تأكيد الإجراء
+// ==========================================
+function askConfirm(orderId, newStatus) {
+  pendingAction = { orderId, newStatus };
+
+  const isPickup  = newStatus === 'picked';
+  document.getElementById('confirmIcon').textContent  = isPickup ? '✅' : '📦';
+  document.getElementById('confirmTitle').textContent = isPickup ? 'استلمت الطلب؟' : 'سلّمت للزبون؟';
+  document.getElementById('confirmSub').textContent   = isPickup
+    ? `طلب رقم ${orderId} — تأكيد الاستلام وبدء التوصيل`
+    : `طلب رقم ${orderId} — تأكيد التسليم للزبون`;
+
+  const yesBtn = document.getElementById('confirmYes');
+  yesBtn.textContent = isPickup ? '✅ نعم، استلمت' : '📦 نعم، سلّمت';
+  yesBtn.style.background = isPickup
+    ? 'linear-gradient(135deg,#00b894,#00a381)'
+    : 'linear-gradient(135deg,#fdcb6e,#e17055)';
+
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  pendingAction = null;
+}
+
+async function confirmAction() {
+  if (!pendingAction) return;
+  const { orderId, newStatus } = pendingAction;
+  closeConfirm();
+
+  showToast('⏳ جاري التحديث...');
+  try {
+    await apiCall('updateOrderStatus', { orderId, status: newStatus });
+    const msg = newStatus === 'picked' ? '✅ تم تسجيل الاستلام' : '📦 تم تسجيل التوصيل';
+    showToast(msg);
+    await loadOrders();
+  } catch(e) {
+    showToast('❌ ' + e.message);
+  }
+}
+
+// ==========================================
+// Toast
+// ==========================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// إغلاق التأكيد عند الضغط خارجه
+document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeConfirm();
+});
+</script>
+</body>
+</html>
