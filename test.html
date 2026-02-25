@@ -373,6 +373,7 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 .status-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;}
 .pill-pending{background:#fff3cd;color:#856404;}
 .pill-ready{background:#d4edda;color:#155724;}
+.pill-picked{background:#fff0e0;color:#e65100;}
 .pill-delivered{background:#cce5ff;color:#004085;}
 .pill-cancelled{background:#f8d7da;color:#721c24;}
 .order-item-row{font-size:13px;color:#555;padding:3px 0;border-bottom:1px solid #f5f5f5;}
@@ -936,10 +937,11 @@ function updateOrdersBadge(count) {
 
 function getStatusInfo(status) {
   const m = {
-    pending:   { label: '⏳ قيد التجهيز',  cls: 'pill-pending'   },
-    ready:     { label: '✅ جاهز للتسليم', cls: 'pill-ready'     },
-    delivered: { label: '🚚 تم التوصيل',   cls: 'pill-delivered' },
-    cancelled: { label: '❌ ملغي',          cls: 'pill-cancelled' }
+    pending:   { label: '⏳ قيد التجهيز',    cls: 'pill-pending'   },
+    ready:     { label: '✅ جاهز للتسليم',   cls: 'pill-ready'     },
+    picked:    { label: '🚗 في الطريق',       cls: 'pill-picked'    },
+    delivered: { label: '📦 تم التوصيل',     cls: 'pill-delivered' },
+    cancelled: { label: '❌ ملغي',            cls: 'pill-cancelled' }
   };
   return m[status] || { label: status, cls: 'pill-pending' };
 }
@@ -948,7 +950,7 @@ function buildOrderCard(o) {
   const si = getStatusInfo(o.status);
   const items = Array.isArray(o.items) ? o.items : [];
   const isCancelled = o.status === 'cancelled';
-  const steps = ['pending','ready','delivered'];
+  const steps = ['pending','ready','picked','delivered'];
   const cur = steps.indexOf(o.status);
 
   const timeline = isCancelled
@@ -960,8 +962,11 @@ function buildOrderCard(o) {
         <div class="order-step ${cur===1?'active':cur>1?'done':''}">
           <div class="step-dot">✅</div><div class="step-txt">جاهز</div>
         </div>
-        <div class="order-step ${cur===2?'active':''}">
-          <div class="step-dot">🚚</div><div class="step-txt">توصيل</div>
+        <div class="order-step ${cur===2?'active':cur>2?'done':''}">
+          <div class="step-dot">🚗</div><div class="step-txt">الطريق</div>
+        </div>
+        <div class="order-step ${cur===3?'active':''}">
+          <div class="step-dot">📦</div><div class="step-txt">وصل</div>
         </div>
       </div>`;
 
@@ -970,7 +975,9 @@ function buildOrderCard(o) {
     return `<div class="order-item-row">• ${item.name||'-'} × ${item.quantity||1} — ${formatPriceIQD(p)} د.ع</div>`;
   }).join('') + (items.length>4 ? `<div class="order-item-row" style="color:#999;">... و ${items.length-4} منتجات أخرى</div>` : '');
 
-  const cancelBtn = o.status==='pending'
+  // زر الإلغاء: فقط pending أو ready (قبل ما يستلم المندوب)
+  const canCancel = o.status === 'pending' || o.status === 'ready';
+  const cancelBtn = canCancel
     ? `<button class="cancel-order-btn" onclick="cancelMyOrder('${o.orderId}')">🗑️ إلغاء الطلب</button>`
     : '';
 
