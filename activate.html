@@ -357,6 +357,30 @@ button:disabled { background: #ccc; cursor: not-allowed; }
   cursor: pointer;
 }
 
+/* ===== طلباتي ===== */
+.order-status-bar{display:flex;align-items:flex-start;margin:14px 0 10px;}
+.order-step{flex:1;text-align:center;position:relative;}
+.order-step:not(:last-child)::after{content:'';position:absolute;top:13px;left:-50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
+.order-step.done::after{background:#25D366;}
+.step-dot{width:26px;height:26px;border-radius:50%;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;}
+.order-step.done .step-dot{background:#25D366;color:#fff;}
+.order-step.active .step-dot{background:#1e88e5;color:#fff;box-shadow:0 0 0 4px rgba(30,136,229,0.2);}
+.step-txt{font-size:10px;color:#aaa;margin-top:4px;}
+.order-step.done .step-txt,.order-step.active .step-txt{color:#333;font-weight:bold;}
+.order-card{background:#fff;border:1px solid #e0e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.order-id-text{font-weight:bold;color:#1e3a5f;font-size:15px;}
+.status-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;}
+.pill-pending{background:#fff3cd;color:#856404;}
+.pill-ready{background:#d4edda;color:#155724;}
+.pill-picked{background:#fff0e0;color:#e65100;}
+.pill-delivered{background:#cce5ff;color:#004085;}
+.pill-cancelled{background:#f8d7da;color:#721c24;}
+.order-item-row{font-size:13px;color:#555;padding:3px 0;border-bottom:1px solid #f5f5f5;}
+.order-item-row:last-child{border:none;}
+.cancel-order-btn{width:100%;padding:10px;border-radius:10px;border:none;background:#fde7e7;color:#b10606;font-size:14px;font-weight:bold;cursor:pointer;margin-top:10px;transition:all 0.2s;}
+.cancel-order-btn:hover{background:#f44336;color:#fff;}
+
 @media print { #pricesPage { display: none !important; } }
 </style>
 </head>
@@ -488,16 +512,22 @@ document.addEventListener('keydown', function(e) {
       <div id="welcomeUser" class="info-box" style="font-size:18px;font-weight:bold;"></div>
       
       <!-- مربعات الضمان -->
-      <div class="brands-grid" style="margin-bottom:20px;">
-        <div class="brand" onclick="openAct()" style="cursor:pointer;">
-          <div style="font-size:20px;margin-bottom:6px;">✅</div>
-          <div style="font-weight:bold;font-size:14px;">تفعيل الضمان</div>
-          <small style="color:#666;">Activate Warranty</small>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 20px;">
+        <div class="brand" onclick="openAct()">
+          <div style="font-size:22px;margin-bottom:4px;">✅</div>
+          <div style="font-weight:bold;font-size:12px;">تفعيل الضمان</div>
+          <small>Warranty</small>
         </div>
-        <div class="brand" onclick="openChk()" style="cursor:pointer;">
-          <div style="font-size:20px;margin-bottom:6px;">🔍</div>
-          <div style="font-weight:bold;font-size:14px;">التحقق من الضمان</div>
-          <small style="color:#666;">Check Warranty</small>
+        <div class="brand" onclick="openChk()">
+          <div style="font-size:22px;margin-bottom:4px;">🔍</div>
+          <div style="font-weight:bold;font-size:12px;">التحقق</div>
+          <small>Check</small>
+        </div>
+        <div class="brand" onclick="openMyOrders()" style="position:relative;">
+          <div style="font-size:22px;margin-bottom:4px;">📦</div>
+          <div style="font-weight:bold;font-size:12px;">طلباتي</div>
+          <small>My Orders</small>
+          <span id="ordersBadge" style="display:none;position:absolute;top:5px;left:5px;background:#f44336;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:bold;line-height:18px;text-align:center;"></span>
         </div>
       </div>
       
@@ -632,6 +662,17 @@ document.addEventListener('keydown', function(e) {
       <div id="out"></div>
     </div>
 
+    <!-- ===== صفحة طلباتي ===== -->
+    <div id="myOrdersPage" style="display:none">
+      <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
+      <h3 class="section-title">📦 طلباتي</h3>
+      <div id="myOrdersLoading" style="text-align:center;padding:30px;">
+        <div class="loading-spinner"></div>
+        <div style="color:#666;margin-top:8px;font-size:15px;">جاري تحميل الطلبات...</div>
+      </div>
+      <div id="myOrdersList"></div>
+    </div>
+
     <!-- صفحة الأسعار -->
     <div id="pricesPage" style="display:none">
       <h3 class="section-title" id="pricesTitle">🔒 الشاشات</h3>
@@ -714,7 +755,7 @@ createParticles();
 
 // ==================== إعدادات ====================
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbwHckW5szEk1Bi5s4BndOPUeO5vwd2ilMXxjYjv7WxJUeWH09H19vzl1oyUo2zf0SXDUQ/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec",
   API_KEY: "AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22",
   DEVICE_ID: generateDeviceId()
 };
@@ -842,7 +883,7 @@ function openFlatSub(subType, labelAr, icon) {
 let currentFlatSubType = null;
 
 function showPage(pageId) {
-  ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage"].forEach(p => {
+  ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage","myOrdersPage"].forEach(p => {
     const el = document.getElementById(p);
     if (el) el.style.display = "none";
   });
@@ -855,6 +896,116 @@ function showLoginPage() { showPage("loginPage"); }
 function backHome() { showPage("homePage"); }
 function openAct() { showPage("activatePage"); document.getElementById("start").value = formatDate(new Date()); }
 function openChk() { showPage("checkPage"); }
+
+// ==================== طلباتي ====================
+function openMyOrders() {
+  showPage("myOrdersPage");
+  showBackButton();
+  loadMyOrders();
+}
+
+async function loadMyOrders() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  const loadEl = document.getElementById('myOrdersLoading');
+  const listEl = document.getElementById('myOrdersList');
+  loadEl.style.display = 'block';
+  listEl.innerHTML = '';
+  try {
+    const orders = await secureApiCall('getMyOrders', { phone: user.phone });
+    loadEl.style.display = 'none';
+    if (!orders || orders.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:#888;"><div style="font-size:52px;">📭</div><div style="margin-top:12px;font-size:16px;">لا توجد طلبات بعد</div></div>';
+      return;
+    }
+    orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const active = orders.filter(o => o.status === 'pending' || o.status === 'ready');
+    updateOrdersBadge(active.length);
+    listEl.innerHTML = orders.map(o => buildOrderCard(o)).join('');
+  } catch(e) {
+    loadEl.style.display = 'none';
+    listEl.innerHTML = '<div class="result error">❌ تعذر تحميل الطلبات، حاول مرة أخرى</div>';
+  }
+}
+
+function updateOrdersBadge(count) {
+  const badge = document.getElementById('ordersBadge');
+  if (!badge) return;
+  if (count > 0) { badge.style.display = 'block'; badge.textContent = count; }
+  else { badge.style.display = 'none'; }
+}
+
+function getStatusInfo(status) {
+  const m = {
+    pending:   { label: '⏳ قيد التجهيز', cls: 'pill-pending'   },
+    picked:    { label: '🚗 في الطريق',    cls: 'pill-picked'    },
+    delivered: { label: '📦 تم التوصيل',  cls: 'pill-delivered' },
+    cancelled: { label: '❌ ملغي',         cls: 'pill-cancelled' }
+  };
+  return m[status] || { label: status, cls: 'pill-pending' };
+}
+
+function buildOrderCard(o) {
+  const si = getStatusInfo(o.status);
+  const items = Array.isArray(o.items) ? o.items : [];
+  const isCancelled = o.status === 'cancelled';
+  const steps = ['pending','picked','delivered'];
+  const cur = steps.indexOf(o.status);
+
+  const timeline = isCancelled
+    ? `<div style="text-align:center;padding:8px;color:#f44336;font-weight:bold;font-size:13px;background:#fff0f0;border-radius:8px;">❌ تم إلغاء هذا الطلب</div>`
+    : `<div class="order-status-bar">
+        <div class="order-step \${cur===0?'active':cur>0?'done':''}">
+          <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
+        </div>
+        <div class="order-step \${cur===1?'active':cur>1?'done':''}">
+          <div class="step-dot">🚗</div><div class="step-txt">الطريق</div>
+        </div>
+        <div class="order-step \${cur===2?'active':''}">
+          <div class="step-dot">📦</div><div class="step-txt">وصل</div>
+        </div>
+      </div>`;
+
+  const itemsHtml = items.slice(0,4).map(item => {
+    const p = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
+    return `<div class="order-item-row">• ${item.name||'-'} × ${item.quantity||1} — ${formatPriceIQD(p)} د.ع</div>`;
+  }).join('') + (items.length>4 ? `<div class="order-item-row" style="color:#999;">... و ${items.length-4} منتجات أخرى</div>` : '');
+
+  // زر الإلغاء: فقط pending أو ready (قبل ما يستلم المندوب)
+  const canCancel = o.status === 'pending';
+  const cancelBtn = canCancel
+    ? `<button class="cancel-order-btn" onclick="cancelMyOrder('${o.orderId}')">🗑️ إلغاء الطلب</button>`
+    : '';
+
+  const dateStr = o.timestamp ? formatDate(new Date(o.timestamp)) : '';
+
+  return `<div class="order-card">
+    <div class="order-card-header">
+      <span class="order-id-text">${o.orderId||'-'}</span>
+      <span class="status-pill ${si.cls}">${si.label}</span>
+    </div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:10px;">📅 ${dateStr}</div>
+    ${timeline}
+    <div style="margin-top:10px;">${itemsHtml}</div>
+    <div style="font-weight:bold;color:#1e88e5;margin-top:8px;font-size:14px;">💰 المجموع: ${formatPriceIQD(Number(o.total)||0)} د.ع</div>
+    <div style="font-size:13px;color:#666;margin-top:4px;">📍 ${o.address||'-'}</div>
+    ${cancelBtn}
+  </div>`;
+}
+
+async function cancelMyOrder(orderId) {
+  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  const reason = prompt('سبب الإلغاء (اختياري):') || 'إلغاء من الزبون';
+  try {
+    await secureApiCall('cancelOrder', { orderId, phone: user.phone, reason });
+    alert('✅ تم إلغاء الطلب بنجاح');
+    loadMyOrders();
+  } catch(e) {
+    alert('❌ تعذر الإلغاء، حاول مرة أخرى');
+  }
+}
 
 let currentPriceType = 'screens';
 
@@ -979,7 +1130,8 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); result.innerHTML = ""; }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); result.innerHTML = "";
+      try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='picked');updateOrdersBadge(ac.length);} } catch(e){} }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -1075,7 +1227,9 @@ async function checkAutoLogin() {
     try {
       const rows = await fetchCustomers();
       const user = rows.find(r => normalizePhone(r.phone) === savedPhone);
-      if (user && user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); return; }
+      if (user && user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage");
+        try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='picked');updateOrdersBadge(ac.length);} } catch(e){}
+        return; }
       else if (user && user.status === "pending") { document.getElementById("loginPhone").value = savedPhone; showPage("loginPage"); document.getElementById("loginResult").innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة</div>'; return; }
       else if (user && user.status === "rejected") { localStorage.removeItem("amwaj_phone"); localStorage.removeItem("amwaj_user"); showPage("loginPage"); return; }
       else { localStorage.removeItem("amwaj_phone"); localStorage.removeItem("amwaj_user"); showPage("registerPage"); return; }
@@ -1357,7 +1511,7 @@ async function submitOrder() {
     const data = await response.json();
     if (data.idMessage) {
       try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
-      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦<br><button onclick="openMyOrders()" style="margin-top:10px;background:#1e88e5;color:#fff;border:none;padding:10px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:bold;width:100%;">📦 تتبع طلبي</button></div>';
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\nمرحباً *${name}*،\n\nشكراً لطلبك من أمواج للإلكترونيات 🌊\n\n📋 *تفاصيل طلبك:*\n\n`;
       cart.forEach((item, i) => {
         const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1392,8 +1546,10 @@ function backToBrands() {
   const brandsSection = document.getElementById("brandsSection");
   const brandPrices = document.getElementById("brandPrices");
   const cartPage = document.getElementById("cartPage");
+  const myOrdersPage = document.getElementById("myOrdersPage");
   const btn = document.getElementById("backToTopBtn");
-  if (cartPage.style.display === "block") { showPage("homePage"); btn.style.display = "none"; }
+  if (myOrdersPage && myOrdersPage.style.display === "block") { showPage("homePage"); btn.style.display = "none"; }
+  else if (cartPage.style.display === "block") { showPage("homePage"); btn.style.display = "none"; }
   else if (brandPrices.style.display === "block") { brandPrices.style.display = "none"; brandsSection.style.display = "block"; window.scrollTo({ top: 0, behavior: 'smooth' }); }
   else if (brandsSection.style.display === "block") { showPage("homePage"); btn.style.display = "none"; }
 }
