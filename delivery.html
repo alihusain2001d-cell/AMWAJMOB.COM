@@ -688,7 +688,7 @@ function buildCard(o) {
         <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
        </div>`;
 
-  const badgeHtml = isReady
+  const badgeHtml = isPending
     ? `<span class="status-badge badge-pending">✅ جاهز</span>`
     : `<span class="status-badge badge-picked">🚗 في الطريق</span>`;
 
