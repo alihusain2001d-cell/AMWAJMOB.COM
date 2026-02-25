@@ -274,7 +274,7 @@
     font-size: 12px;
     font-weight: 700;
   }
-  .badge-ready  { background: rgba(0,184,148,0.2);  color: var(--ready-color); border: 1px solid rgba(0,184,148,0.3); }
+  .badge-pending  { background: rgba(0,184,148,0.2);  color: var(--ready-color); border: 1px solid rgba(0,184,148,0.3); }
   .badge-picked { background: rgba(253,203,110,0.2); color: var(--picked-color); border: 1px solid rgba(253,203,110,0.3); }
 
   .info-row {
@@ -500,9 +500,9 @@
 
     <!-- تبويبات -->
     <div class="tabs">
-      <button class="tab-btn active" id="tab-ready" onclick="switchTab('ready')">
-        ✅ جاهزة للاستلام
-        <span class="tab-badge" id="badge-ready" style="display:none"></span>
+      <button class="tab-btn active" id="tab-pending" onclick="switchTab('pending')">
+        📋 قيد التجهيز
+        <span class="tab-badge" id="badge-pending" style="display:none"></span>
       </button>
       <button class="tab-btn" id="tab-picked" onclick="switchTab('picked')">
         🚗 في الطريق
@@ -551,7 +551,7 @@ const CONFIG = {
 };
 
 let allOrders    = [];
-let currentTab   = 'ready';
+let currentTab   = 'pending';
 let pendingAction = null; // { orderId, newStatus }
 
 // ==========================================
@@ -624,7 +624,7 @@ async function loadOrders() {
     </div>`;
   try {
     const orders = await apiCall('getAllOrders');
-    allOrders = (orders || []).filter(o => o.status === 'ready' || o.status === 'picked');
+    allOrders = (orders || []).filter(o => o.status === 'pending' || o.status === 'picked');
     updateBadges();
     renderTab();
   } catch(e) {
@@ -634,13 +634,15 @@ async function loadOrders() {
 }
 
 function updateBadges() {
-  const readyCount  = allOrders.filter(o => o.status === 'ready').length;
-  const pickedCount = allOrders.filter(o => o.status === 'picked').length;
-
-  const br = document.getElementById('badge-ready');
-  const bp = document.getElementById('badge-picked');
-
-  if (readyCount > 0)  { br.textContent = readyCount;  br.style.display = 'block'; }
+  const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+  const pickedCount  = allOrders.filter(o => o.status === 'picked').length;
+  const bp = document.getElementById('badge-pending');
+  const bk = document.getElementById('badge-picked');
+  if (pendingCount > 0) { bp.textContent = pendingCount; bp.style.display = 'block'; }
+  else { bp.style.display = 'none'; }
+  if (pickedCount > 0) { bk.textContent = pickedCount; bk.style.display = 'block'; }
+  else { bk.style.display = 'none'; }
+}
   else                 { br.style.display = 'none'; }
   if (pickedCount > 0) { bp.textContent = pickedCount; bp.style.display = 'block'; }
   else                 { bp.style.display = 'none'; }
@@ -658,8 +660,8 @@ function renderTab() {
   const container = document.getElementById('ordersContainer');
 
   if (filtered.length === 0) {
-    const msg = currentTab === 'ready' ? 'لا توجد طلبات جاهزة للاستلام' : 'لا توجد طلبات في الطريق';
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">${currentTab==='ready'?'✅':'🚗'}</div><p>${msg}</p></div>`;
+    const msg = currentTab === 'pending' ? 'لا توجد طلبات قيد التجهيز' : 'لا توجد طلبات في الطريق';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">${currentTab==='pending'?'📋':'🚗'}</div><p>${msg}</p></div>`;
     return;
   }
 
@@ -677,21 +679,21 @@ function buildCard(o) {
 
   const total = Number(o.total||0).toLocaleString('de-DE');
 
-  const isReady  = o.status === 'ready';
-  const isPicked = o.status === 'picked';
+  const isPending = o.status === 'pending';
+  const isPicked  = o.status === 'picked';
 
-  const actionBtns = isReady
+  const actionBtns = isPending
     ? `<div class="action-btns">
-        <button class="btn-action btn-pickup" onclick="askConfirm('${o.orderId}','picked')">✅ استلمت الطلب</button>
+        <button class="btn-action btn-pickup" onclick="askConfirm('${o.orderId}','picked')">✅ تم الاستلام</button>
         <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
        </div>`
     : `<div class="action-btns">
-        <button class="btn-action btn-deliver" onclick="askConfirm('${o.orderId}','delivered')">📦 سلّمت للزبون</button>
+        <button class="btn-action btn-deliver" onclick="askConfirm('${o.orderId}','delivered')">📦 تم التوصيل</button>
         <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
        </div>`;
 
   const badgeHtml = isReady
-    ? `<span class="status-badge badge-ready">✅ جاهز</span>`
+    ? `<span class="status-badge badge-pending">✅ جاهز</span>`
     : `<span class="status-badge badge-picked">🚗 في الطريق</span>`;
 
   return `
@@ -725,8 +727,8 @@ function callCustomer(phone) {
 function askConfirm(orderId, newStatus) {
   pendingAction = { orderId, newStatus };
 
-  const isPickup  = newStatus === 'picked';
-  document.getElementById('confirmIcon').textContent  = isPickup ? '✅' : '📦';
+  const isPickup = newStatus === 'picked';
+  document.getElementById('confirmIcon').textContent = isPickup ? '✅' : '📦';
   document.getElementById('confirmTitle').textContent = isPickup ? 'استلمت الطلب؟' : 'سلّمت للزبون؟';
   document.getElementById('confirmSub').textContent   = isPickup
     ? `طلب رقم ${orderId} — تأكيد الاستلام وبدء التوصيل`
