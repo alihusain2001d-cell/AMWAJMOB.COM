@@ -274,7 +274,7 @@
     font-size: 12px;
     font-weight: 700;
   }
-  .badge-pending  { background: rgba(0,184,148,0.2);  color: var(--ready-color); border: 1px solid rgba(0,184,148,0.3); }
+  .badge-ready  { background: rgba(0,184,148,0.2);  color: var(--ready-color); border: 1px solid rgba(0,184,148,0.3); }
   .badge-picked { background: rgba(253,203,110,0.2); color: var(--picked-color); border: 1px solid rgba(253,203,110,0.3); }
 
   .info-row {
@@ -501,7 +501,7 @@
     <!-- تبويبات -->
     <div class="tabs">
       <button class="tab-btn active" id="tab-pending" onclick="switchTab('pending')">
-        📋 قيد التجهيز
+        ✅ جاهزة للاستلام
         <span class="tab-badge" id="badge-pending" style="display:none"></span>
       </button>
       <button class="tab-btn" id="tab-picked" onclick="switchTab('picked')">
@@ -543,7 +543,7 @@
 // الإعدادات
 // ==========================================
 const CONFIG = {
-  API_URL:      "https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec",
+  API_URL:      "https://script.google.com/macros/s/AKfycbwHckW5szEk1Bi5s4BndOPUeO5vwd2ilMXxjYjv7WxJUeWH09H19vzl1oyUo2zf0SXDUQ/exec",
   API_KEY:      "AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22",
   DELIVERY_KEY: "AMWAJ_DELIVERY_2024",   // ← نفس الكلمة في Code.gs
   LOGIN_PASS:   "AMWAJdelivery2024",     // ← كلمة سر دخول المندوب (غيّرها)
@@ -643,10 +643,6 @@ function updateBadges() {
   if (pickedCount > 0) { bk.textContent = pickedCount; bk.style.display = 'block'; }
   else { bk.style.display = 'none'; }
 }
-  else                 { br.style.display = 'none'; }
-  if (pickedCount > 0) { bp.textContent = pickedCount; bp.style.display = 'block'; }
-  else                 { bp.style.display = 'none'; }
-}
 
 function switchTab(tab) {
   currentTab = tab;
@@ -680,20 +676,20 @@ function buildCard(o) {
   const total = Number(o.total||0).toLocaleString('de-DE');
 
   const isPending = o.status === 'pending';
-  const isPicked  = o.status === 'picked';
+  const isPicked = o.status === 'picked';
 
   const actionBtns = isPending
     ? `<div class="action-btns">
-        <button class="btn-action btn-pickup" onclick="askConfirm('${o.orderId}','picked')">✅ تم الاستلام</button>
+        <button class="btn-action btn-pickup" onclick="askConfirm('${o.orderId}','picked')">✅ استلمت الطلب</button>
         <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
        </div>`
     : `<div class="action-btns">
-        <button class="btn-action btn-deliver" onclick="askConfirm('${o.orderId}','delivered')">📦 تم التوصيل</button>
+        <button class="btn-action btn-deliver" onclick="askConfirm('${o.orderId}','delivered')">📦 سلّمت للزبون</button>
         <button class="btn-action btn-call" onclick="callCustomer('${o.phone}')">📞</button>
        </div>`;
 
-  const badgeHtml = isReady
-    ? `<span class="status-badge badge-pending">✅ جاهز</span>`
+  const badgeHtml = isPending
+    ? `<span class="status-badge badge-pending">📋 قيد التجهيز</span>`
     : `<span class="status-badge badge-picked">🚗 في الطريق</span>`;
 
   return `
@@ -727,8 +723,8 @@ function callCustomer(phone) {
 function askConfirm(orderId, newStatus) {
   pendingAction = { orderId, newStatus };
 
-  const isPickup = newStatus === 'picked';
-  document.getElementById('confirmIcon').textContent = isPickup ? '✅' : '📦';
+  const isPickup  = newStatus === 'picked';
+  document.getElementById('confirmIcon').textContent  = isPickup ? '✅' : '📦';
   document.getElementById('confirmTitle').textContent = isPickup ? 'استلمت الطلب؟' : 'سلّمت للزبون؟';
   document.getElementById('confirmSub').textContent   = isPickup
     ? `طلب رقم ${orderId} — تأكيد الاستلام وبدء التوصيل`
