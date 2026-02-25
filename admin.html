@@ -396,10 +396,7 @@
     <div class="stat-chip chip-pending" onclick="filterOrders('pending')">
       <span>⏳</span><span class="count" id="cnt-pending">0</span><span>قيد التجهيز</span>
     </div>
-    <div class="stat-chip chip-ready" onclick="filterOrders('ready')">
-      <span>✅</span><span class="count" id="cnt-ready">0</span><span>جاهز</span>
-    </div>
-    <div class="stat-chip chip-picked" onclick="filterOrders('picked')">
+        <div class="stat-chip chip-picked" onclick="filterOrders('picked')">
       <span>🚗</span><span class="count" id="cnt-picked">0</span><span>في الطريق</span>
     </div>
     <div class="stat-chip chip-delivered" onclick="filterOrders('delivered')">
@@ -510,7 +507,7 @@ async function loadOrders() {
 }
 
 function updateStats() {
-  const counts = { all:0, pending:0, ready:0, picked:0, delivered:0, cancelled:0 };
+  const counts = { all:0, pending:0, picked:0, delivered:0, cancelled:0 };
   allOrders.forEach(o => { counts.all++; if(counts[o.status]!==undefined) counts[o.status]++; });
   Object.keys(counts).forEach(k => {
     const el = document.getElementById('cnt-'+k);
@@ -522,7 +519,7 @@ function filterOrders(f) {
   currentFilter = f;
   document.querySelectorAll('.stat-chip').forEach(c => c.classList.remove('active'));
   const chips = document.querySelectorAll('.stat-chip');
-  const map = ['all','pending','ready','picked','delivered','cancelled'];
+  const map = ['all','pending','picked','delivered','cancelled'];
   const idx = map.indexOf(f);
   if (idx >= 0) chips[idx].classList.add('active');
   document.getElementById('searchInput').value = '';
@@ -555,7 +552,7 @@ function buildCard(o) {
   const total = Number(o.total||0).toLocaleString('de-DE');
   const dateStr = o.timestamp ? new Date(o.timestamp).toLocaleString('ar-IQ',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
 
-  const statusLabels = { pending:'⏳ قيد التجهيز', ready:'✅ جاهز', picked:'🚗 في الطريق', delivered:'📦 موصل', cancelled:'❌ ملغي' };
+  const statusLabels = { pending:'⏳ قيد التجهيز', picked:'🚗 في الطريق', delivered:'📦 موصل', cancelled:'❌ ملغي' };
   const statusLabel  = statusLabels[o.status] || o.status;
 
   const itemsHtml = items.map(it => {
@@ -567,23 +564,16 @@ function buildCard(o) {
     </div>`;
   }).join('');
 
-  // أزرار حسب الحالة
+  // الأدمن يقدر فقط يلغي - المندوب يتولى باقي التغييرات
   let actionBtns = '';
   if (o.status === 'pending') {
     actionBtns = `
-      <button class="btn-act btn-ready"  onclick="askAct('${o.orderId}','ready',   event)">✅ جاهز للتوصيل</button>
-      <button class="btn-act btn-cancel" onclick="askAct('${o.orderId}','cancelled',event)">❌ إلغاء</button>
-      <button class="btn-act btn-call"   onclick="callNum('${o.phone}',event)">📞</button>`;
-  } else if (o.status === 'ready') {
-    actionBtns = `
-      <button class="btn-act btn-pending" onclick="askAct('${o.orderId}','pending', event)">↩️ رجوع قيد التجهيز</button>
-      <button class="btn-act btn-cancel"  onclick="askAct('${o.orderId}','cancelled',event)">❌ إلغاء</button>
-      <button class="btn-act btn-call"    onclick="callNum('${o.phone}',event)">📞</button>`;
+      <button class="btn-act btn-cancel" onclick="askAct('\${o.orderId}','cancelled',event)">❌ إلغاء الطلب</button>
+      <button class="btn-act btn-call"   onclick="callNum('\${o.phone}',event)">📞</button>`;
   } else if (o.status === 'picked') {
-    actionBtns = `
-      <button class="btn-act btn-call" onclick="callNum('${o.phone}',event)">📞 اتصال</button>`;
-  } else if (o.status === 'delivered' || o.status === 'cancelled') {
-    actionBtns = `<span style="font-size:13px;color:var(--text-dim);">لا يوجد إجراء متاح</span>`;
+    actionBtns = `<button class="btn-act btn-call" onclick="callNum('\${o.phone}',event)">📞 اتصال بالزبون</button>`;
+  } else {
+    actionBtns = `<span style="font-size:13px;color:var(--text-dim);">لا يوجد إجراء</span>`;
   }
 
   return `
@@ -655,9 +645,7 @@ function askAct(orderId, newStatus, e) {
   pendingAct = { orderId, newStatus };
 
   const labels = {
-    ready:     { icon:'✅', title:'جاهز للتوصيل؟',      sub:`طلب ${orderId} — سيظهر عند المندوب`,   color:'#3fb950' },
-    pending:   { icon:'↩️', title:'رجوع لقيد التجهيز؟', sub:`طلب ${orderId} — سيُسحب من المندوب`,  color:'#d29922' },
-    cancelled: { icon:'❌', title:'إلغاء الطلب؟',        sub:`طلب ${orderId} — هذا الإجراء نهائي`,  color:'#f85149' }
+    cancelled: { icon:'❌', title:'إلغاء الطلب؟', sub:`طلب \${orderId} — هذا الإجراء نهائي`, color:'#f85149' }
   };
   const l = labels[newStatus] || { icon:'❓', title:'تأكيد', sub:'', color:'#58a6ff' };
 
