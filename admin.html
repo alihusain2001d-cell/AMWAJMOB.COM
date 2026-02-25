@@ -483,7 +483,7 @@ document.getElementById('passInput').addEventListener('keydown', e => { if (e.ke
 // ==========================================
 async function apiCall(action, data={}) {
   const res = await fetch(CONFIG.API_URL, {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain'},
     body: JSON.stringify({ apiKey:CONFIG.API_KEY, adminKey:CONFIG.ADMIN_KEY, action, identifier:'admin', ...data })
   });
   const j = await res.json();
@@ -568,10 +568,10 @@ function buildCard(o) {
   let actionBtns = '';
   if (o.status === 'pending') {
     actionBtns = `
-      <button class="btn-act btn-cancel" onclick="askAct('${o.orderId}','cancelled',event)">❌ إلغاء الطلب</button>
-      <button class="btn-act btn-call"   onclick="callNum('${o.phone}',event)">📞</button>`;
+      <button class="btn-act btn-cancel" onclick="askAct('\${o.orderId}','cancelled',event)">❌ إلغاء الطلب</button>
+      <button class="btn-act btn-call"   onclick="callNum('\${o.phone}',event)">📞</button>`;
   } else if (o.status === 'picked') {
-    actionBtns = `<button class="btn-act btn-call" onclick="callNum('${o.phone}',event)">📞 اتصال بالزبون</button>`;
+    actionBtns = `<button class="btn-act btn-call" onclick="callNum('\${o.phone}',event)">📞 اتصال بالزبون</button>`;
   } else {
     actionBtns = `<span style="font-size:13px;color:var(--text-dim);">لا يوجد إجراء</span>`;
   }
@@ -645,7 +645,7 @@ function askAct(orderId, newStatus, e) {
   pendingAct = { orderId, newStatus };
 
   const labels = {
-    cancelled: { icon:'❌', title:'إلغاء الطلب؟', sub:`طلب ${orderId} — هذا الإجراء نهائي`, color:'#f85149' }
+    cancelled: { icon:'❌', title:'إلغاء الطلب؟', sub:`طلب \${orderId} — هذا الإجراء نهائي`, color:'#f85149' }
   };
   const l = labels[newStatus] || { icon:'❓', title:'تأكيد', sub:'', color:'#58a6ff' };
 
