@@ -937,11 +937,10 @@ function updateOrdersBadge(count) {
 
 function getStatusInfo(status) {
   const m = {
-    pending:   { label: '⏳ قيد التجهيز',    cls: 'pill-pending'   },
-    ready:     { label: '✅ جاهز للتسليم',   cls: 'pill-ready'     },
-    picked:    { label: '🚗 في الطريق',       cls: 'pill-picked'    },
-    delivered: { label: '📦 تم التوصيل',     cls: 'pill-delivered' },
-    cancelled: { label: '❌ ملغي',            cls: 'pill-cancelled' }
+    pending:   { label: '⏳ قيد التجهيز', cls: 'pill-pending'   },
+    picked:    { label: '🚗 في الطريق',    cls: 'pill-picked'    },
+    delivered: { label: '📦 تم التوصيل',  cls: 'pill-delivered' },
+    cancelled: { label: '❌ ملغي',         cls: 'pill-cancelled' }
   };
   return m[status] || { label: status, cls: 'pill-pending' };
 }
@@ -950,22 +949,19 @@ function buildOrderCard(o) {
   const si = getStatusInfo(o.status);
   const items = Array.isArray(o.items) ? o.items : [];
   const isCancelled = o.status === 'cancelled';
-  const steps = ['pending','ready','picked','delivered'];
+  const steps = ['pending','picked','delivered'];
   const cur = steps.indexOf(o.status);
 
   const timeline = isCancelled
     ? `<div style="text-align:center;padding:8px;color:#f44336;font-weight:bold;font-size:13px;background:#fff0f0;border-radius:8px;">❌ تم إلغاء هذا الطلب</div>`
     : `<div class="order-status-bar">
-        <div class="order-step ${cur===0?'active':cur>0?'done':''}">
+        <div class="order-step \${cur===0?'active':cur>0?'done':''}">
           <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
         </div>
-        <div class="order-step ${cur===1?'active':cur>1?'done':''}">
-          <div class="step-dot">✅</div><div class="step-txt">جاهز</div>
-        </div>
-        <div class="order-step ${cur===2?'active':cur>2?'done':''}">
+        <div class="order-step \${cur===1?'active':cur>1?'done':''}">
           <div class="step-dot">🚗</div><div class="step-txt">الطريق</div>
         </div>
-        <div class="order-step ${cur===3?'active':''}">
+        <div class="order-step \${cur===2?'active':''}">
           <div class="step-dot">📦</div><div class="step-txt">وصل</div>
         </div>
       </div>`;
@@ -976,7 +972,7 @@ function buildOrderCard(o) {
   }).join('') + (items.length>4 ? `<div class="order-item-row" style="color:#999;">... و ${items.length-4} منتجات أخرى</div>` : '');
 
   // زر الإلغاء: فقط pending أو ready (قبل ما يستلم المندوب)
-  const canCancel = o.status === 'pending' || o.status === 'ready';
+  const canCancel = o.status === 'pending';
   const cancelBtn = canCancel
     ? `<button class="cancel-order-btn" onclick="cancelMyOrder('${o.orderId}')">🗑️ إلغاء الطلب</button>`
     : '';
@@ -1135,7 +1131,7 @@ async function checkLogin() {
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
     else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); result.innerHTML = "";
-      try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='ready');updateOrdersBadge(ac.length);} } catch(e){} }
+      try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='picked');updateOrdersBadge(ac.length);} } catch(e){} }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -1232,7 +1228,7 @@ async function checkAutoLogin() {
       const rows = await fetchCustomers();
       const user = rows.find(r => normalizePhone(r.phone) === savedPhone);
       if (user && user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage");
-        try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='ready');updateOrdersBadge(ac.length);} } catch(e){}
+        try { const ords = await secureApiCall('getMyOrders',{phone:user.phone}); if(ords){const ac=ords.filter(o=>o.status==='pending'||o.status==='picked');updateOrdersBadge(ac.length);} } catch(e){}
         return; }
       else if (user && user.status === "pending") { document.getElementById("loginPhone").value = savedPhone; showPage("loginPage"); document.getElementById("loginResult").innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة</div>'; return; }
       else if (user && user.status === "rejected") { localStorage.removeItem("amwaj_phone"); localStorage.removeItem("amwaj_user"); showPage("loginPage"); return; }
