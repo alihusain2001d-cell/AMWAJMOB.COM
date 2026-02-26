@@ -968,7 +968,7 @@ function buildOrderCard(o) {
 
   const itemsHtml = items.slice(0,4).map(item => {
     const p = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
-    return `<div class="order-item-row">• ${item.name||'-'} × ${item.quantity||1} — ${formatPriceIQD(p)} د.ع</div>`;
+    return `<div class="order-item-row">• ${item.name||'-'} × ${item.quantity||1} — <span dir="ltr">${formatPriceIQD(p)} IQD</span></div>`;
   }).join('') + (items.length>4 ? `<div class="order-item-row" style="color:#999;">... و ${items.length-4} منتجات أخرى</div>` : '');
 
   // زر الإلغاء: فقط pending أو ready (قبل ما يستلم المندوب)
