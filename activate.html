@@ -1177,10 +1177,10 @@ function handleGlobalSearch(event) {
     let screenTypeLabel = '';
     if (item.source === 'شاشات' && item.type) {
       const typeLabels = {'أصلي وكالة': '🟢', 'أصلي صيني': '🔵', 'TFT': '🟡'};
-      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
+      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:5px 12px;border-radius:8px;font-size:15px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
     }
     let notesHtml = '';
-    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:12px;color:#e65100;">📝 ${item.notes}</div>`;
+    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:8px 12px;margin-top:8px;border-radius:6px;font-size:15px;color:#e65100;font-weight:600;">📝 ${item.notes}</div>`;
     const cartBtn = available ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` : '';
     html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:14px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:12px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
   });
