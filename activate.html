@@ -358,108 +358,28 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 }
 
 /* ===== طلباتي ===== */
-.order-card{
-  background:#fff;
-  border:none;
-  border-radius:20px;
-  padding:20px;
-  margin:14px 0;
-  box-shadow:0 4px 20px rgba(30,80,160,0.10);
-  position:relative;
-  overflow:hidden;
-}
-.order-card::before{
-  content:'';
-  position:absolute;
-  top:0; right:0;
-  width:5px; height:100%;
-  border-radius:0 20px 20px 0;
-}
-.order-card.status-pending::before  { background: #f0a500; }
-.order-card.status-picked::before   { background: #e65100; }
-.order-card.status-delivered::before{ background: #0077cc; }
-.order-card.status-cancelled::before{ background: #e53935; }
-
-.order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.order-id-text{font-weight:900;color:#1e3a5f;font-size:18px;letter-spacing:0.5px;}
-.status-pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;}
-.pill-pending  {background:#fff3cd;color:#856404;border:1.5px solid #f0c300;}
-.pill-ready    {background:#d4edda;color:#155724;border:1.5px solid #25D366;}
-.pill-picked   {background:#fff0e0;color:#e65100;border:1.5px solid #ff9800;}
-.pill-delivered{background:#e3f0ff;color:#0055aa;border:1.5px solid #0077cc;}
-.pill-cancelled{background:#fde8e8;color:#b10606;border:1.5px solid #f44336;}
-
-/* Timeline */
-.order-status-bar{display:flex;align-items:flex-start;margin:16px 0 14px;padding:0 4px;direction:ltr;}
+.order-status-bar{display:flex;align-items:flex-start;margin:14px 0 10px;}
 .order-step{flex:1;text-align:center;position:relative;}
-.order-step:not(:last-child)::after{
-  content:'';position:absolute;
-  top:18px; left:50%; width:100%; height:3px;
-  background:#e0e0e0; z-index:0;
-}
+.order-step:not(:last-child)::after{content:'';position:absolute;top:13px;left:-50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
 .order-step.done::after{background:#25D366;}
-.step-dot{
-  width:36px;height:36px;border-radius:50%;
-  background:#e8edf5;
-  display:inline-flex;align-items:center;justify-content:center;
-  font-size:16px;position:relative;z-index:1;
-  border:2px solid #dde3ee;
-  transition:all 0.3s;
-}
-.order-step.done .step-dot{background:#25D366;border-color:#25D366;box-shadow:0 2px 8px rgba(37,211,102,0.3);}
-.order-step.active .step-dot{background:#1e88e5;border-color:#1e88e5;box-shadow:0 0 0 5px rgba(30,136,229,0.15);}
-.step-txt{font-size:12px;color:#aaa;margin-top:6px;font-weight:600;}
-.order-step.done .step-txt{color:#25D366;}
-.order-step.active .step-txt{color:#1e88e5;}
-
-/* Divider */
-.order-divider{height:1px;background:#f0f4f8;margin:12px 0;}
-
-/* Items */
-.order-item-row{
-  font-size:14px;color:#444;
-  padding:6px 0;
-  border-bottom:1px solid #f5f5f5;
-  display:flex;align-items:center;gap:6px;
-}
+.step-dot{width:26px;height:26px;border-radius:50%;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;}
+.order-step.done .step-dot{background:#25D366;color:#fff;}
+.order-step.active .step-dot{background:#1e88e5;color:#fff;box-shadow:0 0 0 4px rgba(30,136,229,0.2);}
+.step-txt{font-size:10px;color:#aaa;margin-top:4px;}
+.order-step.done .step-txt,.order-step.active .step-txt{color:#333;font-weight:bold;}
+.order-card{background:#fff;border:1px solid #e0e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.order-id-text{font-weight:bold;color:#1e3a5f;font-size:15px;}
+.status-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;}
+.pill-pending{background:#fff3cd;color:#856404;}
+.pill-ready{background:#d4edda;color:#155724;}
+.pill-picked{background:#fff0e0;color:#e65100;}
+.pill-delivered{background:#cce5ff;color:#004085;}
+.pill-cancelled{background:#f8d7da;color:#721c24;}
+.order-item-row{font-size:13px;color:#555;padding:3px 0;border-bottom:1px solid #f5f5f5;}
 .order-item-row:last-child{border:none;}
-.order-item-row::before{content:'•';color:#0077cc;font-size:18px;line-height:1;}
-
-/* Total */
-.order-total{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-top:12px;padding:10px 14px;
-  background:#f0f6ff;border-radius:12px;
-}
-.order-total-label{font-size:14px;color:#555;font-weight:600;}
-.order-total-amount{font-size:18px;font-weight:900;color:#0055aa;}
-
-/* Address */
-.order-address{
-  font-size:13px;color:#888;
-  margin-top:10px;
-  display:flex;align-items:center;gap:5px;
-}
-
-/* Cancel btn */
-.cancel-order-btn{
-  width:100%;padding:12px;border-radius:12px;border:none;
-  background:#fde7e7;color:#b10606;
-  font-size:15px;font-weight:700;
-  cursor:pointer;margin-top:12px;
-  transition:all 0.2s;
-  font-family:inherit;
-}
+.cancel-order-btn{width:100%;padding:10px;border-radius:10px;border:none;background:#fde7e7;color:#b10606;font-size:14px;font-weight:bold;cursor:pointer;margin-top:10px;transition:all 0.2s;}
 .cancel-order-btn:hover{background:#f44336;color:#fff;}
-
-/* Cancelled notice */
-.cancelled-notice{
-  text-align:center;padding:12px;
-  color:#c62828;font-weight:700;font-size:14px;
-  background:#fde8e8;border-radius:12px;
-  border:1.5px dashed #f44336;
-  margin:12px 0;
-}
 
 @media print { #pricesPage { display: none !important; } }
 </style>
@@ -1033,7 +953,7 @@ function buildOrderCard(o) {
   const cur = steps.indexOf(o.status);
 
   const timeline = isCancelled
-    ? `<div class="cancelled-notice">❌ تم إلغاء هذا الطلب</div>`
+    ? `<div style="text-align:center;padding:8px;color:#f44336;font-weight:bold;font-size:13px;background:#fff0f0;border-radius:8px;">❌ تم إلغاء هذا الطلب</div>`
     : `<div class="order-status-bar">
         <div class="order-step \${cur===0?'active':cur>0?'done':''}">
           <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
@@ -1046,11 +966,12 @@ function buildOrderCard(o) {
         </div>
       </div>`;
 
-  const itemsHtml = items.slice(0,5).map(item => {
+  const itemsHtml = items.slice(0,4).map(item => {
     const p = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
-    return `<div class="order-item-row">${item.name||'-'} × ${item.quantity||1} — د.ع ${formatPriceIQD(p)}</div>`;
-  }).join('') + (items.length>5 ? `<div class="order-item-row" style="color:#999;font-style:italic;">... و ${items.length-5} منتجات أخرى</div>` : '');
+    return `<div class="order-item-row">• ${item.name||'-'} × ${item.quantity||1} — ${formatPriceIQD(p)} د.ع</div>`;
+  }).join('') + (items.length>4 ? `<div class="order-item-row" style="color:#999;">... و ${items.length-4} منتجات أخرى</div>` : '');
 
+  // زر الإلغاء: فقط pending أو ready (قبل ما يستلم المندوب)
   const canCancel = o.status === 'pending';
   const cancelBtn = canCancel
     ? `<button class="cancel-order-btn" onclick="cancelMyOrder('${o.orderId}')">🗑️ إلغاء الطلب</button>`
@@ -1058,20 +979,16 @@ function buildOrderCard(o) {
 
   const dateStr = o.timestamp ? formatDate(new Date(o.timestamp)) : '';
 
-  return `<div class="order-card status-${o.status}">
+  return `<div class="order-card">
     <div class="order-card-header">
       <span class="order-id-text">${o.orderId||'-'}</span>
       <span class="status-pill ${si.cls}">${si.label}</span>
     </div>
-    <div style="font-size:12px;color:#aaa;margin-bottom:4px;">📅 ${dateStr}</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:10px;">📅 ${dateStr}</div>
     ${timeline}
-    <div class="order-divider"></div>
-    <div>${itemsHtml}</div>
-    <div class="order-total">
-      <span class="order-total-label">💰 المجموع</span>
-      <span class="order-total-amount">د.ع ${formatPriceIQD(Number(o.total)||0)}</span>
-    </div>
-    <div class="order-address">📍 ${o.address||'-'}</div>
+    <div style="margin-top:10px;">${itemsHtml}</div>
+    <div style="font-weight:bold;color:#1e88e5;margin-top:8px;font-size:14px;">💰 المجموع: ${formatPriceIQD(Number(o.total)||0)} د.ع</div>
+    <div style="font-size:13px;color:#666;margin-top:4px;">📍 ${o.address||'-'}</div>
     ${cancelBtn}
   </div>`;
 }
@@ -1260,12 +1177,12 @@ function handleGlobalSearch(event) {
     let screenTypeLabel = '';
     if (item.source === 'شاشات' && item.type) {
       const typeLabels = {'أصلي وكالة': '🟢', 'أصلي صيني': '🔵', 'TFT': '🟡'};
-      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
+      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:5px 12px;border-radius:8px;font-size:14px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
     }
     let notesHtml = '';
-    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:12px;color:#e65100;">📝 ${item.notes}</div>`;
+    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:8px 12px;margin-top:8px;border-radius:6px;font-size:15px;color:#e65100;font-weight:600;">📝 ${item.notes}</div>`;
     const cartBtn = available ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` : '';
-    html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:14px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:12px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
+    html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:17px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:14px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:16px;color:${priceColor};font-weight:bold;margin-top:6px;">${priceText}</div>${cartBtn}</div>`;
   });
   if (results.length > 20) html += `<div style="padding:8px;color:#666;text-align:center;font-size:13px;">... و ${results.length - 20} نتيجة أخرى</div>`;
   resultsDiv.innerHTML = html;
