@@ -319,14 +319,15 @@ nav {
 }
 
 .brand-pill {
-  padding: 10px 24px; border-radius: 100px;
+  padding: 10px 20px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--border);
-  font-size: 14px; font-weight: 700; color: var(--text-muted);
-  white-space: nowrap;
-  transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 10px;
+  white-space: nowrap; transition: all 0.2s;
 }
-
-.brand-pill:hover { color: var(--primary); border-color: rgba(14,165,233,0.4); }
+.brand-pill:hover { border-color: rgba(14,165,233,0.4); transform: translateY(-2px); }
+.brand-pill img { width: 28px; height: 28px; object-fit: contain; filter: brightness(1.1); transition: filter 0.2s; }
+.brand-pill:hover img { filter: brightness(1.3); }
+.brand-pill span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
 
 @keyframes marquee {
   from { transform: translateX(0); }
@@ -480,36 +481,7 @@ footer strong { color: var(--primary); }
 <div class="brands-section">
   <div class="brands-label">الماركات المتوفرة</div>
   <div class="marquee-track">
-    <span class="brand-pill">Samsung</span>
-    <span class="brand-pill">Apple iPhone</span>
-    <span class="brand-pill">Huawei</span>
-    <span class="brand-pill">Xiaomi</span>
-    <span class="brand-pill">Redmi</span>
-    <span class="brand-pill">Poco</span>
-    <span class="brand-pill">Infinix</span>
-    <span class="brand-pill">Tecno</span>
-    <span class="brand-pill">Oppo</span>
-    <span class="brand-pill">Realme</span>
-    <span class="brand-pill">Vivo</span>
-    <span class="brand-pill">Honor</span>
-    <span class="brand-pill">OnePlus</span>
-    <span class="brand-pill">Nokia</span>
-    <span class="brand-pill">Asus</span>
-    <span class="brand-pill">Samsung</span>
-    <span class="brand-pill">Apple iPhone</span>
-    <span class="brand-pill">Huawei</span>
-    <span class="brand-pill">Xiaomi</span>
-    <span class="brand-pill">Redmi</span>
-    <span class="brand-pill">Poco</span>
-    <span class="brand-pill">Infinix</span>
-    <span class="brand-pill">Tecno</span>
-    <span class="brand-pill">Oppo</span>
-    <span class="brand-pill">Realme</span>
-    <span class="brand-pill">Vivo</span>
-    <span class="brand-pill">Honor</span>
-    <span class="brand-pill">OnePlus</span>
-    <span class="brand-pill">Nokia</span>
-    <span class="brand-pill">Asus</span>
+    <div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/2560px-Samsung_Logo.svg.png" alt="Samsung" onerror="this.style.display='none'"><span>Samsung</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" onerror="this.style.display='none'"><span>Apple</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Huawei_Logo.svg/2560px-Huawei_Logo.svg.png" alt="Huawei" onerror="this.style.display='none'"><span>Huawei</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Xiaomi_logo.svg/2560px-Xiaomi_logo.svg.png" alt="Xiaomi" onerror="this.style.display='none'"><span>Xiaomi</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Redmi_logo.svg/2560px-Redmi_logo.svg.png" alt="Redmi" onerror="this.style.display='none'"><span>Redmi</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/POCO_Logo.svg/2560px-POCO_Logo.svg.png" alt="POCO" onerror="this.style.display='none'"><span>POCO</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Infinix_logo.svg/2560px-Infinix_logo.svg.png" alt="Infinix" onerror="this.style.display='none'"><span>Infinix</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Tecno_logo.svg/2560px-Tecno_logo.svg.png" alt="Tecno" onerror="this.style.display='none'"><span>Tecno</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Oppo_Logo.svg/2560px-Oppo_Logo.svg.png" alt="OPPO" onerror="this.style.display='none'"><span>OPPO</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Realme_logo.svg/2560px-Realme_logo.svg.png" alt="Realme" onerror="this.style.display='none'"><span>Realme</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Vivo_logo_2019.svg/2560px-Vivo_logo_2019.svg.png" alt="Vivo" onerror="this.style.display='none'"><span>Vivo</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Honor_logo.svg/2560px-Honor_logo.svg.png" alt="Honor" onerror="this.style.display='none'"><span>Honor</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/OnePlus_logo.svg/2560px-OnePlus_logo.svg.png" alt="OnePlus" onerror="this.style.display='none'"><span>OnePlus</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Nokia_wordmark.svg/2560px-Nokia_wordmark.svg.png" alt="Nokia" onerror="this.style.display='none'"><span>Nokia</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/ASUS_Logo.svg/2560px-ASUS_Logo.svg.png" alt="Asus" onerror="this.style.display='none'"><span>Asus</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/2560px-Samsung_Logo.svg.png" alt="Samsung" onerror="this.style.display='none'"><span>Samsung</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" onerror="this.style.display='none'"><span>Apple</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Huawei_Logo.svg/2560px-Huawei_Logo.svg.png" alt="Huawei" onerror="this.style.display='none'"><span>Huawei</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Xiaomi_logo.svg/2560px-Xiaomi_logo.svg.png" alt="Xiaomi" onerror="this.style.display='none'"><span>Xiaomi</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Redmi_logo.svg/2560px-Redmi_logo.svg.png" alt="Redmi" onerror="this.style.display='none'"><span>Redmi</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/POCO_Logo.svg/2560px-POCO_Logo.svg.png" alt="POCO" onerror="this.style.display='none'"><span>POCO</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Infinix_logo.svg/2560px-Infinix_logo.svg.png" alt="Infinix" onerror="this.style.display='none'"><span>Infinix</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Tecno_logo.svg/2560px-Tecno_logo.svg.png" alt="Tecno" onerror="this.style.display='none'"><span>Tecno</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Oppo_Logo.svg/2560px-Oppo_Logo.svg.png" alt="OPPO" onerror="this.style.display='none'"><span>OPPO</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Realme_logo.svg/2560px-Realme_logo.svg.png" alt="Realme" onerror="this.style.display='none'"><span>Realme</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Vivo_logo_2019.svg/2560px-Vivo_logo_2019.svg.png" alt="Vivo" onerror="this.style.display='none'"><span>Vivo</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Honor_logo.svg/2560px-Honor_logo.svg.png" alt="Honor" onerror="this.style.display='none'"><span>Honor</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/OnePlus_logo.svg/2560px-OnePlus_logo.svg.png" alt="OnePlus" onerror="this.style.display='none'"><span>OnePlus</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Nokia_wordmark.svg/2560px-Nokia_wordmark.svg.png" alt="Nokia" onerror="this.style.display='none'"><span>Nokia</span></div><div class="brand-pill"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/ASUS_Logo.svg/2560px-ASUS_Logo.svg.png" alt="Asus" onerror="this.style.display='none'"><span>Asus</span></div>
   </div>
 </div>
 
