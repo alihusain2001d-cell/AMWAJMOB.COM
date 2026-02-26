@@ -390,7 +390,7 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 .pill-cancelled{background:#fde8e8;color:#b10606;border:1.5px solid #f44336;}
 
 /* Timeline */
-.order-status-bar{display:flex;align-items:flex-start;margin:16px 0 14px;padding:0 4px;}
+.order-status-bar{display:flex;align-items:flex-start;margin:16px 0 14px;padding:0 4px;direction:ltr;}
 .order-step{flex:1;text-align:center;position:relative;}
 .order-step:not(:last-child)::after{
   content:'';position:absolute;
@@ -1048,7 +1048,7 @@ function buildOrderCard(o) {
 
   const itemsHtml = items.slice(0,5).map(item => {
     const p = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
-    return `<div class="order-item-row">${item.name||'-'} × ${item.quantity||1} — ${formatPriceIQD(p)} د.ع</div>`;
+    return `<div class="order-item-row">${item.name||'-'} × ${item.quantity||1} — د.ع ${formatPriceIQD(p)}</div>`;
   }).join('') + (items.length>5 ? `<div class="order-item-row" style="color:#999;font-style:italic;">... و ${items.length-5} منتجات أخرى</div>` : '');
 
   const canCancel = o.status === 'pending';
@@ -1069,7 +1069,7 @@ function buildOrderCard(o) {
     <div>${itemsHtml}</div>
     <div class="order-total">
       <span class="order-total-label">💰 المجموع</span>
-      <span class="order-total-amount">${formatPriceIQD(Number(o.total)||0)} د.ع</span>
+      <span class="order-total-amount">د.ع ${formatPriceIQD(Number(o.total)||0)}</span>
     </div>
     <div class="order-address">📍 ${o.address||'-'}</div>
     ${cancelBtn}
