@@ -49,7 +49,6 @@
 :root {
   --primary: #0284C7;
   --primary-dark: #0369A1;
-  --primary-light: rgba(2,132,199,0.08);
   --accent: #0891B2;
   --surface: #F0F7FF;
   --card: #FFFFFF;
@@ -62,10 +61,9 @@
   --shadow-lg: 0 8px 32px rgba(2,132,199,0.18);
   --radius: 16px;
   --radius-sm: 10px;
+  --sheet-z: 9000;
 }
-
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
   font-family: 'Tajawal', sans-serif;
   background: var(--surface);
@@ -73,19 +71,14 @@ body {
   overflow-x: hidden;
   color: var(--text);
 }
-
 #pricesPage * { -webkit-user-select:none; user-select:none; }
 
-/* ── Background ── */
+/* BG */
 #particles-bg {
-  position: fixed; inset: 0; z-index: 0;
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 60%, #E0F2FE 100%);
+  position:fixed; inset:0; z-index:0;
+  background: linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 60%,#E0F2FE 100%);
 }
-.particle {
-  position: absolute; border-radius: 50%;
-  background: rgba(2,132,199,0.2);
-  animation: float 15s infinite ease-in-out;
-}
+.particle { position:absolute; border-radius:50%; background:rgba(2,132,199,0.2); animation:float 15s infinite ease-in-out; }
 @keyframes float {
   0%,100%{transform:translateY(0) translateX(0);opacity:.2;}
   25%{transform:translateY(-30px) translateX(10px);opacity:.6;}
@@ -93,319 +86,231 @@ body {
   75%{transform:translateY(-40px) translateX(5px);opacity:.5;}
 }
 
-/* ── Layout ── */
-.main-wrapper { padding: 12px; min-height:100vh; position:relative; z-index:1; }
-
+/* LAYOUT */
+.main-wrapper { padding:12px; min-height:100vh; position:relative; z-index:1; }
 .container {
-  max-width: 540px; margin: auto;
-  background: rgba(255,255,255,0.8);
-  padding: 16px;
-  border-radius: 20px;
-  box-shadow: 0 8px 40px rgba(2,132,199,0.12);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.9);
+  max-width:540px; margin:auto;
+  background:rgba(255,255,255,0.82);
+  padding:16px; border-radius:20px;
+  box-shadow:0 8px 40px rgba(2,132,199,0.12);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.9);
 }
+.logo { text-align:center; margin-bottom:14px; }
+.logo img { width:100px; }
 
-/* ── Logo ── */
-.logo { text-align:center; margin-bottom:16px; }
-.logo img { width: 110px; }
-
-/* ── Welcome Banner ── */
+/* WELCOME */
 #welcomeUser {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-  color: white;
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  font-size: 17px;
-  font-weight: 800;
-  border: none;
-  box-shadow: 0 6px 20px rgba(2,132,199,0.35);
-  text-align: center;
-  line-height: 1.5;
+  background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+  color:white; border-radius:var(--radius);
+  padding:16px 18px; margin-bottom:14px;
+  font-size:17px; font-weight:800; border:none;
+  box-shadow:0 6px 20px rgba(2,132,199,0.35);
+  text-align:center; line-height:1.5;
 }
-#welcomeUser small {
-  color: rgba(255,255,255,0.8);
-  font-size: 13px;
-  font-weight: 400;
-  display: block;
-  margin-top: 2px;
-}
+#welcomeUser small { color:rgba(255,255,255,0.8); font-size:13px; font-weight:400; display:block; margin-top:2px; }
 
-/* ── Quick Actions ── */
-.quick-row {
-  display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 10px;
-  margin-bottom: 14px;
-}
+/* QUICK ROW */
+.quick-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
 .quick-card {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
-  position: relative;
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:14px 8px;
+  text-align:center; cursor:pointer; transition:all .2s;
+  box-shadow:var(--shadow-sm); position:relative;
 }
-.quick-card:hover, .quick-card:active {
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-.quick-card-icon { font-size: 28px; display:block; margin-bottom: 6px; }
-.quick-card-label { font-size: 13px; font-weight: 700; color: var(--text); }
-.quick-card-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.quick-card:active { border-color:var(--primary); transform:scale(.97); }
+.quick-card-icon { font-size:26px; display:block; margin-bottom:6px; }
+.quick-card-label { font-size:13px; font-weight:700; color:var(--text); }
+.quick-card-sub { font-size:10px; color:var(--muted); margin-top:2px; }
 
-/* ── Search Box ── */
+/* SEARCH */
 .search-card {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  box-shadow: var(--shadow-sm);
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:12px 14px;
+  margin-bottom:14px; box-shadow:var(--shadow-sm);
 }
-.search-inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.search-inner { display:flex; align-items:center; gap:10px; }
 .search-inner input {
-  flex: 1;
-  padding: 11px 14px;
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-family: 'Tajawal', sans-serif;
-  transition: border 0.2s;
-  margin: 0;
-  width: auto;
+  flex:1; padding:11px 14px; border:1.5px solid var(--border-light);
+  border-radius:var(--radius-sm); font-size:15px;
+  font-family:'Tajawal',sans-serif; margin:0; width:auto; transition:border .2s;
 }
-.search-inner input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(2,132,199,0.08); }
+.search-inner input:focus { border-color:var(--primary); outline:none; }
 
-/* ── Section Header ── */
-.sec-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 16px 0 10px;
-}
-.sec-header-line {
-  flex: 1;
-  height: 1px;
-  background: var(--border-light);
-}
-.sec-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+/* SEC HEADER */
+.sec-header { display:flex; align-items:center; gap:8px; margin:14px 0 10px; }
+.sec-header-line { flex:1; height:1px; background:var(--border-light); }
+.sec-label { font-size:11px; font-weight:700; color:var(--primary); letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; }
 
-/* ── Products Grid ── */
-.brands-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-top: 0;
-}
-
+/* PRODUCTS GRID */
+.brands-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 .brand {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
-  font-family: 'Tajawal', sans-serif;
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:var(--radius); padding:18px 12px;
+  text-align:center; cursor:pointer; transition:all .2s;
+  box-shadow:var(--shadow-sm); font-family:'Tajawal',sans-serif;
 }
-.brand:hover, .brand:active {
-  border-color: var(--primary);
-  background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-}
-.brand div { font-size: 14px; font-weight: 700; color: var(--text); }
-.brand small { font-size: 11px; color: var(--muted); }
+.brand:active { border-color:var(--primary); background:linear-gradient(135deg,#EFF6FF,#DBEAFE); transform:scale(.97); }
+.brand div { font-size:14px; font-weight:700; color:var(--text); }
+.brand small { font-size:11px; color:var(--muted); }
 
-/* ── Google Search ── */
+/* GOOGLE CARD */
 .google-card {
-  background: linear-gradient(135deg, #1A73E8 0%, #0F9D58 100%);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-top: 14px;
-  box-shadow: 0 6px 20px rgba(26,115,232,0.3);
+  background:linear-gradient(135deg,#1A73E8 0%,#0F9D58 100%);
+  border-radius:var(--radius); padding:14px; margin-top:14px;
+  box-shadow:0 6px 20px rgba(26,115,232,0.3);
 }
 .google-card-title { color:white; font-weight:800; font-size:15px; text-align:center; margin-bottom:10px; }
 .google-search-row { display:flex; gap:8px; margin-bottom:10px; }
-.google-search-row input {
-  flex:1; padding:11px 14px; border:none; border-radius:10px;
-  font-size:14px; font-family:'Tajawal',sans-serif; margin:0;
-}
-.google-search-row button {
-  background:#fff; color:#1A73E8; padding:11px 16px;
-  border:none; border-radius:10px; font-weight:700; cursor:pointer;
-  width:auto; margin:0; font-family:'Tajawal',sans-serif; font-size:14px;
-}
-.google-lens-btn {
-  background:rgba(255,255,255,0.2); padding:10px; border-radius:10px; text-align:center;
-}
-.google-lens-btn button {
-  background:#fff; color:#0F9D58; padding:11px; border:none;
-  border-radius:10px; font-weight:700; cursor:pointer; width:100%;
-  font-family:'Tajawal',sans-serif; font-size:14px; margin:0;
-}
+.google-search-row input { flex:1; padding:11px 14px; border:none; border-radius:10px; font-size:14px; font-family:'Tajawal',sans-serif; margin:0; width:auto; }
+.google-search-row button { background:#fff; color:#1A73E8; padding:11px 16px; border:none; border-radius:10px; font-weight:700; cursor:pointer; width:auto; margin:0; font-family:'Tajawal',sans-serif; font-size:14px; }
+.google-lens-wrap { background:rgba(255,255,255,0.15); padding:10px; border-radius:10px; text-align:center; }
+.google-lens-wrap button { background:#fff; color:#0F9D58; padding:11px; border:none; border-radius:10px; font-weight:700; cursor:pointer; width:100%; font-family:'Tajawal',sans-serif; font-size:14px; margin:0; }
 
-/* ── Contact Card ── */
+/* CONTACT */
 .contact-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-top: 14px;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); padding:16px; margin-top:14px;
+  text-align:center; box-shadow:var(--shadow-sm);
 }
 .contact-label { font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
 .contact-btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
 .contact-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 10px 20px; background: #EFF6FF;
-  border: 1px solid #BFDBFE; border-radius: 10px;
-  font-weight: 700; color: var(--primary); font-size: 15px;
-  text-decoration: none; transition: all 0.2s;
-  font-family: 'Tajawal', sans-serif;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:10px 20px; background:#EFF6FF; border:1px solid #BFDBFE;
+  border-radius:10px; font-weight:700; color:var(--primary);
+  font-size:15px; text-decoration:none; transition:all .2s;
+  font-family:'Tajawal',sans-serif;
 }
-.contact-btn:hover { background: #DBEAFE; transform: translateY(-1px); }
+.contact-btn:active { background:#DBEAFE; }
 
-/* ── WhatsApp ── */
+/* WHATSAPP */
 .whatsapp {
-  display: block; text-align: center;
-  background: #16A34A; color:#fff;
-  padding: 14px; border-radius: 12px;
-  margin-top: 14px; text-decoration: none;
-  font-weight: 800; font-size: 15px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(22,163,74,0.3);
-  font-family: 'Tajawal', sans-serif;
+  display:block; text-align:center; background:#16A34A; color:#fff;
+  padding:14px; border-radius:12px; margin-top:14px;
+  text-decoration:none; font-weight:800; font-size:15px;
+  transition:all .2s; box-shadow:0 4px 16px rgba(22,163,74,0.3);
+  font-family:'Tajawal',sans-serif;
 }
-.whatsapp:hover { background: #15803D; transform: translateY(-2px); }
-
-/* ── Logout ── */
 .logout-btn {
-  width: 100%; padding: 13px;
-  border-radius: 12px;
-  border: 1.5px solid #FEE2E2;
-  background: white; color: #DC2626;
-  font-size: 15px; font-weight: 700;
-  cursor: pointer; margin-top: 12px;
-  font-family: 'Tajawal', sans-serif;
-  transition: all 0.2s;
-}
-.logout-btn:hover { background: #FEF2F2; }
-
-/* ── Cart Badge ── */
-.cart-badge {
-  position: fixed; top: 20px; left: 20px;
-  background: var(--primary); color: white;
-  border-radius: 50%; width: 52px; height: 52px;
-  display: none; align-items: center; justify-content: center;
-  font-size: 24px; cursor: pointer;
-  box-shadow: 0 4px 16px rgba(2,132,199,0.4);
-  z-index: 1000; transition: transform 0.2s;
-}
-.cart-badge:hover { transform: scale(1.1); }
-.cart-count {
-  position: absolute; top: -5px; right: -5px;
-  background: #EF4444; color: white; border-radius: 50%;
-  width: 20px; height: 20px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: bold;
+  width:100%; padding:13px; border-radius:12px;
+  border:1.5px solid #FEE2E2; background:white; color:#DC2626;
+  font-size:15px; font-weight:700; cursor:pointer; margin-top:12px;
+  font-family:'Tajawal',sans-serif; transition:all .2s;
 }
 
-/* ── General Buttons ── */
-.bigbtn {
-  width: 100%; padding: 14px;
-  border-radius: 12px; border: 0;
-  margin: 8px 0; font-size: 18px;
-  font-weight: bold; cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  font-family: 'Tajawal', sans-serif;
+/* ═══════════════════════════════
+   BOTTOM SHEET SYSTEM
+══════════════════════════════ */
+.bsheet-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(15,23,42,0.55); z-index:var(--sheet-z);
+  align-items:flex-end; justify-content:center;
+  backdrop-filter:blur(4px);
 }
-.bigbtn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
-.bigbtn:active { transform: translateY(0); }
-.big1 { background: var(--primary); color:#fff; box-shadow: 0 4px 16px rgba(2,132,199,0.3); }
-.big2 { background: #64748B; color:#fff; }
-.big3 { background: #16A34A; color:#fff; }
-.big4 { background: #F59E0B; color:#fff; }
-
-/* ── Inputs ── */
-label { font-weight: 700; font-size: 14px; display: block; margin-top: 10px; color: var(--text); }
-input, select, button {
-  width: 100%; padding: 12px 14px;
-  margin: 6px 0 10px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border-light);
-  font-size: 16px; box-sizing: border-box;
-  font-family: 'Tajawal', sans-serif;
-  transition: border 0.2s;
+.bsheet-overlay.open { display:flex; }
+.bsheet {
+  background:#fff; border-radius:24px 24px 0 0;
+  width:100%; max-width:540px;
+  max-height:92vh; overflow:hidden;
+  display:flex; flex-direction:column;
+  animation:sheetUp .3s cubic-bezier(.32,.72,0,1);
 }
-input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(2,132,199,0.08); }
-button { background: var(--primary); color:#fff; border:none; cursor:pointer; }
-button:disabled { background:#CBD5E1; cursor:not-allowed; }
+@keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+.bsheet-handle { width:40px; height:4px; background:#E2E8F0; border-radius:2px; margin:12px auto 0; flex-shrink:0; }
+.bsheet-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px 12px; flex-shrink:0;
+  border-bottom:1px solid var(--border-light);
+}
+.bsheet-title { font-size:17px; font-weight:800; color:var(--text); }
+.bsheet-close {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:#F1F5F9; color:var(--muted); font-size:18px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-family:'Tajawal',sans-serif; padding:0; margin:0; width:32px;
+}
+.bsheet-body { flex:1; overflow-y:auto; padding:14px 16px 24px; }
 
-/* ── Results ── */
-.result { padding:14px; border-radius:12px; margin-top:10px; font-family:'Tajawal',sans-serif; }
+/* sheet search */
+.bsheet-search {
+  display:flex; gap:8px; margin-bottom:14px;
+  padding:12px 14px; background:#F8FAFC;
+  border:1px solid var(--border-light); border-radius:12px;
+}
+.bsheet-search input {
+  flex:1; padding:10px 12px; border:1.5px solid var(--border-light);
+  border-radius:10px; font-size:15px; font-family:'Tajawal',sans-serif;
+  margin:0; width:auto; transition:border .2s;
+}
+.bsheet-search input:focus { border-color:var(--primary); outline:none; }
+
+/* brands inside sheet */
+.bsheet-brands { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+.bsheet-brand {
+  background:#F8FAFC; border:1.5px solid var(--border-light);
+  border-radius:12px; padding:14px 10px; text-align:center;
+  cursor:pointer; transition:all .2s; font-family:'Tajawal',sans-serif;
+}
+.bsheet-brand:active { background:linear-gradient(135deg,#EFF6FF,#DBEAFE); border-color:var(--primary); }
+.bsheet-brand b { display:block; font-size:13px; color:var(--text); margin-bottom:2px; }
+.bsheet-brand small { font-size:10px; color:var(--muted); }
+
+/* price items in sheet */
+.price-item {
+  padding:14px; border:1px solid var(--border-light);
+  margin:8px 0; border-radius:12px; background:#F9FBFF;
+}
+.pi-name { font-weight:700; font-size:15px; color:var(--text); }
+.pi-brand { font-size:12px; color:var(--muted); margin-top:2px; }
+.pi-price { font-size:17px; font-weight:800; margin-top:6px; }
+.pi-price.avail { color:var(--primary); }
+.pi-price.unavail { color:#DC2626; }
+.pi-type { display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:6px; }
+.pi-notes { background:#FFF7ED; border-right:3px solid #F59E0B; padding:8px 12px; border-radius:8px; font-size:14px; color:#92400E; font-weight:600; margin-top:8px; }
+.add-to-cart-btn {
+  background:#16A34A; color:white; padding:10px; border-radius:10px;
+  border:none; cursor:pointer; margin-top:10px; width:100%;
+  font-weight:700; font-size:15px; font-family:'Tajawal',sans-serif;
+  transition:all .2s;
+}
+
+/* warranty/check forms inside sheet */
+.form-group { margin-bottom:14px; }
+.form-label { font-weight:700; font-size:14px; color:var(--text); margin-bottom:6px; display:block; }
+.form-input {
+  width:100%; padding:12px 14px; border:1.5px solid var(--border-light);
+  border-radius:10px; font-size:16px; font-family:'Tajawal',sans-serif;
+  transition:border .2s; margin:0;
+}
+.form-input:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 3px rgba(2,132,199,0.08); }
+.form-btn {
+  width:100%; padding:14px; background:var(--primary); color:#fff;
+  border:none; border-radius:12px; font-size:17px; font-weight:800;
+  cursor:pointer; font-family:'Tajawal',sans-serif; transition:all .2s;
+  box-shadow:0 4px 16px rgba(2,132,199,0.3);
+}
+.form-btn:disabled { background:#CBD5E1; cursor:not-allowed; box-shadow:none; }
+.form-btn.danger { background:#EF4444; box-shadow:0 4px 16px rgba(239,68,68,0.3); }
+.form-btn.success-btn { background:#16A34A; box-shadow:0 4px 16px rgba(22,163,74,0.3); }
+
+/* results */
+.result { padding:14px; border-radius:12px; margin-top:10px; font-family:'Tajawal',sans-serif; font-size:15px; line-height:1.7; }
 .result.success { background:#F0FDF4; color:#166534; border:1px solid #86EFAC; }
 .result.error   { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
 .result.pending { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
 
-/* ── Info box ── */
-.info-box {
-  background: #EFF6FF; padding:14px; border-radius:12px;
-  margin:10px 0; text-align:center;
-  border: 1px solid #BFDBFE; font-family:'Tajawal',sans-serif;
-}
-.section-title { text-align:center; color:var(--primary); font-size:20px; margin:14px 0; font-family:'Tajawal',sans-serif; }
-.welcome-text { text-align:center; font-size:16px; color:var(--text); margin:12px 0; line-height:1.8; }
-
-/* ── Loading ── */
-#loadingPage { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; text-align:center; }
-#loadingPage img { width:160px; margin-bottom:20px; }
-.loading-spinner {
-  border: 4px solid #E2E8F0; border-top: 4px solid var(--primary);
-  border-radius: 50%; width:42px; height:42px;
-  animation: spin 1s linear infinite; margin:20px auto;
-}
-@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
-.loading-text { color:var(--primary); font-size:17px; margin-top:10px; }
-
-/* ── Prices page brands grid ── */
-.brands-grid-prices {
-  display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 10px;
-  margin-top: 10px;
-}
-
-/* ── Order Cards ── */
-.order-status-bar{display:flex;align-items:flex-start;margin:14px 0 10px;direction:rtl;}
+/* orders in sheet */
+.order-status-bar{display:flex;align-items:flex-start;margin:12px 0 8px;direction:rtl;}
 .order-step{flex:1;text-align:center;position:relative;}
 .order-step:not(:last-child)::after{content:'';position:absolute;top:13px;right:50%;width:100%;height:3px;background:#E2E8F0;z-index:0;}
 .order-step.done::after{background:#16A34A;}
-.step-dot{width:28px;height:28px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:13px;position:relative;z-index:1;}
+.step-dot{width:28px;height:28px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;}
 .order-step.done .step-dot{background:#16A34A;color:#fff;}
 .order-step.active .step-dot{background:var(--primary);color:#fff;box-shadow:0 0 0 4px rgba(2,132,199,0.2);}
 .step-txt{font-size:10px;color:#94A3B8;margin-top:4px;}
-.order-step.done .step-txt,.order-step.active .step-txt{color:var(--text);font-weight:bold;}
-.order-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:10px 0;box-shadow:var(--shadow-sm);overflow:hidden;}
+.order-step.done .step-txt,.order-step.active .step-txt{color:var(--text);font-weight:700;}
+.order-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;margin:10px 0;box-shadow:var(--shadow-sm);overflow:hidden;}
 .order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .order-id-text{font-weight:800;color:var(--text);font-size:15px;}
 .status-pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;}
@@ -413,181 +318,259 @@ button:disabled { background:#CBD5E1; cursor:not-allowed; }
 .pill-picked{background:#FFF7ED;color:#C2410C;}
 .pill-delivered{background:#DCFCE7;color:#166534;}
 .pill-cancelled{background:#FEE2E2;color:#991B1B;}
-.order-item-row{font-size:15px;color:#475569;padding:4px 0;border-bottom:1px solid #F1F5F9;}
+.order-item-row{font-size:14px;color:#475569;padding:4px 0;border-bottom:1px solid #F1F5F9;}
 .order-item-row:last-child{border:none;}
-.cancel-order-btn{width:100%;padding:11px;border-radius:10px;border:1.5px solid #FEE2E2;background:white;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;transition:all 0.2s;font-family:'Tajawal',sans-serif;}
-.cancel-order-btn:hover{background:#FEF2F2;}
+.cancel-order-btn{width:100%;padding:11px;border-radius:10px;border:1.5px solid #FEE2E2;background:white;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;font-family:'Tajawal',sans-serif;}
 
-/* ── Cart ── */
-.add-to-cart-btn{background:#16A34A;color:white;padding:10px 16px;border-radius:10px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;transition:all 0.2s;font-family:'Tajawal',sans-serif;font-size:15px;}
-.add-to-cart-btn:hover{background:#15803D;transform:translateY(-1px);}
-.cart-item{background:#F8FAFC;padding:14px;margin:8px 0;border-radius:12px;border:1px solid var(--border-light);}
-.cart-item-info{width:100%;}
+/* cart */
+.cart-badge {
+  position:fixed; top:20px; left:20px;
+  background:var(--primary); color:white; border-radius:50%;
+  width:52px; height:52px; display:none; align-items:center;
+  justify-content:center; font-size:24px; cursor:pointer;
+  box-shadow:0 4px 16px rgba(2,132,199,0.4); z-index:1000;
+}
+.cart-count { position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; }
+.cart-item { background:#F8FAFC; padding:14px; margin:8px 0; border-radius:12px; border:1px solid var(--border-light); }
+.cart-item-info { width:100%; }
 
-/* ── Flatpower Modal ── */
-#flatpowerModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.6);z-index:9000;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
+/* flatpower bottom sheet (reuse .bsheet styles) */
+#flatpowerModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.55);z-index:9000;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
 #flatpowerModal.active{display:flex;}
-.flatpower-sheet{background:white;border-radius:24px 24px 0 0;padding:20px 16px 30px;width:100%;max-width:540px;animation:slideUp .3s ease;max-height:85vh;overflow-y:auto;}
-@keyframes slideUp{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
-.flatpower-handle{width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 16px;}
-.flatpower-title{text-align:center;font-size:18px;font-weight:800;color:var(--text);margin-bottom:16px;}
-.flatpower-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-.flatpower-btn{background:#F8FAFC;border:1.5px solid var(--border-light);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:all 0.2s;font-weight:bold;color:var(--text);}
-.flatpower-btn:hover{background:linear-gradient(135deg,var(--primary),var(--accent));color:white;border-color:var(--primary);transform:scale(1.03);box-shadow:0 6px 20px rgba(2,132,199,0.3);}
-.flatpower-btn:active{transform:scale(0.97);}
+.flatpower-sheet{background:white;border-radius:24px 24px 0 0;padding:0 0 24px;width:100%;max-width:540px;animation:sheetUp .3s cubic-bezier(.32,.72,0,1);max-height:85vh;overflow-y:auto;}
+.flatpower-handle{width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:12px auto 0;}
+.flatpower-title{text-align:center;font-size:17px;font-weight:800;color:var(--text);padding:12px 16px 0;}
+.flatpower-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px;}
+.flatpower-btn{background:#F8FAFC;border:1.5px solid var(--border-light);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;font-weight:bold;color:var(--text);}
+.flatpower-btn:active{background:linear-gradient(135deg,var(--primary),var(--accent));color:white;border-color:var(--primary);}
 .flatpower-btn .btn-icon{font-size:26px;display:block;margin-bottom:6px;}
 .flatpower-btn .btn-label{font-size:14px;font-weight:700;display:block;}
 .flatpower-btn .btn-sub{font-size:11px;opacity:.6;display:block;margin-top:3px;font-weight:normal;}
-.flatpower-close{display:block;width:100%;margin-top:14px;padding:13px;background:#EF4444;color:white;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'Tajawal',sans-serif;}
+.flatpower-close{display:block;width:calc(100% - 32px);margin:0 16px;padding:13px;background:#EF4444;color:white;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'Tajawal',sans-serif;}
 
-/* ── Back button ── */
-#backToTopBtn{background:linear-gradient(135deg,var(--primary),var(--accent))!important;box-shadow:0 4px 15px rgba(2,132,199,0.4)!important;}
+/* loading */
+#loadingPage{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;}
+.loading-spinner{border:4px solid #E2E8F0;border-top:4px solid var(--primary);border-radius:50%;width:42px;height:42px;animation:spin 1s linear infinite;margin:20px auto;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.loading-text{color:var(--primary);font-size:17px;margin-top:10px;}
 
-@media print { #pricesPage{display:none!important;} }
+/* old pages (activate / check / cart) — keep minimal */
+.bigbtn{width:100%;padding:14px;border-radius:12px;border:0;margin:8px 0;font-size:18px;font-weight:bold;cursor:pointer;transition:transform .2s;font-family:'Tajawal',sans-serif;}
+.bigbtn:active{transform:scale(.97);}
+.big1{background:var(--primary);color:#fff;box-shadow:0 4px 16px rgba(2,132,199,.3);}
+.big2{background:#64748B;color:#fff;}
+.big3{background:#16A34A;color:#fff;}
+.big4{background:#F59E0B;color:#fff;}
+label{font-weight:700;font-size:14px;display:block;margin-top:10px;color:var(--text);}
+input,select,button{width:100%;padding:12px 14px;margin:6px 0 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border-light);font-size:16px;box-sizing:border-box;font-family:'Tajawal',sans-serif;transition:border .2s;}
+input:focus,select:focus{border-color:var(--primary);outline:none;}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer;}
+button:disabled{background:#CBD5E1;cursor:not-allowed;}
+.info-box{background:#EFF6FF;padding:14px;border-radius:12px;margin:10px 0;text-align:center;border:1px solid #BFDBFE;}
+.section-title{text-align:center;color:var(--primary);font-size:20px;margin:14px 0;font-family:'Tajawal',sans-serif;}
+.welcome-text{text-align:center;font-size:16px;color:var(--text);margin:12px 0;line-height:1.8;}
+.footer{text-align:center;margin-top:12px;font-size:16px;}
+#backToTopBtn{background:linear-gradient(135deg,var(--primary),var(--accent))!important;box-shadow:0 4px 15px rgba(2,132,199,.4)!important;}
+@media print{#pricesPage{display:none!important;}}
 </style>
 </head>
 <body>
 
-<script>
-document.addEventListener('contextmenu', function(e) {
-  if (document.getElementById('pricesPage') && document.getElementById('pricesPage').style.display !== 'none') { e.preventDefault(); return false; }
-});
-document.addEventListener('keydown', function(e) {
-  if (document.getElementById('pricesPage') && document.getElementById('pricesPage').style.display !== 'none') {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'a' || e.key === 'p')) { e.preventDefault(); return false; }
-  }
-});
-</script>
-
 <div id="particles-bg"></div>
 
-<!-- أيقونة السلة -->
-<div id="cartBadge" class="cart-badge" onclick="openCart()">
-  🛒
-  <span id="cartCount" class="cart-count">0</span>
-</div>
+<!-- Cart Badge -->
+<div id="cartBadge" class="cart-badge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
 
-<!-- ==================== موديل تقسيمات بور + صوت ==================== -->
+<!-- ═══ FLATPOWER MODAL (keep as is) ═══ -->
 <div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
   <div class="flatpower-sheet" onclick="event.stopPropagation()">
     <div class="flatpower-handle"></div>
     <div class="flatpower-title">🔧 قطع غيار منوعة</div>
     <div class="flatpower-grid">
-      <div class="flatpower-btn" onclick="openFlatSub('FLAT POWER', 'فلات بور', '⚡')">
-        <span class="btn-icon">⚡</span>
-        <span class="btn-label">فلات بور</span>
-        <span class="btn-sub">FLAT POWER</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('FLAT VOLUME', 'فلات صوت', '🔉')">
-        <span class="btn-icon">🔉</span>
-        <span class="btn-label">فلات صوت</span>
-        <span class="btn-sub">FLAT VOLUME</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('BUZZER', 'سماعة جرس', '🔔')">
-        <span class="btn-icon">🔔</span>
-        <span class="btn-label">سماعة جرس</span>
-        <span class="btn-sub">BUZZER</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('EAR SPEAKER', 'سماعة اتصال', '📞')">
-        <span class="btn-icon">📞</span>
-        <span class="btn-label">سماعة اتصال</span>
-        <span class="btn-sub">EAR SPEAKER</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('DOOR SIM', 'باب سيم كارت', '💳')">
-        <span class="btn-icon">💳</span>
-        <span class="btn-label">باب سيم كارت</span>
-        <span class="btn-sub">DOOR SIM</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('FINGERPRINT', 'بصمة', '👆')">
-        <span class="btn-icon">👆</span>
-        <span class="btn-label">بصمة</span>
-        <span class="btn-sub">FINGERPRINT</span>
-      </div>
-      <div class="flatpower-btn" onclick="openFlatSub('OTHER', 'منوعة', '📦')">
-        <span class="btn-icon">📦</span>
-        <span class="btn-label">منوعة</span>
-        <span class="btn-sub">OTHER</span>
-      </div>
-      <div class="flatpower-btn" onclick="openLensFromModal()">
-        <span class="btn-icon">📷</span>
-        <span class="btn-label">عدسة كاميرا</span>
-        <span class="btn-sub">LENS CAMERA</span>
-      </div>
+      <div class="flatpower-btn" onclick="openFlatSub('FLAT POWER','فلات بور','⚡')"><span class="btn-icon">⚡</span><span class="btn-label">فلات بور</span><span class="btn-sub">FLAT POWER</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('FLAT VOLUME','فلات صوت','🔉')"><span class="btn-icon">🔉</span><span class="btn-label">فلات صوت</span><span class="btn-sub">FLAT VOLUME</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('BUZZER','سماعة جرس','🔔')"><span class="btn-icon">🔔</span><span class="btn-label">سماعة جرس</span><span class="btn-sub">BUZZER</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('EAR SPEAKER','سماعة اتصال','📞')"><span class="btn-icon">📞</span><span class="btn-label">سماعة اتصال</span><span class="btn-sub">EAR SPEAKER</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('DOOR SIM','باب سيم كارت','💳')"><span class="btn-icon">💳</span><span class="btn-label">باب سيم كارت</span><span class="btn-sub">DOOR SIM</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('FINGERPRINT','بصمة','👆')"><span class="btn-icon">👆</span><span class="btn-label">بصمة</span><span class="btn-sub">FINGERPRINT</span></div>
+      <div class="flatpower-btn" onclick="openFlatSub('OTHER','منوعة','📦')"><span class="btn-icon">📦</span><span class="btn-label">منوعة</span><span class="btn-sub">OTHER</span></div>
+      <div class="flatpower-btn" onclick="openLensFromModal()"><span class="btn-icon">📷</span><span class="btn-label">عدسة كاميرا</span><span class="btn-sub">LENS CAMERA</span></div>
     </div>
     <button class="flatpower-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
   </div>
 </div>
 
+<!-- ═══ BOTTOM SHEETS ═══ -->
+
+<!-- Products Sheet -->
+<div id="productsSheet" class="bsheet-overlay" onclick="closeSheet('productsSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
+      <button class="bsheet-close" onclick="closeSheet('productsSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="bsheet-search">
+        <span style="font-size:20px;">🔍</span>
+        <input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()">
+      </div>
+      <div id="sheetBrands" class="bsheet-brands"></div>
+      <div id="sheetResults"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Warranty Sheet -->
+<div id="warrantySheet" class="bsheet-overlay" onclick="closeSheet('warrantySheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">✅ تفعيل الضمان</span>
+      <button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="form-group"><label class="form-label">اسم الزبون</label><input class="form-input" id="name" placeholder="مثال: أحمد محمد"></div>
+      <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
+      <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
+      <div class="form-group"><label class="form-label">كود الشاشة</label><input class="form-input" id="screenCode" placeholder="الكود خلف الشاشة"></div>
+      <div class="form-group"><label class="form-label">اسم الشاشة (اختياري)</label><input class="form-input" id="screenName" placeholder="مثال: iPhone 11 Pro"></div>
+      <div class="form-group"><label class="form-label">نوع القطعة</label>
+        <select class="form-input" id="type"><option value="screen">شاشة</option><option value="battery">بطارية</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">تاريخ التركيب</label><input class="form-input" id="start" readonly></div>
+      <div id="dupMsg" style="display:none;background:#FEF2F2;color:#991B1B;padding:10px;border-radius:10px;margin:10px 0;border:1px solid #FECACA;"></div>
+      <button class="form-btn" id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
+      <div id="result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Check Sheet -->
+<div id="checkSheet" class="bsheet-overlay" onclick="closeSheet('checkSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔍 التحقق من الضمان</span>
+      <button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="form-group">
+        <label class="form-label">أدخل كود الشاشة</label>
+        <input class="form-input" id="inv" placeholder="كود الشاشة...">
+      </div>
+      <button class="form-btn" onclick="checkWarranty()">🔍 بحث</button>
+      <div id="out"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Orders Sheet -->
+<div id="ordersSheet" class="bsheet-overlay" onclick="closeSheet('ordersSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">📦 طلباتي</span>
+      <button class="bsheet-close" onclick="closeSheet('ordersSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div id="myOrdersLoading" style="text-align:center;padding:30px;">
+        <div class="loading-spinner"></div>
+        <div style="color:var(--muted);margin-top:8px;font-size:15px;">جاري تحميل الطلبات...</div>
+      </div>
+      <div id="myOrdersList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Sheet -->
+<div id="cartSheet" class="bsheet-overlay" onclick="closeSheet('cartSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🛒 سلة المشتريات</span>
+      <button class="bsheet-close" onclick="closeSheet('cartSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div id="cartItems"></div>
+      <div id="cartSummary" style="display:none;background:#EFF6FF;padding:14px;border-radius:12px;margin:12px 0;border:1px solid #BFDBFE;">
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;">
+          <span>المجموع:</span><span id="cartTotal" style="color:var(--primary);">0</span>
+        </div>
+      </div>
+      <button onclick="clearCart()" class="form-btn danger" id="clearCartBtn" style="display:none;margin-bottom:12px;">🗑️ إفراغ السلة</button>
+      <div id="orderForm" style="display:none;">
+        <div style="text-align:center;font-size:16px;font-weight:800;color:var(--primary);margin:14px 0 10px;">معلومات التوصيل</div>
+        <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
+        <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
+        <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
+        <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
+        <div id="orderResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN WRAPPER ═══ -->
 <div class="main-wrapper">
   <div class="container">
-    <div class="logo">
-      <img src="1646237145252.png" alt="أمواج للإلكترونيات">
-    </div>
+    <div class="logo"><img src="1646237145252.png" alt="أمواج للإلكترونيات"></div>
 
-    <!-- شاشة التحميل -->
-    <div id="loadingPage">
+    <!-- Loading -->
+    <div id="loadingPage" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;">
       <div class="loading-spinner"></div>
       <div class="loading-text">جاري التحميل...</div>
     </div>
 
-    <!-- صفحة التسجيل -->
+    <!-- Register -->
     <div id="registerPage" style="display:none">
       <h2 class="section-title">تسجيل حساب جديد</h2>
       <p class="welcome-text">أهلاً بك في أمواج للإلكترونيات<br>سجل بياناتك للحصول على خدمات الضمان</p>
-      <label>الاسم الثلاثي</label>
-      <input type="text" id="regName" placeholder="مثال: أحمد محمد علي">
-      <label>اسم المحل</label>
-      <input type="text" id="regShop" placeholder="اسم محلك أو شركتك">
-      <label>رقم الهاتف</label>
-      <input type="tel" id="regPhone" placeholder="07xxxxxxxxx">
+      <label>الاسم الثلاثي</label><input type="text" id="regName" placeholder="مثال: أحمد محمد علي">
+      <label>اسم المحل</label><input type="text" id="regShop" placeholder="اسم محلك">
+      <label>رقم الهاتف</label><input type="tel" id="regPhone" placeholder="07xxxxxxxxx">
       <button class="bigbtn big1" id="btnRegister" onclick="submitRegistration()">إرسال طلب التسجيل</button>
       <div id="regResult"></div>
-      <div style="text-align:center;margin-top:20px;padding-top:15px;border-top:1px solid #eee;">
-        <p style="color:#666;">عندك حساب مسبقاً؟</p>
+      <div style="text-align:center;margin-top:20px;padding-top:15px;border-top:1px solid #E2E8F0;">
+        <p style="color:var(--muted);">عندك حساب مسبقاً؟</p>
         <button class="bigbtn big2" onclick="showLoginPage()">تسجيل الدخول</button>
       </div>
-      <div class="info-box">
-        📞 للاستفسار:<br>
-        <div style="margin-top:5px;">
-          <a href="tel:7696" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 7696</a>
-          <a href="tel:07709000160" style="font-weight:bold;color:#1e88e5;display:block;margin:3px 0;">📱 07709000160</a>
-        </div>
+      <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
+        <a href="tel:7696" style="font-weight:bold;color:var(--primary);display:block;margin:4px 0;">📱 7696</a>
+        <a href="tel:07709000160" style="font-weight:bold;color:var(--primary);display:block;margin:4px 0;">📱 07709000160</a>
       </div>
     </div>
 
-    <!-- صفحة تسجيل الدخول -->
+    <!-- Login -->
     <div id="loginPage" style="display:none">
       <h2 class="section-title">تسجيل الدخول</h2>
-      <p class="welcome-text">أهلاً بك مجدداً<br>🌊 أدخل رقم هاتفك للدخول</p>
-      <label>رقم الهاتف</label>
-      <input type="tel" id="loginPhone" placeholder="07xxxxxxxxx">
+      <p class="welcome-text">أهلاً بك مجدداً 🌊<br>أدخل رقم هاتفك للدخول</p>
+      <label>رقم الهاتف</label><input type="tel" id="loginPhone" placeholder="07xxxxxxxxx">
       <button class="bigbtn big1" id="btnLogin" onclick="checkLogin()">دخول</button>
       <div id="loginResult"></div>
-      <div style="text-align:center;margin-top:20px;padding-top:15px;border-top:1px solid #eee;">
-        <p style="color:#666;">ما عندك حساب؟</p>
+      <div style="text-align:center;margin-top:20px;padding-top:15px;border-top:1px solid #E2E8F0;">
+        <p style="color:var(--muted);">ما عندك حساب؟</p>
         <button class="bigbtn big3" onclick="showRegisterPage()">تسجيل حساب جديد</button>
       </div>
     </div>
 
-    <!-- الصفحة الرئيسية -->
+    <!-- HOME PAGE -->
     <div id="homePage" style="display:none">
-
-      <!-- Welcome -->
-      <div id="welcomeUser" style="font-size:18px;font-weight:bold;"></div>
+      <div id="welcomeUser"></div>
 
       <!-- Quick Actions -->
       <div class="quick-row">
-        <div class="quick-card" onclick="openAct()">
+        <div class="quick-card" onclick="openSheet('warrantySheet'); document.getElementById('start').value=formatDate(new Date());">
           <span class="quick-card-icon">✅</span>
           <div class="quick-card-label">تفعيل الضمان</div>
           <div class="quick-card-sub">Warranty</div>
         </div>
-        <div class="quick-card" onclick="openChk()">
+        <div class="quick-card" onclick="openSheet('checkSheet')">
           <span class="quick-card-icon">🔍</span>
           <div class="quick-card-label">التحقق</div>
           <div class="quick-card-sub">Check</div>
         </div>
-        <div class="quick-card" onclick="openMyOrders()" style="position:relative;">
+        <div class="quick-card" onclick="openOrdersSheet()" style="position:relative;">
           <span class="quick-card-icon">📦</span>
           <div class="quick-card-label">طلباتي</div>
           <div class="quick-card-sub">My Orders</div>
@@ -599,8 +582,7 @@ document.addEventListener('keydown', function(e) {
       <div class="search-card">
         <div class="search-inner">
           <span style="font-size:22px;">🔍</span>
-          <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)"
-                 onkeyup="handleGlobalSearch(event)">
+          <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" onkeyup="handleGlobalSearch(event)">
         </div>
         <div id="globalSearchResults" style="margin-top:10px;display:none;"></div>
       </div>
@@ -611,59 +593,33 @@ document.addEventListener('keydown', function(e) {
         <span class="sec-label">المنتجات · Products</span>
         <div class="sec-header-line"></div>
       </div>
-
       <div class="brands-grid">
-        <div class="brand" onclick="openPrices('screens')">
-          <div style="font-size:28px;margin-bottom:8px;">🖥️</div>
-          <div>الشاشات</div>
-          <small>Screens</small>
-        </div>
-        <div class="brand" onclick="openPrices('batteries')">
-          <div style="font-size:28px;margin-bottom:8px;">🔋</div>
-          <div>البطاريات</div>
-          <small>Batteries</small>
-        </div>
-        <div class="brand" onclick="openPrices('chargeboards')">
-          <div style="font-size:28px;margin-bottom:8px;">🔌</div>
-          <div>بورد شحن</div>
-          <small>Charge Board</small>
-        </div>
-        <div class="brand" onclick="openPrices('flatcharging')">
-          <div style="font-size:28px;margin-bottom:8px;">⚡</div>
-          <div>شريط شحن + شاشة</div>
-          <small>Charging Flex</small>
-        </div>
+        <div class="brand" onclick="openProductSheet('screens','🖥️ الشاشات')">
+          <div style="font-size:26px;margin-bottom:7px;">🖥️</div><div>الشاشات</div><small>Screens</small></div>
+        <div class="brand" onclick="openProductSheet('batteries','🔋 البطاريات')">
+          <div style="font-size:26px;margin-bottom:7px;">🔋</div><div>البطاريات</div><small>Batteries</small></div>
+        <div class="brand" onclick="openProductSheet('chargeboards','🔌 بورد شحن')">
+          <div style="font-size:26px;margin-bottom:7px;">🔌</div><div>بورد شحن</div><small>Charge Board</small></div>
+        <div class="brand" onclick="openProductSheet('flatcharging','⚡ شريط شحن')">
+          <div style="font-size:26px;margin-bottom:7px;">⚡</div><div>شريط شحن</div><small>Charging Flex</small></div>
         <div class="brand" onclick="openFlatpowerModal()">
-          <div style="font-size:28px;margin-bottom:8px;">🔊</div>
-          <div>قطع منوعة</div>
-          <small>Power & Sound & Misc</small>
-        </div>
-        <div class="brand" onclick="openPrices('backcover')">
-          <div style="font-size:28px;margin-bottom:8px;">📱</div>
-          <div>باك كفر</div>
-          <small>Back Cover</small>
-        </div>
-        <div class="brand" onclick="openPrices('housing')">
-          <div style="font-size:28px;margin-bottom:8px;">🏠</div>
-          <div>شاصي</div>
-          <small>Housing</small>
-        </div>
-        <div class="brand" onclick="openPrices('camera')">
-          <div style="font-size:28px;margin-bottom:8px;">📷</div>
-          <div>كاميرا</div>
-          <small>Camera</small>
-        </div>
+          <div style="font-size:26px;margin-bottom:7px;">🔊</div><div>قطع منوعة</div><small>Power & Sound</small></div>
+        <div class="brand" onclick="openProductSheet('backcover','📱 باك كفر')">
+          <div style="font-size:26px;margin-bottom:7px;">📱</div><div>باك كفر</div><small>Back Cover</small></div>
+        <div class="brand" onclick="openProductSheet('housing','🏠 شاصي')">
+          <div style="font-size:26px;margin-bottom:7px;">🏠</div><div>شاصي</div><small>Housing</small></div>
+        <div class="brand" onclick="openProductSheet('camera','📷 كاميرا')">
+          <div style="font-size:26px;margin-bottom:7px;">📷</div><div>كاميرا</div><small>Camera</small></div>
       </div>
 
-      <!-- Google Search -->
+      <!-- Google -->
       <div class="google-card">
         <div class="google-card-title">🌐 بحث Google</div>
         <div class="google-search-row">
-          <input type="text" id="googleTextSearch" placeholder="ابحث في Google..."
-                 onkeypress="if(event.key==='Enter') searchGoogle()">
+          <input type="text" id="googleTextSearch" placeholder="ابحث في Google..." onkeypress="if(event.key==='Enter') searchGoogle()">
           <button onclick="searchGoogle()">بحث</button>
         </div>
-        <div class="google-lens-btn">
+        <div class="google-lens-wrap">
           <input type="file" id="googleImageInput" accept="image/*" style="display:none;" onchange="searchGoogleByImage(this)">
           <button onclick="document.getElementById('googleImageInput').click()">📷 بحث بالصورة (Google Lens)</button>
           <div id="imageSearchStatus" style="color:#fff;font-size:13px;margin-top:8px;"></div>
@@ -679,115 +635,190 @@ document.addEventListener('keydown', function(e) {
         </div>
         <div style="margin-top:10px;color:var(--muted);font-size:13px;">أمواج للإلكترونيات يرحب بكم 🌊</div>
       </div>
-
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp">🟢 التواصل عبر الواتساب</a>
       <button class="logout-btn" onclick="logout()">🚪 تسجيل الخروج</button>
     </div>
 
-    <!-- صفحة التفعيل -->
-
-
+    <!-- Old pages kept for fallback -->
     <div id="activatePage" style="display:none">
       <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title">تفعيل ضمان أمواج للإلكترونيات</h3>
-      <label>اسم الزبون</label>
-      <input id="name">
-      <label>رقم الهاتف</label>
-      <input id="phone">
-      <label>رقم الفاتورة</label>
-      <input id="invoice">
-      <label>كود الشاشة</label>
-      <input id="screenCode" placeholder="الكود الموجود خلف الشاشة">
-      <label>اسم الشاشة (اختياري)</label>
-      <input id="screenName" placeholder="مثال: iPhone 11 Pro">
-      <label>نوع القطعة</label>
-      <select id="type">
-        <option value="screen">شاشة</option>
-        <option value="battery">بطارية</option>
-      </select>
-      <label>تاريخ التركيب</label>
-      <input id="start" readonly>
-      <div id="dupMsg" style="display:none;background:#fde7e7;color:#b10606;padding:10px;border-radius:10px;margin:10px 0;"></div>
-      <button id="btnActivate" class="bigbtn big1" onclick="sendData()">تفعيل الضمان</button>
-      <div id="result"></div>
-      <div class="footer">
-        📞 للاستفسار: <a href="tel:7696" style="font-weight:bold;color:#1e88e5;">7696</a><br>
-        شكراً لاختياركم أمواج للإلكترونيات 🌊
-        <a class="whatsapp" href="https://wa.me/9647709000160" target="_blank">تواصل عبر واتساب</a>
-      </div>
+      <h3 class="section-title">تفعيل ضمان أمواج</h3>
     </div>
-
-    <!-- صفحة التحقق -->
-    <div id="checkPage" style="display:none">
-      <button onclick="backHome()" class="bigbtn big2">⬅ رجوع</button>
-      <h3 class="section-title">تحقق من الضمان</h3>
-      <input id="inv" placeholder="أدخل كود الشاشة">
-      <button class="bigbtn big1" onclick="checkWarranty()">بحث</button>
-      <div id="out"></div>
-    </div>
-
-    <!-- صفحة الأسعار -->
+    <div id="checkPage" style="display:none"></div>
+    <div id="myOrdersPage" style="display:none"></div>
     <div id="pricesPage" style="display:none">
-      <h3 class="section-title" id="pricesTitle">🔒 الشاشات</h3>
-      <input type="text" id="searchInput" placeholder="بحث عن الموديل..." style="width:100%;margin:10px 0;padding:12px;">
-      <div id="brandsSection">
-        <div class="brands-grid" id="brandsGrid"></div>
-      </div>
-      <div id="brandPrices" style="display:none">
-        <div id="brandPricesBox"></div>
-      </div>
+      <h3 class="section-title" id="pricesTitle"></h3>
+      <input type="text" id="searchInput" style="display:none;">
+      <div id="brandsSection"><div class="brands-grid" id="brandsGrid"></div></div>
+      <div id="brandPrices" style="display:none"><div id="brandPricesBox"></div></div>
     </div>
-
-    <!-- صفحة السلة -->
-    <div id="cartPage" style="display:none">
-      <h3 class="section-title">🛒 سلة المشتريات</h3>
-      <div id="cartItems"></div>
-      <div id="cartSummary" style="background:#f0f7ff;padding:12px;border-radius:10px;margin:15px 0;display:none;">
-        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;">
-          <span>المجموع:</span>
-          <span id="cartTotal">0 د.ع</span>
-        </div>
-      </div>
-      <button onclick="clearCart()" class="bigbtn" style="background:#f44336;display:none;" id="clearCartBtn">🗑️ إفراغ السلة</button>
-      <div id="orderForm" style="margin-top:20px;display:none;">
-        <h4 style="text-align:center;color:#1e88e5;margin:15px 0;">معلومات التوصيل</h4>
-        <label>الاسم</label>
-        <input type="text" id="orderName" placeholder="اسمك الكامل">
-        <label>اسم المحل</label>
-        <input type="text" id="orderShop" placeholder="اسم محلك">
-        <label>العنوان</label>
-        <input type="text" id="orderAddress" placeholder="العنوان بالتفصيل">
-        <button onclick="submitOrder()" class="bigbtn big3">📤 إرسال الطلب</button>
-        <div id="orderResult"></div>
-      </div>
-    </div>
+    <div id="cartPage" style="display:none"></div>
 
   </div>
-  
-  <!-- زر الرجوع العائم -->
-  <button id="backToTopBtn" onclick="backToBrands()" style="
-    display: none;
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 9999;
-    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    width: 60px;
-    height: 60px;
-    font-size: 24px;
-    box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
-    cursor: pointer;
-    transition: all 0.3s ease;
-  ">
-    ➡️
-  </button>
-
 </div>
 
+<!-- Back button (hidden, kept for JS compat) -->
+<button id="backToTopBtn" onclick="backToBrands()" style="display:none;position:fixed;top:80px;right:20px;z-index:9999;background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border:none;border-radius:50px;width:60px;height:60px;font-size:24px;box-shadow:0 4px 15px rgba(2,132,199,.4);cursor:pointer;">➡️</button>
+
 <script>
+
+// ═══ SHEET SYSTEM ═══
+function openSheet(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+let sheetPriceType = 'screens';
+let sheetFlatSubType = null;
+
+function openProductSheet(type, title) {
+  sheetPriceType = type;
+  sheetFlatSubType = null;
+  currentPriceType = type;
+  document.getElementById('productsSheetTitle').textContent = title;
+  document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetResults').innerHTML = '';
+  renderSheetBrands(type);
+  openSheet('productsSheet');
+}
+
+function openFlatSubSheet(subType, labelAr, icon) {
+  closeFlatpowerModal();
+  sheetPriceType = 'flatpower';
+  sheetFlatSubType = subType;
+  currentPriceType = 'flatpower';
+  currentFlatSubType = subType;
+  document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
+  document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetResults').innerHTML = '';
+  renderSheetBrands('flatpower');
+  openSheet('productsSheet');
+}
+
+function renderSheetBrands(type) {
+  const grid = document.getElementById('sheetBrands');
+  const commonBrands = [
+    {label:'هواوي + هونر', sub:'Huawei • Honor', brands:'Huawei,Honor'},
+    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
+    {label:'ايفون', sub:'Apple', brands:'Apple'},
+    {label:'شاومي + ريدمي + بوكو', sub:'Xiaomi • Redmi • Poco', brands:'Xiaomi,Redmi,Poco'},
+    {label:'اوبو + ريلمي', sub:'Oppo • Realme', brands:'Oppo,Realme'},
+    {label:'انفنكس + تكنو', sub:'Infinix • Tecno', brands:'Infinix,Tecno'},
+    {label:'فيفو', sub:'Vivo', brands:'Vivo'},
+    {label:'ازوز + كوكل', sub:'Asus • Google', brands:'Asus,Google'},
+  ];
+  const screenBrands = [
+    {label:'ايفون', sub:'iPhone', brands:'Apple'},
+    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
+    {label:'هواوي', sub:'Huawei', brands:'Huawei'},
+    {label:'شاومي', sub:'Xiaomi', brands:'Xiaomi'},
+    {label:'ريدمي + بوكو', sub:'Redmi & Poco', brands:'Redmi,Poco'},
+    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
+    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
+    {label:'فيفو + ويكو', sub:'Vivo & Wiko', brands:'Vivo,Wiko'},
+    {label:'ازوز + ريد ماجك + كوكل', sub:'Asus • RedMagic • Google', brands:'Asus,RedMagic,Google'},
+    {label:'ZTE + Alcatel + TCL', sub:'ZTE • Alcatel • TCL • Blackview', brands:'ZTE,Alcatel,TCL,Blackview'},
+  ];
+  const list = type === 'screens' ? screenBrands : commonBrands;
+  grid.innerHTML = list.map(b =>
+    `<div class="bsheet-brand" onclick="openSheetBrand('${b.brands}')">
+      <b>${b.label}</b><small>${b.sub}</small>
+    </div>`
+  ).join('');
+}
+
+function handleSheetSearch() {
+  const q = document.getElementById('sheetSearch').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('sheetResults');
+  const brandsDiv = document.getElementById('sheetBrands');
+  if (q.length < 2) {
+    resultsDiv.innerHTML = '';
+    brandsDiv.style.display = 'grid';
+    return;
+  }
+  brandsDiv.style.display = 'none';
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  const filtered = data.filter(p => (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q));
+  if (filtered.length === 0) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">لا توجد نتائج</div>'; return; }
+  resultsDiv.innerHTML = `<div style="font-size:13px;color:var(--muted);margin-bottom:10px;">النتائج (${Math.min(filtered.length,50)}):</div>` +
+    filtered.slice(0,50).map(p => createSheetPriceItem(p)).join('');
+}
+
+function openSheetBrand(brandsStr) {
+  const brands = brandsStr.split(',').map(b=>b.trim());
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  const filtered = data.filter(p => brands.map(b=>b.toLowerCase()).includes((p.brand||'').toLowerCase()));
+  const grid = document.getElementById('sheetBrands');
+  const results = document.getElementById('sheetResults');
+  grid.style.display = 'none';
+  if (filtered.length === 0) {
+    results.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">لا توجد أسعار</div>';
+  } else {
+    results.innerHTML = `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <button onclick="backToSheetBrands()" style="background:#F1F5F9;color:var(--text);border:none;border-radius:8px;padding:8px 14px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">← رجوع</button>
+      <span style="font-size:13px;color:var(--muted);">${filtered.length} منتج</span>
+    </div>` + filtered.map(p => createSheetPriceItem(p)).join('');
+  }
+}
+
+function backToSheetBrands() {
+  document.getElementById('sheetBrands').style.display = 'grid';
+  document.getElementById('sheetResults').innerHTML = '';
+  document.getElementById('sheetSearch').value = '';
+}
+
+function createSheetPriceItem(p) {
+  const priceStr = String(p.price||'').replace(/[^0-9]/g,'');
+  const price = Number(priceStr)||0;
+  const qty = Number(p.qty)||0;
+  const avail = qty > 0 && price > 0;
+  const priceHtml = avail
+    ? `<div class="pi-price avail">${formatPriceIQD(price)} IQD</div>`
+    : `<div class="pi-price unavail">غير متوفر</div>`;
+  const typeHtml = (sheetPriceType==='screens' && p.type)
+    ? `<span class="pi-type">${p.type}</span>` : '';
+  const notesHtml = (p.notes && p.notes.trim())
+    ? `<div class="pi-notes">📝 ${p.notes}</div>` : '';
+  const cartBtn = avail
+    ? `<button class="add-to-cart-btn" onclick='addToCartInSheet(${JSON.stringify(p).replace(/'/g,"&#39;")})'>🛒 إضافة للسلة</button>` : '';
+  return `<div class="price-item">
+    <div class="pi-name">${p.name||'-'}</div>
+    <div class="pi-brand">${p.brand||'-'}</div>
+    ${typeHtml}${priceHtml}${notesHtml}${cartBtn}
+  </div>`;
+}
+
+function addToCartInSheet(product) {
+  product.itemType = sheetPriceType;
+  addToCart(product);
+}
+
+function openOrdersSheet() {
+  openSheet('ordersSheet');
+  loadMyOrders();
+}
+
+function openCartSheet() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!user) { alert('يرجى تسجيل الدخول أولاً'); return; }
+  openSheet('cartSheet');
+  renderCart();
+  document.getElementById('orderName').value = user.name||'';
+  document.getElementById('orderShop').value = user.shop||'';
+  const saved = localStorage.getItem('amwaj_address');
+  if (saved) document.getElementById('orderAddress').value = saved;
+}
+
+// Override old openCart
+function openCart() { openCartSheet(); }
+
+// Override openFlatSub to use sheet
+const _origOpenFlatSub = window.openFlatSub;
+
 // ==================== النقاط المتحركة ====================
 function createParticles() {
   const bg = document.getElementById('particles-bg');
@@ -903,12 +934,7 @@ function getFlatSubData(subType) {
 }
 
 function openFlatSub(subType, labelAr, icon) {
-  document.getElementById('flatpowerModal').classList.remove('active');
-  document.body.style.overflow = '';
-  currentPriceType = 'flatpower';
-  currentFlatSubType = subType;
-  showPage("pricesPage");
-  showBackButton();
+  openFlatSubSheet(subType, labelAr, icon); return;
   document.getElementById("pricesTitle").innerHTML = `${icon} ${labelAr}`;
   document.getElementById("brandsSection").style.display = "block";
   document.getElementById("brandPrices").style.display = "none";
@@ -947,8 +973,8 @@ function showPage(pageId) {
 function showRegisterPage() { showPage("registerPage"); }
 function showLoginPage() { showPage("loginPage"); }
 function backHome() { showPage("homePage"); }
-function openAct() { showPage("activatePage"); document.getElementById("start").value = formatDate(new Date()); }
-function openChk() { showPage("checkPage"); }
+function openAct() { openSheet("warrantySheet"); document.getElementById("start").value = formatDate(new Date()); }
+function openChk() { openSheet("checkSheet"); }
 
 let currentPriceType = 'screens';
 
