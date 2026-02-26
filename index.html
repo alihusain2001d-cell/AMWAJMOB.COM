@@ -1,10 +1,614 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
-<meta http-equiv="refresh" content="0; url=/activate.html">
-<link rel="canonical" href="https://www.amwajmob.com/activate.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أمواج للإلكترونيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #0284C7;
+  --primary-dark: #0369A1;
+  --accent: #0891B2;
+  --surface: #F8FAFC;
+  --surface-2: #FFFFFF;
+  --surface-3: #E2E8F0;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --border: rgba(15,23,42,0.1);
+  --glow: rgba(2,132,199,0.25);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Background ── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(2,132,199,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(2,132,199,0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.bg-glow {
+  position: fixed; top: -200px; right: -200px;
+  width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(2,132,199,0.12) 0%, transparent 70%);
+  z-index: 0; pointer-events: none;
+}
+
+.bg-glow-2 {
+  position: fixed; bottom: -300px; left: -200px;
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(8,145,178,0.08) 0%, transparent 70%);
+  z-index: 0; pointer-events: none;
+}
+
+/* ── Nav ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(248,250,252,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 20px; font-weight: 800; color: var(--text);
+  text-decoration: none;
+}
+
+.nav-logo img { width: 36px; height: 36px; border-radius: 8px; }
+
+.nav-logo span { color: var(--primary); }
+
+.nav-links { display: flex; gap: 8px; align-items: center; }
+
+.nav-link {
+  padding: 8px 16px; border-radius: 8px;
+  color: var(--text-muted); font-size: 14px; font-weight: 500;
+  text-decoration: none; transition: all 0.2s;
+}
+.nav-link:hover { color: var(--text); background: var(--surface-2); }
+
+.nav-cta {
+  padding: 9px 20px; border-radius: 8px;
+  background: var(--primary); color: #fff;
+  font-size: 14px; font-weight: 700;
+  text-decoration: none; transition: all 0.2s;
+  box-shadow: 0 0 20px var(--glow);
+}
+.nav-cta:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* ── Hero ── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 100px;
+  background: rgba(14,165,233,0.1);
+  border: 1px solid rgba(14,165,233,0.3);
+  color: var(--primary); font-size: 13px; font-weight: 600;
+  margin-bottom: 32px;
+  animation: fadeDown 0.6s ease both;
+}
+
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.hero-title {
+  font-size: clamp(40px, 7vw, 80px);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  animation: fadeDown 0.6s 0.1s ease both;
+}
+
+.hero-title .gradient {
+  background: linear-gradient(135deg, var(--primary), var(--accent), #38BDF8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  animation: fadeDown 0.6s 0.2s ease both;
+}
+
+.hero-actions {
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  animation: fadeDown 0.6s 0.3s ease both;
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; border-radius: 10px;
+  background: var(--primary); color: #fff;
+  font-size: 16px; font-weight: 700;
+  text-decoration: none; transition: all 0.25s;
+  box-shadow: 0 4px 30px var(--glow);
+}
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 40px var(--glow); }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 32px; border-radius: 10px;
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 16px; font-weight: 600;
+  text-decoration: none; transition: all 0.25s;
+}
+.btn-secondary:hover { background: var(--surface-3); transform: translateY(-2px); }
+
+/* ── Stats ── */
+.stats-bar {
+  display: flex; gap: 0; justify-content: center;
+  margin-top: 72px;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+  animation: fadeDown 0.6s 0.4s ease both;
+  max-width: 700px; width: 100%;
+}
+
+.stat-item {
+  flex: 1; padding: 24px 20px; text-align: center;
+  border-left: 1px solid var(--border);
+}
+.stat-item:last-child { border-left: none; }
+
+.stat-num {
+  font-size: 28px; font-weight: 800; color: var(--primary);
+  display: block; margin-bottom: 4px;
+}
+
+.stat-label { font-size: 12px; color: var(--text-muted); }
+
+/* ── Features ── */
+.section {
+  position: relative; z-index: 1;
+  padding: 100px 24px;
+  max-width: 1100px; margin: 0 auto;
+}
+
+.section-tag {
+  display: inline-block;
+  padding: 4px 14px; border-radius: 100px;
+  background: rgba(14,165,233,0.1);
+  border: 1px solid rgba(14,165,233,0.2);
+  color: var(--primary); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800; margin-bottom: 16px;
+}
+
+.section-sub {
+  color: var(--text-muted); font-size: 17px; max-width: 500px;
+  line-height: 1.7; margin-bottom: 56px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.feature-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  padding: 28px;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+
+.feature-card:hover { border-color: rgba(14,165,233,0.3); transform: translateY(-4px); }
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(14,165,233,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 16px;
+  border: 1px solid rgba(14,165,233,0.2);
+}
+
+.feature-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+/* ── Products ── */
+.products-section {
+  position: relative; z-index: 1;
+  padding: 0 24px 100px;
+}
+
+.products-inner { max-width: 1100px; margin: 0 auto; }
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.product-chip {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-decoration: none;
+  display: block;
+}
+
+.product-chip:hover {
+  border-color: rgba(14,165,233,0.4);
+  background: rgba(14,165,233,0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(14,165,233,0.15);
+}
+
+.product-chip-icon { font-size: 28px; display: block; margin-bottom: 10px; }
+.product-chip-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.product-chip-en { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Brands Marquee ── */
+.brands-section {
+  position: relative; z-index: 1;
+  padding: 60px 0;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.brands-label {
+  text-align: center; color: var(--text-muted);
+  font-size: 13px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 32px;
+}
+
+.marquee-track {
+  display: flex; gap: 40px;
+  animation: marquee 25s linear infinite;
+  width: max-content;
+}
+
+.brand-pill {
+  padding: 12px 24px; border-radius: 12px;
+  background: #FFFFFF; border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: 10px;
+  white-space: nowrap; transition: all 0.2s;
+}
+.brand-pill:hover { border-color: rgba(14,165,233,0.4); transform: translateY(-2px); }
+.brand-pill img { width: 70px; height: 36px; object-fit: contain; filter: brightness(0.85) saturate(0.9); transition: all 0.2s; }
+.brand-pill:hover img { filter: brightness(1) saturate(1.2); transform: scale(1.05); }
+.brand-pill span { display: none; }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ── CTA Section ── */
+.cta-section {
+  position: relative; z-index: 1;
+  padding: 100px 24px;
+  text-align: center;
+}
+
+.cta-card {
+  max-width: 700px; margin: 0 auto;
+  background: linear-gradient(135deg, rgba(2,132,199,0.08), rgba(8,145,178,0.04));
+  border: 1px solid rgba(14,165,233,0.25);
+  border-radius: 24px;
+  padding: 64px 40px;
+  position: relative; overflow: hidden;
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at center, rgba(14,165,233,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.cta-title { font-size: 36px; font-weight: 900; margin-bottom: 16px; }
+.cta-sub { color: var(--text-muted); font-size: 17px; margin-bottom: 40px; line-height: 1.7; }
+
+.contact-grid {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.contact-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); font-size: 15px; font-weight: 600;
+  text-decoration: none; transition: all 0.2s;
+}
+.contact-chip:hover { border-color: rgba(14,165,233,0.4); color: var(--primary); }
+
+/* ── Footer ── */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--text-muted); font-size: 13px;
+}
+
+footer strong { color: var(--primary); }
+
+/* ── Animations ── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  nav { padding: 12px 16px; }
+  .nav-links { gap: 4px; }
+  .nav-link { display: none; }
+  .hero { padding: 100px 16px 60px; }
+  .stats-bar { flex-wrap: wrap; }
+  .stat-item { min-width: 45%; border-left: none; border-top: 1px solid var(--border); }
+  .cta-card { padding: 40px 20px; }
+  .products-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
 </head>
 <body>
-<script>window.location.replace('/activate.html');</script>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow-2"></div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="1646237145252.png" alt="أمواج" onerror="this.style.display='none'">
+    أمواج <span>للإلكترونيات</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">المميزات</a>
+    <a href="#products" class="nav-link">المنتجات</a>
+    <a href="https://wa.me/9647709000160" class="nav-link">تواصل معنا</a>
+    <a href="activate.html" class="nav-cta">ابدأ الآن ←</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="badge-dot"></span>
+    قطع غيار موبايل معتمدة في العراق
+  </div>
+
+  <h1 class="hero-title">
+    قطع الغيار الأصلية<br>
+    <span class="gradient">بضمان موثوق</span>
+  </h1>
+
+  <p class="hero-sub">
+    أمواج للإلكترونيات — شاشات، بطاريات، قطع غيار لجميع الأجهزة.
+    تسوّق بسهولة، تتبّع طلبك لحظة بلحظة، واستمتع بضمان معتمد.
+  </p>
+
+  <div class="hero-actions">
+    <a href="activate.html" class="btn-primary">
+      🛒 تسوّق الآن
+    </a>
+    <a href="https://wa.me/9647709000160" target="_blank" class="btn-secondary">
+      💬 تواصل واتساب
+    </a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-num">1000+</span>
+      <span class="stat-label">منتج متوفر</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">24/7</span>
+      <span class="stat-label">دعم فوري</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">30</span>
+      <span class="stat-label">يوم ضمان شاشات</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">توصيل</span>
+      <span class="stat-label">لجميع المحافظات</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- Products -->
+<section class="products-section" id="products">
+  <div class="products-inner">
+    <div class="fade-up">
+      <div class="section-tag">منتجاتنا</div>
+      <h2 class="section-title">كل قطعة تحتاجها<br>في مكان واحد</h2>
+      <p class="section-sub">تشكيلة واسعة من قطع الغيار الأصلية والمعتمدة لجميع موبايلات السوق</p>
+    </div>
+
+    <div class="products-grid fade-up">
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">🖥️</span>
+        <div class="product-chip-name">الشاشات</div>
+        <div class="product-chip-en">Screens</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">🔋</span>
+        <div class="product-chip-name">البطاريات</div>
+        <div class="product-chip-en">Batteries</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">🔌</span>
+        <div class="product-chip-name">بورد شحن</div>
+        <div class="product-chip-en">Charge Board</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">⚡</span>
+        <div class="product-chip-name">شريط شحن</div>
+        <div class="product-chip-en">Charging Flex</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">📷</span>
+        <div class="product-chip-name">كاميرا</div>
+        <div class="product-chip-en">Camera</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">📱</span>
+        <div class="product-chip-name">باك كفر</div>
+        <div class="product-chip-en">Back Cover</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">🏠</span>
+        <div class="product-chip-name">شاصي</div>
+        <div class="product-chip-en">Housing</div>
+      </a>
+      <a href="activate.html" class="product-chip">
+        <span class="product-chip-icon">🔊</span>
+        <div class="product-chip-name">قطع منوعة</div>
+        <div class="product-chip-en">Misc Parts</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section" id="features">
+  <div class="fade-up">
+    <div class="section-tag">لماذا أمواج</div>
+    <h2 class="section-title">تجربة تسوق<br>احترافية ومريحة</h2>
+    <p class="section-sub">نظام متكامل يربطك بمندوبنا لحظة بلحظة حتى يصلك طلبك</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card fade-up">
+      <div class="feature-icon">📦</div>
+      <div class="feature-title">تتبع الطلب فوري</div>
+      <div class="feature-desc">تابع حالة طلبك من التجهيز حتى التوصيل — قيد التجهيز، في الطريق، وصل.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🛡️</div>
+      <div class="feature-title">ضمان معتمد</div>
+      <div class="feature-desc">30 يوم ضمان على الشاشات، سنة على البطاريات. كل قطعة لها كود ضمان خاص.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🚚</div>
+      <div class="feature-title">توصيل لبابك</div>
+      <div class="feature-desc">مندوب خاص يوصل طلبك لمحلك مباشرة في كربلاء والمحافظات.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">💬</div>
+      <div class="feature-title">واتساب تلقائي</div>
+      <div class="feature-desc">إشعارات فورية على واتساب عند كل تحديث بطلبك أو ضمانك.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🔍</div>
+      <div class="feature-title">بحث ذكي</div>
+      <div class="feature-desc">ابحث عن أي موديل بالاسم أو الصورة عبر Google Lens مباشرة من الموقع.</div>
+    </div>
+    <div class="feature-card fade-up">
+      <div class="feature-icon">🛒</div>
+      <div class="feature-title">سلة مشتريات</div>
+      <div class="feature-desc">أضف أكثر من منتج بطلب واحد، اختر الكمية، وأرسل الطلب بنقرة.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-card fade-up">
+    <h2 class="cta-title">جاهز تبدأ؟ 🚀</h2>
+    <p class="cta-sub">سجل حسابك مجاناً وابدأ التسوق من أكبر مخزن قطع غيار موبايل في كربلاء</p>
+    <a href="activate.html" class="btn-primary" style="font-size:17px;padding:16px 40px;">
+      ابدأ التسوق الآن ←
+    </a>
+    <div class="contact-grid">
+      <a href="tel:7696" class="contact-chip">📞 7696</a>
+      <a href="tel:07709000160" class="contact-chip">📞 07709000160</a>
+      <a href="https://wa.me/9647709000160" target="_blank" class="contact-chip">🟢 واتساب</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <strong>أمواج للإلكترونيات</strong> — كربلاء، العراق &nbsp;·&nbsp;
+  جميع الحقوق محفوظة &copy; 2026
+</footer>
+
+<script>
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
