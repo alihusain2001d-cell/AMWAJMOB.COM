@@ -360,14 +360,14 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 /* ===== طلباتي ===== */
 .order-status-bar{display:flex;align-items:flex-start;margin:14px 0 10px;direction:rtl;}
 .order-step{flex:1;text-align:center;position:relative;}
-.order-step:not(:last-child)::after{content:'';position:absolute;top:13px;right:-50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
+.order-step:not(:last-child)::after{content:'';position:absolute;top:13px;right:50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
 .order-step.done::after{background:#25D366;}
 .step-dot{width:26px;height:26px;border-radius:50%;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;}
 .order-step.done .step-dot{background:#25D366;color:#fff;}
 .order-step.active .step-dot{background:#1e88e5;color:#fff;box-shadow:0 0 0 4px rgba(30,136,229,0.2);}
 .step-txt{font-size:10px;color:#aaa;margin-top:4px;}
 .order-step.done .step-txt,.order-step.active .step-txt{color:#333;font-weight:bold;}
-.order-card{background:#fff;border:1px solid #e0e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.order-card{background:#fff;border:1px solid #e0e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;}
 .order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .order-id-text{font-weight:bold;color:#1e3a5f;font-size:15px;}
 .status-pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold;}
