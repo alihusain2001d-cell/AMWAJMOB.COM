@@ -956,13 +956,13 @@ function buildOrderCard(o) {
   const timeline = isCancelled
     ? `<div style="text-align:center;padding:8px;color:#f44336;font-weight:bold;font-size:13px;background:#fff0f0;border-radius:8px;">❌ تم إلغاء هذا الطلب</div>`
     : `<div class="order-status-bar">
-        <div class="order-step \${cur===2?'active done':'done'}">
+        <div class="order-step \${cur>2?'done':cur===2?'active':''}">
           <div class="step-dot">📦</div><div class="step-txt">وصل</div>
         </div>
-        <div class="order-step \${cur===1?'active':cur>1?'done':''}">
+        <div class="order-step \${cur>1?'done':cur===1?'active':''}">
           <div class="step-dot">🚗</div><div class="step-txt">الطريق</div>
         </div>
-        <div class="order-step \${cur===0?'active':''}">
+        <div class="order-step \${cur>0?'done':cur===0?'active':''}">
           <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
         </div>
       </div>`;
