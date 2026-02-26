@@ -358,15 +358,14 @@ button:disabled { background: #ccc; cursor: not-allowed; }
 }
 
 /* ===== طلباتي ===== */
-.order-status-bar{display:flex;align-items:flex-start;margin:16px 0 12px;direction:ltr;}
+.order-status-bar{display:flex;align-items:flex-start;margin:14px 0 10px;}
 .order-step{flex:1;text-align:center;position:relative;}
-.order-step:not(:last-child)::after{content:'';position:absolute;top:16px;left:50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
+.order-step:not(:last-child)::after{content:'';position:absolute;top:13px;left:-50%;width:100%;height:3px;background:#e0e0e0;z-index:0;}
 .order-step.done::after{background:#25D366;}
-.order-step.active::after{background:#e0e0e0;}
-.step-dot{width:32px;height:32px;border-radius:50%;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1;}
-.order-step.done .step-dot{background:#25D366;color:#fff;box-shadow:0 0 0 3px rgba(37,211,102,0.2);}
-.order-step.active .step-dot{background:#1e88e5;color:#fff;box-shadow:0 0 0 4px rgba(30,136,229,0.25);}
-.step-txt{font-size:12px;color:#aaa;margin-top:6px;}
+.step-dot{width:26px;height:26px;border-radius:50%;background:#e0e0e0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;position:relative;z-index:1;}
+.order-step.done .step-dot{background:#25D366;color:#fff;}
+.order-step.active .step-dot{background:#1e88e5;color:#fff;box-shadow:0 0 0 4px rgba(30,136,229,0.2);}
+.step-txt{font-size:10px;color:#aaa;margin-top:4px;}
 .order-step.done .step-txt,.order-step.active .step-txt{color:#333;font-weight:bold;}
 .order-card{background:#fff;border:1px solid #e0e8f0;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
 .order-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
@@ -956,14 +955,14 @@ function buildOrderCard(o) {
   const timeline = isCancelled
     ? `<div style="text-align:center;padding:8px;color:#f44336;font-weight:bold;font-size:13px;background:#fff0f0;border-radius:8px;">❌ تم إلغاء هذا الطلب</div>`
     : `<div class="order-status-bar">
-        <div class="order-step \${cur>2?'done':cur===2?'active':''}">
-          <div class="step-dot">📦</div><div class="step-txt">وصل</div>
+        <div class="order-step ${cur===0?'active':cur>0?'done':''}">
+          <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
         </div>
-        <div class="order-step \${cur>1?'done':cur===1?'active':''}">
+        <div class="order-step ${cur===1?'active':cur>1?'done':''}">
           <div class="step-dot">🚗</div><div class="step-txt">الطريق</div>
         </div>
-        <div class="order-step \${cur>0?'done':cur===0?'active':''}">
-          <div class="step-dot">📋</div><div class="step-txt">تجهيز</div>
+        <div class="order-step ${cur===2?'active':''}">
+          <div class="step-dot">📦</div><div class="step-txt">وصل</div>
         </div>
       </div>`;
 
