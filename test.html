@@ -668,6 +668,46 @@ body {
   </div>
 </div>
 
+
+<!-- New Items Sheet -->
+<div id="newItemsSheet" class="bsheet-overlay" onclick="closeSheet('newItemsSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">✨ وصل جديد</span>
+      <button class="bsheet-close" onclick="closeSheet('newItemsSheet')">✕</button>
+    </div>
+    <div class="bsheet-body" id="newItemsSheetBody">
+      <div style="text-align:center;padding:30px;">
+        <div class="loading-spinner" style="margin:0 auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Search Sheet -->
+<div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔍 بحث في كل المواد</span>
+      <button class="bsheet-close" onclick="closeSheet('searchSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="bsheet-search-bar" style="margin-bottom:14px;">
+        <span style="font-size:18px;">🔍</span>
+        <input type="text" id="globalSheetSearch" placeholder="ابحث عن أي منتج..." oninput="doGlobalSheetSearch()" autofocus>
+      </div>
+      <div id="globalSheetResults">
+        <div style="text-align:center;padding:30px;color:#94A3B8;font-size:14px;">اكتب اسم المنتج للبحث...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- APP SHELL -->
 <div class="app-shell">
 
@@ -829,42 +869,6 @@ body {
 </div>
 
 
-
-<!-- New Items Sheet -->
-<div id="newItemsSheet" class="bsheet-overlay" onclick="closeSheet('newItemsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">✨ وصل جديد</span>
-      <button class="bsheet-close" onclick="closeSheet('newItemsSheet')">✕</button>
-    </div>
-    <div class="bsheet-body" id="newItemsSheetBody">
-      <div style="text-align:center;padding:30px;">
-        <div class="loading-spinner" style="margin:0 auto;"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Search Sheet -->
-<div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">🔍 بحث في كل المواد</span>
-      <button class="bsheet-close" onclick="closeSheet('searchSheet')">✕</button>
-    </div>
-    <div class="bsheet-body">
-      <div class="bsheet-search-bar" style="margin-bottom:14px;">
-        <span style="font-size:18px;">🔍</span>
-        <input type="text" id="globalSheetSearch" placeholder="ابحث عن أي منتج..." oninput="doGlobalSheetSearch()" autofocus>
-      </div>
-      <div id="globalSheetResults">
-        <div style="text-align:center;padding:30px;color:#94A3B8;font-size:14px;">اكتب اسم المنتج للبحث...</div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- COMPAT hidden -->
 <div id="loadingPage" style="display:none"></div>
