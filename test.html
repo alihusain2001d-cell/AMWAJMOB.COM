@@ -1636,151 +1636,29 @@ function renderAccountSheet() {
   const div = document.getElementById('accountContent');
   if (!div) return;
   if (user) {
-    div.innerHTML = `
-      <div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">
-        <div style="font-size:40px;margin-bottom:8px;">👤</div>
-        <div style="font-size:18px;font-weight:800;">${user.name}</div>
-        <div style="font-size:13px;opacity:0.85;margin-top:4px;">${user.shop}</div>
-        <div style="font-size:12px;opacity:0.7;margin-top:2px;">${user.phone}</div>
-      </div>
-      <button class="form-btn" onclick="openSheet('warrantySheet');document.getElementById('start').value=formatDate(new Date());closeSheet('accountSheet');">✅ تفعيل الضمان</button>
-      <button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openSheet('checkSheet');closeSheet('accountSheet');">🔍 التحقق من الضمان</button>
-      <button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>`;
+    div.innerHTML =
+      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">' +
+      '<div style="font-size:40px;margin-bottom:8px;">&#128100;</div>' +
+      '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>' +
+      '<div style="font-size:13px;opacity:.85;margin-top:4px;">' + user.shop + '</div>' +
+      '<div style="font-size:12px;opacity:.7;margin-top:2px;">' + user.phone + '</div>' +
+      '</div>' +
+      '<button class="form-btn" onclick="openWarrantyFromAccount()">&#9989; تفعيل الضمان</button>' +
+      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">&#128269; التحقق من الضمان</button>' +
+      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">&#128682; تسجيل الخروج</button>';
   } else {
-    div.innerHTML = `
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:48px;margin-bottom:12px;">👤</div>
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>
-      </div>
-      <button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>
-      <button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">تسجيل حساب جديد</button>`;
+    div.innerHTML =
+      '<div style="text-align:center;padding:20px 0;">' +
+      '<div style="font-size:48px;margin-bottom:12px;">&#128100;</div>' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>' +
+      '<div style="font-size:13px;color:#64748B;margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>' +
+      '</div>' +
+      '<button class="form-btn" onclick="toLoginScreen()">تسجيل الدخول</button>' +
+      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="toRegisterScreen()">تسجيل حساب جديد</button>';
   }
 }
-
-// ── Sheet system ──
-function openSheet(id) {
-  document.getElementById(id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeSheet(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-let sheetPriceType = 'screens';
-let sheetFlatSubType = null;
-
-function openProductSheet(type, title) {
-  sheetPriceType = type;
-  sheetFlatSubType = null;
-  currentPriceType = type;
-  document.getElementById('productsSheetTitle').textContent = title;
-  document.getElementById('sheetSearch').value = '';
-  document.getElementById('sheetResults').innerHTML = '';
-  renderSheetBrands(type);
-  openSheet('productsSheet');
-}
-
-function openFlatSubSheet(subType, labelAr, icon) {
-  closeFlatpowerModal();
-  sheetPriceType = 'flatpower';
-  sheetFlatSubType = subType;
-  currentPriceType = 'flatpower';
-  currentFlatSubType = subType;
-  document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
-  document.getElementById('sheetSearch').value = '';
-  document.getElementById('sheetResults').innerHTML = '';
-  renderSheetBrands('flatpower');
-  openSheet('productsSheet');
-}
-
-function renderSheetBrands(type) {
-  const grid = document.getElementById('sheetBrands');
-  const screenBrands = [
-    {label:'ايفون', sub:'iPhone', brands:'Apple'},
-    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
-    {label:'هواوي', sub:'Huawei', brands:'Huawei'},
-    {label:'شاومي', sub:'Xiaomi', brands:'Xiaomi'},
-    {label:'ريدمي + بوكو', sub:'Redmi & Poco', brands:'Redmi,Poco'},
-    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
-    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
-    {label:'فيفو + ويكو', sub:'Vivo & Wiko', brands:'Vivo,Wiko'},
-    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
-    {label:'ZTE + TCL + Alcatel', sub:'ZTE • TCL • Alcatel', brands:'ZTE,TCL,Alcatel,Blackview'},
-  ];
-  const commonBrands = [
-    {label:'هواوي + هونر', sub:'Huawei & Honor', brands:'Huawei,Honor'},
-    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
-    {label:'ايفون', sub:'Apple', brands:'Apple'},
-    {label:'شاومي + ريدمي + بوكو', sub:'Xiaomi • Redmi • Poco', brands:'Xiaomi,Redmi,Poco'},
-    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
-    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
-    {label:'فيفو', sub:'Vivo', brands:'Vivo'},
-    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
-  ];
-  const list = type === 'screens' ? screenBrands : commonBrands;
-  grid.style.display = 'grid';
-  grid.innerHTML = list.map(b =>
-    `<div class="sheet-brand-btn" onclick="openSheetBrand('${b.brands}')"><b>${b.label}</b><small>${b.sub}</small></div>`
-  ).join('');
-}
-
-function handleSheetSearch() {
-  const q = document.getElementById('sheetSearch').value.trim().toLowerCase();
-  const resultsDiv = document.getElementById('sheetResults');
-  const brandsDiv = document.getElementById('sheetBrands');
-  if (q.length < 2) { resultsDiv.innerHTML = ''; brandsDiv.style.display = 'grid'; return; }
-  brandsDiv.style.display = 'none';
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(p => (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q));
-  if (!filtered.length) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">لا توجد نتائج</div>'; return; }
-  resultsDiv.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${Math.min(filtered.length,50)} نتيجة</div>` +
-    filtered.slice(0,50).map(p => createSheetPriceItem(p)).join('');
-}
-
-function openSheetBrand(brandsStr) {
-  const brands = brandsStr.split(',').map(b => b.trim().toLowerCase());
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(p => brands.includes((p.brand||'').toLowerCase()));
-  const brandsDiv = document.getElementById('sheetBrands');
-  const resultsDiv = document.getElementById('sheetResults');
-  brandsDiv.style.display = 'none';
-  if (!filtered.length) {
-    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">لا توجد أسعار</div>';
-  } else {
-    resultsDiv.innerHTML =
-      `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <button onclick="backToSheetBrands()" style="background:#F1F5F9;color:var(--text);border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">← رجوع</button>
-        <span style="font-size:12px;color:var(--muted);">${filtered.length} منتج</span>
-      </div>` + filtered.map(p => createSheetPriceItem(p)).join('');
-  }
-}
-
-function backToSheetBrands() {
-  document.getElementById('sheetBrands').style.display = 'grid';
-  document.getElementById('sheetResults').innerHTML = '';
-  document.getElementById('sheetSearch').value = '';
-}
-
-function createSheetPriceItem(p) {
-  const price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
-  const qty = Number(p.qty) || 0;
-  const avail = qty > 0 && price > 0;
-  const priceHtml = avail
-    ? `<div class="pi-price avail">${formatPriceIQD(price)} IQD</div>`
-    : `<div class="pi-price unavail">غير متوفر</div>`;
-  const typeHtml = (sheetPriceType === 'screens' && p.type) ? `<span class="pi-type">${p.type}</span>` : '';
-  const notesHtml = (p.notes && p.notes.trim()) ? `<div class="pi-notes">📝 ${p.notes}</div>` : '';
-  const cartBtn = avail
-    ? `<button class="add-to-cart-btn" onclick='addToCartInSheet(${JSON.stringify(p).replace(/'/g,"&#39;")})'>🛒 إضافة للسلة</button>` : '';
-  return `<div class="price-item"><div class="pi-name">${p.name||'-'}</div><div class="pi-brand">${p.brand||'-'}</div>${typeHtml}${priceHtml}${notesHtml}${cartBtn}</div>`;
-}
-
-function addToCartInSheet(product) {
-  product.itemType = sheetPriceType;
-  addToCart(product);
-}
+function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
+function toRegisterScreen() { closeSheet('accountSheet'); showScreen('registerScreen'); }
 
 function openOrdersSheet() {
   openSheet('ordersSheet');
@@ -1939,8 +1817,8 @@ function renderAccountSheet() {
         '<div style="font-size:16px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>',
         '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>',
       '</div>',
-      '<button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>',
-      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">تسجيل حساب جديد</button>',
+      '<button class="form-btn" onclick="closeSheet(\'accountSheet\');showScreen(\'loginScreen\');">تسجيل الدخول</button>',
+      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet(\'accountSheet\');showScreen(\'registerScreen\');">تسجيل حساب جديد</button>',
     ].join('');
   }
 }
