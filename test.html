@@ -1727,20 +1727,7 @@ function showScreen(id) {
   if (target) target.style.display = (id === 'homeScreen') ? 'block' : 'block';
 }
 
-function footerTab(tab) {
-  document.querySelectorAll('.footer-tab').forEach(t => t.classList.remove('active'));
-  const tabEl = document.getElementById('tab-' + tab);
-  if (tabEl) tabEl.classList.add('active');
-  if (tab === 'search') {
-    focusHomeSearch();
-  }
-}
-
-function focusHomeSearch() {
-  showScreen('homeScreen');
-  const el = document.getElementById('globalSearch');
-  if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
-}
+// footerTab defined above
 
 function renderAccountSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
