@@ -773,7 +773,7 @@ body {
         </div>
         <div class="store-info">
           <div class="store-name">أمواج للإلكترونيات</div>
-          <div class="store-sub">مكتب قطع غيار موبايل — كربلاء</div>
+          <div class="store-sub"> قطع غيار موبايل — كربلاء</div>
           <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
         </div>
       </div>
@@ -1368,7 +1368,7 @@ async function checkWarranty() {
         else expiryDate = new Date(r.expiry);
       }
       let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000*60*60*24)) : null;
-      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
+      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
     }
