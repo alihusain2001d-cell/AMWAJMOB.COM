@@ -2106,6 +2106,7 @@ function openNewItemsSheet() {
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
 
+  // screens FIRST, then rest
   var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
   var typeLabels = {
     screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
@@ -2125,21 +2126,17 @@ function openNewItemsSheet() {
         var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
         if (qty > 0 && price > 0) {
           var isNew = isNewItem(p, t);
-          allItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length, isNew:isNew});
-          if (isNew) newItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length});
+          var obj = {p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length, isNew:isNew};
+          allItems.push(obj);
+          if (isNew) newItems.push(obj);
         }
       });
     });
 
-    if (!allItems.length && attempts < 12) {
-      setTimeout(tryRender, 500);
-      return;
-    }
+    if (!allItems.length && attempts < 12) { setTimeout(tryRender, 500); return; }
 
-    // Save new snapshot after reading
     saveSnapshotAfterLoad();
 
-    // Decide what to show
     var toShow = newItems.length > 0 ? newItems : allItems;
     var title = newItems.length > 0
       ? '🆕 وصل جديد (' + newItems.length + ' مادة)'
@@ -2150,8 +2147,11 @@ function openNewItemsSheet() {
       return;
     }
 
-    // Sort newest first
+    // Sort: screens first (newest first within screens), then rest (newest first)
     toShow.sort(function(a, b) {
+      var aIsScreen = a.type === 'screens' ? 0 : 1;
+      var bIsScreen = b.type === 'screens' ? 0 : 1;
+      if (aIsScreen !== bIsScreen) return aIsScreen - bIsScreen;
       return (b.i / b.total) - (a.i / a.total);
     });
 
