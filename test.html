@@ -725,6 +725,11 @@ body {
     <!-- HOME -->
     <div id="homeScreen" style="display:none;" class="home-page">
 
+
+      <!-- New Items Section -->
+      <div class="sec-label" id="newItemsLabel" style="display:none;">✨ وصل جديد</div>
+      <div id="newItemsGrid" style="display:none;padding:0 12px;margin-bottom:4px;"></div>
+
       <!-- Store card -->
       <div class="store-card">
         <div class="store-logo">
@@ -807,12 +812,12 @@ body {
   <!-- Footer nav -->
   <div class="app-footer">
     <button class="footer-tab active" id="tab-home" onclick="footerTab('home')">
-      <span class="footer-tab-icon">🏠</span>
-      <span class="footer-tab-label">الرئيسية</span>
+      <span class="footer-tab-icon">✨</span>
+      <span class="footer-tab-label">جديد</span>
     </button>
-    <button class="footer-tab" id="tab-search" onclick="footerTab('search')">
+    <button class="footer-tab" id="tab-search" onclick="openSearchSheet()">
       <span class="footer-tab-icon">🔍</span>
-      <span class="footer-tab-label">بحث الكل</span>
+      <span class="footer-tab-label">بحث</span>
     </button>
     <div class="footer-fab" onclick="openSheet('accountSheet');renderAccountSheet();">👤</div>
     <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
@@ -825,6 +830,27 @@ body {
       <span class="footer-tab-label">السلة</span>
       <span class="footer-tab-badge" id="footerCartBadge" style="display:none;">0</span>
     </button>
+  </div>
+</div>
+
+
+<!-- Search Sheet -->
+<div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔍 بحث في كل المواد</span>
+      <button class="bsheet-close" onclick="closeSheet('searchSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="bsheet-search-bar" style="margin-bottom:14px;">
+        <span style="font-size:18px;">🔍</span>
+        <input type="text" id="globalSheetSearch" placeholder="ابحث عن أي منتج..." oninput="doGlobalSheetSearch()" autofocus>
+      </div>
+      <div id="globalSheetResults">
+        <div style="text-align:center;padding:30px;color:#94A3B8;font-size:14px;">اكتب اسم المنتج للبحث...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2012,6 +2038,103 @@ function backToBrands() {}
 
 // ═══════════════════
 
+// ── Search Sheet ──
+function openSearchSheet() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
+  openSheet('searchSheet');
+  setTimeout(function() {
+    var el = document.getElementById('globalSheetSearch');
+    if (el) el.focus();
+  }, 300);
+}
+
+function doGlobalSheetSearch() {
+  var q = (document.getElementById('globalSheetSearch').value || '').trim().toLowerCase();
+  var resultsDiv = document.getElementById('globalSheetResults');
+  if (q.length < 2) {
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;font-size:14px;">اكتب اسم المنتج للبحث...</div>';
+    return;
+  }
+  // Search all data types
+  var allTypes = ['screens','batteries','chargeboards','flatcharging','backcover','housing','camera'];
+  var flatSubs = ['FLAT POWER','FLAT VOLUME','BUZZER','EAR SPEAKER','DOOR SIM','FINGERPRINT','OTHER'];
+  var results = [];
+  allTypes.forEach(function(t) {
+    var data = getDataForType(t);
+    data.forEach(function(p) {
+      if ((p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q)) {
+        results.push({p:p, type:t});
+      }
+    });
+  });
+  flatSubs.forEach(function(sub) {
+    var data = getFlatSubData(sub);
+    data.forEach(function(p) {
+      if ((p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q)) {
+        results.push({p:p, type:'flatpower', sub:sub});
+      }
+    });
+  });
+  if (!results.length) {
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+    return;
+  }
+  var oldSheetType = sheetPriceType;
+  var html = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(results.length,80) + ' نتيجة</div>';
+  results.slice(0,80).forEach(function(r) {
+    sheetPriceType = r.type;
+    sheetFlatSubType = r.sub || null;
+    html += createSheetPriceItem(r.p);
+  });
+  sheetPriceType = oldSheetType;
+  resultsDiv.innerHTML = html;
+}
+
+// ── New Arrivals ──
+function loadNewItems() {
+  var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera'];
+  var newItems = [];
+  allTypes.forEach(function(t) {
+    var data = getDataForType(t);
+    // Take last 3 available items from each type
+    var avail = data.filter(function(p) {
+      var qty = Number(p.qty)||0;
+      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+      return qty > 0 && price > 0;
+    });
+    avail.slice(-3).forEach(function(p) { newItems.push({p:p, type:t}); });
+  });
+  if (!newItems.length) return;
+  
+  var label = document.getElementById('newItemsLabel');
+  var grid = document.getElementById('newItemsGrid');
+  if (!label || !grid) return;
+  
+  label.style.display = 'flex';
+  grid.style.display = 'block';
+  
+  var typeLabels = {
+    screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
+    backcover:'باك كفر', housing:'شاصي', camera:'كاميرا'
+  };
+  
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+  newItems.slice(0,6).forEach(function(r) {
+    var p = r.p;
+    var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+    var typeLabel = typeLabels[r.type] || r.type;
+    html += '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px;cursor:pointer;" onclick="openProductSheet(\''+r.type+'\',\''+typeLabel+'\')">'+
+      '<div style="font-size:11px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 7px;display:inline-block;font-weight:700;margin-bottom:5px;">'+typeLabel+'</div>'+
+      '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+( p.name||'-')+'</div>'+
+      '<div style="font-size:12px;color:#64748B;">'+( p.brand||'-')+'</div>'+
+      '<div style="font-size:14px;font-weight:800;color:#0284C7;margin-top:5px;" dir="ltr">'+formatPriceIQD(price)+' IQD</div>'+
+      '</div>';
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
 async function appBoot() {
   const phone = localStorage.getItem('amwaj_phone');
   
@@ -2024,6 +2147,7 @@ async function appBoot() {
     const welcome = document.getElementById('storeWelcome');
     if (welcome) welcome.textContent = 'أهلاً ' + cachedUser.name.split(' ')[0] + ' 👋';
     showScreen('homeScreen');
+    loadNewItems();
     // Background refresh
     setTimeout(async () => {
       try {
@@ -2048,6 +2172,7 @@ async function appBoot() {
         const welcome = document.getElementById('storeWelcome');
         if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
         showScreen('homeScreen');
+        loadNewItems();
         try {
           const ords = await secureApiCall('getMyOrders', { phone: user.phone });
           if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
