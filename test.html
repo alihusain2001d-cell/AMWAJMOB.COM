@@ -905,10 +905,22 @@ function closeFlatpowerModal(e) {
   }
 }
 function footerTab(tab) {
-  document.querySelectorAll('.footer-tab').forEach(t => t.classList.remove('active'));
-  const tabEl = document.getElementById('tab-' + tab);
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
+  document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
+  var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
-  if (tab === 'search') focusHomeSearch();
+  if (tab === 'home') {
+    showScreen('homeScreen');
+    loadNewItems();
+    // Scroll to new items
+    setTimeout(function(){
+      var el = document.getElementById('newItemsLabel');
+      if (el) el.scrollIntoView({behavior:'smooth'});
+    }, 100);
+  } else if (tab === 'search') {
+    openSearchSheet();
+  }
 }
 function focusHomeSearch() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
@@ -2093,46 +2105,57 @@ function doGlobalSheetSearch() {
 
 // ── New Arrivals ──
 function loadNewItems() {
-  var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera'];
-  var newItems = [];
-  allTypes.forEach(function(t) {
-    var data = getDataForType(t);
-    // Take last 3 available items from each type
-    var avail = data.filter(function(p) {
-      var qty = Number(p.qty)||0;
-      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      return qty > 0 && price > 0;
-    });
-    avail.slice(-3).forEach(function(p) { newItems.push({p:p, type:t}); });
-  });
-  if (!newItems.length) return;
-  
   var label = document.getElementById('newItemsLabel');
   var grid = document.getElementById('newItemsGrid');
   if (!label || !grid) return;
   
   label.style.display = 'flex';
   grid.style.display = 'block';
+  grid.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
   
-  var typeLabels = {
-    screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
-    backcover:'باك كفر', housing:'شاصي', camera:'كاميرا'
-  };
-  
-  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
-  newItems.slice(0,6).forEach(function(r) {
-    var p = r.p;
-    var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-    var typeLabel = typeLabels[r.type] || r.type;
-    html += '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px;cursor:pointer;" onclick="openProductSheet(\''+r.type+'\',\''+typeLabel+'\')">'+
-      '<div style="font-size:11px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 7px;display:inline-block;font-weight:700;margin-bottom:5px;">'+typeLabel+'</div>'+
-      '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+( p.name||'-')+'</div>'+
-      '<div style="font-size:12px;color:#64748B;">'+( p.brand||'-')+'</div>'+
-      '<div style="font-size:14px;font-weight:800;color:#0284C7;margin-top:5px;" dir="ltr">'+formatPriceIQD(price)+' IQD</div>'+
-      '</div>';
-  });
-  html += '</div>';
-  grid.innerHTML = html;
+  // Wait for prices to load then show
+  setTimeout(function() {
+    var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
+    var newItems = [];
+    var typeLabels = {
+      screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
+      backcover:'باك كفر', housing:'شاصي', camera:'كاميرا', flatcharging:'شريط شحن'
+    };
+    
+    allTypes.forEach(function(t) {
+      var data = getDataForType(t);
+      // Get last added available items
+      var avail = data.filter(function(p) {
+        var qty = Number(p.qty)||0;
+        var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+        return qty > 0 && price > 0;
+      });
+      // Take last 2 from each type (newest added)
+      avail.slice(-2).forEach(function(p) {
+        newItems.push({p:p, type:t, label: typeLabels[t]||t});
+      });
+    });
+    
+    if (!newItems.length) {
+      grid.innerHTML = '<div style="text-align:center;padding:20px;color:#94A3B8;font-size:14px;">لا توجد مواد جديدة حالياً</div>';
+      return;
+    }
+    
+    var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+    newItems.forEach(function(r) {
+      var p = r.p;
+      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+      html += '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;" ' +
+        'onclick="requireAuth(function(){openProductSheet(\'' + r.type + '\',\'' + r.label + '\')})">' +
+        '<div style="font-size:10px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;display:inline-block;font-weight:700;margin-bottom:6px;">' + r.label + '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (p.name||'-') + '</div>' +
+        '<div style="font-size:11px;color:#64748B;">' + (p.brand||'-') + '</div>' +
+        '<div style="font-size:14px;font-weight:800;color:#0284C7;margin-top:6px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+        '</div>';
+    });
+    html += '</div>';
+    grid.innerHTML = html;
+  }, 1500);
 }
 
 async function appBoot() {
