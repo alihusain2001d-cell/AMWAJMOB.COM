@@ -2073,43 +2073,58 @@ function openNewItemsSheet() {
     screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
     backcover:'باك كفر', housing:'شاصي', camera:'كاميرا', flatcharging:'شريط شحن'
   };
-  var attempts = 0;
 
+  var attempts = 0;
   function tryRender() {
     attempts++;
-    var newItems = [];
+    // Collect ALL available items from all types, sorted newest (last in array = newest in sheet)
+    var allItems = [];
     allTypes.forEach(function(t) {
       var data = getDataForType(t) || [];
-      var avail = data.filter(function(p) {
-        return (Number(p.qty)||0) > 0 && (Number(String(p.price||'').replace(/[^0-9]/g,''))||0) > 0;
-      });
-      avail.slice(-3).forEach(function(p) {
-        newItems.push({p:p, type:t, label:typeLabels[t]||t});
+      data.forEach(function(p, idx) {
+        var qty = Number(p.qty)||0;
+        var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+        if (qty > 0 && price > 0) {
+          allItems.push({p:p, type:t, label:typeLabels[t]||t, idx:idx, total:data.length});
+        }
       });
     });
 
-    if (!newItems.length && attempts < 10) {
-      setTimeout(tryRender, 600);
+    if (!allItems.length && attempts < 12) {
+      setTimeout(tryRender, 500);
       return;
     }
 
-    if (!newItems.length) {
-      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد مواد حالياً</div>';
+    if (!allItems.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;font-size:15px;">لا توجد مواد متوفرة حالياً</div>';
       return;
     }
 
-    var html = '';
-    newItems.forEach(function(r) {
+    // Sort by recency: items closer to end of their array = newer
+    // Score = idx / total → higher score = newer
+    allItems.sort(function(a, b) {
+      return (b.idx / b.total) - (a.idx / a.total);
+    });
+
+    // Take top 20 newest
+    var toShow = allItems.slice(0, 20);
+
+    var html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;">آخر ' + toShow.length + ' مادة مضافة</div>';
+    toShow.forEach(function(r) {
       var p = r.p;
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      var pid = 'ni_' + Math.random().toString(36).substr(2,8);
+      var pid = 'ni_' + Math.random().toString(36).substr(2,9);
       window[pid] = Object.assign({}, p, {itemType: r.type});
       html +=
         '<div class="price-item">' +
-          '<div class="pi-name">' + (p.name||'-') + '</div>' +
-          '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-          '<span class="pi-type">' + r.label + '</span>' +
-          '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<span class="pi-type">' + r.label + '</span>' +
+              '<div class="pi-name" style="margin-top:5px;">' + (p.name||'-') + '</div>' +
+              '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+              '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+            '</div>' +
+          '</div>' +
           (p.notes ? '<div class="pi-notes">📝 ' + p.notes + '</div>' : '') +
           '<button class="add-to-cart-btn" onclick="addToCart(window[\'' + pid + '\'])">🛒 إضافة للسلة</button>' +
         '</div>';
