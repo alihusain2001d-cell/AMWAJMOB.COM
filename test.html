@@ -1782,7 +1782,7 @@ function renderSheetBrands(type) {
   const list = type === 'screens' ? screenBrands : commonBrands;
   grid.style.display = 'grid';
   grid.innerHTML = list.map(function(b) {
-    return '<div class="sheet-brand-btn" onclick="openSheetBrand('' + b.brands + '')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
+    return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
   }).join('');
 }
 
@@ -1833,17 +1833,26 @@ function createSheetPriceItem(p) {
     : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + p.notes + '</div>' : '';
-  var safeP = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
-  var cartBtn = avail
-    ? '<button class="add-to-cart-btn" onclick='addToCartInSheet(' + JSON.stringify(p).replace(/'/g,"&#39;") + ')'>&#128722; إضافة للسلة</button>'
-    : '';
-  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div><div class="pi-brand">' + (p.brand||'-') + '</div>' + typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+  var cartBtn = '';
+  if (avail) {
+    var pid = 'pi_' + Math.random().toString(36).substr(2,6);
+    window['_pd_' + pid] = p;
+    cartBtn = '<button class="add-to-cart-btn" onclick="addToCartById(\'_pd_' + pid + '\')">&#128722; إضافة للسلة</button>';
+  }
+  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
+    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
 }
 
-function addToCartInSheet(product) {
-  product.itemType = sheetPriceType;
-  addToCart(product);
+function addToCartById(key) {
+  var p = window[key];
+  if (!p) return;
+  p.itemType = sheetPriceType;
+  addToCart(p);
 }
+
+
+// addToCartInSheet replaced by addToCartById
 
 function loadMyOrders() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -1879,7 +1888,7 @@ function loadMyOrders() {
         return '<div class="order-step ' + cls + '"><div class="step-dot">' + stepIcons[i] + '</div><div class="step-txt">' + stepLabels[i] + '</div></div>';
       }).join('') + '</div>';
       var cancelBtn = o.status === 'pending'
-        ? '<button class="cancel-order-btn" onclick="cancelOrder('' + o.orderId + '')">&#10060; إلغاء الطلب</button>' : '';
+        ? '<button class="cancel-order-btn" onclick="cancelOrderById(this)" data-id="' + (o.orderId||'') + '">&#10060; إلغاء الطلب</button>' : '';
       return '<div class="order-card">' +
         '<div class="order-card-header">' +
           '<span class="order-id-text">' + (o.orderId||'-') + '</span>' +
@@ -1917,6 +1926,15 @@ function openCartSheet() {
   if (shopEl) shopEl.value = user.shop || '';
   const saved = localStorage.getItem('amwaj_address');
   if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
+}
+
+
+function cancelOrderById(btn) {
+  var orderId = btn.getAttribute('data-id');
+  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
+  secureApiCall('cancelOrder', { orderId: orderId })
+    .then(function() { loadMyOrders(); })
+    .catch(function() { alert('فشل إلغاء الطلب'); });
 }
 
 function cancelOrder(orderId) {
