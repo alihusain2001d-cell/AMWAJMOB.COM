@@ -725,11 +725,6 @@ body {
     <!-- HOME -->
     <div id="homeScreen" style="display:none;" class="home-page">
 
-
-      <!-- New Items Section -->
-      <div class="sec-label" id="newItemsLabel" style="display:none;">✨ وصل جديد</div>
-      <div id="newItemsGrid" style="display:none;padding:0 12px;margin-bottom:4px;"></div>
-
       <!-- Store card -->
       <div class="store-card">
         <div class="store-logo">
@@ -834,6 +829,23 @@ body {
 </div>
 
 
+
+<!-- New Items Sheet -->
+<div id="newItemsSheet" class="bsheet-overlay" onclick="closeSheet('newItemsSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">✨ وصل جديد</span>
+      <button class="bsheet-close" onclick="closeSheet('newItemsSheet')">✕</button>
+    </div>
+    <div class="bsheet-body" id="newItemsSheetBody">
+      <div style="text-align:center;padding:30px;">
+        <div class="loading-spinner" style="margin:0 auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Search Sheet -->
 <div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
   <div class="bsheet" onclick="event.stopPropagation()">
@@ -911,12 +923,7 @@ function footerTab(tab) {
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'home') {
-    showScreen('homeScreen');
-    loadNewItems();
-    setTimeout(function(){
-      var body = document.getElementById('appBody');
-      if (body) body.scrollTo({top:0, behavior:'smooth'});
-    }, 100);
+    openNewItemsSheet();
   } else if (tab === 'search') {
     openSearchSheet();
   }
@@ -2050,6 +2057,64 @@ function backToBrands() {}
 // ═══════════════════
 
 // ── Search Sheet ──
+function openNewItemsSheet() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
+  openSheet('newItemsSheet');
+  var body = document.getElementById('newItemsSheetBody');
+  body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
+
+  var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
+  var typeLabels = {
+    screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
+    backcover:'باك كفر', housing:'شاصي', camera:'كاميرا', flatcharging:'شريط شحن'
+  };
+  var attempts = 0;
+
+  function tryRender() {
+    attempts++;
+    var newItems = [];
+    allTypes.forEach(function(t) {
+      var data = getDataForType(t) || [];
+      var avail = data.filter(function(p) {
+        return (Number(p.qty)||0) > 0 && (Number(String(p.price||'').replace(/[^0-9]/g,''))||0) > 0;
+      });
+      avail.slice(-3).forEach(function(p) {
+        newItems.push({p:p, type:t, label:typeLabels[t]||t});
+      });
+    });
+
+    if (!newItems.length && attempts < 10) {
+      setTimeout(tryRender, 600);
+      return;
+    }
+
+    if (!newItems.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد مواد حالياً</div>';
+      return;
+    }
+
+    var html = '';
+    newItems.forEach(function(r) {
+      var p = r.p;
+      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+      var pid = 'ni_' + Math.random().toString(36).substr(2,8);
+      window[pid] = Object.assign({}, p, {itemType: r.type});
+      html +=
+        '<div class="price-item">' +
+          '<div class="pi-name">' + (p.name||'-') + '</div>' +
+          '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+          '<span class="pi-type">' + r.label + '</span>' +
+          '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+          (p.notes ? '<div class="pi-notes">📝 ' + p.notes + '</div>' : '') +
+          '<button class="add-to-cart-btn" onclick="addToCart(window[\'' + pid + '\'])">🛒 إضافة للسلة</button>' +
+        '</div>';
+    });
+    body.innerHTML = html;
+  }
+  tryRender();
+}
+
 function openSearchSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u) { showScreen('loginScreen'); return; }
@@ -2185,7 +2250,6 @@ async function appBoot() {
     const welcome = document.getElementById('storeWelcome');
     if (welcome) welcome.textContent = 'أهلاً ' + cachedUser.name.split(' ')[0] + ' 👋';
     showScreen('homeScreen');
-    loadNewItems();
     // Background refresh
     setTimeout(async () => {
       try {
@@ -2210,7 +2274,6 @@ async function appBoot() {
         const welcome = document.getElementById('storeWelcome');
         if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
         showScreen('homeScreen');
-        loadNewItems();
         try {
           const ords = await secureApiCall('getMyOrders', { phone: user.phone });
           if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
