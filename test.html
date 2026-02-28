@@ -1115,14 +1115,14 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); result.innerHTML = ""; }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("storeWelcome"); if(_sw) _sw.textContent = "أهلاً " + user.name.split(" ")[0] + " 👋"; showScreen("homeScreen"); result.innerHTML = ""; }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
 }
 
 function logout() {
-  localStorage.removeItem("amwaj_user"); localStorage.removeItem("amwaj_phone");
+  localStorage.removeItem("amwaj_user"); localStorage.removeItem("amwaj_phone"); showScreen("registerScreen");
   document.getElementById("loginPhone").value = ""; document.getElementById("loginResult").innerHTML = "";
   cart = []; saveCart(); showPage("loginPage");
 }
@@ -1205,19 +1205,7 @@ function searchGoogleByImage(input) {
 }
 
 async function checkAutoLogin() {
-  showPage("loadingPage");
-  const savedPhone = localStorage.getItem("amwaj_phone");
-  if (savedPhone) {
-    try {
-      const rows = await fetchCustomers();
-      const user = rows.find(r => normalizePhone(r.phone) === savedPhone);
-      if (user && user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); document.getElementById("welcomeUser").innerHTML = `مرحباً ${user.name} 👋<br><small>${user.shop}</small>`; showPage("homePage"); return; }
-      else if (user && user.status === "pending") { document.getElementById("loginPhone").value = savedPhone; showPage("loginPage"); document.getElementById("loginResult").innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة</div>'; return; }
-      else if (user && user.status === "rejected") { localStorage.removeItem("amwaj_phone"); localStorage.removeItem("amwaj_user"); showPage("loginPage"); return; }
-      else { localStorage.removeItem("amwaj_phone"); localStorage.removeItem("amwaj_user"); showPage("registerPage"); return; }
-    } catch (e) { console.error(e); showPage("registerPage"); return; }
-  }
-  showPage("registerPage");
+  // Disabled — using appBoot() instead
 }
 
 function formatDate(d) {
@@ -1799,30 +1787,50 @@ function updateCartBadge(count) {
 
 // App boot
 async function appBoot() {
-  showScreen('loadingScreen');
   const phone = localStorage.getItem('amwaj_phone');
-  if (!phone) { setTimeout(() => showScreen('registerScreen'), 800); return; }
-  try {
-    const rows = await fetchCustomers();
-    const user = rows.find(r => normalizePhone(r.phone) === phone);
-    if (user && user.status === 'approved') {
-      localStorage.setItem('amwaj_user', JSON.stringify(user));
-      const welcome = document.getElementById('storeWelcome');
-      if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
-      showScreen('homeScreen');
+  
+  // No phone saved → register screen immediately
+  if (!phone) { showScreen('registerScreen'); return; }
+
+  // Cached approved user → show home IMMEDIATELY, no loading
+  const cachedUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (cachedUser && cachedUser.status === 'approved') {
+    const welcome = document.getElementById('storeWelcome');
+    if (welcome) welcome.textContent = 'أهلاً ' + cachedUser.name.split(' ')[0] + ' 👋';
+    showScreen('homeScreen');
+    // Background refresh
+    setTimeout(async () => {
       try {
-        const ords = await secureApiCall('getMyOrders', { phone: user.phone });
+        const rows = await fetchCustomers();
+        const user = rows.find(r => normalizePhone(r.phone) === phone);
+        if (user) localStorage.setItem('amwaj_user', JSON.stringify(user));
+        const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone });
         if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
       } catch(e) {}
-    } else if (user && user.status === 'pending') {
-      showScreen('registerScreen');
-      document.getElementById('regResult').innerHTML = '<div class="result pending">طلبك قيد المراجعة، انتظر موافقة الإدارة ⏳</div>';
-    } else {
-      showScreen('loginScreen');
-    }
-  } catch(e) {
-    setTimeout(() => showScreen('loginScreen'), 1000);
+    }, 1500);
+    return;
   }
+
+  // No cached user, phone exists → show login immediately, fetch in background
+  showScreen('loginScreen');
+  setTimeout(async () => {
+    try {
+      const rows = await fetchCustomers();
+      const user = rows.find(r => normalizePhone(r.phone) === phone);
+      if (user && user.status === 'approved') {
+        localStorage.setItem('amwaj_user', JSON.stringify(user));
+        const welcome = document.getElementById('storeWelcome');
+        if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
+        showScreen('homeScreen');
+        try {
+          const ords = await secureApiCall('getMyOrders', { phone: user.phone });
+          if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
+        } catch(e) {}
+      } else if (user && user.status === 'pending') {
+        document.getElementById('loginResult').innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر موافقة الإدارة</div>';
+      }
+    } catch(e) {}
+  }, 500);
 }
 
 // Override submitRegistration to redirect to home
