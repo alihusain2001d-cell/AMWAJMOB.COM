@@ -679,7 +679,7 @@ body {
       <button class="header-icon-btn" onclick="focusHomeSearch()" title="بحث">🔍</button>
       <button class="header-icon-btn" onclick="openCartSheet()" title="السلة" style="position:relative;">
         🛒
-        <span id="headerCartBadge" style="display:none;position:absolute;top:-2px;left:-2px;background:var(--red);color:white;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:bold;line-height:16px;text-align:center;"></span>
+        <span id="headerCartBadge" style="display:none;position:absolute;top:-3px;left:-3px;background:#EF4444;color:white;border-radius:50%;min-width:17px;height:17px;font-size:10px;font-weight:800;line-height:17px;text-align:center;padding:0 3px;"></span>
       </button>
     </div>
   </div>
@@ -911,16 +911,6 @@ function updateOrdersBadge(count) {
     const el = document.getElementById(id);
     if (el) { el.style.display = count > 0 ? 'flex' : 'none'; el.textContent = count; }
   });
-}
-function updateCartBadge(count) {
-  const cb = document.getElementById('cartBadge');
-  if (cb) cb.style.display = count > 0 ? 'flex' : 'none';
-  const cc = document.getElementById('cartCount');
-  if (cc) { cc.style.display = count > 0 ? 'flex' : 'none'; cc.textContent = count; }
-  const hb = document.getElementById('headerCartBadge');
-  if (hb) { hb.style.display = count > 0 ? 'flex' : 'none'; hb.textContent = count; }
-  const fb = document.getElementById('footerCartBadge');
-  if (fb) { fb.style.display = count > 0 ? 'flex' : 'none'; fb.textContent = count; }
 }
 // renderAccountSheet — see clean version below
 
@@ -1428,19 +1418,27 @@ function loadCart() {
   if (saved) { cart = JSON.parse(saved); updateCartBadge(); }
 }
 
+function updateCartBadge() {
+  var n = (cart||[]).reduce(function(s,i){ return s+(Number(i.quantity)||1); }, 0);
+  
+  // Floating btn
+  var cb = document.getElementById('cartBadge');
+  if (cb) cb.style.display = n > 0 ? 'flex' : 'none';
+  var cc = document.getElementById('cartCount');
+  if (cc) cc.textContent = n;
+
+  // Header icon badge
+  var hb = document.getElementById('headerCartBadge');
+  if (hb) { hb.textContent = n; hb.style.display = n > 0 ? 'flex' : 'none'; }
+
+  // Footer tab badge
+  var fb = document.getElementById('footerCartBadge');
+  if (fb) { fb.textContent = n; fb.style.display = n > 0 ? 'block' : 'none'; }
+}
+
+
 function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); updateCartBadge(); }
 
-function updateCartBadge() {
-  var total = (cart||[]).reduce(function(s,i){ return s+(Number(i.quantity)||1); },0);
-  var badge = document.getElementById('cartBadge');
-  var countEl = document.getElementById('cartCount');
-  if (badge) badge.style.display = total>0?'flex':'none';
-  if (countEl) { countEl.textContent = total; }
-  var hb = document.getElementById('headerCartBadge');
-  if (hb) { hb.textContent = total; hb.style.display = total>0?'flex':'none'; }
-  var fb = document.getElementById('footerCartBadge');
-  if (fb) { fb.textContent = total; fb.style.display = total>0?'block':'none'; }
-}
 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -1791,18 +1789,6 @@ function updateOrdersBadge(count) {
 
 // Override updateCartBadge to also update footer and header
 const _origUpdateCart = window.updateCartBadge;
-function updateCartBadge(count) {
-  // floating badge
-  const cb = document.getElementById('cartBadge');
-  const cc = document.getElementById('cartCount');
-  if (cb && cc) { cb.style.display = count > 0 ? 'flex' : 'none'; cc.textContent = count; }
-  // header badge
-  const hb = document.getElementById('headerCartBadge');
-  if (hb) { hb.style.display = count > 0 ? 'flex' : 'none'; hb.textContent = count; }
-  // footer badge
-  const fb = document.getElementById('footerCartBadge');
-  if (fb) { fb.style.display = count > 0 ? 'flex' : 'none'; fb.textContent = count; }
-}
 
 // App boot
 // ═══ SHEET & PRODUCT FUNCTIONS ═══
