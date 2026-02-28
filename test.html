@@ -853,6 +853,67 @@ body {
 <div id="cartPage" style="display:none"></div>
 <button id="backToTopBtn" style="display:none;" onclick="backToBrands()"></button>
 
+<script>
+// ═══ CORE FUNCTIONS — LOADED FIRST ═══
+
+function showScreen(id) {
+  ['loadingScreen','registerScreen','loginScreen','homeScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = 'none';
+  });
+  const t = document.getElementById(id);
+  if (t) t.style.display = 'block';
+}
+
+function openSheet(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('open'); document.body.style.overflow = ''; }
+}
+function openFlatpowerModal() {
+  const m = document.getElementById('flatpowerModal');
+  if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
+}
+function closeFlatpowerModal(e) {
+  if (!e || e.target === document.getElementById('flatpowerModal')) {
+    const m = document.getElementById('flatpowerModal');
+    if (m) m.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+function footerTab(tab) {
+  document.querySelectorAll('.footer-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (tab === 'search') focusHomeSearch();
+}
+function focusHomeSearch() {
+  showScreen('homeScreen');
+  const el = document.getElementById('globalSearch');
+  if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
+}
+function updateOrdersBadge(count) {
+  ['ordersBadge','footerOrdersBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = count > 0 ? 'flex' : 'none'; el.textContent = count; }
+  });
+}
+function updateCartBadge(count) {
+  const cb = document.getElementById('cartBadge');
+  if (cb) cb.style.display = count > 0 ? 'flex' : 'none';
+  const cc = document.getElementById('cartCount');
+  if (cc) { cc.style.display = count > 0 ? 'flex' : 'none'; cc.textContent = count; }
+  const hb = document.getElementById('headerCartBadge');
+  if (hb) { hb.style.display = count > 0 ? 'flex' : 'none'; hb.textContent = count; }
+  const fb = document.getElementById('footerCartBadge');
+  if (fb) { fb.style.display = count > 0 ? 'flex' : 'none'; fb.textContent = count; }
+}
+// renderAccountSheet — see clean version below
+
+
 
 const CONFIG = {
   API_URL: "https://script.google.com/macros/s/AKfycbwHckW5szEk1Bi5s4BndOPUeO5vwd2ilMXxjYjv7WxJUeWH09H19vzl1oyUo2zf0SXDUQ/exec",
@@ -1853,6 +1914,47 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('❌ PWA: Service Worker registration failed', err));
   });
 }
+
+// renderAccountSheet — clean version
+function renderAccountSheet() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  const div = document.getElementById('accountContent');
+  if (!div) return;
+  if (user) {
+    div.innerHTML = [
+      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">',
+        '<div style="font-size:40px;margin-bottom:8px;">👤</div>',
+        '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>',
+        '<div style="font-size:13px;opacity:.85;margin-top:4px;">' + user.shop + '</div>',
+        '<div style="font-size:12px;opacity:.7;margin-top:2px;">' + user.phone + '</div>',
+      '</div>',
+      '<button class="form-btn" onclick="openWarrantyFromAccount()">✅ تفعيل الضمان</button>',
+      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">🔍 التحقق من الضمان</button>',
+      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>',
+    ].join('');
+  } else {
+    div.innerHTML = [
+      '<div style="text-align:center;padding:20px 0;">',
+        '<div style="font-size:48px;margin-bottom:12px;">👤</div>',
+        '<div style="font-size:16px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>',
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>',
+      '</div>',
+      '<button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>',
+      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">تسجيل حساب جديد</button>',
+    ].join('');
+  }
+}
+function openWarrantyFromAccount() {
+  closeSheet('accountSheet');
+  openSheet('warrantySheet');
+  const s = document.getElementById('start');
+  if (s) s.value = formatDate(new Date());
+}
+function openCheckFromAccount() {
+  closeSheet('accountSheet');
+  openSheet('checkSheet');
+}
+
 </script>
 </body>
 
