@@ -157,12 +157,14 @@ body {
 
 .footer-tab-badge {
   position: absolute;
-  top: 6px; right: 50%;
-  margin-right: -22px;
-  background: var(--red); color: white;
-  border-radius: 50%; width: 16px; height: 16px;
-  font-size: 9px; font-weight: bold;
-  display: none; align-items: center; justify-content: center;
+  top: 4px; right: 50%;
+  margin-right: -20px;
+  background: #EF4444; color: white;
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 10px; font-weight: 800;
+  line-height: 18px; text-align: center;
+  display: none;
+  pointer-events: none;
 }
 
 /* ── Center FAB (account) ── */
@@ -738,15 +740,15 @@ body {
       <!-- Quick actions -->
       <div class="sec-label">إجراءات سريعة</div>
       <div class="quick-strip">
-        <div class="quick-btn" onclick="openSheet('warrantySheet');document.getElementById('start').value=formatDate(new Date());">
+        <div class="quick-btn" onclick="requireAuth(function(){openSheet('warrantySheet');document.getElementById('start').value=formatDate(new Date());})">
           <span class="quick-btn-icon">✅</span>
           <div class="quick-btn-label">تفعيل الضمان</div>
         </div>
-        <div class="quick-btn" onclick="openSheet('checkSheet')">
+        <div class="quick-btn" onclick="requireAuth(function(){openSheet('checkSheet');})">
           <span class="quick-btn-icon">🔍</span>
           <div class="quick-btn-label">التحقق</div>
         </div>
-        <div class="quick-btn" onclick="openOrdersSheet()" style="position:relative;">
+        <div class="quick-btn" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
           <span class="quick-btn-icon">📦</span>
           <div class="quick-btn-label">طلباتي</div>
           <span class="quick-badge" id="ordersBadge"></span>
@@ -764,28 +766,28 @@ body {
       <!-- Products -->
       <div class="sec-label">المنتجات</div>
       <div class="products-grid">
-        <div class="prod-card" onclick="openProductSheet('screens','🖥️ الشاشات')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
           <span class="prod-icon">🖥️</span><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('batteries','🔋 البطاريات')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('batteries','🔋 البطاريات');})">
           <span class="prod-icon">🔋</span><div class="prod-name">البطاريات</div><div class="prod-name-en">Batteries</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('chargeboards','🔌 بورد شحن')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('chargeboards','🔌 بورد شحن');})">
           <span class="prod-icon">🔌</span><div class="prod-name">بورد شحن</div><div class="prod-name-en">Charge Board</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('flatcharging','⚡ شريط شحن')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
           <span class="prod-icon">⚡</span><div class="prod-name">شريط شحن</div><div class="prod-name-en">Charging Flex</div>
         </div>
-        <div class="prod-card" onclick="openFlatpowerModal()">
+        <div class="prod-card" onclick="requireAuth(function(){openFlatpowerModal();})">
           <span class="prod-icon">🔊</span><div class="prod-name">قطع منوعة</div><div class="prod-name-en">Misc Parts</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('backcover','📱 باك كفر')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
           <span class="prod-icon">📱</span><div class="prod-name">باك كفر</div><div class="prod-name-en">Back Cover</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('housing','🏠 شاصي')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
           <span class="prod-icon">🏠</span><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('camera','📷 كاميرا')">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
           <span class="prod-icon">📷</span><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div>
         </div>
       </div>
@@ -828,7 +830,7 @@ body {
       <span class="footer-tab-label">بحث الكل</span>
     </button>
     <div class="footer-fab" onclick="openSheet('accountSheet');renderAccountSheet();">👤</div>
-    <button class="footer-tab" id="tab-orders" onclick="openOrdersSheet()" style="position:relative;">
+    <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
@@ -866,6 +868,12 @@ function showScreen(id) {
   if (t) t.style.display = 'block';
 }
 
+function requireAuth(fn) {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
+  fn();
+}
+
 function openSheet(id) {
   const el = document.getElementById(id);
   if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
@@ -892,6 +900,8 @@ function footerTab(tab) {
   if (tab === 'search') focusHomeSearch();
 }
 function focusHomeSearch() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   showScreen('homeScreen');
   const el = document.getElementById('globalSearch');
   if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
@@ -1191,6 +1201,8 @@ function logout() {
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
 function handleGlobalSearch(event) {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
@@ -1419,18 +1431,15 @@ function loadCart() {
 function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); updateCartBadge(); }
 
 function updateCartBadge() {
-  var total = (cart||[]).reduce(function(s, i) { return s + (Number(i.quantity) || 1); }, 0);
-  
+  var total = (cart||[]).reduce(function(s,i){ return s+(Number(i.quantity)||1); },0);
   var badge = document.getElementById('cartBadge');
   var countEl = document.getElementById('cartCount');
-  if (badge) badge.style.display = total > 0 ? 'flex' : 'none';
-  if (countEl) { countEl.textContent = total; countEl.style.display = total > 0 ? 'flex' : 'none'; }
-  
+  if (badge) badge.style.display = total>0?'flex':'none';
+  if (countEl) { countEl.textContent = total; }
   var hb = document.getElementById('headerCartBadge');
-  if (hb) { hb.textContent = total; hb.style.display = total > 0 ? 'flex' : 'none'; }
-  
+  if (hb) { hb.textContent = total; hb.style.display = total>0?'flex':'none'; }
   var fb = document.getElementById('footerCartBadge');
-  if (fb) { fb.textContent = total; fb.style.display = total > 0 ? 'flex' : 'none'; }
+  if (fb) { fb.textContent = total; fb.style.display = total>0?'block':'none'; }
 }
 
 function addToCart(product) {
