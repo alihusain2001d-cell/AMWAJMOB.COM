@@ -854,6 +854,7 @@ body {
 <button id="backToTopBtn" style="display:none;" onclick="backToBrands()"></button>
 
 <script>
+let cart = [];
 // ═══ CORE FUNCTIONS — LOADED FIRST ═══
 
 function showScreen(id) {
@@ -1410,8 +1411,6 @@ function backToBrands() {
   document.getElementById("brandsSection").style.display = "block";
 }
 
-let cart = [];
-
 function loadCart() {
   const saved = localStorage.getItem('amwaj_cart');
   if (saved) { cart = JSON.parse(saved); updateCartBadge(); }
@@ -1420,20 +1419,17 @@ function loadCart() {
 function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); updateCartBadge(); }
 
 function updateCartBadge() {
-  const total = cart.reduce(function(s, i) { return s + (i.quantity || 1); }, 0);
+  var total = (cart||[]).reduce(function(s, i) { return s + (Number(i.quantity) || 1); }, 0);
   
-  // floating badge
-  const badge = document.getElementById('cartBadge');
-  const countEl = document.getElementById('cartCount');
+  var badge = document.getElementById('cartBadge');
+  var countEl = document.getElementById('cartCount');
   if (badge) badge.style.display = total > 0 ? 'flex' : 'none';
   if (countEl) { countEl.textContent = total; countEl.style.display = total > 0 ? 'flex' : 'none'; }
   
-  // header badge
-  const hb = document.getElementById('headerCartBadge');
+  var hb = document.getElementById('headerCartBadge');
   if (hb) { hb.textContent = total; hb.style.display = total > 0 ? 'flex' : 'none'; }
   
-  // footer badge
-  const fb = document.getElementById('footerCartBadge');
+  var fb = document.getElementById('footerCartBadge');
   if (fb) { fb.textContent = total; fb.style.display = total > 0 ? 'flex' : 'none'; }
 }
 
