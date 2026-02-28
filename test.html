@@ -1725,6 +1725,224 @@ function updateCartBadge(count) {
 }
 
 // App boot
+// ═══ SHEET & PRODUCT FUNCTIONS ═══
+
+let sheetPriceType = 'screens';
+let sheetFlatSubType = null;
+
+function openProductSheet(type, title) {
+  sheetPriceType = type;
+  sheetFlatSubType = null;
+  if (typeof currentPriceType !== 'undefined') currentPriceType = type;
+  if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
+  document.getElementById('productsSheetTitle').textContent = title;
+  document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetResults').innerHTML = '';
+  renderSheetBrands(type);
+  openSheet('productsSheet');
+}
+
+function openFlatSubSheet(subType, labelAr, icon) {
+  closeFlatpowerModal();
+  sheetPriceType = 'flatpower';
+  sheetFlatSubType = subType;
+  if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
+  if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
+  document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
+  document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetResults').innerHTML = '';
+  renderSheetBrands('flatpower');
+  openSheet('productsSheet');
+}
+
+function renderSheetBrands(type) {
+  const grid = document.getElementById('sheetBrands');
+  const screenBrands = [
+    {label:'ايفون', sub:'iPhone', brands:'Apple'},
+    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
+    {label:'هواوي', sub:'Huawei', brands:'Huawei'},
+    {label:'شاومي', sub:'Xiaomi', brands:'Xiaomi'},
+    {label:'ريدمي + بوكو', sub:'Redmi & Poco', brands:'Redmi,Poco'},
+    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
+    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
+    {label:'فيفو + ويكو', sub:'Vivo & Wiko', brands:'Vivo,Wiko'},
+    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
+    {label:'ZTE + TCL + Alcatel', sub:'ZTE • TCL • Alcatel', brands:'ZTE,TCL,Alcatel,Blackview'},
+  ];
+  const commonBrands = [
+    {label:'هواوي + هونر', sub:'Huawei & Honor', brands:'Huawei,Honor'},
+    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
+    {label:'ايفون', sub:'Apple', brands:'Apple'},
+    {label:'شاومي + ريدمي + بوكو', sub:'Xiaomi • Redmi • Poco', brands:'Xiaomi,Redmi,Poco'},
+    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
+    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
+    {label:'فيفو', sub:'Vivo', brands:'Vivo'},
+    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
+  ];
+  const list = type === 'screens' ? screenBrands : commonBrands;
+  grid.style.display = 'grid';
+  grid.innerHTML = list.map(function(b) {
+    return '<div class="sheet-brand-btn" onclick="openSheetBrand('' + b.brands + '')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
+  }).join('');
+}
+
+function handleSheetSearch() {
+  const q = document.getElementById('sheetSearch').value.trim().toLowerCase();
+  const resultsDiv = document.getElementById('sheetResults');
+  const brandsDiv = document.getElementById('sheetBrands');
+  if (q.length < 2) { resultsDiv.innerHTML = ''; brandsDiv.style.display = 'grid'; return; }
+  brandsDiv.style.display = 'none';
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  const filtered = data.filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
+  if (!filtered.length) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج</div>'; return; }
+  resultsDiv.innerHTML = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
+    filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+}
+
+function openSheetBrand(brandsStr) {
+  const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
+  const brandsDiv = document.getElementById('sheetBrands');
+  const resultsDiv = document.getElementById('sheetResults');
+  brandsDiv.style.display = 'none';
+  if (!filtered.length) {
+    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد أسعار</div>';
+  } else {
+    resultsDiv.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+      '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
+      '<span style="font-size:12px;color:#64748B;">' + filtered.length + ' منتج</span>' +
+      '</div>' +
+      filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+  }
+}
+
+function backToSheetBrands() {
+  document.getElementById('sheetBrands').style.display = 'grid';
+  document.getElementById('sheetResults').innerHTML = '';
+  document.getElementById('sheetSearch').value = '';
+}
+
+function createSheetPriceItem(p) {
+  var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
+  var qty = Number(p.qty) || 0;
+  var avail = qty > 0 && price > 0;
+  var priceHtml = avail
+    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
+    : '<div class="pi-price unavail">غير متوفر</div>';
+  var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
+  var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + p.notes + '</div>' : '';
+  var safeP = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+  var cartBtn = avail
+    ? '<button class="add-to-cart-btn" onclick='addToCartInSheet(' + JSON.stringify(p).replace(/'/g,"&#39;") + ')'>&#128722; إضافة للسلة</button>'
+    : '';
+  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div><div class="pi-brand">' + (p.brand||'-') + '</div>' + typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+}
+
+function addToCartInSheet(product) {
+  product.itemType = sheetPriceType;
+  addToCart(product);
+}
+
+function loadMyOrders() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  const listDiv = document.getElementById('myOrdersList');
+  const loadDiv = document.getElementById('myOrdersLoading');
+  if (!user) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">يرجى تسجيل الدخول أولاً</div>';
+    return;
+  }
+  if (loadDiv) loadDiv.style.display = 'block';
+  if (listDiv) listDiv.innerHTML = '';
+  secureApiCall('getMyOrders', { phone: user.phone }).then(function(orders) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (!orders || !orders.length) {
+      if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#64748B;">&#128230; لا توجد طلبات</div>';
+      return;
+    }
+    var steps = ['pending','picked','delivered'];
+    var stepLabels = ['تجهيز','الطريق','وصل'];
+    var stepIcons = ['&#128203;','&#128663;','&#128230;'];
+    var html = orders.map(function(o) {
+      var cur = steps.indexOf(o.status);
+      var statusText = {pending:'قيد التجهيز',picked:'في الطريق',delivered:'تم التوصيل',cancelled:'ملغي'}[o.status] || o.status;
+      var pillClass = 'pill-' + (o.status || 'pending');
+      var items = (o.items||[]).map(function(it) {
+        var p2 = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
+        return '<div class="order-item-row">• ' + (it.name||'-') + ' × ' + (it.quantity||1) + ' — <span dir="ltr">' + formatPriceIQD(p2) + ' IQD</span></div>';
+      }).join('');
+      var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
+      var timelineHtml = '<div class="order-status-bar">' + steps.map(function(s,i) {
+        var cls = cur > i ? 'done' : (cur === i ? 'active' : '');
+        return '<div class="order-step ' + cls + '"><div class="step-dot">' + stepIcons[i] + '</div><div class="step-txt">' + stepLabels[i] + '</div></div>';
+      }).join('') + '</div>';
+      var cancelBtn = o.status === 'pending'
+        ? '<button class="cancel-order-btn" onclick="cancelOrder('' + o.orderId + '')">&#10060; إلغاء الطلب</button>' : '';
+      return '<div class="order-card">' +
+        '<div class="order-card-header">' +
+          '<span class="order-id-text">' + (o.orderId||'-') + '</span>' +
+          '<span class="status-pill ' + pillClass + '">' + statusText + '</span>' +
+        '</div>' +
+        timelineHtml + items +
+        '<div style="font-weight:800;font-size:15px;color:#0284C7;margin-top:8px;border-top:1px solid #E2E8F0;padding-top:8px;">المجموع: <span dir="ltr">' + formatPriceIQD(total) + ' IQD</span></div>' +
+        '<div style="font-size:12px;color:#64748B;margin-top:4px;">&#128205; ' + (o.address||'-') + '</div>' +
+        cancelBtn + '</div>';
+    }).join('');
+    if (listDiv) listDiv.innerHTML = html;
+    var active = orders.filter(function(o) { return o.status === 'pending' || o.status === 'picked'; });
+    updateOrdersBadge(active.length);
+  }).catch(function(e) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div class="result error">&#9888;&#65039; فشل تحميل الطلبات</div>';
+  });
+}
+
+function openOrdersSheet() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) { showScreen('loginScreen'); return; }
+  openSheet('ordersSheet');
+  loadMyOrders();
+}
+
+function openCartSheet() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) { showScreen('loginScreen'); return; }
+  openSheet('cartSheet');
+  renderCart();
+  const nameEl = document.getElementById('orderName');
+  const shopEl = document.getElementById('orderShop');
+  if (nameEl) nameEl.value = user.name || '';
+  if (shopEl) shopEl.value = user.shop || '';
+  const saved = localStorage.getItem('amwaj_address');
+  if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
+}
+
+function cancelOrder(orderId) {
+  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
+  secureApiCall('cancelOrder', { orderId: orderId })
+    .then(function() { loadMyOrders(); })
+    .catch(function() { alert('فشل إلغاء الطلب'); });
+}
+
+// Override old functions
+function openCart() { openCartSheet(); }
+function openFlatSub(subType, labelAr, icon) { openFlatSubSheet(subType, labelAr, icon); }
+function openLensFromModal() { closeFlatpowerModal(); openProductSheet('camera', '&#128247; عدسة كاميرا'); }
+function showPage(id) { /* no-op */ }
+function backHome() { showScreen('homeScreen'); }
+function showLoginPage() { showScreen('loginScreen'); }
+function showRegisterPage() { showScreen('registerScreen'); }
+function openAct() { openSheet('warrantySheet'); const s = document.getElementById('start'); if(s) s.value = formatDate(new Date()); }
+function openChk() { openSheet('checkSheet'); }
+function openMyOrders() { openOrdersSheet(); }
+function showBackButton() {}
+function hideBackButton() {}
+function backToBrands() {}
+
+// ═══════════════════
+
 async function appBoot() {
   const phone = localStorage.getItem('amwaj_phone');
   
