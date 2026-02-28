@@ -2048,6 +2048,57 @@ function backToBrands() {}
 // ═══════════════════
 
 // ── Search Sheet ──
+// ── Snapshot system for "جديد" detection ──
+var _prevSnapshot = null;
+
+function saveSnapshot(allData) {
+  var snap = {};
+  var typeKeys = {
+    screens:'s', batteries:'b', chargeboards:'c', backcover:'bc',
+    housing:'h', camera:'cam', flatcharging:'fc'
+  };
+  Object.keys(typeKeys).forEach(function(t) {
+    var data = allData[t] || [];
+    data.forEach(function(p) {
+      var key = typeKeys[t] + '|' + (p.name||'').trim();
+      snap[key] = Number(p.qty)||0;
+    });
+  });
+  localStorage.setItem('amwaj_snap', JSON.stringify(snap));
+  localStorage.setItem('amwaj_snap_time', Date.now().toString());
+}
+
+function getPrevSnapshot() {
+  try {
+    var s = localStorage.getItem('amwaj_snap');
+    return s ? JSON.parse(s) : {};
+  } catch(e) { return {}; }
+}
+
+function isNewItem(p, type) {
+  var typeKeys = {
+    screens:'s', batteries:'b', chargeboards:'c', backcover:'bc',
+    housing:'h', camera:'cam', flatcharging:'fc'
+  };
+  var snap = getPrevSnapshot();
+  if (!Object.keys(snap).length) return false; // first load ever, nothing is "new"
+  var key = (typeKeys[type]||type) + '|' + (p.name||'').trim();
+  var prevQty = snap.hasOwnProperty(key) ? snap[key] : -1;
+  // New if: didn't exist before OR was 0 and now has stock
+  return prevQty === -1 || prevQty === 0;
+}
+
+function saveSnapshotAfterLoad() {
+  var allData = {
+    screens: pricesData||[], batteries: batteriesData||[],
+    chargeboards: chargeboardsData||[], backcover: backcoverData||[],
+    housing: housingData||[], camera: cameraData||[], flatcharging: flatchargingData||[]
+  };
+  // Only save if we have data
+  var total = Object.values(allData).reduce(function(s,a){return s+a.length;},0);
+  if (total > 0) saveSnapshot(allData);
+}
+
 function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u) { showScreen('loginScreen'); return; }
@@ -2064,15 +2115,18 @@ function openNewItemsSheet() {
   var attempts = 0;
   function tryRender() {
     attempts++;
-    // Collect ALL available items from all types, sorted newest (last in array = newest in sheet)
+    var newItems = [];
     var allItems = [];
+
     allTypes.forEach(function(t) {
       var data = getDataForType(t) || [];
-      data.forEach(function(p, idx) {
+      data.forEach(function(p, i) {
         var qty = Number(p.qty)||0;
         var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
         if (qty > 0 && price > 0) {
-          allItems.push({p:p, type:t, label:typeLabels[t]||t, idx:idx, total:data.length});
+          var isNew = isNewItem(p, t);
+          allItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length, isNew:isNew});
+          if (isNew) newItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length});
         }
       });
     });
@@ -2082,21 +2136,27 @@ function openNewItemsSheet() {
       return;
     }
 
-    if (!allItems.length) {
-      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;font-size:15px;">لا توجد مواد متوفرة حالياً</div>';
+    // Save new snapshot after reading
+    saveSnapshotAfterLoad();
+
+    // Decide what to show
+    var toShow = newItems.length > 0 ? newItems : allItems;
+    var title = newItems.length > 0
+      ? '🆕 وصل جديد (' + newItems.length + ' مادة)'
+      : '📦 المخزون الحالي (' + allItems.length + ' مادة)';
+
+    if (!toShow.length) {
+      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد مواد متوفرة</div>';
       return;
     }
 
-    // Sort by recency: items closer to end of their array = newer
-    // Score = idx / total → higher score = newer
-    allItems.sort(function(a, b) {
-      return (b.idx / b.total) - (a.idx / a.total);
+    // Sort newest first
+    toShow.sort(function(a, b) {
+      return (b.i / b.total) - (a.i / a.total);
     });
 
-    // Take top 20 newest
-    var toShow = allItems.slice(0, 20);
+    var html = '<div style="font-size:13px;font-weight:700;color:#0284C7;margin-bottom:12px;padding:8px 12px;background:#EFF6FF;border-radius:10px;">' + title + '</div>';
 
-    var html = '<div style="font-size:12px;color:#64748B;margin-bottom:10px;">آخر ' + toShow.length + ' مادة مضافة</div>';
     toShow.forEach(function(r) {
       var p = r.p;
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
@@ -2104,14 +2164,13 @@ function openNewItemsSheet() {
       window[pid] = Object.assign({}, p, {itemType: r.type});
       html +=
         '<div class="price-item">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
-            '<div style="flex:1;min-width:0;">' +
-              '<span class="pi-type">' + r.label + '</span>' +
-              '<div class="pi-name" style="margin-top:5px;">' + (p.name||'-') + '</div>' +
-              '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-              '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
-            '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
+            '<span class="pi-type">' + r.label + '</span>' +
+            (r.isNew ? '<span style="background:#DCFCE7;color:#166534;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">✨ جديد</span>' : '') +
           '</div>' +
+          '<div class="pi-name">' + (p.name||'-') + '</div>' +
+          '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+          '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           (p.notes ? '<div class="pi-notes">📝 ' + p.notes + '</div>' : '') +
           '<button class="add-to-cart-btn" onclick="addToCart(window[\'' + pid + '\'])">🛒 إضافة للسلة</button>' +
         '</div>';
@@ -2303,6 +2362,8 @@ loadBackCover(); loadHousing(); loadLens(); loadCamera();
 loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc();
 loadCart();
 appBoot();
+// Save snapshot after data loads
+setTimeout(saveSnapshotAfterLoad, 4000);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
