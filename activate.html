@@ -775,7 +775,7 @@ body {
         </div>
         <div class="store-info">
           <div class="store-name">أمواج للإلكترونيات</div>
-          <div class="store-sub"> قطع غيار موبايل — كربلاء المقدسة</div>
+          <div class="store-sub">مكتب قطع غيار موبايل — كربلاء</div>
           <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
         </div>
       </div>
@@ -789,7 +789,7 @@ body {
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openSheet('checkSheet');})">
           <span class="quick-btn-icon">🔍</span>
-          <div class="quick-btn-label">التحقق من الضمان</div>
+          <div class="quick-btn-label">التحقق</div>
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
           <span class="quick-btn-icon">📦</span>
@@ -1499,7 +1499,7 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { showScreen('loginScreen'); return; }
-  if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
+  if (!product.itemType) product.itemType = (typeof sheetPriceType !== 'undefined' && sheetPriceType) ? sheetPriceType : ((typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens');
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1695,10 +1695,13 @@ async function submitOrder() {
         body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
       setTimeout(() => {
-        cart = []; saveCart(); result.innerHTML = ''; submitBtn.disabled = false;
+        cart = [];
+        saveCart();
+        result.innerHTML = '';
+        submitBtn.disabled = false;
         if (clearBtn) clearBtn.disabled = false;
-        if (document.getElementById('cartPage').style.display !== 'none') renderCart(); else closeCart();
-      }, 20000);
+        closeSheet('cartSheet');
+      }, 4000);
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
     console.error(e);
@@ -1944,9 +1947,8 @@ function createSheetPriceItem(p) {
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var cartBtn = '';
   if (avail) {
-    var pid = 'pi_' + Math.random().toString(36).substr(2,6);
-    window['_pd_' + pid] = p;
-    cartBtn = '<button class="add-to-cart-btn" onclick="addToCartById(\'_pd_' + pid + '\')">&#128722; إضافة للسلة</button>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
+    cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">&#128722; إضافة للسلة</button>';
   }
   return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
