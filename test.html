@@ -775,7 +775,7 @@ body {
         </div>
         <div class="store-info">
           <div class="store-name">أمواج للإلكترونيات</div>
-          <div class="store-sub"> قطع غيار موبايل — كربلاء</div>
+          <div class="store-sub">مكتب قطع غيار موبايل — كربلاء</div>
           <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
         </div>
       </div>
@@ -789,7 +789,7 @@ body {
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openSheet('checkSheet');})">
           <span class="quick-btn-icon">🔍</span>
-          <div class="quick-btn-label">التحقق من الضمان</div>
+          <div class="quick-btn-label">التحقق</div>
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
           <span class="quick-btn-icon">📦</span>
@@ -2129,7 +2129,6 @@ function openNewItemsSheet() {
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
 
-  // screens FIRST, then rest
   var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
   var typeLabels = {
     screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
@@ -2140,61 +2139,64 @@ function openNewItemsSheet() {
   function tryRender() {
     attempts++;
     var newItems = [];
-    var allItems = [];
 
     allTypes.forEach(function(t) {
       var data = getDataForType(t) || [];
       data.forEach(function(p, i) {
         var qty = Number(p.qty)||0;
         var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-        if (qty > 0 && price > 0) {
-          var isNew = isNewItem(p, t);
-          var obj = {p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length, isNew:isNew};
-          allItems.push(obj);
-          if (isNew) newItems.push(obj);
+        if (qty > 0 && price > 0 && isNewItem(p, t)) {
+          newItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length});
         }
       });
     });
 
-    if (!allItems.length && attempts < 12) { setTimeout(tryRender, 500); return; }
+    // Keep trying if no data loaded yet
+    if (!newItems.length) {
+      // Check if data actually loaded at all
+      var totalLoaded = allTypes.reduce(function(s,t){ return s+(getDataForType(t)||[]).length; },0);
+      if (totalLoaded === 0 && attempts < 12) {
+        setTimeout(tryRender, 500);
+        return;
+      }
+    }
 
+    // Save snapshot AFTER reading (next time, current items = old)
     saveSnapshotAfterLoad();
 
-    var toShow = newItems.length > 0 ? newItems : allItems;
-    var title = newItems.length > 0
-      ? '🆕 وصل جديد (' + newItems.length + ' مادة)'
-      : '📦 المخزون الحالي (' + allItems.length + ' مادة)';
-
-    if (!toShow.length) {
-      body.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد مواد متوفرة</div>';
+    // No new items
+    if (!newItems.length) {
+      body.innerHTML =
+        '<div style="text-align:center;padding:40px 20px;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
+          '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:8px;">لا يوجد جديد</div>' +
+          '<div style="font-size:14px;color:#94A3B8;">سيظهر هنا أي منتج جديد يُضاف للمخزون</div>' +
+        '</div>';
       return;
     }
 
-    // Sort: screens first (newest first within screens), then rest (newest first)
-    toShow.sort(function(a, b) {
-      var aIsScreen = a.type === 'screens' ? 0 : 1;
-      var bIsScreen = b.type === 'screens' ? 0 : 1;
-      if (aIsScreen !== bIsScreen) return aIsScreen - bIsScreen;
+    // Sort: screens first, then newest first
+    newItems.sort(function(a, b) {
+      var aS = a.type === 'screens' ? 0 : 1;
+      var bS = b.type === 'screens' ? 0 : 1;
+      if (aS !== bS) return aS - bS;
       return (b.i / b.total) - (a.i / a.total);
     });
 
-    var html = '<div style="font-size:13px;font-weight:700;color:#0284C7;margin-bottom:12px;padding:8px 12px;background:#EFF6FF;border-radius:10px;">' + title + '</div>';
+    var html = '<div style="font-size:13px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + newItems.length + ' مادة جديدة</div>';
 
-    toShow.forEach(function(r) {
+    newItems.forEach(function(r) {
       var p = r.p;
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
       var pid = cacheProduct(Object.assign({}, p, {itemType: r.type}));
       html +=
         '<div class="price-item">' +
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
-            '<span class="pi-type">' + r.label + '</span>' +
-            (r.isNew ? '<span style="background:#DCFCE7;color:#166534;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;">✨ جديد</span>' : '') +
-          '</div>' +
-          '<div class="pi-name">' + (p.name||'-') + '</div>' +
-          '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+          '<span class="pi-type">' + r.label + '</span>' +
+          '<div class="pi-name" style="margin-top:5px;">' + sanitize(p.name||'-') + '</div>' +
+          '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
           '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
-          (p.notes ? '<div class="pi-notes">📝 ' + p.notes + '</div>' : '') +
-          '<button class="add-to-cart-btn" onclick="addToCart(window[\'' + pid + '\'])">🛒 إضافة للسلة</button>' +
+          (p.notes ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '') +
+          '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>' +
         '</div>';
     });
     body.innerHTML = html;
