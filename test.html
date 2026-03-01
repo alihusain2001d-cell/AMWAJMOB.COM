@@ -1499,7 +1499,7 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { showScreen('loginScreen'); return; }
-  if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
+  if (!product.itemType) product.itemType = (typeof sheetPriceType !== 'undefined' && sheetPriceType) ? sheetPriceType : ((typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens');
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1695,10 +1695,13 @@ async function submitOrder() {
         body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
       setTimeout(() => {
-        cart = []; saveCart(); result.innerHTML = ''; submitBtn.disabled = false;
+        cart = [];
+        saveCart();
+        result.innerHTML = '';
+        submitBtn.disabled = false;
         if (clearBtn) clearBtn.disabled = false;
-        if (document.getElementById('cartPage').style.display !== 'none') renderCart(); else closeCart();
-      }, 20000);
+        closeSheet('cartSheet');
+      }, 4000);
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
     console.error(e);
@@ -1944,9 +1947,8 @@ function createSheetPriceItem(p) {
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var cartBtn = '';
   if (avail) {
-    var pid = 'pi_' + Math.random().toString(36).substr(2,6);
-    window['_pd_' + pid] = p;
-    cartBtn = '<button class="add-to-cart-btn" onclick="addToCartById(\'_pd_' + pid + '\')">&#128722; إضافة للسلة</button>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
+    cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">&#128722; إضافة للسلة</button>';
   }
   return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
@@ -1954,9 +1956,9 @@ function createSheetPriceItem(p) {
 }
 
 function addToCartById(key) {
-  var p = getCachedProduct(key);
-  if (!p) return;
-  p.itemType = sheetPriceType;
+  var p = getCachedProduct(key) || window[key] || window['_pd_' + key];
+  if (!p) { console.warn('product not found:', key); return; }
+  if (!p.itemType) p.itemType = sheetPriceType;
   addToCart(p);
 }
 
@@ -2041,9 +2043,50 @@ function openCartSheet() {
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
-    .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+  
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الإلغاء...';
+  
+  secureApiCall('cancelOrder', { 
+    orderId: orderId,
+    phone: user.phone
+  })
+    .then(function() { 
+      loadMyOrders();
+    })
+    .catch(function(e) { 
+      console.error('cancelOrder error:', e);
+      // Try direct fetch with more details
+      fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          apiKey: CONFIG.API_KEY,
+          action: 'cancelOrder',
+          identifier: CONFIG.DEVICE_ID,
+          orderId: orderId,
+          phone: user.phone
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (result.success) {
+          loadMyOrders();
+        } else {
+          btn.disabled = false;
+          btn.textContent = '❌ إلغاء الطلب';
+          alert('فشل الإلغاء: ' + (result.error || 'خطأ غير معروف'));
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = '❌ إلغاء الطلب';
+        alert('فشل الاتصال بالسيرفر');
+      });
+    });
 }
 
 function cancelOrder(orderId) {
@@ -2194,6 +2237,7 @@ function openNewItemsSheet() {
           '<span class="pi-type">' + r.label + '</span>' +
           '<div class="pi-name" style="margin-top:5px;">' + sanitize(p.name||'-') + '</div>' +
           '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
+          (p.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(p.type) + '</span>' : '') +
           '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           (p.notes ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '') +
           '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>' +
@@ -2317,7 +2361,7 @@ function loadNewItems() {
             '<div style="font-size:12px;color:#64748B;">' + (p.brand||'-') + '</div>' +
             '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           '</div>' +
-          '<button onclick="addToCart(window[\'' + pid + '\'])" ' +
+          '<button onclick="addToCart(getCachedProduct(\'' + pid + '\'))" ' +
             'style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>' +
         '</div>';
     });
