@@ -344,16 +344,17 @@ body {
 .contact-btn {
   flex: 1;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 8px;
+  border: 1.5px solid rgba(2,132,199,0.3);
+  border-radius: 14px;
+  padding: 16px 8px;
   text-align: center;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   color: var(--primary);
   font-family: 'Tajawal', sans-serif;
   transition: all 0.2s;
+  letter-spacing: 0.5px;
 }
 .contact-btn:active { background: var(--primary-light); }
 
@@ -839,7 +840,7 @@ body {
         <a href="tel:7696" class="contact-btn">📱 7696</a>
         <a href="tel:07709000160" class="contact-btn">📱 07709000160</a>
       </div>
-      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn">🟢 واتساب</a>
+      <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:19px;padding:16px;">🟢 واتساب</a>
 
       <div style="height:16px;"></div>
     </div>
@@ -1368,7 +1369,7 @@ async function checkWarranty() {
         else expiryDate = new Date(r.expiry);
       }
       let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000*60*60*24)) : null;
-      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
+      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
     }
