@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -748,7 +749,7 @@ body {
       <div id="regResult"></div>
       <div class="switch-link"><p>عندك حساب مسبقاً؟</p><button class="form-btn gray" onclick="showScreen('loginScreen')">تسجيل الدخول</button></div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
-        <a href="tel:7696" style="font-weight:bold;color:var(--primary);">📱        7696</a> &nbsp;
+        <a href="tel:7696" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
         <a href="tel:07709000160" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
     </div>
@@ -886,6 +887,26 @@ body {
 
 <script>
 let cart = [];
+
+function sanitize(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+var _productCache = {};
+function cacheProduct(p) {
+  var pid = 'p_' + Math.random().toString(36).substr(2,9);
+  _productCache[pid] = p;
+  return pid;
+}
+function getCachedProduct(pid) {
+  return _productCache[pid] || null;
+}
 // ═══ CORE FUNCTIONS — LOADED FIRST ═══
 
 function showScreen(id) {
@@ -1920,7 +1941,7 @@ function createSheetPriceItem(p) {
     ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
     : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
-  var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + p.notes + '</div>' : '';
+  var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var cartBtn = '';
   if (avail) {
     var pid = 'pi_' + Math.random().toString(36).substr(2,6);
@@ -1933,7 +1954,7 @@ function createSheetPriceItem(p) {
 }
 
 function addToCartById(key) {
-  var p = window[key];
+  var p = getCachedProduct(key);
   if (!p) return;
   p.itemType = sheetPriceType;
   addToCart(p);
@@ -2162,8 +2183,7 @@ function openNewItemsSheet() {
     toShow.forEach(function(r) {
       var p = r.p;
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      var pid = 'ni_' + Math.random().toString(36).substr(2,9);
-      window[pid] = Object.assign({}, p, {itemType: r.type});
+      var pid = cacheProduct(Object.assign({}, p, {itemType: r.type}));
       html +=
         '<div class="price-item">' +
           '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
@@ -2220,7 +2240,7 @@ function doGlobalSheetSearch() {
     });
   });
   if (!results.length) {
-    resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد نتائج لـ &quot;' + sanitize(q) + '&quot;</div>';
     return;
   }
   var oldSheetType = sheetPriceType;
