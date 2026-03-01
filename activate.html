@@ -775,7 +775,7 @@ body {
         </div>
         <div class="store-info">
           <div class="store-name">أمواج للإلكترونيات</div>
-          <div class="store-sub">مكتب قطع غيار موبايل — كربلاء</div>
+          <div class="store-sub">قطع غيار موبايل — كربلاء المقدسة</div>
           <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
         </div>
       </div>
@@ -789,7 +789,7 @@ body {
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openSheet('checkSheet');})">
           <span class="quick-btn-icon">🔍</span>
-          <div class="quick-btn-label">التحقق</div>
+          <div class="quick-btn-label">التحقق من الضمان</div>
         </div>
         <div class="quick-btn" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
           <span class="quick-btn-icon">📦</span>
@@ -2043,9 +2043,50 @@ function openCartSheet() {
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
-    .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+  
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الإلغاء...';
+  
+  secureApiCall('cancelOrder', { 
+    orderId: orderId,
+    phone: user.phone
+  })
+    .then(function() { 
+      loadMyOrders();
+    })
+    .catch(function(e) { 
+      console.error('cancelOrder error:', e);
+      // Try direct fetch with more details
+      fetch(CONFIG.API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          apiKey: CONFIG.API_KEY,
+          action: 'cancelOrder',
+          identifier: CONFIG.DEVICE_ID,
+          orderId: orderId,
+          phone: user.phone
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (result.success) {
+          loadMyOrders();
+        } else {
+          btn.disabled = false;
+          btn.textContent = '❌ إلغاء الطلب';
+          alert('فشل الإلغاء: ' + (result.error || 'خطأ غير معروف'));
+        }
+      })
+      .catch(function() {
+        btn.disabled = false;
+        btn.textContent = '❌ إلغاء الطلب';
+        alert('فشل الاتصال بالسيرفر');
+      });
+    });
 }
 
 function cancelOrder(orderId) {
