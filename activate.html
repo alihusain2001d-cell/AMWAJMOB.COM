@@ -745,7 +745,7 @@ body {
       <div class="form-group"><label class="form-label">الاسم الثلاثي</label><input class="form-input" type="text" id="regName" placeholder="مثال: أحمد محمد علي"></div>
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
-            <button class="form-btn" id="btnRegister" onclick="submitRegistration()">إرسال طلب التسجيل</button>
+      <button class="form-btn" id="btnRegister" onclick="submitRegistration()">إرسال طلب التسجيل</button>
       <div id="regResult"></div>
       <div class="switch-link"><p>عندك حساب مسبقاً؟</p><button class="form-btn gray" onclick="showScreen('loginScreen')">تسجيل الدخول</button></div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
@@ -763,11 +763,6 @@ body {
       <button class="form-btn" id="btnLogin" onclick="checkLogin()">دخول</button>
       <div id="loginResult"></div>
       <div class="switch-link"><p>ما عندك حساب؟</p><button class="form-btn success-btn" onclick="showScreen('registerScreen')">تسجيل حساب جديد</button></div>
-      <div style="margin-top:12px;text-align:center;">
-        <button onclick="enterAsGuest()" style="background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:10px 24px;color:#64748B;font-size:14px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;width:100%;">
-          👁️ تصفح كضيف بدون تسجيل
-        </button>
-      </div>
     </div>
 
     <!-- HOME -->
@@ -814,28 +809,28 @@ body {
       <!-- Products -->
       <div class="sec-label">المنتجات</div>
       <div class="products-grid">
-        <div class="prod-card" onclick="openProductSheet('screens','🖥️ الشاشات');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
           <span class="prod-icon">🖥️</span><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('batteries','🔋 البطاريات');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('batteries','🔋 البطاريات');})">
           <span class="prod-icon">🔋</span><div class="prod-name">البطاريات</div><div class="prod-name-en">Batteries</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('chargeboards','🔌 بورد شحن');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('chargeboards','🔌 بورد شحن');})">
           <span class="prod-icon">🔌</span><div class="prod-name">بورد شحن</div><div class="prod-name-en">Charge Board</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('flatcharging','⚡ شريط شحن');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
           <span class="prod-icon">⚡</span><div class="prod-name">شريط شحن</div><div class="prod-name-en">Charging Flex</div>
         </div>
-        <div class="prod-card" onclick="openFlatpowerModal();">
+        <div class="prod-card" onclick="requireAuth(function(){openFlatpowerModal();})">
           <span class="prod-icon">🔊</span><div class="prod-name">قطع منوعة</div><div class="prod-name-en">Misc Parts</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('backcover','📱 باك كفر');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
           <span class="prod-icon">📱</span><div class="prod-name">باك كفر</div><div class="prod-name-en">Back Cover</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('housing','🏠 شاصي');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
           <span class="prod-icon">🏠</span><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
         </div>
-        <div class="prod-card" onclick="openProductSheet('camera','📷 كاميرا');">
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
           <span class="prod-icon">📷</span><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div>
         </div>
       </div>
@@ -863,7 +858,7 @@ body {
       <span class="footer-tab-label">بحث</span>
     </button>
     <div class="footer-fab" onclick="openSheet('accountSheet');renderAccountSheet();">👤</div>
-    <button class="footer-tab" id="tab-orders" onclick="openOrdersSheet();" style="position:relative;">
+    <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
@@ -950,7 +945,7 @@ function closeFlatpowerModal(e) {
 }
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  // guests can browse but not order/warrant
+  if (!u) { showScreen('loginScreen'); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
@@ -961,6 +956,8 @@ function footerTab(tab) {
   }
 }
 function focusHomeSearch() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   showScreen('homeScreen');
   const el = document.getElementById('globalSearch');
   if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
@@ -1250,6 +1247,8 @@ function logout() {
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
 function handleGlobalSearch(event) {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
@@ -1277,8 +1276,8 @@ function handleGlobalSearch(event) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
     const available = qty > 0 && price > 0;
-    const priceText = !available ? 'غير متوفر' : isGuest() ? '🔒 سجل لرؤية السعر' : formatPriceIQD(price) + ' د.ع';
-    const priceColor = !available ? '#c62828' : isGuest() ? '#94A3B8' : '#1e88e5';
+    const priceText = available ? formatPriceIQD(price) + ' د.ع' : 'غير متوفر';
+    const priceColor = available ? '#1e88e5' : '#c62828';
     let screenTypeLabel = '';
     if (item.source === 'شاشات' && item.type) {
       const typeLabels = {'أصلي وكالة': '🟢', 'أصلي صيني': '🔵', 'TFT': '🟡'};
@@ -1286,7 +1285,7 @@ function handleGlobalSearch(event) {
     }
     let notesHtml = '';
     if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:12px;color:#e65100;">📝 ${item.notes}</div>`;
-    const cartBtn = !available ? '' : isGuest() ? `<button onclick='showLoginPrompt()' style="background:#64748B;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🔒 سجل للشراء</button>` : `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>`;
+    const cartBtn = available ? `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:14px;">🛒 إضافة للسلة</button>` : '';
     html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:14px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:12px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:13px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
   });
   if (results.length > 20) html += `<div style="padding:8px;color:#666;text-align:center;font-size:13px;">... و ${results.length - 20} نتيجة أخرى</div>`;
@@ -1403,25 +1402,6 @@ let flatpowerData = [], backcoverData = [], housingData = [], lensData = [];
 let cameraData = [], buzzerData = [], earSpeakerData = [], doorSimData = [];
 let fingerprintData = [], miscData = [];
 
-async function loadAllDataGuest() {
-  try {
-    await loadPrices();
-    await loadBatteries();
-    await loadChargeboards();
-    await loadFlatMain();
-    await loadBackCover();
-    await loadHousing();
-    await loadLens();
-    await loadCamera();
-    await loadBuzzer();
-    await loadEarSpeaker();
-    await loadDoorSim();
-    await loadFingerprint();
-    await loadMisc();
-    renderHomeCategories();
-  } catch(e) { console.log('guest load error', e); }
-}
-
 async function loadPrices() { try { pricesData = await secureApiCall('getPrices'); } catch(e){} }
 async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بطارية',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بورد شحن',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
@@ -1518,8 +1498,8 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
-  if (!product.itemType) product.itemType = (typeof sheetPriceType !== 'undefined' && sheetPriceType) ? sheetPriceType : ((typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens');
+  if (!user) { showScreen('loginScreen'); return; }
+  if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1689,9 +1669,11 @@ async function submitOrder() {
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
   result.innerHTML = '<div class="result pending">جاري الإرسال...</div>';
   try {
-    // إرسال للأدمن محذوف
-    const fakeData = { idMessage: 'local' };
-    const data = fakeData;
+    const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chatId: '9647709000160@c.us', message: message })
+    });
+    const data = await response.json();
     if (data.idMessage) {
       try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
@@ -1713,13 +1695,10 @@ async function submitOrder() {
         body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
       setTimeout(() => {
-        cart = [];
-        saveCart();
-        result.innerHTML = '';
-        submitBtn.disabled = false;
+        cart = []; saveCart(); result.innerHTML = ''; submitBtn.disabled = false;
         if (clearBtn) clearBtn.disabled = false;
-        closeSheet('cartSheet');
-      }, 4000);
+        if (document.getElementById('cartPage').style.display !== 'none') renderCart(); else closeCart();
+      }, 20000);
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
     console.error(e);
@@ -1779,8 +1758,8 @@ function renderAccountSheet() {
   if (!div) return;
   if (user) {
     div.innerHTML =
-      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;position:relative;">' +
-      '<div style="font-size:40px;margin-bottom:8px;">👤</div>' +
+      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">' +
+      '<div style="font-size:40px;margin-bottom:8px;">&#128100;</div>' +
       '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>' +
       '<div style="font-size:13px;opacity:.85;margin-top:4px;">' + user.shop + '</div>' +
       '<div style="font-size:12px;opacity:.7;margin-top:2px;">' + user.phone + '</div>' +
@@ -1809,7 +1788,7 @@ function openOrdersSheet() {
 
 function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
+  if (!user) { showScreen('loginScreen'); return; }
   openSheet('cartSheet');
   renderCart();
   document.getElementById('orderName').value = user.name || '';
@@ -1931,33 +1910,13 @@ function handleSheetSearch() {
 
 function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
   brandsDiv.style.display = 'none';
-
-  // إذا البيانات ما حُملت بعد — دائرة تحميل وانتظر
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  if (!data || data.length === 0) {
-    resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:13px;">جاري تحميل الأسعار...</div></div>';
-    // انتظر حتى تحمل البيانات
-    var attempts = 0;
-    var wait = setInterval(function() {
-      attempts++;
-      var d = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-      if (d && d.length > 0) {
-        clearInterval(wait);
-        openSheetBrand(brandsStr);
-      } else if (attempts > 20) {
-        clearInterval(wait);
-        resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">⚠️ تعذّر تحميل البيانات، تحقق من الاتصال</div>';
-      }
-    }, 500);
-    return;
-  }
-
-  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   if (!filtered.length) {
-    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
+    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد أسعار</div>';
   } else {
     resultsDiv.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
@@ -1978,23 +1937,16 @@ function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var _isGuest2 = isGuest();
-  var priceHtml = !avail
-    ? '<div class="pi-price unavail">غير متوفر</div>'
-    : _isGuest2
-      ? '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>'
-      : '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+  var priceHtml = avail
+    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
+    : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var cartBtn = '';
   if (avail) {
-    var _g = !localStorage.getItem('amwaj_user') || localStorage.getItem('amwaj_user') === 'null';
-    if (_g) {
-      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل للشراء</button>';
-    } else {
-      var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
-      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">&#128722; إضافة للسلة</button>';
-    }
+    var pid = 'pi_' + Math.random().toString(36).substr(2,6);
+    window['_pd_' + pid] = p;
+    cartBtn = '<button class="add-to-cart-btn" onclick="addToCartById(\'_pd_' + pid + '\')">&#128722; إضافة للسلة</button>';
   }
   return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
@@ -2002,9 +1954,9 @@ function createSheetPriceItem(p) {
 }
 
 function addToCartById(key) {
-  var p = getCachedProduct(key) || window[key] || window['_pd_' + key];
-  if (!p) { console.warn('product not found:', key); return; }
-  if (!p.itemType) p.itemType = sheetPriceType;
+  var p = getCachedProduct(key);
+  if (!p) return;
+  p.itemType = sheetPriceType;
   addToCart(p);
 }
 
@@ -2067,14 +2019,14 @@ function loadMyOrders() {
 
 function openOrdersSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
+  if (!user) { showScreen('loginScreen'); return; }
   openSheet('ordersSheet');
   loadMyOrders();
 }
 
 function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
+  if (!user) { showScreen('loginScreen'); return; }
   openSheet('cartSheet');
   renderCart();
   const nameEl = document.getElementById('orderName');
@@ -2088,143 +2040,10 @@ function openCartSheet() {
 
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
-  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) return;
-
-  // Popup لاختيار سبب الإلغاء
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML =
-    '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:340px;direction:rtl;">' +
-      '<div style="font-size:16px;font-weight:800;margin-bottom:16px;">❌ إلغاء الطلب ' + orderId + '</div>' +
-      '<div style="font-size:14px;color:#64748B;margin-bottom:12px;">اختر سبب الإلغاء:</div>' +
-      '<div id="cancelReasons" style="display:flex;flex-direction:column;gap:8px;">' +
-        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">تغيير رأيي</button>' +
-        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">طلبت بالغلط</button>' +
-        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">وجدت سعر أفضل</button>' +
-        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">تأخر التوصيل</button>' +
-        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">سبب آخر</button>' +
-      '</div>' +
-      '<div id="cancelOtherDiv" style="display:none;margin-top:10px;">' +
-        '<input id="cancelOtherText" type="text" placeholder="اكتب السبب..." style="width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;font-size:14px;font-family:Tajawal,sans-serif;box-sizing:border-box;">' +
-      '</div>' +
-      '<div style="display:flex;gap:8px;margin-top:16px;">' +
-        '<button id="confirmCancelBtn" onclick="confirmCancel()" disabled style="flex:1;background:#DC2626;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;opacity:0.5;">تأكيد الإلغاء</button>' +
-        '<button onclick="document.getElementById(\'cancelOverlay\').remove()" style="flex:1;background:#F1F5F9;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">تراجع</button>' +
-      '</div>' +
-    '</div>';
-  overlay.id = 'cancelOverlay';
-  document.body.appendChild(overlay);
-  
-  window._cancelOrderId = orderId;
-  window._cancelPhone = user.phone;
-  window._cancelBtn = btn;
-  window._cancelReason = '';
-}
-
-function isGuest() {
-  var u = localStorage.getItem('amwaj_user');
-  if (!u || u === 'null' || u === '' || u === 'undefined') return true;
-  try { var obj = JSON.parse(u); return !obj || obj.status !== 'approved'; } catch(e) { return true; }
-}
-
-
-function enterAsGuest() {
-  showScreen('homeScreen');
-  loadAllDataGuest();
-}
-
-function showLoginPrompt() {
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-  overlay.innerHTML =
-    '<div style="background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:320px;text-align:center;direction:rtl;">' +
-      '<div style="font-size:48px;margin-bottom:16px;">🔒</div>' +
-      '<div style="font-size:18px;font-weight:800;margin-bottom:8px;">سجل دخولك أولاً</div>' +
-      '<div style="font-size:14px;color:#64748B;margin-bottom:24px;">لعرض الأسعار وإضافة منتجات للسلة، يرجى تسجيل الدخول أو إنشاء حساب</div>' +
-      '<button onclick="document.getElementById(\'loginPromptOverlay\').remove();showScreen(\'loginScreen\')" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:10px;">تسجيل الدخول</button>' +
-      '<button onclick="document.getElementById(\'loginPromptOverlay\').remove();showScreen(\'registerScreen\')" style="width:100%;background:#F1F5F9;color:#0F172A;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:10px;">إنشاء حساب جديد</button>' +
-      '<button onclick="document.getElementById(\'loginPromptOverlay\').remove()" style="width:100%;background:none;border:none;color:#94A3B8;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">تصفح بدون تسجيل</button>' +
-    '</div>';
-  overlay.id = 'loginPromptOverlay';
-  document.body.appendChild(overlay);
-}
-
-function selectCancelReason(el) {
-  document.querySelectorAll('#cancelReasons button').forEach(function(b) {
-    b.style.background = '#F8FAFC';
-    b.style.borderColor = '#E2E8F0';
-    b.style.color = '#0F172A';
-  });
-  el.style.background = '#EFF6FF';
-  el.style.borderColor = '#0284C7';
-  el.style.color = '#0284C7';
-  window._cancelReason = el.textContent.trim();
-  var otherDiv = document.getElementById('cancelOtherDiv');
-  if (window._cancelReason === 'سبب آخر') {
-    otherDiv.style.display = 'block';
-    window._cancelReason = '';
-  } else {
-    otherDiv.style.display = 'none';
-  }
-  var confirmBtn = document.getElementById('confirmCancelBtn');
-  confirmBtn.disabled = false;
-  confirmBtn.style.opacity = '1';
-}
-
-function confirmCancel() {
-  var reason = window._cancelReason;
-  var otherText = document.getElementById('cancelOtherText');
-  if (!reason && otherText) reason = otherText.value.trim();
-  if (!reason) { alert('يرجى اختيار سبب الإلغاء'); return; }
-
-  var overlay = document.getElementById('cancelOverlay');
-  if (overlay) overlay.remove();
-
-  var btn = window._cancelBtn;
-  var orderId = window._cancelOrderId;
-  var phone = window._cancelPhone;
-
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الإلغاء...'; }
-
-  secureApiCall('cancelOrder', {
-    orderId: orderId,
-    phone: phone,
-    reason: reason
-  })
-    .then(function() { 
-      loadMyOrders();
-    })
-    .catch(function(e) { 
-      console.error('cancelOrder error:', e);
-      // Try direct fetch with more details
-      fetch(CONFIG.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          apiKey: CONFIG.API_KEY,
-          action: 'cancelOrder',
-          identifier: CONFIG.DEVICE_ID,
-          orderId: orderId,
-          phone: user.phone
-        })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(result) {
-        if (result.success) {
-          loadMyOrders();
-        } else {
-          btn.disabled = false;
-          btn.textContent = '❌ إلغاء الطلب';
-          alert('فشل الإلغاء: ' + (result.error || 'خطأ غير معروف'));
-        }
-      })
-      .catch(function() {
-        btn.disabled = false;
-        btn.textContent = '❌ إلغاء الطلب';
-        alert('فشل الاتصال بالسيرفر');
-      });
-    });
+  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
+  secureApiCall('cancelOrder', { orderId: orderId })
+    .then(function() { loadMyOrders(); })
+    .catch(function() { alert('فشل إلغاء الطلب'); });
 }
 
 function cancelOrder(orderId) {
@@ -2304,6 +2123,8 @@ function saveSnapshotAfterLoad() {
 }
 
 function openNewItemsSheet() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
@@ -2374,13 +2195,9 @@ function openNewItemsSheet() {
           '<div class="pi-name" style="margin-top:5px;">' + sanitize(p.name||'-') + '</div>' +
           '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
           (p.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(p.type) + '</span>' : '') +
-          (isGuest()
-            ? '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>'
-            : '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>') +
+          '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           (p.notes ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '') +
-          (isGuest()
-            ? '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل للشراء</button>'
-            : '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>') +
+          '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>' +
         '</div>';
     });
     body.innerHTML = html;
@@ -2389,6 +2206,8 @@ function openNewItemsSheet() {
 }
 
 function openSearchSheet() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
+  if (!u) { showScreen('loginScreen'); return; }
   openSheet('searchSheet');
   setTimeout(function() {
     var el = document.getElementById('globalSheetSearch');
@@ -2488,20 +2307,19 @@ function loadNewItems() {
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
       var lbl = r.label;
       var t = r.type;
-      var pid = cacheProduct(Object.assign({}, p, {itemType: t}));
+      var pid = 'nw_' + Math.random().toString(36).substr(2,8);
+      window[pid] = p;
+      window[pid].itemType = t;
       html +=
         '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">' +
           '<div style="flex:1;min-width:0;">' +
             '<span style="font-size:10px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;font-weight:700;">' + lbl + '</span>' +
             '<div style="font-size:14px;font-weight:700;margin:5px 0 2px;color:#0F172A;">' + (p.name||'-') + '</div>' +
             '<div style="font-size:12px;color:#64748B;">' + (p.brand||'-') + '</div>' +
-            (isGuest()
-              ? '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>'
-              : '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>') +
+            '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           '</div>' +
-          (isGuest()
-            ? '<button onclick="showLoginPrompt()" style="background:#64748B;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;flex-shrink:0;">🔒</button>'
-            : '<button onclick="addToCart(getCachedProduct(\'' + pid + '\'))" style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>') +
+          '<button onclick="addToCart(window[\'' + pid + '\'])" ' +
+            'style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>' +
         '</div>';
     });
     grid.innerHTML = html;
@@ -2513,12 +2331,8 @@ function loadNewItems() {
 async function appBoot() {
   const phone = localStorage.getItem('amwaj_phone');
   
-  // No phone saved → show home as guest (browse only)
-  if (!phone) {
-    showScreen('homeScreen');
-    loadAllDataGuest();
-    return;
-  }
+  // No phone saved → register screen immediately
+  if (!phone) { showScreen('registerScreen'); return; }
 
   // Cached approved user → show home IMMEDIATELY, no loading
   const cachedUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -2539,9 +2353,8 @@ async function appBoot() {
     return;
   }
 
-  // No cached user → show home as guest (prices hidden)
-  showScreen('homeScreen');
-  loadAllDataGuest();
+  // No cached user, phone exists → show login immediately, fetch in background
+  showScreen('loginScreen');
   setTimeout(async () => {
     try {
       const rows = await fetchCustomers();
