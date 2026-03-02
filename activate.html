@@ -1958,10 +1958,10 @@ function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var isGuest = !localStorage.getItem('amwaj_user') || localStorage.getItem('amwaj_user') === 'null';
+  var _isGuest2 = isGuest();
   var priceHtml = !avail
     ? '<div class="pi-price unavail">غير متوفر</div>'
-    : isGuest
+    : _isGuest2
       ? '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>'
       : '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
@@ -2100,6 +2100,12 @@ function cancelOrderById(btn) {
   window._cancelPhone = user.phone;
   window._cancelBtn = btn;
   window._cancelReason = '';
+}
+
+function isGuest() {
+  var u = localStorage.getItem('amwaj_user');
+  if (!u || u === 'null' || u === '' || u === 'undefined') return true;
+  try { var obj = JSON.parse(u); return !obj || obj.status !== 'approved'; } catch(e) { return true; }
 }
 
 function enterAsGuest() {
@@ -2347,9 +2353,13 @@ function openNewItemsSheet() {
           '<div class="pi-name" style="margin-top:5px;">' + sanitize(p.name||'-') + '</div>' +
           '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
           (p.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(p.type) + '</span>' : '') +
-          '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+          (isGuest()
+            ? '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>'
+            : '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>') +
           (p.notes ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '') +
-          '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>' +
+          (isGuest()
+            ? '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل للشراء</button>'
+            : '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">🛒 إضافة للسلة</button>') +
         '</div>';
     });
     body.innerHTML = html;
@@ -2457,20 +2467,18 @@ function loadNewItems() {
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
       var lbl = r.label;
       var t = r.type;
-      var pid = 'nw_' + Math.random().toString(36).substr(2,8);
-      window[pid] = p;
-      window[pid].itemType = t;
+      var pid = cacheProduct(Object.assign({}, p, {itemType: t}));
       html +=
         '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">' +
           '<div style="flex:1;min-width:0;">' +
             '<span style="font-size:10px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;font-weight:700;">' + lbl + '</span>' +
             '<div style="font-size:14px;font-weight:700;margin:5px 0 2px;color:#0F172A;">' + (p.name||'-') + '</div>' +
             '<div style="font-size:12px;color:#64748B;">' + (p.brand||'-') + '</div>' +
-            ((!localStorage.getItem('amwaj_user') || localStorage.getItem('amwaj_user')==='null')
+            (isGuest()
               ? '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>'
               : '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>') +
           '</div>' +
-          ((!localStorage.getItem('amwaj_user') || localStorage.getItem('amwaj_user')==='null')
+          (isGuest()
             ? '<button onclick="showLoginPrompt()" style="background:#64748B;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;flex-shrink:0;">🔒</button>'
             : '<button onclick="addToCart(getCachedProduct(\'' + pid + '\'))" style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>') +
         '</div>';
