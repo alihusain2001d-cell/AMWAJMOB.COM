@@ -1240,9 +1240,11 @@ async function checkLogin() {
 }
 
 function logout() {
-  localStorage.removeItem("amwaj_user"); localStorage.removeItem("amwaj_phone"); showScreen("registerScreen");
-  document.getElementById("loginPhone").value = ""; document.getElementById("loginResult").innerHTML = "";
-  cart = []; saveCart(); showPage("loginPage");
+  localStorage.removeItem("amwaj_user");
+  localStorage.removeItem("amwaj_phone");
+  cart = []; saveCart();
+  closeSheet('accountSheet');
+  setTimeout(function() { showScreen('loginScreen'); }, 200);
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
