@@ -1931,13 +1931,33 @@ function handleSheetSearch() {
 
 function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
   brandsDiv.style.display = 'none';
+
+  // إذا البيانات ما حُملت بعد — دائرة تحميل وانتظر
+  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+  if (!data || data.length === 0) {
+    resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:13px;">جاري تحميل الأسعار...</div></div>';
+    // انتظر حتى تحمل البيانات
+    var attempts = 0;
+    var wait = setInterval(function() {
+      attempts++;
+      var d = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+      if (d && d.length > 0) {
+        clearInterval(wait);
+        openSheetBrand(brandsStr);
+      } else if (attempts > 20) {
+        clearInterval(wait);
+        resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">⚠️ تعذّر تحميل البيانات، تحقق من الاتصال</div>';
+      }
+    }, 500);
+    return;
+  }
+
+  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   if (!filtered.length) {
-    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد أسعار</div>';
+    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
   } else {
     resultsDiv.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
