@@ -571,19 +571,13 @@ function buildCard(o) {
   let actionBtns = '';
   if (o.status === 'pending') {
     actionBtns = `
-      <button class="btn-act btn-ready"  onclick="askAct('${o.orderId}','ready',   event)">✅ جاهز للتوصيل</button>
       <button class="btn-act btn-cancel" onclick="askAct('${o.orderId}','cancelled',event)">❌ إلغاء</button>
       <button class="btn-act btn-call"   onclick="callNum('${o.phone}',event)">📞</button>`;
-  } else if (o.status === 'ready') {
-    actionBtns = `
-      <button class="btn-act btn-pending" onclick="askAct('${o.orderId}','pending', event)">↩️ رجوع قيد التجهيز</button>
-      <button class="btn-act btn-cancel"  onclick="askAct('${o.orderId}','cancelled',event)">❌ إلغاء</button>
-      <button class="btn-act btn-call"    onclick="callNum('${o.phone}',event)">📞</button>`;
-  } else if (o.status === 'picked') {
+  } else if (o.status === 'cancelled') {
+    actionBtns = `<span style="font-size:13px;color:var(--text-dim);">تم الإلغاء</span>`;
+  } else {
     actionBtns = `
       <button class="btn-act btn-call" onclick="callNum('${o.phone}',event)">📞 اتصال</button>`;
-  } else if (o.status === 'delivered' || o.status === 'cancelled') {
-    actionBtns = `<span style="font-size:13px;color:var(--text-dim);">لا يوجد إجراء متاح</span>`;
   }
 
   return `
