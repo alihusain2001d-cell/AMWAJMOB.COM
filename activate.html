@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" href="LOGO%20MOB.png">
 <link rel="apple-touch-icon" href="LOGO%20MOB.png">
 <link rel="manifest" href="manifest.json">
-<title>امواج للالكترونيات</title>
+<title>أمواج للإلكترونيات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -956,8 +956,6 @@ function footerTab(tab) {
   }
 }
 function focusHomeSearch() {
-  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
   showScreen('homeScreen');
   const el = document.getElementById('globalSearch');
   if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
@@ -1247,8 +1245,6 @@ function logout() {
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
 function handleGlobalSearch(event) {
-  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
@@ -1517,7 +1513,7 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   if (!product.itemType) product.itemType = (typeof sheetPriceType !== 'undefined' && sheetPriceType) ? sheetPriceType : ((typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens');
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
@@ -1808,7 +1804,7 @@ function openOrdersSheet() {
 
 function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
   document.getElementById('orderName').value = user.name || '';
@@ -2046,14 +2042,14 @@ function loadMyOrders() {
 
 function openOrdersSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('ordersSheet');
   loadMyOrders();
 }
 
 function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
   const nameEl = document.getElementById('orderName');
@@ -2271,8 +2267,6 @@ function saveSnapshotAfterLoad() {
 }
 
 function openNewItemsSheet() {
-  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
@@ -2354,8 +2348,6 @@ function openNewItemsSheet() {
 }
 
 function openSearchSheet() {
-  var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
   openSheet('searchSheet');
   setTimeout(function() {
     var el = document.getElementById('globalSheetSearch');
