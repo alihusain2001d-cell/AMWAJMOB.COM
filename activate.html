@@ -1669,11 +1669,9 @@ async function submitOrder() {
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
   result.innerHTML = '<div class="result pending">جاري الإرسال...</div>';
   try {
-    const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chatId: '9647709000160@c.us', message: message })
-    });
-    const data = await response.json();
+    // إرسال للأدمن محذوف
+    const fakeData = { idMessage: 'local' };
+    const data = fakeData;
     if (data.idMessage) {
       try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
@@ -2042,17 +2040,81 @@ function openCartSheet() {
 
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
-  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) return;
+
+  // Popup لاختيار سبب الإلغاء
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:340px;direction:rtl;">' +
+      '<div style="font-size:16px;font-weight:800;margin-bottom:16px;">❌ إلغاء الطلب ' + orderId + '</div>' +
+      '<div style="font-size:14px;color:#64748B;margin-bottom:12px;">اختر سبب الإلغاء:</div>' +
+      '<div id="cancelReasons" style="display:flex;flex-direction:column;gap:8px;">' +
+        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">تغيير رأيي</button>' +
+        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">طلبت بالغلط</button>' +
+        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">وجدت سعر أفضل</button>' +
+        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">تأخر التوصيل</button>' +
+        '<button onclick="selectCancelReason(this)" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 14px;text-align:right;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">سبب آخر</button>' +
+      '</div>' +
+      '<div id="cancelOtherDiv" style="display:none;margin-top:10px;">' +
+        '<input id="cancelOtherText" type="text" placeholder="اكتب السبب..." style="width:100%;border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;font-size:14px;font-family:Tajawal,sans-serif;box-sizing:border-box;">' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;margin-top:16px;">' +
+        '<button id="confirmCancelBtn" onclick="confirmCancel()" disabled style="flex:1;background:#DC2626;color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;opacity:0.5;">تأكيد الإلغاء</button>' +
+        '<button onclick="document.getElementById(\'cancelOverlay\').remove()" style="flex:1;background:#F1F5F9;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">تراجع</button>' +
+      '</div>' +
+    '</div>';
+  overlay.id = 'cancelOverlay';
+  document.body.appendChild(overlay);
   
-  btn.disabled = true;
-  btn.textContent = '⏳ جاري الإلغاء...';
-  
-  secureApiCall('cancelOrder', { 
+  window._cancelOrderId = orderId;
+  window._cancelPhone = user.phone;
+  window._cancelBtn = btn;
+  window._cancelReason = '';
+}
+
+function selectCancelReason(el) {
+  document.querySelectorAll('#cancelReasons button').forEach(function(b) {
+    b.style.background = '#F8FAFC';
+    b.style.borderColor = '#E2E8F0';
+    b.style.color = '#0F172A';
+  });
+  el.style.background = '#EFF6FF';
+  el.style.borderColor = '#0284C7';
+  el.style.color = '#0284C7';
+  window._cancelReason = el.textContent.trim();
+  var otherDiv = document.getElementById('cancelOtherDiv');
+  if (window._cancelReason === 'سبب آخر') {
+    otherDiv.style.display = 'block';
+    window._cancelReason = '';
+  } else {
+    otherDiv.style.display = 'none';
+  }
+  var confirmBtn = document.getElementById('confirmCancelBtn');
+  confirmBtn.disabled = false;
+  confirmBtn.style.opacity = '1';
+}
+
+function confirmCancel() {
+  var reason = window._cancelReason;
+  var otherText = document.getElementById('cancelOtherText');
+  if (!reason && otherText) reason = otherText.value.trim();
+  if (!reason) { alert('يرجى اختيار سبب الإلغاء'); return; }
+
+  var overlay = document.getElementById('cancelOverlay');
+  if (overlay) overlay.remove();
+
+  var btn = window._cancelBtn;
+  var orderId = window._cancelOrderId;
+  var phone = window._cancelPhone;
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الإلغاء...'; }
+
+  secureApiCall('cancelOrder', {
     orderId: orderId,
-    phone: user.phone
+    phone: phone,
+    reason: reason
   })
     .then(function() { 
       loadMyOrders();
