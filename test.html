@@ -1056,7 +1056,29 @@ function closeFlatpowerModal(event) {
 
 function openLensFromModal() {
   closeFlatpowerModal();
-  openFlatSubSheet('LENS', 'عدسة كاميرا', '📷');
+  sheetPriceType = 'flatpower';
+  sheetFlatSubType = 'LENS';
+  document.getElementById('productsSheetTitle').textContent = '📷 عدسة كاميرا';
+  document.getElementById('sheetSearch').value = '';
+  var resultsDiv = document.getElementById('sheetResults');
+  var brandsDiv = document.getElementById('sheetBrands');
+  brandsDiv.style.display = 'none';
+  resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div></div>';
+  openSheet('productsSheet');
+  var attempts = 0;
+  function tryRenderLens() {
+    attempts++;
+    var data = lensData || [];
+    if (!data.length && attempts < 20) { setTimeout(tryRenderLens, 500); return; }
+    if (!data.length) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد</div>';
+      return;
+    }
+    resultsDiv.innerHTML =
+      '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + data.length + ' منتج</div>' +
+      data.map(function(p) { return createSheetPriceItem(p); }).join('');
+  }
+  setTimeout(tryRenderLens, 100);
 }
 
 function getFlatSubData(subType) {
