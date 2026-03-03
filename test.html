@@ -762,6 +762,9 @@ body {
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="loginPhone" placeholder="07xxxxxxxxx"></div>
       <button class="form-btn" id="btnLogin" onclick="checkLogin()">دخول</button>
       <div id="loginResult"></div>
+      <div style="margin-top:12px;">
+        <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:14px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
+      </div>
       <div class="switch-link"><p>ما عندك حساب؟</p><button class="form-btn success-btn" onclick="showScreen('registerScreen')">تسجيل حساب جديد</button></div>
     </div>
 
@@ -1240,9 +1243,11 @@ async function checkLogin() {
 }
 
 function logout() {
-  localStorage.removeItem("amwaj_user"); localStorage.removeItem("amwaj_phone"); showScreen("registerScreen");
-  document.getElementById("loginPhone").value = ""; document.getElementById("loginResult").innerHTML = "";
-  cart = []; saveCart(); showPage("loginPage");
+  localStorage.removeItem("amwaj_user");
+  localStorage.removeItem("amwaj_phone");
+  cart = []; saveCart();
+  closeSheet('accountSheet');
+  setTimeout(function() { showScreen('loginScreen'); }, 200);
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
@@ -1499,7 +1504,7 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { showScreen('loginScreen'); return; }
-  if (!product.itemType) product.itemType = (typeof sheetPriceType !== 'undefined' && sheetPriceType) ? sheetPriceType : ((typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens');
+  if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1667,7 +1672,8 @@ async function submitOrder() {
     if (item.notes) message += `   📝 ملاحظة: ${item.notes}\n`;
   });
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
-  result.innerHTML = '<div class="result pending">جاري الإرسال...</div>';
+  submitBtn.textContent = '⏳ جاري الإرسال...';
+  submitBtn.style.background = '#64748B';
   try {
     const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1694,14 +1700,26 @@ async function submitOrder() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
-      setTimeout(() => {
-        cart = [];
-        saveCart();
-        result.innerHTML = '';
-        submitBtn.disabled = false;
-        if (clearBtn) clearBtn.disabled = false;
+      // تحويل زر الإرسال إلى حسناً
+      cart = []; saveCart();
+      if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
+      document.getElementById('cartItems').innerHTML = '';
+      document.getElementById('cartSummary').style.display = 'none';
+      document.getElementById('orderResult').innerHTML = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = '✅ تم الإرسال — اضغط حسناً';
+      submitBtn.style.background = '#16A34A';
+      submitBtn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.4)';
+      submitBtn.onclick = function() {
         closeSheet('cartSheet');
-      }, 4000);
+        submitBtn.textContent = '📤 إرسال الطلب';
+        submitBtn.style.background = '';
+        submitBtn.style.boxShadow = '';
+        submitBtn.onclick = submitOrder;
+        document.getElementById('orderResult').innerHTML = '';
+        document.getElementById('orderForm').style.display = 'block';
+        if (clearBtn) clearBtn.style.display = 'none';
+      };
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
     console.error(e);
@@ -1785,15 +1803,22 @@ function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen')
 function toRegisterScreen() { closeSheet('accountSheet'); showScreen('registerScreen'); }
 
 function openOrdersSheet() {
+  if (isGuest()) { showLoginPrompt(); return; }
   openSheet('ordersSheet');
   loadMyOrders();
 }
 
 function openCartSheet() {
+  if (isGuest()) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
+  // نظف رسالة النجاح القديمة فقط إذا السلة فيها شي
+  if (cart.length > 0) {
+    var r = document.getElementById('orderResult');
+    if (r) r.innerHTML = '';
+  }
   document.getElementById('orderName').value = user.name || '';
   document.getElementById('orderShop').value = user.shop || '';
   const saved = localStorage.getItem('amwaj_address');
@@ -1904,30 +1929,63 @@ function handleSheetSearch() {
   const brandsDiv = document.getElementById('sheetBrands');
   if (q.length < 2) { resultsDiv.innerHTML = ''; brandsDiv.style.display = 'grid'; return; }
   brandsDiv.style.display = 'none';
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
-  if (!filtered.length) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج</div>'; return; }
-  resultsDiv.innerHTML = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
-    filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+
+  // دائرة تحميل أولاً
+  resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:13px;">جاري البحث...</div></div>';
+
+  var attempts = 0;
+  function trySearch() {
+    attempts++;
+    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+    if ((!data || data.length === 0) && attempts < 20) {
+      setTimeout(trySearch, 500);
+      return;
+    }
+    var filtered = (data||[]).filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
+    if (!filtered.length) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+      return;
+    }
+    resultsDiv.innerHTML = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
+      filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+  }
+  setTimeout(trySearch, 100);
 }
 
 function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
   brandsDiv.style.display = 'none';
-  if (!filtered.length) {
-    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد أسعار</div>';
-  } else {
-    resultsDiv.innerHTML =
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-      '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
-      '<span style="font-size:12px;color:#64748B;">' + filtered.length + ' منتج</span>' +
-      '</div>' +
-      filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+
+  // دائرة تحميل أولاً
+  resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:13px;">جاري تحميل الأسعار...</div></div>';
+
+  var attempts = 0;
+  function tryRender() {
+    attempts++;
+    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+
+    // لو البيانات ما حُملت بعد — انتظر
+    if ((!data || data.length === 0) && attempts < 20) {
+      setTimeout(tryRender, 500);
+      return;
+    }
+
+    var filtered = (data||[]).filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
+
+    if (!filtered.length && data && data.length > 0) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
+    } else {
+      resultsDiv.innerHTML =
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+        '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
+        '<span style="font-size:12px;color:#64748B;">' + filtered.length + ' منتج</span>' +
+        '</div>' +
+        filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+    }
   }
+  setTimeout(tryRender, 100);
 }
 
 function backToSheetBrands() {
@@ -1947,8 +2005,13 @@ function createSheetPriceItem(p) {
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var cartBtn = '';
   if (avail) {
-    var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
-    cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\''+pid+'\'))">&#128722; إضافة للسلة</button>';
+    if (isGuest()) {
+      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+    } else {
+      var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
+      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
+    }
   }
   return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
@@ -1956,9 +2019,9 @@ function createSheetPriceItem(p) {
 }
 
 function addToCartById(key) {
-  var p = getCachedProduct(key) || window[key] || window['_pd_' + key];
-  if (!p) { console.warn('product not found:', key); return; }
-  if (!p.itemType) p.itemType = sheetPriceType;
+  var p = getCachedProduct(key);
+  if (!p) return;
+  p.itemType = sheetPriceType;
   addToCart(p);
 }
 
@@ -1982,30 +2045,19 @@ function loadMyOrders() {
       if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#64748B;">&#128230; لا توجد طلبات</div>';
       return;
     }
-    var steps = ['pending','picked','delivered'];
-    var stepLabels = ['تجهيز','الطريق','وصل'];
-    var stepIcons = ['&#128203;','&#128663;','&#128230;'];
     var html = orders.map(function(o) {
-      var cur = steps.indexOf(o.status);
-      var statusText = {pending:'قيد التجهيز',picked:'في الطريق',delivered:'تم التوصيل',cancelled:'ملغي'}[o.status] || o.status;
-      var pillClass = 'pill-' + (o.status || 'pending');
       var items = (o.items||[]).map(function(it) {
         var p2 = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
         return '<div class="order-item-row">• ' + (it.name||'-') + ' × ' + (it.quantity||1) + ' — <span dir="ltr">' + formatPriceIQD(p2) + ' IQD</span></div>';
       }).join('');
       var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
-      var timelineHtml = '<div class="order-status-bar">' + steps.map(function(s,i) {
-        var cls = cur > i ? 'done' : (cur === i ? 'active' : '');
-        return '<div class="order-step ' + cls + '"><div class="step-dot">' + stepIcons[i] + '</div><div class="step-txt">' + stepLabels[i] + '</div></div>';
-      }).join('') + '</div>';
-      var cancelBtn = o.status === 'pending'
-        ? '<button class="cancel-order-btn" onclick="cancelOrderById(this)" data-id="' + (o.orderId||'') + '">&#10060; إلغاء الطلب</button>' : '';
+      var timelineHtml = '';
+      var cancelBtn = '';
       return '<div class="order-card">' +
         '<div class="order-card-header">' +
           '<span class="order-id-text">' + (o.orderId||'-') + '</span>' +
-          '<span class="status-pill ' + pillClass + '">' + statusText + '</span>' +
         '</div>' +
-        timelineHtml + items +
+        items +
         '<div style="font-weight:800;font-size:15px;color:#0284C7;margin-top:8px;border-top:1px solid #E2E8F0;padding-top:8px;">المجموع: <span dir="ltr">' + formatPriceIQD(total) + ' IQD</span></div>' +
         '<div style="font-size:12px;color:#64748B;margin-top:4px;">&#128205; ' + (o.address||'-') + '</div>' +
         cancelBtn + '</div>';
@@ -2027,8 +2079,9 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
+  if (isGuest()) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
   const nameEl = document.getElementById('orderName');
@@ -2043,50 +2096,9 @@ function openCartSheet() {
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  
-  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) return;
-  
-  btn.disabled = true;
-  btn.textContent = '⏳ جاري الإلغاء...';
-  
-  secureApiCall('cancelOrder', { 
-    orderId: orderId,
-    phone: user.phone
-  })
-    .then(function() { 
-      loadMyOrders();
-    })
-    .catch(function(e) { 
-      console.error('cancelOrder error:', e);
-      // Try direct fetch with more details
-      fetch(CONFIG.API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          apiKey: CONFIG.API_KEY,
-          action: 'cancelOrder',
-          identifier: CONFIG.DEVICE_ID,
-          orderId: orderId,
-          phone: user.phone
-        })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(result) {
-        if (result.success) {
-          loadMyOrders();
-        } else {
-          btn.disabled = false;
-          btn.textContent = '❌ إلغاء الطلب';
-          alert('فشل الإلغاء: ' + (result.error || 'خطأ غير معروف'));
-        }
-      })
-      .catch(function() {
-        btn.disabled = false;
-        btn.textContent = '❌ إلغاء الطلب';
-        alert('فشل الاتصال بالسيرفر');
-      });
-    });
+  secureApiCall('cancelOrder', { orderId: orderId })
+    .then(function() { loadMyOrders(); })
+    .catch(function() { alert('فشل إلغاء الطلب'); });
 }
 
 function cancelOrder(orderId) {
@@ -2361,7 +2373,7 @@ function loadNewItems() {
             '<div style="font-size:12px;color:#64748B;">' + (p.brand||'-') + '</div>' +
             '<div style="font-size:15px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           '</div>' +
-          '<button onclick="addToCart(getCachedProduct(\'' + pid + '\'))" ' +
+          '<button onclick="addToCart(window[\'' + pid + '\'])" ' +
             'style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>' +
         '</div>';
     });
@@ -2369,6 +2381,44 @@ function loadNewItems() {
   }
 
   tryRender();
+}
+
+function isGuest() {
+  var u = localStorage.getItem('amwaj_user');
+  if (!u || u === 'null' || u === '' || u === 'undefined') return true;
+  try { var obj = JSON.parse(u); return !obj || obj.status !== 'approved'; } catch(e) { return true; }
+}
+
+function enterAsGuest() {
+  showScreen('homeScreen');
+}
+
+function showLoginPrompt() {
+  var existing = document.getElementById('loginPromptOverlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'loginPromptOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  var d = document.createElement('div');
+  d.style.cssText = 'background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:320px;text-align:center;direction:rtl;';
+  d.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">&#128274;</div>' +
+    '<div style="font-size:18px;font-weight:800;margin-bottom:8px;">&#x633;&#x62C;&#x644; &#x62F;&#x62E;&#x648;&#x644;&#x643; &#x623;&#x648;&#x644;&#x627;&#x64B;</div>' +
+    '<div style="font-size:14px;color:#64748B;margin-bottom:24px;">&#x644;&#x639;&#x631;&#x636; &#x627;&#x644;&#x623;&#x633;&#x639;&#x627;&#x631; &#x648;&#x625;&#x636;&#x627;&#x641;&#x629; &#x645;&#x646;&#x62A;&#x62C;&#x627;&#x62A; &#x644;&#x644;&#x633;&#x644;&#x629;</div>';
+  var b1 = document.createElement('button');
+  b1.textContent = 'تسجيل الدخول';
+  b1.style.cssText = 'width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:10px;display:block;';
+  b1.onclick = function(){ overlay.remove(); showScreen('loginScreen'); };
+  var b2 = document.createElement('button');
+  b2.textContent = 'إنشاء حساب جديد';
+  b2.style.cssText = 'width:100%;background:#F1F5F9;color:#0F172A;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:10px;display:block;';
+  b2.onclick = function(){ overlay.remove(); showScreen('registerScreen'); };
+  var b3 = document.createElement('button');
+  b3.textContent = 'تصفح بدون تسجيل';
+  b3.style.cssText = 'width:100%;background:none;border:none;color:#94A3B8;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;display:block;';
+  b3.onclick = function(){ overlay.remove(); };
+  d.appendChild(b1); d.appendChild(b2); d.appendChild(b3);
+  overlay.appendChild(d);
+  document.body.appendChild(overlay);
 }
 
 async function appBoot() {
