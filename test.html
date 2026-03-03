@@ -1872,10 +1872,6 @@ function openFlatSub(subType, labelAr, icon) {
   openFlatSubSheet(subType, labelAr, icon);
 }
 
-function openLensFromModal() {
-  closeFlatpowerModal();
-  openProductSheet('camera', '📷 عدسة كاميرا');
-}
 
 // override old nav functions
 function showPage(id) { /* no-op */ }
@@ -2154,7 +2150,7 @@ function cancelOrder(orderId) {
 // Override old functions
 function openCart() { openCartSheet(); }
 function openFlatSub(subType, labelAr, icon) { openFlatSubSheet(subType, labelAr, icon); }
-function openLensFromModal() { closeFlatpowerModal(); openProductSheet('camera', '&#128247; عدسة كاميرا'); }
+
 function showPage(id) { /* no-op */ }
 function backHome() { showScreen('homeScreen'); }
 function showLoginPage() { showScreen('loginScreen'); }
