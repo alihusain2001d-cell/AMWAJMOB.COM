@@ -1248,6 +1248,7 @@ async function checkLogin() {
 function logout() {
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
+  localStorage.removeItem("amwaj_guest");
   cart = []; saveCart();
   closeSheet('accountSheet');
   setTimeout(function() { showScreen('loginScreen'); }, 200);
@@ -2393,6 +2394,7 @@ function isGuest() {
 }
 
 function enterAsGuest() {
+  localStorage.setItem('amwaj_guest', '1');
   showScreen('homeScreen');
 }
 
@@ -2427,8 +2429,11 @@ function showLoginPrompt() {
 async function appBoot() {
   const phone = localStorage.getItem('amwaj_phone');
   
-  // No phone saved → register screen immediately
-  if (!phone) { showScreen('registerScreen'); return; }
+  // No phone saved → check if guest mode
+  if (!phone) {
+    if (localStorage.getItem('amwaj_guest') === '1') { showScreen('homeScreen'); return; }
+    showScreen('registerScreen'); return;
+  }
 
   // Cached approved user → show home IMMEDIATELY, no loading
   const cachedUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -2442,6 +2447,7 @@ async function appBoot() {
         const rows = await fetchCustomers();
         const user = rows.find(r => normalizePhone(r.phone) === phone);
         if (user) localStorage.setItem('amwaj_user', JSON.stringify(user));
+    localStorage.removeItem('amwaj_guest');
         const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone });
         if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
       } catch(e) {}
