@@ -1055,9 +1055,8 @@ function closeFlatpowerModal(event) {
 }
 
 function openLensFromModal() {
-  document.getElementById('flatpowerModal').classList.remove('active');
-  document.body.style.overflow = '';
-  openPrices('lens');
+  closeFlatpowerModal();
+  openFlatSubSheet('CAMERA', 'عدسة كاميرا', '📷');
 }
 
 function getFlatSubData(subType) {
