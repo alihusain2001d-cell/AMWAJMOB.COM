@@ -1903,30 +1903,63 @@ function handleSheetSearch() {
   const brandsDiv = document.getElementById('sheetBrands');
   if (q.length < 2) { resultsDiv.innerHTML = ''; brandsDiv.style.display = 'grid'; return; }
   brandsDiv.style.display = 'none';
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
-  if (!filtered.length) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج</div>'; return; }
-  resultsDiv.innerHTML = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
-    filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+
+  // دائرة تحميل أولاً
+  resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:13px;">جاري البحث...</div></div>';
+
+  var attempts = 0;
+  function trySearch() {
+    attempts++;
+    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+    if ((!data || data.length === 0) && attempts < 20) {
+      setTimeout(trySearch, 500);
+      return;
+    }
+    var filtered = (data||[]).filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
+    if (!filtered.length) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+      return;
+    }
+    resultsDiv.innerHTML = '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
+      filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+  }
+  setTimeout(trySearch, 100);
 }
 
 function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
-  const data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-  const filtered = data.filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
   brandsDiv.style.display = 'none';
-  if (!filtered.length) {
-    resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد أسعار</div>';
-  } else {
-    resultsDiv.innerHTML =
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-      '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
-      '<span style="font-size:12px;color:#64748B;">' + filtered.length + ' منتج</span>' +
-      '</div>' +
-      filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+
+  // دائرة تحميل أولاً
+  resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:13px;">جاري تحميل الأسعار...</div></div>';
+
+  var attempts = 0;
+  function tryRender() {
+    attempts++;
+    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+
+    // لو البيانات ما حُملت بعد — انتظر
+    if ((!data || data.length === 0) && attempts < 20) {
+      setTimeout(tryRender, 500);
+      return;
+    }
+
+    var filtered = (data||[]).filter(function(p) { return brands.includes((p.brand||'').toLowerCase()); });
+
+    if (!filtered.length && data && data.length > 0) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
+    } else {
+      resultsDiv.innerHTML =
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+        '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
+        '<span style="font-size:12px;color:#64748B;">' + filtered.length + ' منتج</span>' +
+        '</div>' +
+        filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+    }
   }
+  setTimeout(tryRender, 100);
 }
 
 function backToSheetBrands() {
