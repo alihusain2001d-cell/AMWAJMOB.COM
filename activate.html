@@ -1696,11 +1696,21 @@ async function submitOrder() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
-      setTimeout(() => {
-        cart = []; saveCart(); result.innerHTML = ''; submitBtn.disabled = false;
-        if (clearBtn) clearBtn.disabled = false;
-        if (document.getElementById('cartPage').style.display !== 'none') renderCart(); else closeCart();
-      }, 20000);
+      // نفرغ السلة ونظهر رسالة نجاح مع زر إغلاق
+      cart = []; saveCart();
+      submitBtn.disabled = false;
+      if (clearBtn) clearBtn.disabled = false;
+      document.getElementById('cartItems').innerHTML = '';
+      document.getElementById('cartSummary').style.display = 'none';
+      document.getElementById('orderForm').style.display = 'none';
+      if (clearBtn) clearBtn.style.display = 'none';
+      document.getElementById('orderResult').innerHTML =
+        '<div class="result success" style="text-align:center;padding:24px;">' +
+        '<div style="font-size:48px;margin-bottom:12px;">✅</div>' +
+        '<div style="font-size:17px;font-weight:800;margin-bottom:8px;">تم إرسال الطلب بنجاح!</div>' +
+        '<div style="font-size:14px;color:#166534;margin-bottom:20px;">سيتم تجهيز طلبك قريباً 📦</div>' +
+        '<button onclick="closeSheet(&quot;cartSheet&quot;)" style="background:#0284C7;color:white;border:none;border-radius:12px;padding:12px 32px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً</button>' +
+        '</div>';
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
     console.error(e);
