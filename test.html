@@ -575,7 +575,7 @@ body {
       <div class="fp-btn" onclick="openFlatSub('DOOR SIM','باب سيم كارت','💳')"><span class="fp-icon">💳</span><div class="fp-label">باب سيم كارت</div><div class="fp-sub">DOOR SIM</div></div>
       <div class="fp-btn" onclick="openFlatSub('FINGERPRINT','بصمة','👆')"><span class="fp-icon">👆</span><div class="fp-label">بصمة</div><div class="fp-sub">FINGERPRINT</div></div>
       <div class="fp-btn" onclick="openFlatSub('OTHER','منوعة','📦')"><span class="fp-icon">📦</span><div class="fp-label">منوعة</div><div class="fp-sub">OTHER</div></div>
-      <div class="fp-btn" onclick="openLensFromModal()"><span class="fp-icon">📷</span><div class="fp-label">عدسة كاميرا</div><div class="fp-sub">LENS CAMERA</div></div>
+    <div class="fp-btn" onclick="openLensFromModal()"><span class="fp-icon">📷</span><div class="fp-label">عدسة كاميرا</div><div class="fp-sub">LENS CAMERA</div></div>
     </div>
     <button class="fp-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
   </div>
@@ -1939,10 +1939,7 @@ function renderSheetBrands(type) {
   var brandsHtml = list.map(function(b) {
     return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
   }).join('');
-  // زر لينز خاص بقسم الكاميرا
-  if (type === 'camera') {
-    brandsHtml = '<div class="sheet-brand-btn" style="grid-column:1/-1;background:#EFF6FF;border:2px solid #BFDBFE;" onclick="openLensSheet()"><b>🔍 لينز كاميرا</b><small>Lens Camera</small></div>' + brandsHtml;
-  }
+
   grid.innerHTML = brandsHtml;
 }
 
