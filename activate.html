@@ -1670,6 +1670,7 @@ async function submitOrder() {
     if (item.notes) message += `   📝 ملاحظة: ${item.notes}\n`;
   });
   message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
+  window._orderJustSent = true;
   result.innerHTML = '<div class="result pending">جاري الإرسال...</div>';
   try {
     const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
