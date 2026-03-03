@@ -1597,6 +1597,7 @@ function openCart() {
 function closeCart() { showPage('pricesPage'); }
 
 function renderCart() {
+  if (window._orderJustSent) return; // لا تمسح رسالة النجاح
   const container = document.getElementById('cartItems');
   const totalEl = document.getElementById('cartTotal');
   const summaryDiv = document.getElementById('cartSummary');
@@ -1698,6 +1699,7 @@ async function submitOrder() {
       }).catch(err => console.error(err));
       // نفرغ السلة ونظهر رسالة نجاح مع زر إغلاق
       cart = []; saveCart();
+      window._orderJustSent = true;
       submitBtn.disabled = false;
       if (clearBtn) clearBtn.disabled = false;
       document.getElementById('cartItems').innerHTML = '';
@@ -1709,7 +1711,7 @@ async function submitOrder() {
         '<div style="font-size:48px;margin-bottom:12px;">✅</div>' +
         '<div style="font-size:17px;font-weight:800;margin-bottom:8px;">تم إرسال الطلب بنجاح!</div>' +
         '<div style="font-size:14px;color:#166534;margin-bottom:20px;">سيتم تجهيز طلبك قريباً 📦</div>' +
-        '<button onclick="closeSheet(&quot;cartSheet&quot;)" style="background:#0284C7;color:white;border:none;border-radius:12px;padding:12px 32px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً</button>' +
+        '<button onclick="window._orderJustSent=false;closeSheet(&quot;cartSheet&quot;)" style="background:#0284C7;color:white;border:none;border-radius:12px;padding:12px 32px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً</button>' +
         '</div>';
     } else { throw new Error('فشل الإرسال'); }
   } catch (e) {
@@ -1802,6 +1804,7 @@ function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { showScreen('loginScreen'); return; }
   // نظف رسالة النجاح القديمة
+  window._orderJustSent = false;
   var r = document.getElementById('orderResult');
   if (r) r.innerHTML = '';
   openSheet('cartSheet');
