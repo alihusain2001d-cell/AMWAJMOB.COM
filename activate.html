@@ -1801,6 +1801,9 @@ function openOrdersSheet() {
 function openCartSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { showScreen('loginScreen'); return; }
+  // نظف رسالة النجاح القديمة
+  var r = document.getElementById('orderResult');
+  if (r) r.innerHTML = '';
   openSheet('cartSheet');
   renderCart();
   document.getElementById('orderName').value = user.name || '';
