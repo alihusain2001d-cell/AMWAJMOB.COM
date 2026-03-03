@@ -1936,9 +1936,36 @@ function renderSheetBrands(type) {
   ];
   const list = type === 'screens' ? screenBrands : commonBrands;
   grid.style.display = 'grid';
-  grid.innerHTML = list.map(function(b) {
+  var brandsHtml = list.map(function(b) {
     return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
   }).join('');
+  // زر لينز خاص بقسم الكاميرا
+  if (type === 'camera') {
+    brandsHtml = '<div class="sheet-brand-btn" style="grid-column:1/-1;background:#EFF6FF;border:2px solid #BFDBFE;" onclick="openLensSheet()"><b>🔍 لينز كاميرا</b><small>Lens Camera</small></div>' + brandsHtml;
+  }
+  grid.innerHTML = brandsHtml;
+}
+
+function openLensSheet() {
+  sheetPriceType = 'camera';
+  sheetFlatSubType = 'lens';
+  var brandsDiv = document.getElementById('sheetBrands');
+  var resultsDiv = document.getElementById('sheetResults');
+  brandsDiv.style.display = 'none';
+  resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div></div>';
+  setTimeout(function() {
+    var data = lensData || [];
+    if (!data.length) {
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد</div>';
+      return;
+    }
+    resultsDiv.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+      '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
+      '<span style="font-size:12px;color:#64748B;">' + data.length + ' منتج</span>' +
+      '</div>' +
+      data.map(function(p) { return createSheetPriceItem(p); }).join('');
+  }, 100);
 }
 
 function handleSheetSearch() {
