@@ -926,7 +926,7 @@ function showScreen(id) {
 
 function requireAuth(fn) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   fn();
 }
 
@@ -951,7 +951,8 @@ function closeFlatpowerModal(e) {
 }
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
+  if (isGuest() && (tab === 'cart' || tab === 'orders')) { showLoginPrompt(); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
@@ -963,7 +964,7 @@ function footerTab(tab) {
 }
 function focusHomeSearch() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   showScreen('homeScreen');
   const el = document.getElementById('globalSearch');
   if (el) { el.scrollIntoView({behavior:'smooth'}); setTimeout(()=>el.focus(), 300); }
@@ -1257,7 +1258,7 @@ async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
 function handleGlobalSearch(event) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
@@ -2183,7 +2184,7 @@ function saveSnapshotAfterLoad() {
 
 function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
@@ -2266,7 +2267,7 @@ function openNewItemsSheet() {
 
 function openSearchSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u) { showScreen('loginScreen'); return; }
+  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   openSheet('searchSheet');
   setTimeout(function() {
     var el = document.getElementById('globalSheetSearch');
