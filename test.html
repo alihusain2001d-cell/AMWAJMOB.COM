@@ -1056,7 +1056,7 @@ function closeFlatpowerModal(event) {
 
 function openLensFromModal() {
   closeFlatpowerModal();
-  openFlatSubSheet('CAMERA', 'عدسة كاميرا', '📷');
+  openFlatSubSheet('LENS', 'عدسة كاميرا', '📷');
 }
 
 function getFlatSubData(subType) {
@@ -1067,7 +1067,8 @@ function getFlatSubData(subType) {
     case 'EAR SPEAKER':  return earSpeakerData;
     case 'DOOR SIM':     return doorSimData;
     case 'FINGERPRINT':  return fingerprintData;
-    case 'CAMERA':       return lensData;
+    case 'LENS':         return lensData;
+    case 'CAMERA':       return cameraData;
     case 'OTHER':        return miscData;
     default: return [];
   }
