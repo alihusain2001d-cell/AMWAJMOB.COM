@@ -2584,5 +2584,38 @@ function openCheckFromAccount() {
 </script>
 </body>
 
+<div id="installPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:flex-end;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center;direction:rtl;">
+    <div style="font-size:52px;margin-bottom:8px;">📲</div>
+    <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:6px;">أضف التطبيق للشاشة الرئيسية</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:20px;line-height:1.6;">للوصول السريع لأمواج للإلكترونيات</div>
+    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
+      <div style="font-size:13px;color:#0F172A;margin-bottom:8px;">📱 <b>على الآيفون:</b></div>
+      <div style="font-size:12px;color:#475569;margin-bottom:4px;">١. اضغط على زر المشاركة <span style="font-size:15px;">⬆️</span></div>
+      <div style="font-size:12px;color:#475569;">٢. اضغط على "إضافة إلى الشاشة الرئيسية" <span style="font-size:13px;">＋</span></div>
+    </div>
+    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:20px;text-align:right;">
+      <div style="font-size:13px;color:#0F172A;margin-bottom:8px;">🤖 <b>على الأندرويد:</b></div>
+      <div style="font-size:12px;color:#475569;margin-bottom:4px;">١. اضغط على ⋮ (القائمة)</div>
+      <div style="font-size:12px;color:#475569;">٢. اضغط "إضافة إلى الشاشة الرئيسية"</div>
+    </div>
+    <button onclick="closeInstallPrompt()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً، شكراً!</button>
+  </div>
+</div>
+
+<script>
+function closeInstallPrompt() {
+  document.getElementById('installPrompt').style.display = 'none';
+  localStorage.setItem('amwaj_install_shown', '1');
+}
+
+// Show only once
+if (!localStorage.getItem('amwaj_install_shown')) {
+  setTimeout(function() {
+    document.getElementById('installPrompt').style.display = 'flex';
+  }, 2000);
+}
+</script>
+
 </body>
 </html>
