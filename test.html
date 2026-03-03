@@ -1060,25 +1060,23 @@ function openLensFromModal() {
   sheetFlatSubType = 'LENS';
   document.getElementById('productsSheetTitle').textContent = '📷 عدسة كاميرا';
   document.getElementById('sheetSearch').value = '';
-  var resultsDiv = document.getElementById('sheetResults');
-  var brandsDiv = document.getElementById('sheetBrands');
-  brandsDiv.style.display = 'none';
-  resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div></div>';
+  document.getElementById('sheetResults').innerHTML = '';
   openSheet('productsSheet');
   var attempts = 0;
-  function tryRenderLens() {
+  function tryShowBrands() {
     attempts++;
     var data = lensData || [];
-    if (!data.length && attempts < 20) { setTimeout(tryRenderLens, 500); return; }
-    if (!data.length) {
-      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد</div>';
-      return;
-    }
-    resultsDiv.innerHTML =
-      '<div style="font-size:12px;color:#64748B;margin-bottom:8px;">' + data.length + ' منتج</div>' +
-      data.map(function(p) { return createSheetPriceItem(p); }).join('');
+    if (!data.length && attempts < 20) { setTimeout(tryShowBrands, 500); return; }
+    var brandsSet = {};
+    data.forEach(function(p) { if (p.brand) brandsSet[p.brand] = true; });
+    var brands = Object.keys(brandsSet).sort();
+    var brandsDiv = document.getElementById('sheetBrands');
+    brandsDiv.style.display = 'grid';
+    brandsDiv.innerHTML = brands.map(function(b) {
+      return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b + '\')"><b>' + b + '</b></div>';
+    }).join('');
   }
-  setTimeout(tryRenderLens, 100);
+  setTimeout(tryShowBrands, 100);
 }
 
 function getFlatSubData(subType) {
