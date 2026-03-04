@@ -760,6 +760,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="form-group"><label class="form-label">الاسم الثلاثي</label><input class="form-input" type="text" id="regName" placeholder="مثال: أحمد محمد علي"></div>
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
+      <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="regAddress" placeholder="مثال: كربلاء، شارع..."></div>
       <button class="form-btn" id="btnRegister" onclick="submitRegistration()">إرسال طلب التسجيل</button>
       <div id="regResult"></div>
       <div class="switch-link"><p>عندك حساب مسبقاً؟</p><button class="form-btn gray" onclick="showScreen('loginScreen')">تسجيل الدخول</button></div>
@@ -1245,7 +1246,8 @@ async function submitRegistration() {
   const name = document.getElementById("regName").value.trim();
   const shop = document.getElementById("regShop").value.trim();
   const phone = normalizePhone(document.getElementById("regPhone").value);
-  if (!name || !shop || !phone) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
+  const address = document.getElementById("regAddress").value.trim();
+  if (!name || !shop || !phone || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
   if (phone.length < 11) { result.innerHTML = '<div class="result error">❌ رقم الهاتف غير صحيح</div>'; return; }
   btn.disabled = true; btn.innerText = "جاري الإرسال...";
   try {
@@ -1257,10 +1259,10 @@ async function submitRegistration() {
       else { result.innerHTML = '<div class="result error">❌ تم رفض طلبك سابقاً، تواصل معنا للمزيد</div>'; }
       btn.disabled = false; btn.innerText = "إرسال طلب التسجيل"; return;
     }
-    await secureApiCall('addCustomer', { name, shop, phone, date: formatDate(new Date()), status: 'pending' });
+    await secureApiCall('addCustomer', { name, shop, phone, address, date: formatDate(new Date()), status: 'pending' });
     localStorage.setItem("amwaj_phone", phone);
     result.innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${phone}</b></div>`;
-    document.getElementById("regName").value = ""; document.getElementById("regShop").value = ""; document.getElementById("regPhone").value = "";
+    document.getElementById("regName").value = ""; document.getElementById("regShop").value = ""; document.getElementById("regPhone").value = ""; document.getElementById("regAddress").value = "";
   } catch (e) { console.error(e); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
   btn.disabled = false; btn.innerText = "إرسال طلب التسجيل";
 }
