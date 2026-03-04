@@ -423,13 +423,25 @@ body {
 /* Sheet brand buttons */
 .sheet-brands { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px; }
 .sheet-brand-btn {
-  background:var(--surface); border:1.5px solid var(--border);
-  border-radius:12px; padding:12px 10px; text-align:center;
-  cursor:pointer; transition:all .2s;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
-.sheet-brand-btn:active { background:var(--primary-light); border-color:var(--primary); }
-.sheet-brand-btn b { display:block; font-size:17px; color:var(--text); }
-.sheet-brand-btn small { font-size:12px; color:var(--muted); }
+.sheet-brand-btn:active { transform:scale(0.94); border-color:var(--primary); background:var(--primary-light); }
+.sheet-brand-btn b { display:block; font-size:14px; color:var(--text); font-weight:700; line-height:1.3; }
+.sheet-brand-btn small { font-size:11px; color:var(--muted); }
+.brand-logos { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; margin-bottom:3px; }
+.brand-logos img { height:20px; object-fit:contain; max-width:58px; }
 
 /* Price items */
 .price-item {
@@ -1945,35 +1957,68 @@ function openFlatSubSheet(subType, labelAr, icon) {
 
 function renderSheetBrands(type) {
   const grid = document.getElementById('sheetBrands');
+
+  // لوغوات الماركات (CDN موثوق)
+  const logos = {
+    'Apple':   'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
+    'Samsung': 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg',
+    'Huawei':  'https://upload.wikimedia.org/wikipedia/commons/e/e8/Huawei_Logo.svg',
+    'Honor':   'https://upload.wikimedia.org/wikipedia/commons/8/8e/Honor_Logo.svg',
+    'Xiaomi':  'https://upload.wikimedia.org/wikipedia/commons/2/29/Xiaomi_logo.svg',
+    'Redmi':   'https://upload.wikimedia.org/wikipedia/commons/2/28/Redmi_Logo.svg',
+    'Poco':    'https://upload.wikimedia.org/wikipedia/commons/4/45/POCO_Logo.svg',
+    'Oppo':    'https://upload.wikimedia.org/wikipedia/commons/6/6b/OPPO_LOGO_2019.svg',
+    'Realme':  'https://upload.wikimedia.org/wikipedia/commons/9/91/Realme_logo.svg',
+    'Vivo':    'https://upload.wikimedia.org/wikipedia/commons/0/00/Vivo_logo.svg',
+    'Infinix': 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Infinix_Mobility_logo.svg',
+    'Tecno':   'https://upload.wikimedia.org/wikipedia/commons/3/3c/Tecno_Mobile_logo.svg',
+    'Itel':    'https://upload.wikimedia.org/wikipedia/commons/f/f2/Itel-new-logo.svg',
+    'Asus':    'https://upload.wikimedia.org/wikipedia/commons/2/2e/ASUS_Logo.svg',
+    'Google':  'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
+  };
+
+  function logoImg(brand) {
+    var src = logos[brand];
+    if (!src) return '';
+    return '<img src="' + src + '" alt="' + brand + '" onerror="this.style.display=\'none\'">';
+  }
+
+  function brandCard(b) {
+    var brands = b.brands.split(',');
+    var logosHtml = brands.map(function(br){ return logoImg(br.trim()); }).filter(Boolean).join('');
+    return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')">' +
+      (logosHtml ? '<div class="brand-logos">' + logosHtml + '</div>' : '') +
+      '<b>' + b.label + '</b>' +
+      '</div>';
+  }
+
   const screenBrands = [
-    {label:'ايفون', sub:'iPhone', brands:'Apple'},
-    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
-    {label:'هواوي', sub:'Huawei', brands:'Huawei'},
-    {label:'شاومي', sub:'Xiaomi', brands:'Xiaomi'},
-    {label:'ريدمي + بوكو', sub:'Redmi & Poco', brands:'Redmi,Poco'},
-    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
-    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
-    {label:'فيفو + ويكو', sub:'Vivo & Wiko', brands:'Vivo,Wiko'},
-    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
-    {label:'ZTE + TCL + Alcatel', sub:'ZTE • TCL • Alcatel', brands:'ZTE,TCL,Alcatel,Blackview'},
+    {label:'ايفون',                  brands:'Apple'},
+    {label:'سامسونج',                brands:'Samsung'},
+    {label:'هواوي / هونر',           brands:'Huawei,Honor'},
+    {label:'شاومي / بوكو',           brands:'Xiaomi,Poco'},
+    {label:'ريدمي',                  brands:'Redmi'},
+    {label:'الانفنكس والتكنو والايتل', brands:'Infinix,Tecno,Itel'},
+    {label:'اوبو / ريلمي',           brands:'Oppo,Realme'},
+    {label:'فيفو',                   brands:'Vivo'},
+    {label:'ازوز / كوكل',            brands:'Asus,Google'},
+    {label:'ZTE / TCL / Alcatel',    brands:'ZTE,TCL,Alcatel,Blackview'},
   ];
+
   const commonBrands = [
-    {label:'هواوي + هونر', sub:'Huawei & Honor', brands:'Huawei,Honor'},
-    {label:'سامسونج', sub:'Samsung', brands:'Samsung'},
-    {label:'ايفون', sub:'Apple', brands:'Apple'},
-    {label:'شاومي + ريدمي + بوكو', sub:'Xiaomi • Redmi • Poco', brands:'Xiaomi,Redmi,Poco'},
-    {label:'اوبو + ريلمي', sub:'Oppo & Realme', brands:'Oppo,Realme'},
-    {label:'انفنكس + تكنو', sub:'Infinix & Tecno', brands:'Infinix,Tecno'},
-    {label:'فيفو', sub:'Vivo', brands:'Vivo'},
-    {label:'ازوز + كوكل', sub:'Asus & Google', brands:'Asus,Google'},
+    {label:'هواوي / هونر',           brands:'Huawei,Honor'},
+    {label:'سامسونج',                brands:'Samsung'},
+    {label:'ايفون',                  brands:'Apple'},
+    {label:'شاومي / ريدمي / بوكو',   brands:'Xiaomi,Redmi,Poco'},
+    {label:'اوبو / ريلمي',           brands:'Oppo,Realme'},
+    {label:'الانفنكس / تكنو / ايتل', brands:'Infinix,Tecno,Itel'},
+    {label:'فيفو',                   brands:'Vivo'},
+    {label:'ازوز / كوكل',            brands:'Asus,Google'},
   ];
+
   const list = type === 'screens' ? screenBrands : commonBrands;
   grid.style.display = 'grid';
-  var brandsHtml = list.map(function(b) {
-    return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')"><b>' + b.label + '</b><small>' + b.sub + '</small></div>';
-  }).join('');
-
-  grid.innerHTML = brandsHtml;
+  grid.innerHTML = list.map(brandCard).join('');
 }
 
 
