@@ -557,35 +557,21 @@ body {
 }
 
 /* ── منع النسخ ── */
-* {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-}
-input, textarea {
-  -webkit-user-select: text !important;
-  user-select: text !important;
-}
+* { -webkit-user-select:none !important; user-select:none !important; }
+input, textarea { -webkit-user-select:text !important; user-select:text !important; }
 
-/* ── منع تصوير الشاشة (CSS layer) ── */
-@media screen {
-  .app-shell {
-    -webkit-user-select: none;
-  }
-}
-
-/* ── زر الرجوع للأعلى ── */
+/* ── زر الرجوع للأعلى — داخل الـ shell ── */
 #scrollTopBtn {
-  position: fixed;
+  position: absolute;
   bottom: calc(var(--footer-h) + 14px);
   right: 16px;
-  width: 44px; height: 44px;
+  width: 42px; height: 42px;
   border-radius: 50%;
   background: var(--primary);
   color: white;
   border: none;
   font-size: 22px;
+  font-weight: bold;
   cursor: pointer;
   z-index: 450;
   box-shadow: 0 4px 16px rgba(2,132,199,0.45);
@@ -608,9 +594,6 @@ input, textarea {
 
 <!-- Cart floating btn -->
 <div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
-
-<!-- زر الرجوع للأعلى -->
-<button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
 
 <!-- flatpower modal -->
 <div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
@@ -902,6 +885,9 @@ input, textarea {
       <div style="height:16px;"></div>
     </div>
   </div>
+
+  <!-- زر الرجوع للأعلى — داخل الـ shell -->
+  <button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
 
   <!-- Footer nav -->
   <div class="app-footer">
@@ -2583,77 +2569,51 @@ appBoot();
 // Save snapshot after data loads
 setTimeout(saveSnapshotAfterLoad, 4000);
 
-// ══════════════════════════════════════
 // ── منع النسخ والتصوير ──
-// ══════════════════════════════════════
-
-// 1. منع النقر بالزر الأيمن
-document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-
-// 2. منع اختصارات النسخ (Ctrl+C, Ctrl+A, Ctrl+S, Ctrl+U, PrintScreen)
-document.addEventListener('keydown', function(e) {
-  var blocked = (
-    (e.ctrlKey && ['c','a','s','u','p','x'].includes(e.key.toLowerCase())) ||
-    e.key === 'PrintScreen' ||
-    e.key === 'F12'
-  );
-  if (blocked) { e.preventDefault(); e.stopPropagation(); }
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey && ['c','a','s','u','p','x'].includes(e.key.toLowerCase())) ||
+      e.key==='PrintScreen' || e.key==='F12') { e.preventDefault(); e.stopPropagation(); }
 });
-
-// 3. منع تحديد النص بالضغط المطوّل (موبايل)
-document.addEventListener('selectstart', function(e) {
+document.addEventListener('selectstart', function(e){
   if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
 });
-
-// 4. كشف تصوير الشاشة (visibilitychange trick)
-document.addEventListener('visibilitychange', function() {
+document.addEventListener('visibilitychange', function(){
+  var ov = document.getElementById('screenshotOverlay');
   if (document.visibilityState === 'hidden') {
-    // المستخدم غادر التطبيق — يُحتمل تصوير الشاشة
-    var overlay = document.getElementById('screenshotOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'screenshotOverlay';
-      overlay.style.cssText = [
-        'position:fixed','inset:0','background:#0F172A',
-        'z-index:999999','display:flex','flex-direction:column',
-        'align-items:center','justify-content:center','color:white',
-        'font-family:Tajawal,sans-serif','text-align:center','padding:30px'
-      ].join(';');
-      overlay.innerHTML =
-        '<div style="font-size:56px;margin-bottom:16px;">🔒</div>' +
-        '<div style="font-size:20px;font-weight:800;margin-bottom:10px;">محتوى محمي</div>' +
-        '<div style="font-size:14px;opacity:.7;line-height:1.8;">أمواج للإلكترونيات<br>جميع الأسعار محمية ومحفوظة الحقوق</div>';
-      document.body.appendChild(overlay);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'screenshotOverlay';
+      ov.style.cssText = 'position:fixed;inset:0;background:#0F172A;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:Tajawal,sans-serif;text-align:center;padding:30px;';
+      ov.innerHTML = '<div style="font-size:56px;margin-bottom:16px;">🔒</div><div style="font-size:20px;font-weight:800;margin-bottom:10px;">محتوى محمي</div><div style="font-size:14px;opacity:.7;line-height:1.8;">أمواج للإلكترونيات<br>جميع الأسعار محمية ومحفوظة الحقوق</div>';
+      document.body.appendChild(ov);
     }
-    overlay.style.display = 'flex';
+    ov.style.display = 'flex';
   } else {
-    var overlay = document.getElementById('screenshotOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (ov) ov.style.display = 'none';
   }
 });
 
-// 5. زر الرجوع للأعلى
-(function() {
+// ── زر الرجوع للأعلى ──
+(function(){
   var btn = document.getElementById('scrollTopBtn');
   if (!btn) return;
-  document.querySelectorAll('.bsheet-body').forEach(function(el) {
-    if (el._scrollTopAttached) return;
-    el._scrollTopAttached = true;
-    el.addEventListener('scroll', function() {
-      if (el.scrollTop > 120) { btn.classList.add('visible'); btn._scroller = el; }
-      else { btn.classList.remove('visible'); btn._scroller = null; }
-    }, { passive: true });
+  document.querySelectorAll('.bsheet-body').forEach(function(el){
+    if (el._sta) return; el._sta = true;
+    el.addEventListener('scroll', function(){
+      if (el.scrollTop > 120) { btn.classList.add('visible'); btn._sc = el; }
+      else { btn.classList.remove('visible'); btn._sc = null; }
+    }, {passive:true});
   });
-  document.querySelectorAll('.bsheet-overlay').forEach(function(ov) {
-    new MutationObserver(function() {
-      if (!ov.classList.contains('open')) { btn.classList.remove('visible'); btn._scroller = null; }
-    }).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  document.querySelectorAll('.bsheet-overlay').forEach(function(ov){
+    new MutationObserver(function(){
+      if (!ov.classList.contains('open')) { btn.classList.remove('visible'); btn._sc = null; }
+    }).observe(ov, {attributes:true, attributeFilter:['class']});
   });
 })();
-
-window.scrollSheetToTop = function() {
+window.scrollSheetToTop = function(){
   var btn = document.getElementById('scrollTopBtn');
-  if (btn && btn._scroller) btn._scroller.scrollTo({ top: 0, behavior: 'smooth' });
+  if (btn && btn._sc) btn._sc.scrollTo({top:0, behavior:'smooth'});
 };
 
 if ('serviceWorker' in navigator) {
