@@ -560,11 +560,11 @@ body {
 * { -webkit-user-select:none !important; user-select:none !important; }
 input, textarea { -webkit-user-select:text !important; user-select:text !important; }
 
-/* ── زر الرجوع للأعلى — داخل الـ shell ── */
+/* ── زر الرجوع للأعلى ── */
 #scrollTopBtn {
-  position: absolute;
+  position: fixed;
   bottom: calc(var(--footer-h) + 14px);
-  right: 16px;
+  right: max(16px, calc(50vw - 240px + 16px));
   width: 42px; height: 42px;
   border-radius: 50%;
   background: var(--primary);
@@ -573,7 +573,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   font-size: 22px;
   font-weight: bold;
   cursor: pointer;
-  z-index: 450;
+  z-index: 600;
   box-shadow: 0 4px 16px rgba(2,132,199,0.45);
   transition: opacity 0.25s, transform 0.25s;
   opacity: 0;
@@ -594,6 +594,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 <!-- Cart floating btn -->
 <div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
+
+<!-- زر الرجوع للأعلى -->
+<button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
 
 <!-- flatpower modal -->
 <div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
@@ -885,9 +888,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div style="height:16px;"></div>
     </div>
   </div>
-
-  <!-- زر الرجوع للأعلى — داخل الـ shell -->
-  <button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
 
   <!-- Footer nav -->
   <div class="app-footer">
@@ -2598,19 +2598,35 @@ document.addEventListener('visibilitychange', function(){
 (function(){
   var btn = document.getElementById('scrollTopBtn');
   if (!btn) return;
-  document.querySelectorAll('.bsheet-body').forEach(function(el){
-    if (el._sta) return; el._sta = true;
-    el.addEventListener('scroll', function(){
-      if (el.scrollTop > 120) { btn.classList.add('visible'); btn._sc = el; }
+
+  function attachToBody(sheetId) {
+    var sheet = document.getElementById(sheetId);
+    if (!sheet) return;
+    var body = sheet.querySelector('.bsheet-body');
+    if (!body || body._sta) return;
+    body._sta = true;
+    body.addEventListener('scroll', function(){
+      if (body.scrollTop > 120) { btn.classList.add('visible'); btn._sc = body; }
       else { btn.classList.remove('visible'); btn._sc = null; }
     }, {passive:true});
-  });
-  document.querySelectorAll('.bsheet-overlay').forEach(function(ov){
-    new MutationObserver(function(){
-      if (!ov.classList.contains('open')) { btn.classList.remove('visible'); btn._sc = null; }
-    }).observe(ov, {attributes:true, attributeFilter:['class']});
-  });
+  }
+
+  // Override openSheet to attach listener when sheet opens
+  var _origOpen = window.openSheet;
+  window.openSheet = function(id) {
+    _origOpen(id);
+    setTimeout(function(){ attachToBody(id); }, 50);
+  };
+
+  // Also attach to already-attached sheets on close
+  var _origClose = window.closeSheet;
+  window.closeSheet = function(id) {
+    _origClose(id);
+    btn.classList.remove('visible');
+    btn._sc = null;
+  };
 })();
+
 window.scrollSheetToTop = function(){
   var btn = document.getElementById('scrollTopBtn');
   if (btn && btn._sc) btn._sc.scrollTo({top:0, behavior:'smooth'});
