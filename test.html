@@ -1958,62 +1958,62 @@ function openFlatSubSheet(subType, labelAr, icon) {
 function renderSheetBrands(type) {
   const grid = document.getElementById('sheetBrands');
 
-  // لوغوات الماركات (CDN موثوق)
-  const logos = {
-    'Apple':   'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-    'Samsung': 'https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg',
-    'Huawei':  'https://upload.wikimedia.org/wikipedia/commons/e/e8/Huawei_Logo.svg',
-    'Honor':   'https://upload.wikimedia.org/wikipedia/commons/8/8e/Honor_Logo.svg',
-    'Xiaomi':  'https://upload.wikimedia.org/wikipedia/commons/2/29/Xiaomi_logo.svg',
-    'Redmi':   'https://upload.wikimedia.org/wikipedia/commons/2/28/Redmi_Logo.svg',
-    'Poco':    'https://upload.wikimedia.org/wikipedia/commons/4/45/POCO_Logo.svg',
-    'Oppo':    'https://upload.wikimedia.org/wikipedia/commons/6/6b/OPPO_LOGO_2019.svg',
-    'Realme':  'https://upload.wikimedia.org/wikipedia/commons/9/91/Realme_logo.svg',
-    'Vivo':    'https://upload.wikimedia.org/wikipedia/commons/0/00/Vivo_logo.svg',
-    'Infinix': 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Infinix_Mobility_logo.svg',
-    'Tecno':   'https://upload.wikimedia.org/wikipedia/commons/3/3c/Tecno_Mobile_logo.svg',
-    'Itel':    'https://upload.wikimedia.org/wikipedia/commons/f/f2/Itel-new-logo.svg',
-    'Asus':    'https://upload.wikimedia.org/wikipedia/commons/2/2e/ASUS_Logo.svg',
-    'Google':  'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
+  const logoHtml = {
+    'Apple':   '<span style="font-size:22px;">🍎</span>',
+    'Samsung': '<span style="font-size:12px;font-weight:900;color:#1428A0;letter-spacing:-0.5px;">SAMSUNG</span>',
+    'Huawei':  '<span style="font-size:12px;font-weight:900;color:#CF0A2C;">HUAWEI</span>',
+    'Honor':   '<span style="font-size:12px;font-weight:900;color:#000;">HONOR</span>',
+    'Xiaomi':  '<span style="display:inline-block;background:#FF6900;color:white;font-size:13px;font-weight:900;padding:1px 6px;border-radius:4px;">mi</span>',
+    'Redmi':   '<span style="font-size:12px;font-weight:900;color:#FF6900;">Redmi</span>',
+    'Poco':    '<span style="font-size:12px;font-weight:900;color:#FFEB00;background:#000;padding:1px 5px;border-radius:3px;">POCO</span>',
+    'Oppo':    '<span style="font-size:12px;font-weight:900;color:#1D4289;">OPPO</span>',
+    'Realme':  '<span style="font-size:12px;font-weight:900;"><span style="color:#FFC300;">real</span><span style="color:#000;">me</span></span>',
+    'Vivo':    '<span style="font-size:13px;font-weight:900;color:#415FFF;">vivo</span>',
+    'Infinix': '<span style="font-size:11px;font-weight:900;color:#E4002B;">Infinix</span>',
+    'Tecno':   '<span style="font-size:12px;font-weight:900;color:#00A0DC;">TECNO</span>',
+    'Itel':    '<span style="font-size:12px;font-weight:900;color:#E30613;font-style:italic;">itel</span>',
+    'Asus':    '<span style="font-size:12px;font-weight:900;color:#00539B;">ASUS</span>',
+    'Google':  '<span style="font-size:12px;font-weight:700;"><span style="color:#4285F4;">G</span><span style="color:#DB4437;">o</span><span style="color:#F4B400;">o</span><span style="color:#4285F4;">g</span><span style="color:#0F9D58;">l</span><span style="color:#DB4437;">e</span></span>',
+    'ZTE':     '<span style="font-size:12px;font-weight:900;color:#005BAC;">ZTE</span>',
+    'TCL':     '<span style="font-size:12px;font-weight:900;color:#E4002B;">TCL</span>',
   };
 
-  function logoImg(brand) {
-    var src = logos[brand];
-    if (!src) return '';
-    return '<img src="' + src + '" alt="' + brand + '" onerror="this.style.display=\'none\'">';
+  function getBrandLogos(brandsStr) {
+    return brandsStr.split(',').map(function(br) {
+      return logoHtml[br.trim()] || '';
+    }).filter(Boolean).join(' ');
   }
 
   function brandCard(b) {
-    var brands = b.brands.split(',');
-    var logosHtml = brands.map(function(br){ return logoImg(br.trim()); }).filter(Boolean).join('');
+    var logosContent = getBrandLogos(b.brands);
     return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')">' +
-      (logosHtml ? '<div class="brand-logos">' + logosHtml + '</div>' : '') +
+      (logosContent ? '<div class="brand-logos">' + logosContent + '</div>' : '') +
       '<b>' + b.label + '</b>' +
       '</div>';
   }
 
   const screenBrands = [
-    {label:'ايفون',                  brands:'Apple'},
-    {label:'سامسونج',                brands:'Samsung'},
-    {label:'هواوي / هونر',           brands:'Huawei,Honor'},
-    {label:'شاومي / بوكو',           brands:'Xiaomi,Poco'},
-    {label:'ريدمي',                  brands:'Redmi'},
+    {label:'ايفون',                    brands:'Apple'},
+    {label:'سامسونج',                  brands:'Samsung'},
+    {label:'هواوي / هونر',             brands:'Huawei,Honor'},
+    {label:'شاومي / بوكو',             brands:'Xiaomi,Poco'},
+    {label:'ريدمي',                    brands:'Redmi'},
     {label:'الانفنكس والتكنو والايتل', brands:'Infinix,Tecno,Itel'},
-    {label:'اوبو / ريلمي',           brands:'Oppo,Realme'},
-    {label:'فيفو',                   brands:'Vivo'},
-    {label:'ازوز / كوكل',            brands:'Asus,Google'},
-    {label:'ZTE / TCL / Alcatel',    brands:'ZTE,TCL,Alcatel,Blackview'},
+    {label:'اوبو / ريلمي',             brands:'Oppo,Realme'},
+    {label:'فيفو',                     brands:'Vivo'},
+    {label:'ازوز / كوكل',              brands:'Asus,Google'},
+    {label:'ZTE / TCL / Alcatel',      brands:'ZTE,TCL,Alcatel,Blackview'},
   ];
 
   const commonBrands = [
-    {label:'هواوي / هونر',           brands:'Huawei,Honor'},
-    {label:'سامسونج',                brands:'Samsung'},
-    {label:'ايفون',                  brands:'Apple'},
-    {label:'شاومي / ريدمي / بوكو',   brands:'Xiaomi,Redmi,Poco'},
-    {label:'اوبو / ريلمي',           brands:'Oppo,Realme'},
-    {label:'الانفنكس / تكنو / ايتل', brands:'Infinix,Tecno,Itel'},
-    {label:'فيفو',                   brands:'Vivo'},
-    {label:'ازوز / كوكل',            brands:'Asus,Google'},
+    {label:'هواوي / هونر',             brands:'Huawei,Honor'},
+    {label:'سامسونج',                  brands:'Samsung'},
+    {label:'ايفون',                    brands:'Apple'},
+    {label:'شاومي / ريدمي / بوكو',     brands:'Xiaomi,Redmi,Poco'},
+    {label:'اوبو / ريلمي',             brands:'Oppo,Realme'},
+    {label:'الانفنكس / تكنو / ايتل',   brands:'Infinix,Tecno,Itel'},
+    {label:'فيفو',                     brands:'Vivo'},
+    {label:'ازوز / كوكل',              brands:'Asus,Google'},
   ];
 
   const list = type === 'screens' ? screenBrands : commonBrands;
