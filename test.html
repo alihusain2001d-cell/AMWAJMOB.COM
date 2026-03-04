@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -292,36 +293,23 @@ body {
 /* Products grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   padding: 0 12px;
 }
 .prod-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 0;
+  border-radius: 14px;
+  padding: 12px 6px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
-.prod-card:active { transform: scale(0.96); border-color: var(--primary); background: var(--primary-light); }
-.prod-card-img {
-  width: 100%;
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  display: block;
-  background: #f1f5f9;
-}
-.prod-card-body {
-  padding: 10px 8px;
-}
+.prod-card:active { transform: scale(0.94); border-color: var(--primary); background: var(--primary-light); }
 .prod-icon { font-size: 24px; display: block; margin-bottom: 5px; }
-.prod-name { font-size: 14px; font-weight: 800; color: var(--text); line-height: 1.3; }
-.prod-name-en { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.prod-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.prod-name-en { font-size: 9px; color: var(--muted); margin-top: 1px; }
 
 /* Google card */
 .google-card {
@@ -856,47 +844,30 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <!-- Products -->
       <div class="sec-label">المنتجات</div>
       <div class="products-grid">
-
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/61VwWwsanXL._AC_SL1500_.jpg" alt="شاشات" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div></div>
+          <span class="prod-icon">🖥️</span><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div>
         </div>
-
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('batteries','🔋 البطاريات');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/61CGHv6kmWL._AC_SL1500_.jpg" alt="بطاريات" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">البطاريات</div><div class="prod-name-en">Batteries</div></div>
+          <span class="prod-icon">🔋</span><div class="prod-name">البطاريات</div><div class="prod-name-en">Batteries</div>
         </div>
-
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('chargeboards','🔌 بورد شحن');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/61DUrm4Be5S._AC_.jpg" alt="بورد شحن" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">بورد شحن</div><div class="prod-name-en">Charge Board</div></div>
+          <span class="prod-icon">🔌</span><div class="prod-name">بورد شحن</div><div class="prod-name-en">Charge Board</div>
         </div>
-
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/61tPe6UiSQL._AC_SL1500_.jpg" alt="شريط شحن" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">شريط شحن</div><div class="prod-name-en">Charging Flex</div></div>
+          <span class="prod-icon">⚡</span><div class="prod-name">شريط شحن</div><div class="prod-name-en">Charging Flex</div>
         </div>
-
-        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/51TWl5FLSEL._AC_SL1000_.jpg" alt="باك كفر" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">باك كفر</div><div class="prod-name-en">Back Cover</div></div>
-        </div>
-
-        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/51a6O4KuAeL._AC_SL1000_.jpg" alt="شاصي" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div></div>
-        </div>
-
-        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/61YQp9CQHFL._AC_SL1500_.jpg" alt="كاميرا" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div></div>
-        </div>
-
         <div class="prod-card" onclick="requireAuth(function(){openFlatpowerModal();})">
-          <img class="prod-card-img" src="https://m.media-amazon.com/images/I/71RpYpFJVoL._AC_SL1500_.jpg" alt="قطع منوعة" onerror="this.style.display='none'">
-          <div class="prod-card-body"><div class="prod-name">قطع منوعة</div><div class="prod-name-en">Misc Parts</div></div>
+          <span class="prod-icon">🔊</span><div class="prod-name">قطع منوعة</div><div class="prod-name-en">Misc Parts</div>
         </div>
-
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
+          <span class="prod-icon">📱</span><div class="prod-name">باك كفر</div><div class="prod-name-en">Back Cover</div>
+        </div>
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
+          <span class="prod-icon">🏠</span><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
+        </div>
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
+          <span class="prod-icon">📷</span><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div>
+        </div>
       </div>
 
             <!-- Contact -->
