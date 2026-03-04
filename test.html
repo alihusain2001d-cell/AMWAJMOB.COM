@@ -1774,7 +1774,7 @@ async function submitOrder() {
       }
       document.getElementById('orderResult').innerHTML = _offHoursMsg;
       submitBtn.disabled = false;
-      submitBtn.textContent = '✅  تم الإرسال — سيتم تجهيز طلبك قريباً';
+      submitBtn.textContent = '✅ تم الإرسال — اضغط حسناً';
       submitBtn.style.background = '#16A34A';
       submitBtn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.4)';
       submitBtn.onclick = function() {
@@ -2583,6 +2583,13 @@ async function appBoot() {
       try {
         const rows = await fetchCustomers();
         const user = rows.find(r => normalizePhone(r.phone) === phone);
+
+        // ── لو الزبون محذوف من الشيت → خروج تلقائي ──
+        if (!user) {
+          logout();
+          return;
+        }
+
         if (user) localStorage.setItem('amwaj_user', JSON.stringify(user));
     localStorage.removeItem('amwaj_guest');
         const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone });
@@ -2606,6 +2613,10 @@ async function appBoot() {
     try {
       const rows = await fetchCustomers();
       const user = rows.find(r => normalizePhone(r.phone) === phone);
+
+      // ── لو الزبون محذوف من الشيت → خروج تلقائي ──
+      if (!user) { logout(); return; }
+
       if (user && user.status === 'approved') {
         localStorage.setItem('amwaj_user', JSON.stringify(user));
         const welcome = document.getElementById('storeWelcome');
