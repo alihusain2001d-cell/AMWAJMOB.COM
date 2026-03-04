@@ -440,7 +440,7 @@
 <script>
 // ==========================================
 const CONFIG = {
-  API_URL:   "https://script.google.com/macros/s/AKfycbwHckW5szEk1Bi5s4BndOPUeO5vwd2ilMXxjYjv7WxJUeWH09H19vzl1oyUo2zf0SXDUQ/exec",
+  API_URL:   "https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec",
   API_KEY:   "AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22",
   ADMIN_KEY: "AMWAJ_ADMIN_2024",    // ← نفس الكلمة في Code.gs
   LOGIN_PASS:"AMWAJadmin2024",      // ← كلمة سر دخول صفحة الأدمن (غيّرها)
@@ -708,6 +708,130 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
+
+// ==========================================
+// تنبيه الطلبات الجديدة — Polling كل 30 ثانية
+// ==========================================
+let _knownOrderIds = null;
+let _pollInterval  = null;
+
+function startPolling() {
+  if (_pollInterval) return;
+  _pollInterval = setInterval(async function() {
+    try {
+      const data = await apiCall('getAllOrders');
+      const orders = data || [];
+      const newIds = orders.map(o => o.orderId);
+
+      if (_knownOrderIds === null) {
+        // أول تحميل — فقط احفظ الأرقام
+        _knownOrderIds = new Set(newIds);
+        return;
+      }
+
+      // كشف طلبات جديدة
+      const newOrders = orders.filter(o => !_knownOrderIds.has(o.orderId));
+      if (newOrders.length > 0) {
+        newIds.forEach(id => _knownOrderIds.add(id));
+        allOrders = orders;
+        updateStats();
+        renderOrders();
+        showNewOrderAlert(newOrders);
+      }
+    } catch(e) { /* صامت */ }
+  }, 30000); // كل 30 ثانية
+}
+
+function showNewOrderAlert(orders) {
+  // صوت تنبيه
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 150, 300].forEach(function(delay) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay/1000);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.2);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime + delay/1000 + 0.2);
+    });
+  } catch(e) {}
+
+  // تنبيه مرئي
+  var old = document.getElementById('newOrderAlert');
+  if (old) old.remove();
+
+  var alert = document.createElement('div');
+  alert.id = 'newOrderAlert';
+  alert.style.cssText = [
+    'position:fixed','top:70px','left:50%',
+    'transform:translateX(-50%) translateY(-20px)',
+    'background:linear-gradient(135deg,#1a2a1a,#0d2010)',
+    'border:1px solid rgba(63,185,80,0.5)',
+    'color:white','padding:16px 24px','border-radius:14px',
+    'z-index:9999','box-shadow:0 8px 32px rgba(0,0,0,0.6)',
+    'display:flex','align-items:center','gap:14px',
+    'font-family:Tajawal,sans-serif','direction:rtl',
+    'opacity:0','transition:all .3s ease','cursor:pointer',
+    'min-width:260px'
+  ].join(';');
+
+  var names = orders.map(o => o.name||'زبون').slice(0,2).join('، ');
+  alert.innerHTML =
+    '<span style="font-size:32px;animation:pulse 0.5s ease infinite alternate;">🔔</span>' +
+    '<div>' +
+      '<div style="font-size:16px;font-weight:800;color:#3fb950;">' +
+        (orders.length > 1 ? orders.length + ' طلبات جديدة!' : 'طلب جديد وصل!') +
+      '</div>' +
+      '<div style="font-size:13px;opacity:.8;margin-top:3px;">' + names + '</div>' +
+    '</div>' +
+    '<span style="font-size:20px;opacity:.5;margin-right:auto;">✕</span>';
+
+  alert.onclick = function() { alert.remove(); filterOrders('pending'); };
+
+  // أضف animation للجرس
+  if (!document.getElementById('bellAnim')) {
+    var style = document.createElement('style');
+    style.id = 'bellAnim';
+    style.textContent = '@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.2)}}';
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(alert);
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    alert.style.opacity = '1';
+    alert.style.transform = 'translateX(-50%) translateY(0)';
+  }); });
+
+  // يختفي بعد 8 ثواني
+  setTimeout(function(){
+    alert.style.opacity = '0';
+    alert.style.transform = 'translateX(-50%) translateY(-20px)';
+    setTimeout(function(){ if(alert.parentNode) alert.remove(); }, 300);
+  }, 8000);
+
+  // إشعار الموبايل/المتصفح
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('🔔 طلب جديد - أمواج', {
+      body: orders.length + ' طلب جديد من ' + names,
+      icon: '📦'
+    });
+  }
+}
+
+// طلب صلاحية الإشعارات + بدء الـ polling بعد تسجيل الدخول
+const _origLoadOrders = loadOrders;
+window.loadOrders = async function() {
+  await _origLoadOrders();
+  // حفظ الأرقام الحالية كـ "معروفة"
+  _knownOrderIds = new Set(allOrders.map(o => o.orderId));
+  // طلب صلاحية إشعارات المتصفح
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  startPolling();
+};
 </script>
 </body>
 </html>
