@@ -1958,25 +1958,31 @@ function openFlatSubSheet(subType, labelAr, icon) {
 function renderSheetBrands(type) {
   const grid = document.getElementById('sheetBrands');
 
-  const logoHtml = {
-    'Apple':   '<span style="font-size:22px;">🍎</span>',
-    'Samsung': '<span style="font-size:12px;font-weight:900;color:#1428A0;letter-spacing:-0.5px;">SAMSUNG</span>',
-    'Huawei':  '<span style="font-size:12px;font-weight:900;color:#CF0A2C;">HUAWEI</span>',
-    'Honor':   '<span style="font-size:12px;font-weight:900;color:#000;">HONOR</span>',
-    'Xiaomi':  '<span style="display:inline-block;background:#FF6900;color:white;font-size:13px;font-weight:900;padding:1px 6px;border-radius:4px;">mi</span>',
-    'Redmi':   '<span style="font-size:12px;font-weight:900;color:#FF6900;">Redmi</span>',
-    'Poco':    '<span style="font-size:12px;font-weight:900;color:#FFEB00;background:#000;padding:1px 5px;border-radius:3px;">POCO</span>',
-    'Oppo':    '<span style="font-size:12px;font-weight:900;color:#1D4289;">OPPO</span>',
-    'Realme':  '<span style="font-size:12px;font-weight:900;"><span style="color:#FFC300;">real</span><span style="color:#000;">me</span></span>',
-    'Vivo':    '<span style="font-size:13px;font-weight:900;color:#415FFF;">vivo</span>',
-    'Infinix': '<span style="font-size:11px;font-weight:900;color:#E4002B;">Infinix</span>',
-    'Tecno':   '<span style="font-size:12px;font-weight:900;color:#00A0DC;">TECNO</span>',
-    'Itel':    '<span style="font-size:12px;font-weight:900;color:#E30613;font-style:italic;">itel</span>',
-    'Asus':    '<span style="font-size:12px;font-weight:900;color:#00539B;">ASUS</span>',
-    'Google':  '<span style="font-size:12px;font-weight:700;"><span style="color:#4285F4;">G</span><span style="color:#DB4437;">o</span><span style="color:#F4B400;">o</span><span style="color:#4285F4;">g</span><span style="color:#0F9D58;">l</span><span style="color:#DB4437;">e</span></span>',
-    'ZTE':     '<span style="font-size:12px;font-weight:900;color:#005BAC;">ZTE</span>',
-    'TCL':     '<span style="font-size:12px;font-weight:900;color:#E4002B;">TCL</span>',
+  // لوغوات حقيقية عبر img2.brandfetch.io
+  const logoSrc = {
+    'Apple':   'https://img2.brandfetch.io/idnrCPuv87/theme/dark/symbol.svg',
+    'Samsung': 'https://img2.brandfetch.io/idF3b0F7qI/theme/dark/logo.svg',
+    'Huawei':  'https://img2.brandfetch.io/idS6JvHLKr/theme/dark/logo.svg',
+    'Honor':   'https://img2.brandfetch.io/idjbVINZZO/theme/light/logo.svg',
+    'Xiaomi':  'https://img2.brandfetch.io/idN1buF3Qo/theme/dark/logo.svg',
+    'Redmi':   'https://img2.brandfetch.io/idvCGAjXYp/theme/dark/logo.svg',
+    'Poco':    'https://img2.brandfetch.io/idNm0IQOL3/theme/dark/logo.svg',
+    'Oppo':    'https://img2.brandfetch.io/idGa5PJHBY/theme/dark/logo.svg',
+    'Realme':  'https://img2.brandfetch.io/idAUbXpFUw/theme/dark/logo.svg',
+    'Vivo':    'https://img2.brandfetch.io/idlOCMtzTQ/theme/dark/logo.svg',
+    'Infinix': 'https://img2.brandfetch.io/idSmwsS-pJ/theme/dark/logo.svg',
+    'Tecno':   'https://img2.brandfetch.io/idJJHsTGzp/theme/dark/logo.svg',
+    'Itel':    'https://img2.brandfetch.io/idlYsTuSAR/theme/light/logo.svg',
+    'Asus':    'https://img2.brandfetch.io/id-EJyNwGV/theme/dark/logo.svg',
+    'Google':  'https://img2.brandfetch.io/idRFNfkvm2/theme/dark/logo.svg',
+    'ZTE':     'https://img2.brandfetch.io/idHaU9eFAX/theme/dark/logo.svg',
+    'TCL':     'https://img2.brandfetch.io/idKLENjMGe/theme/dark/logo.svg',
   };
+
+  const logoHtml = {};
+  Object.keys(logoSrc).forEach(function(k) {
+    logoHtml[k] = '<img src="' + logoSrc[k] + '" alt="' + k + '" style="height:22px;max-width:65px;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('' + k + ''))">';
+  });
 
   function getBrandLogos(brandsStr) {
     return brandsStr.split(',').map(function(br) {
