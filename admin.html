@@ -505,7 +505,16 @@ async function loadOrders() {
     updateStats();
     renderOrders();
   } catch(e) {
-    document.getElementById('ordersList').innerHTML = `<div class="empty"><div class="ico">⚠️</div><p>تعذر التحميل<br><small>${e.message}</small></p></div>`;
+    document.getElementById('ordersList').innerHTML = `
+      <div class="empty">
+        <div class="ico">⚠️</div>
+        <p style="margin-bottom:12px;">تعذر التحميل</p>
+        <div style="background:#161b22;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;font-size:12px;color:#8b949e;text-align:right;direction:rtl;max-width:320px;margin:0 auto;word-break:break-all;">
+          <b style="color:#f85149;">الخطأ:</b> ${e.message}<br><br>
+          <b style="color:#8b949e;">الرابط:</b><br>${CONFIG.API_URL.slice(0,60)}...
+        </div>
+        <button onclick="loadOrders()" style="margin-top:16px;padding:10px 24px;background:#58a6ff;color:#0d1117;border:none;border-radius:8px;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🔄 إعادة المحاولة</button>
+      </div>`;
   }
 }
 
