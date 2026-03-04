@@ -555,47 +555,26 @@ body {
 @media (min-width: 480px) {
   .app-shell { border-radius: 20px; margin-top: 20px; height: calc(100dvh - 40px); }
 }
-
-/* ── منع النسخ ── */
 * { -webkit-user-select:none !important; user-select:none !important; }
 input, textarea { -webkit-user-select:text !important; user-select:text !important; }
-
-/* ── زر الرجوع للأعلى ── */
 #scrollTopBtn {
-  position: fixed;
-  bottom: calc(var(--footer-h) + 14px);
-  right: max(16px, calc(50vw - 240px + 16px));
-  width: 42px; height: 42px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 600;
-  box-shadow: 0 4px 16px rgba(2,132,199,0.45);
-  transition: opacity 0.25s, transform 0.25s;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position:fixed; bottom:calc(var(--footer-h) + 14px);
+  right:max(16px, calc(50vw - 224px));
+  width:42px; height:42px; border-radius:50%;
+  background:var(--primary); color:white; border:none;
+  font-size:22px; font-weight:bold; cursor:pointer;
+  z-index:600; box-shadow:0 4px 16px rgba(2,132,199,0.45);
+  transition:opacity .25s,transform .25s;
+  opacity:0; pointer-events:none; transform:translateY(10px);
+  display:flex; align-items:center; justify-content:center;
 }
-#scrollTopBtn.visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
+#scrollTopBtn.visible { opacity:1; pointer-events:auto; transform:translateY(0); }
 </style>
 </head>
 <body>
 
 <!-- Cart floating btn -->
 <div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
-
-<!-- زر الرجوع للأعلى -->
 <button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
 
 <!-- flatpower modal -->
@@ -2116,7 +2095,6 @@ function loadMyOrders() {
     if (loadDiv) loadDiv.style.display = 'none';
     if (!orders || !orders.length) {
       if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#64748B;">📦 لا توجد طلبات</div>';
-      // مسح الرقم
       updateOrdersBadge(0);
       localStorage.setItem('amwaj_orders_seen', '[]');
       return;
@@ -2127,16 +2105,10 @@ function loadMyOrders() {
     try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen') || '[]'); } catch(e) {}
     var allIds = orders.map(function(o){ return o.orderId; });
     var newOrders = orders.filter(function(o){ return o.orderId && !seenIds.includes(o.orderId); });
-    // إشعار بالطلبات الجديدة (إذا مو أول مرة يفتح)
     if (newOrders.length > 0 && seenIds.length > 0) {
       showOrdersNotification(newOrders.length);
     }
-    // حفظ كل الطلبات كـ "مشوفة"
     localStorage.setItem('amwaj_orders_seen', JSON.stringify(allIds));
-
-    var statusLabels = { pending:'⏳ قيد التجهيز', picked:'🚗 في الطريق', delivered:'✅ تم التوصيل', cancelled:'❌ ملغي' };
-    var statusColors = { pending:'#FEF9C3', picked:'#FFF7ED', delivered:'#DCFCE7', cancelled:'#FEE2E2' };
-    var statusTextColors = { pending:'#854D0E', picked:'#C2410C', delivered:'#166534', cancelled:'#991B1B' };
 
     var html = orders.map(function(o) {
       var items = (o.items||[]).map(function(it) {
@@ -2144,12 +2116,9 @@ function loadMyOrders() {
         return '<div class="order-item-row">• ' + (it.name||'-') + ' × ' + (it.quantity||1) + ' — <span dir="ltr">' + formatPriceIQD(p2) + ' IQD</span></div>';
       }).join('');
       var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
-      var st = o.status || 'pending';
-      var statusBadge = '<span style="background:' + (statusColors[st]||'#F1F5F9') + ';color:' + (statusTextColors[st]||'#333') + ';padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;">' + (statusLabels[st]||st) + '</span>';
       return '<div class="order-card">' +
         '<div class="order-card-header">' +
           '<span class="order-id-text">' + (o.orderId||'-') + '</span>' +
-          statusBadge +
         '</div>' +
         items +
         '<div style="font-weight:800;font-size:15px;color:#0284C7;margin-top:8px;border-top:1px solid #E2E8F0;padding-top:8px;">المجموع: <span dir="ltr">' + formatPriceIQD(total) + ' IQD</span></div>' +
@@ -2160,7 +2129,6 @@ function loadMyOrders() {
 
     // مسح الرقم بعد الفتح
     updateOrdersBadge(0);
-    localStorage.removeItem('amwaj_orders_badge');
 
   }).catch(function(e) {
     if (loadDiv) loadDiv.style.display = 'none';
@@ -2169,35 +2137,18 @@ function loadMyOrders() {
 }
 
 function showOrdersNotification(count) {
-  // أزل أي تنبيه سابق
   var old = document.getElementById('ordersNotifToast');
   if (old) old.remove();
-
   var toast = document.createElement('div');
   toast.id = 'ordersNotifToast';
-  toast.style.cssText = [
-    'position:fixed','top:80px','left:50%',
-    'transform:translateX(-50%) translateY(-20px)',
-    'background:#0F172A','color:white',
-    'padding:14px 22px','border-radius:16px',
-    'z-index:99999','box-shadow:0 8px 28px rgba(0,0,0,0.35)',
-    'display:flex','align-items:center','gap:12px',
-    'font-family:Tajawal,sans-serif','font-size:15px','font-weight:700',
-    'opacity:0','transition:all .35s cubic-bezier(.32,.72,0,1)',
-    'direction:rtl','min-width:220px','text-align:right'
-  ].join(';');
-  toast.innerHTML = '<span style="font-size:28px;">📦</span>' +
-    '<div><div>' + count + ' طلب' + (count > 1 ? ' جديدة' : ' جديد') + ' وصلك!</div>' +
-    '<div style="font-size:12px;opacity:.75;margin-top:2px;">اضغط لعرض الطلبات</div></div>';
+  toast.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:#0F172A;color:white;padding:14px 22px;border-radius:16px;z-index:99999;box-shadow:0 8px 28px rgba(0,0,0,0.35);display:flex;align-items:center;gap:12px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;opacity:0;transition:all .35s cubic-bezier(.32,.72,0,1);direction:rtl;min-width:220px;cursor:pointer;';
+  toast.innerHTML = '<span style="font-size:28px;">📦</span><div><div>' + count + (count > 1 ? ' طلبات جديدة' : ' طلب جديد') + ' وصلك!</div><div style="font-size:12px;opacity:.75;margin-top:2px;">اضغط لعرض الطلبات</div></div>';
   toast.onclick = function() { toast.remove(); openOrdersSheet(); };
   document.body.appendChild(toast);
-
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(-50%) translateY(0)';
-    });
-  });
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+  }); });
   setTimeout(function(){
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(-50%) translateY(-20px)';
@@ -2589,17 +2540,12 @@ async function appBoot() {
     localStorage.removeItem('amwaj_guest');
         const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone });
         if (ords) {
-          // كشف طلبات جديدة
-          var seenIds = [];
-          try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen') || '[]'); } catch(e) {}
+          var seenIds = []; try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen')||'[]'); } catch(e){}
           var allIds = ords.map(function(o){ return o.orderId; });
           var newOrds = ords.filter(function(o){ return o.orderId && !seenIds.includes(o.orderId); });
           if (newOrds.length > 0 && seenIds.length > 0) {
             updateOrdersBadge(newOrds.length);
             showOrdersNotification(newOrds.length);
-          } else {
-            var ac = ords.filter(function(o){ return o.status === 'pending' || o.status === 'picked'; });
-            updateOrdersBadge(ac.length);
           }
         }
       } catch(e) {}
@@ -2641,14 +2587,13 @@ loadBackCover(); loadHousing(); loadLens(); loadCamera();
 loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc();
 loadCart();
 appBoot();
-// Save snapshot after data loads
 setTimeout(saveSnapshotAfterLoad, 4000);
 
 // ── منع النسخ والتصوير ──
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 document.addEventListener('keydown', function(e){
-  if ((e.ctrlKey && ['c','a','s','u','p','x'].includes(e.key.toLowerCase())) ||
-      e.key==='PrintScreen' || e.key==='F12') { e.preventDefault(); e.stopPropagation(); }
+  if ((e.ctrlKey && ['c','a','s','u','p','x'].includes(e.key.toLowerCase())) || e.key==='PrintScreen' || e.key==='F12')
+    { e.preventDefault(); e.stopPropagation(); }
 });
 document.addEventListener('selectstart', function(e){
   if (!['INPUT','TEXTAREA'].includes(e.target.tagName)) e.preventDefault();
@@ -2657,51 +2602,40 @@ document.addEventListener('visibilitychange', function(){
   var ov = document.getElementById('screenshotOverlay');
   if (document.visibilityState === 'hidden') {
     if (!ov) {
-      ov = document.createElement('div');
-      ov.id = 'screenshotOverlay';
+      ov = document.createElement('div'); ov.id = 'screenshotOverlay';
       ov.style.cssText = 'position:fixed;inset:0;background:#0F172A;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:Tajawal,sans-serif;text-align:center;padding:30px;';
       ov.innerHTML = '<div style="font-size:56px;margin-bottom:16px;">🔒</div><div style="font-size:20px;font-weight:800;margin-bottom:10px;">محتوى محمي</div><div style="font-size:14px;opacity:.7;line-height:1.8;">أمواج للإلكترونيات<br>جميع الأسعار محمية ومحفوظة الحقوق</div>';
       document.body.appendChild(ov);
     }
     ov.style.display = 'flex';
-  } else {
-    if (ov) ov.style.display = 'none';
-  }
+  } else { if (ov) ov.style.display = 'none'; }
 });
 
 // ── زر الرجوع للأعلى ──
 (function(){
   var btn = document.getElementById('scrollTopBtn');
   if (!btn) return;
-
-  function attachToBody(sheetId) {
-    var sheet = document.getElementById(sheetId);
-    if (!sheet) return;
-    var body = sheet.querySelector('.bsheet-body');
-    if (!body || body._sta) return;
-    body._sta = true;
-    body.addEventListener('scroll', function(){
-      if (body.scrollTop > 120) { btn.classList.add('visible'); btn._sc = body; }
-      else { btn.classList.remove('visible'); btn._sc = null; }
-    }, {passive:true});
-  }
-
-  // Override openSheet to attach listener when sheet opens
   var _origOpen = window.openSheet;
   window.openSheet = function(id) {
     _origOpen(id);
-    setTimeout(function(){ attachToBody(id); }, 50);
+    setTimeout(function(){
+      var sheet = document.getElementById(id);
+      if (!sheet) return;
+      var body = sheet.querySelector('.bsheet-body');
+      if (!body || body._sta) return;
+      body._sta = true;
+      body.addEventListener('scroll', function(){
+        if (body.scrollTop > 120) { btn.classList.add('visible'); btn._sc = body; }
+        else { btn.classList.remove('visible'); btn._sc = null; }
+      }, {passive:true});
+    }, 50);
   };
-
-  // Also attach to already-attached sheets on close
   var _origClose = window.closeSheet;
   window.closeSheet = function(id) {
     _origClose(id);
-    btn.classList.remove('visible');
-    btn._sc = null;
+    btn.classList.remove('visible'); btn._sc = null;
   };
 })();
-
 window.scrollSheetToTop = function(){
   var btn = document.getElementById('scrollTopBtn');
   if (btn && btn._sc) btn._sc.scrollTo({top:0, behavior:'smooth'});
