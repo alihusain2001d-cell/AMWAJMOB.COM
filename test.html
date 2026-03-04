@@ -1981,7 +1981,7 @@ function renderSheetBrands(type) {
 
   const logoHtml = {};
   Object.keys(logoSrc).forEach(function(k) {
-    logoHtml[k] = '<img src="' + logoSrc[k] + '" alt="' + k + '" style="height:22px;max-width:65px;object-fit:contain;" onerror="this.replaceWith(document.createTextNode('' + k + ''))">';
+    logoHtml[k] = '<img src="' + logoSrc[k] + '" alt="' + k + '" style="height:22px;max-width:65px;object-fit:contain;" onerror="this.outerHTML=this.alt">';
   });
 
   function getBrandLogos(brandsStr) {
