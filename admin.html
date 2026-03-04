@@ -29,6 +29,7 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    direction: rtl;
   }
 
   /* ===== Login ===== */
@@ -212,6 +213,7 @@
     padding: 14px 16px 10px;
     cursor: pointer;
     user-select: none;
+    direction: rtl;
   }
 
   .o-left { display: flex; align-items: center; gap: 10px; }
@@ -240,6 +242,8 @@
     display: none;
     padding: 0 16px 16px;
     border-top: 1px solid var(--border);
+    color: var(--text);
+    direction: rtl;
   }
   .o-card.open .o-card-body { display: block; }
 
@@ -249,9 +253,8 @@
     gap: 10px;
     margin-top: 14px;
   }
-  .info-cell { }
-  .info-cell .lbl { font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
-  .info-cell .val { font-size: 14px; font-weight: 600; color: var(--text); }
+  .info-cell .lbl { font-size: 12px; color: var(--text-dim); margin-bottom: 3px; }
+  .info-cell .val { font-size: 14px; font-weight: 600; color: var(--text) !important; }
   .info-cell.full { grid-column: 1 / -1; }
 
   .items-section { margin-top: 14px; }
@@ -590,7 +593,7 @@ function buildCard(o) {
   }
 
   return `
-  <div class="o-card" id="card-${o.orderId}">
+  <div class="o-card" data-orderid="${o.orderId}">
     <div class="o-card-head" onclick="toggleCard('${o.orderId}')">
       <div class="o-left">
         <div>
@@ -637,7 +640,7 @@ function buildCard(o) {
 }
 
 function toggleCard(id) {
-  const card = document.getElementById('card-'+id);
+  const card = document.querySelector('[data-orderid="' + id + '"]');
   if (card) card.classList.toggle('open');
 }
 
