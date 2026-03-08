@@ -1052,7 +1052,7 @@ function footerTab(tab) {
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'home') {
-    openCatalogPage();
+    try { openCatalogPage(); } catch(e) { alert('خطأ: ' + e.message); }
   } else if (tab === 'search') {
     openSearchSheet();
   }
