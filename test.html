@@ -839,7 +839,20 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <div class="store-sub"> قطع غيار موبايل — كربلاء المقدسة</div>
           <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
         </div>
-      </div>
+      
+<div id="catalogPage" style="display:none">
+  <div style="padding:12px 12px 0;">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;box-shadow:0 1px 4px rgba(2,132,199,0.07);">
+      <span style="font-size:18px;color:#94a3b8;">🔍</span>
+      <input type="text" id="catalogSearch" placeholder="ابحث في كل المواد..." 
+        style="flex:1;border:none;outline:none;font-family:Tajawal,sans-serif;font-size:16px;background:transparent;color:#0f172a;"
+        oninput="filterCatalog(this.value)">
+      <span id="catalogCount" style="font-size:12px;color:#94a3b8;white-space:nowrap;"></span>
+    </div>
+  </div>
+  <div id="catalogResults" style="padding:10px 12px;overflow-y:auto;height:calc(100dvh - 140px);"></div>
+</div>
+</div>
 
       <!-- Quick actions -->
       <div class="sec-label">إجراءات سريعة</div>
@@ -960,18 +973,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="registerPage" style="display:none"></div>
 <div id="loginPage" style="display:none"></div>
 <div id="homePage" style="display:none"></div>
-<div id="catalogPage" style="display:none">
-  <div style="padding:12px 12px 0;">
-    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;box-shadow:0 1px 4px rgba(2,132,199,0.07);">
-      <span style="font-size:18px;color:#94a3b8;">🔍</span>
-      <input type="text" id="catalogSearch" placeholder="ابحث في كل المواد..." 
-        style="flex:1;border:none;outline:none;font-family:Tajawal,sans-serif;font-size:16px;background:transparent;color:#0f172a;"
-        oninput="filterCatalog(this.value)">
-      <span id="catalogCount" style="font-size:12px;color:#94a3b8;white-space:nowrap;"></span>
-    </div>
-  </div>
-  <div id="catalogResults" style="padding:10px 12px;overflow-y:auto;height:calc(100dvh - 140px);"></div>
-</div>
+
 <div id="activatePage" style="display:none"></div>
 <div id="checkPage" style="display:none"></div>
 <div id="myOrdersPage" style="display:none"></div>
