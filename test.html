@@ -2849,6 +2849,7 @@ if (!localStorage.getItem('amwaj_install_shown')) {
 var catalogAllItems = [];
 
 function openCatalogPage() {
+  showScreen('homeScreen');
   showPage('catalogPage');
   document.getElementById('catalogSearch').value = '';
   if (!catalogAllItems.length) {
