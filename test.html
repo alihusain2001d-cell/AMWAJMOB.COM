@@ -173,13 +173,13 @@ body {
 .footer-fab {
   width: 56px; height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border: 4px solid var(--card);
+  background: transparent;
+  border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   font-size: 22px;
   margin-top: -20px;
-  box-shadow: 0 4px 16px rgba(2,132,199,0.4);
+  box-shadow: none;
   transition: all 0.2s;
   flex-shrink: 0;
   align-self: flex-start;
@@ -932,8 +932,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   <!-- Footer nav -->
   <div class="app-footer">
     <button class="footer-tab active" id="tab-home" onclick="footerTab('home')">
-      <span class="footer-tab-icon">✨</span>
-      <span class="footer-tab-label">وصلنا حديثاً</span>
+      <span class="footer-tab-icon">🏠</span>
+      <span class="footer-tab-label">جميع المواد</span>
     </button>
     <button class="footer-tab" id="tab-search" onclick="openSearchSheet()">
       <span class="footer-tab-icon">🔍</span>
@@ -960,6 +960,18 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="registerPage" style="display:none"></div>
 <div id="loginPage" style="display:none"></div>
 <div id="homePage" style="display:none"></div>
+<div id="catalogPage" style="display:none">
+  <div style="padding:12px 12px 0;">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 14px;box-shadow:0 1px 4px rgba(2,132,199,0.07);">
+      <span style="font-size:18px;color:#94a3b8;">🔍</span>
+      <input type="text" id="catalogSearch" placeholder="ابحث في كل المواد..." 
+        style="flex:1;border:none;outline:none;font-family:Tajawal,sans-serif;font-size:16px;background:transparent;color:#0f172a;"
+        oninput="filterCatalog(this.value)">
+      <span id="catalogCount" style="font-size:12px;color:#94a3b8;white-space:nowrap;"></span>
+    </div>
+  </div>
+  <div id="catalogResults" style="padding:10px 12px;overflow-y:auto;height:calc(100dvh - 140px);"></div>
+</div>
 <div id="activatePage" style="display:none"></div>
 <div id="checkPage" style="display:none"></div>
 <div id="myOrdersPage" style="display:none"></div>
@@ -1033,7 +1045,7 @@ function footerTab(tab) {
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'home') {
-    openNewItemsSheet();
+    openCatalogPage();
   } else if (tab === 'search') {
     openSearchSheet();
   }
@@ -1199,7 +1211,7 @@ function openFlatSub(subType, labelAr, icon) {
 let currentFlatSubType = null;
 
 function showPage(pageId) {
-  ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage"].forEach(p => {
+  ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage","catalogPage"].forEach(p => {
     const el = document.getElementById(p);
     if (el) el.style.display = "none";
   });
@@ -2828,6 +2840,130 @@ if (!localStorage.getItem('amwaj_install_shown')) {
   setTimeout(function() {
     document.getElementById('installPrompt').style.display = 'flex';
   }, 2000);
+}
+
+// ==========================================
+// صفحة الكتالوج الكامل
+// ==========================================
+
+var catalogAllItems = [];
+
+function openCatalogPage() {
+  showPage('catalogPage');
+  document.getElementById('catalogSearch').value = '';
+  if (!catalogAllItems.length) {
+    buildCatalogItems();
+  } else {
+    renderCatalogItems(catalogAllItems);
+  }
+}
+
+function buildCatalogItems() {
+  var resultsDiv = document.getElementById('catalogResults');
+  resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div><div style="margin-top:12px;color:#64748b;">جارٍ تحميل المواد...</div></div>';
+
+  var attempts = 0;
+  function tryBuild() {
+    attempts++;
+    var allTypes = [
+      {type:'screens',    data: pricesData,       label:'شاشات',        icon:'🖥️'},
+      {type:'batteries',  data: batteriesData,     label:'بطاريات',      icon:'🔋'},
+      {type:'chargeboards',data:chargeboardsData,  label:'بورد شحن',     icon:'🔌'},
+      {type:'flatcharging',data:flatchargingData,  label:'شريط شحن',     icon:'⚡'},
+      {type:'flatpower',  data: flatpowerData,     label:'فلات',         icon:'🔊'},
+      {type:'backcover',  data: backcoverData,     label:'باك كفر',      icon:'📱'},
+      {type:'housing',    data: housingData,       label:'شاصي',         icon:'🏠'},
+      {type:'camera',     data: cameraData,        label:'كاميرا',       icon:'📷'},
+      {type:'buzzer',     data: buzzerData,        label:'سماعة جرس',    icon:'🔔'},
+      {type:'earSpeaker', data: earSpeakerData,    label:'سماعة اتصال',  icon:'📞'},
+      {type:'doorSim',    data: doorSimData,       label:'باب سيم',      icon:'💳'},
+      {type:'fingerprint',data: fingerprintData,   label:'بصمة',         icon:'👆'},
+      {type:'lens',       data: lensData,          label:'عدسة كاميرا',  icon:'📷'},
+      {type:'misc',       data: miscData,          label:'منوعة',        icon:'📦'},
+    ];
+
+    var totalLoaded = allTypes.reduce(function(s,t){ return s + (t.data||[]).length; }, 0);
+    if (totalLoaded === 0 && attempts < 20) { setTimeout(tryBuild, 500); return; }
+
+    catalogAllItems = [];
+    allTypes.forEach(function(t) {
+      (t.data||[]).forEach(function(p) {
+        var qty   = Number(p.qty)   || 0;
+        var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
+        if (qty <= 0 || price <= 0) return;
+        catalogAllItems.push(Object.assign({}, p, {
+          _type:  t.type,
+          _label: t.label,
+          _icon:  t.icon
+        }));
+      });
+    });
+
+    renderCatalogItems(catalogAllItems);
+  }
+  setTimeout(tryBuild, 100);
+}
+
+function filterCatalog(q) {
+  if (!catalogAllItems.length) return;
+  var term = q.trim().toLowerCase();
+  if (!term) {
+    renderCatalogItems(catalogAllItems);
+    return;
+  }
+  var filtered = catalogAllItems.filter(function(p) {
+    return (p.name||'').toLowerCase().includes(term) ||
+           (p.brand||'').toLowerCase().includes(term) ||
+           (p._label||'').includes(term);
+  });
+  renderCatalogItems(filtered);
+}
+
+function renderCatalogItems(items) {
+  var resultsDiv = document.getElementById('catalogResults');
+  var countEl    = document.getElementById('catalogCount');
+  countEl.textContent = items.length + ' مادة';
+
+  if (!items.length) {
+    resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><div style="font-size:36px;">🔍</div><div style="margin-top:8px;">لا توجد نتائج</div></div>';
+    return;
+  }
+
+  var html = '';
+  items.forEach(function(p) {
+    var price    = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
+    var priceHtml, cartBtn;
+
+    if (isGuest()) {
+      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+      cartBtn   = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+    } else {
+      priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+      var pid   = cacheProduct(Object.assign({}, p, {itemType: p._type}));
+      cartBtn   = '<button class="add-to-cart-btn" onclick="addToCart('' + pid + '')">🛒 أضف للسلة</button>';
+    }
+
+    var typeHtml  = (p._type === 'screens' && p.type) ? '<span class="pi-type">' + sanitize(p.type) + '</span>' : '';
+    var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '';
+    var brandHtml = p.brand ? '<span style="color:#94a3b8;font-size:12px;">' + sanitize(p.brand) + '</span>' : '';
+
+    html += '<div class="price-item">' +
+      '<div class="pi-header">' +
+        '<div>' +
+          '<div class="pi-name">' + p._icon + ' ' + sanitize(p.name||'') + '</div>' +
+          '<div style="display:flex;gap:6px;align-items:center;margin-top:2px;">' +
+            '<span style="background:#e0f2fe;color:#0284c7;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700;">' + sanitize(p._label) + '</span>' +
+            brandHtml + typeHtml +
+          '</div>' +
+        '</div>' +
+        priceHtml +
+      '</div>' +
+      notesHtml +
+      cartBtn +
+    '</div>';
+  });
+
+  resultsDiv.innerHTML = html;
 }
 </script>
 
