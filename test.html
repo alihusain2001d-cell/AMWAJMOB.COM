@@ -1041,7 +1041,8 @@ function closeFlatpowerModal(e) {
 }
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
-  if (!u && !isGuest()) { showScreen('loginScreen'); return; }
+  // جميع المواد تشتغل دايماً حتى بدون تسجيل
+  if (tab !== 'home' && !u && !isGuest()) { showScreen('loginScreen'); return; }
   if (isGuest() && (tab === 'cart' || tab === 'orders')) { showLoginPrompt(); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
@@ -2844,130 +2845,6 @@ if (!localStorage.getItem('amwaj_install_shown')) {
   }, 2000);
 }
 
-// ==========================================
-// صفحة الكتالوج الكامل
-// ==========================================
-
-var catalogAllItems = [];
-
-function openCatalogPage() {
-  showScreen('homeScreen');
-  showPage('catalogPage');
-  document.getElementById('catalogSearch').value = '';
-  if (!catalogAllItems.length) {
-    buildCatalogItems();
-  } else {
-    renderCatalogItems(catalogAllItems);
-  }
-}
-
-function buildCatalogItems() {
-  var resultsDiv = document.getElementById('catalogResults');
-  resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div><div style="margin-top:12px;color:#64748b;">جارٍ تحميل المواد...</div></div>';
-
-  var attempts = 0;
-  function tryBuild() {
-    attempts++;
-    var allTypes = [
-      {type:'screens',    data: pricesData,       label:'شاشات',        icon:'🖥️'},
-      {type:'batteries',  data: batteriesData,     label:'بطاريات',      icon:'🔋'},
-      {type:'chargeboards',data:chargeboardsData,  label:'بورد شحن',     icon:'🔌'},
-      {type:'flatcharging',data:flatchargingData,  label:'شريط شحن',     icon:'⚡'},
-      {type:'flatpower',  data: flatpowerData,     label:'فلات',         icon:'🔊'},
-      {type:'backcover',  data: backcoverData,     label:'باك كفر',      icon:'📱'},
-      {type:'housing',    data: housingData,       label:'شاصي',         icon:'🏠'},
-      {type:'camera',     data: cameraData,        label:'كاميرا',       icon:'📷'},
-      {type:'buzzer',     data: buzzerData,        label:'سماعة جرس',    icon:'🔔'},
-      {type:'earSpeaker', data: earSpeakerData,    label:'سماعة اتصال',  icon:'📞'},
-      {type:'doorSim',    data: doorSimData,       label:'باب سيم',      icon:'💳'},
-      {type:'fingerprint',data: fingerprintData,   label:'بصمة',         icon:'👆'},
-      {type:'lens',       data: lensData,          label:'عدسة كاميرا',  icon:'📷'},
-      {type:'misc',       data: miscData,          label:'منوعة',        icon:'📦'},
-    ];
-
-    var totalLoaded = allTypes.reduce(function(s,t){ return s + (t.data||[]).length; }, 0);
-    if (totalLoaded === 0 && attempts < 20) { setTimeout(tryBuild, 500); return; }
-
-    catalogAllItems = [];
-    allTypes.forEach(function(t) {
-      (t.data||[]).forEach(function(p) {
-        var qty   = Number(p.qty)   || 0;
-        var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
-        if (qty <= 0 || price <= 0) return;
-        catalogAllItems.push(Object.assign({}, p, {
-          _type:  t.type,
-          _label: t.label,
-          _icon:  t.icon
-        }));
-      });
-    });
-
-    renderCatalogItems(catalogAllItems);
-  }
-  setTimeout(tryBuild, 100);
-}
-
-function filterCatalog(q) {
-  if (!catalogAllItems.length) return;
-  var term = q.trim().toLowerCase();
-  if (!term) {
-    renderCatalogItems(catalogAllItems);
-    return;
-  }
-  var filtered = catalogAllItems.filter(function(p) {
-    return (p.name||'').toLowerCase().includes(term) ||
-           (p.brand||'').toLowerCase().includes(term) ||
-           (p._label||'').includes(term);
-  });
-  renderCatalogItems(filtered);
-}
-
-function renderCatalogItems(items) {
-  var resultsDiv = document.getElementById('catalogResults');
-  var countEl    = document.getElementById('catalogCount');
-  countEl.textContent = items.length + ' مادة';
-
-  if (!items.length) {
-    resultsDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;"><div style="font-size:36px;">🔍</div><div style="margin-top:8px;">لا توجد نتائج</div></div>';
-    return;
-  }
-
-  var html = '';
-  items.forEach(function(p) {
-    var price    = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
-    var priceHtml, cartBtn;
-
-    if (isGuest()) {
-      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      cartBtn   = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
-    } else {
-      priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
-      var pid   = cacheProduct(Object.assign({}, p, {itemType: p._type}));
-      cartBtn   = '<button class="add-to-cart-btn" onclick="addToCart('' + pid + '')">🛒 أضف للسلة</button>';
-    }
-
-    var typeHtml  = (p._type === 'screens' && p.type) ? '<span class="pi-type">' + sanitize(p.type) + '</span>' : '';
-    var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '';
-    var brandHtml = p.brand ? '<span style="color:#94a3b8;font-size:12px;">' + sanitize(p.brand) + '</span>' : '';
-
-    html += '<div class="price-item">' +
-      '<div class="pi-header">' +
-        '<div>' +
-          '<div class="pi-name">' + p._icon + ' ' + sanitize(p.name||'') + '</div>' +
-          '<div style="display:flex;gap:6px;align-items:center;margin-top:2px;">' +
-            '<span style="background:#e0f2fe;color:#0284c7;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700;">' + sanitize(p._label) + '</span>' +
-            brandHtml + typeHtml +
-          '</div>' +
-        '</div>' +
-        priceHtml +
-      '</div>' +
-      notesHtml +
-      cartBtn +
-    '</div>';
-  });
-
-  resultsDiv.innerHTML = html;
-}
 </script>
 
 </body>
