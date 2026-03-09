@@ -2776,7 +2776,6 @@ function openCheckFromAccount() {
       <button class="bsheet-close" onclick="closeSheet('allProductsSheet')">✕</button>
     </div>
     <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="allProdSearch" placeholder="ابحث في جميع المواد..." oninput="handleAllProdSearch()" autocomplete="off"></div>
-    <div id="allProdCategories" style="padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;overflow-y:auto;"></div>
     <div id="allProdResults" style="padding:0 14px 14px;overflow-y:auto;"></div>
   </div>
 </div>
@@ -2816,90 +2815,124 @@ if (!localStorage.getItem('amwaj_install_shown')) {
 }
 
 // ===== ALL PRODUCTS SHEET =====
-var allProdCategories = [
-  {key:'screens',      label:'الشاشات',       icon:'🖥️'},
-  {key:'batteries',    label:'البطاريات',      icon:'🔋'},
-  {key:'chargeboards', label:'بورد شحن',       icon:'🔌'},
-  {key:'flatcharging', label:'شريط شحن',       icon:'⚡'},
-  {key:'flatpower',    label:'فلات بور',       icon:'⚡', sub:'FLAT POWER'},
-  {key:'flatpower',    label:'فلات صوت',       icon:'🔉', sub:'FLAT VOLUME'},
-  {key:'flatpower',    label:'سماعة جرس',      icon:'🔔', sub:'BUZZER'},
-  {key:'flatpower',    label:'سماعة اتصال',    icon:'📞', sub:'EAR SPEAKER'},
-  {key:'flatpower',    label:'باب سيم',        icon:'💳', sub:'DOOR SIM'},
-  {key:'flatpower',    label:'بصمة',           icon:'👆', sub:'FINGERPRINT'},
-  {key:'lens',         label:'عدسة كاميرا',    icon:'📷'},
-  {key:'flatpower',    label:'منوعة',          icon:'📦', sub:'OTHER'},
-  {key:'backcover',    label:'باك كفر',        icon:'📱'},
-  {key:'housing',      label:'شاصي',           icon:'🏠'},
-  {key:'camera',       label:'كاميرا',         icon:'📸'},
+var ALL_PROD_ORDER = [
+  {key:'screens',      label:'الشاشات',        icon:'🖥️'},
+  {key:'batteries',    label:'البطاريات',       icon:'🔋'},
+  {key:'chargeboards', label:'بورد شحن',        icon:'🔌'},
+  {key:'flatcharging', label:'شريط شحن',        icon:'⚡'},
+  {key:'flatpower',    label:'فلات بور',        icon:'⚡',  sub:'FLAT POWER'},
+  {key:'flatpower',    label:'فلات صوت',        icon:'🔉',  sub:'FLAT VOLUME'},
+  {key:'flatpower',    label:'سماعة جرس',       icon:'🔔',  sub:'BUZZER'},
+  {key:'flatpower',    label:'سماعة اتصال',     icon:'📞',  sub:'EAR SPEAKER'},
+  {key:'flatpower',    label:'باب سيم',         icon:'💳',  sub:'DOOR SIM'},
+  {key:'flatpower',    label:'بصمة',            icon:'👆',  sub:'FINGERPRINT'},
+  {key:'lens',         label:'عدسة كاميرا',     icon:'📷'},
+  {key:'flatpower',    label:'منوعة',           icon:'📦',  sub:'OTHER'},
+  {key:'backcover',    label:'باك كفر',         icon:'📱'},
+  {key:'housing',      label:'شاصي',            icon:'🏠'},
+  {key:'camera',       label:'كاميرا',          icon:'📸'},
 ];
 
-function openAllProductsSheet() {
-  document.getElementById('allProdSearch').value = '';
-  document.getElementById('allProdResults').innerHTML = '';
-  renderAllProdCategories();
-  openSheet('allProductsSheet');
+function createAllProdItem(p, typeKey) {
+  var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
+  var qty = Number(p.qty) || 0;
+  var avail = qty > 0 && price > 0;
+  var priceHtml = avail
+    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
+    : '<div class="pi-price unavail">غير متوفر</div>';
+  var typeHtml = (typeKey === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
+  var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
+  var cartBtn = '';
+  if (avail) {
+    if (isGuest()) {
+      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+    } else {
+      var pid = cacheProduct(Object.assign({}, p, {itemType: typeKey}));
+      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
+    }
+  }
+  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
+    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
+    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
 }
 
-function renderAllProdCategories() {
-  var catDiv = document.getElementById('allProdCategories');
-  catDiv.style.display = 'grid';
-  catDiv.innerHTML = allProdCategories.map(function(c) {
-    var onclick = c.sub
-      ? 'openFlatSubSheet("' + c.sub + '","' + c.label + '","' + c.icon + '")'
-      : 'openProductSheet("' + c.key + '","' + c.icon + ' ' + c.label + '")';
-    return '<div onclick="' + onclick + '" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;active:background:#E2E8F0;">' +
-      '<div style="font-size:26px;margin-bottom:4px;">' + c.icon + '</div>' +
-      '<div style="font-size:13px;font-weight:700;color:#1E293B;">' + c.label + '</div>' +
-      '</div>';
-  }).join('');
-}
-
-function getAllData() {
+function getAllDataOrdered() {
   var all = [];
-  var types = ['screens','batteries','chargeboards','flatcharging','backcover','housing','lens','camera'];
-  types.forEach(function(t) {
-    var d = getDataForType(t) || [];
-    d.forEach(function(p) { all.push(Object.assign({}, p, {_type: t})); });
-  });
-  var flatSubs = ['FLAT POWER','FLAT VOLUME','BUZZER','EAR SPEAKER','DOOR SIM','FINGERPRINT','OTHER'];
-  flatSubs.forEach(function(s) {
-    var d = getFlatSubData(s) || [];
-    d.forEach(function(p) { all.push(Object.assign({}, p, {_type: 'flatpower', _sub: s})); });
+  ALL_PROD_ORDER.forEach(function(cat) {
+    var items = cat.sub ? (getFlatSubData(cat.sub)||[]) : (getDataForType(cat.key)||[]);
+    items.forEach(function(p) {
+      all.push(Object.assign({}, p, {_type: cat.key, _sub: cat.sub||null, _label: cat.label, _icon: cat.icon}));
+    });
   });
   return all;
 }
 
-function handleAllProdSearch() {
-  var q = document.getElementById('allProdSearch').value.trim().toLowerCase();
-  var catDiv = document.getElementById('allProdCategories');
+function renderAllProdList(data, query) {
   var resDiv = document.getElementById('allProdResults');
-
-  if (q.length < 2) {
-    resDiv.innerHTML = '';
-    catDiv.style.display = 'grid';
+  if (!data || !data.length) {
+    resDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج' + (query ? ' لـ &quot;' + query + '&quot;' : '') + '</div>';
     return;
   }
 
-  catDiv.style.display = 'none';
-  resDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
+  // Group by category
+  var groups = {};
+  var groupOrder = [];
+  data.forEach(function(p) {
+    var gkey = p._label;
+    if (!groups[gkey]) { groups[gkey] = {label: p._label, icon: p._icon, items: []}; groupOrder.push(gkey); }
+    groups[gkey].items.push(p);
+  });
+
+  var html = '';
+  groupOrder.forEach(function(gkey) {
+    var g = groups[gkey];
+    html += '<div style="margin-bottom:4px;">' +
+      '<div style="padding:10px 4px 6px;font-size:15px;font-weight:800;color:#0F172A;border-bottom:2px solid #E2E8F0;margin-bottom:6px;">' +
+      g.icon + ' ' + g.label + ' <span style="font-size:12px;font-weight:500;color:#94A3B8;">(' + g.items.length + ')</span></div>' +
+      g.items.map(function(p) { return createAllProdItem(p, p._type); }).join('') +
+      '</div>';
+  });
+
+  resDiv.innerHTML = html;
+}
+
+function openAllProductsSheet() {
+  document.getElementById('allProdSearch').value = '';
+  var resDiv = document.getElementById('allProdResults');
+  resDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل المواد...</div></div>';
+  openSheet('allProductsSheet');
 
   var attempts = 0;
-  function trySearch() {
+  function tryLoad() {
     attempts++;
-    var all = getAllData();
-    if (all.length === 0 && attempts < 20) { setTimeout(trySearch, 500); return; }
+    var all = getAllDataOrdered();
+    if (all.length === 0 && attempts < 30) { setTimeout(tryLoad, 500); return; }
+    renderAllProdList(all, '');
+  }
+  setTimeout(tryLoad, 300);
+}
+
+function handleAllProdSearch() {
+  var q = document.getElementById('allProdSearch').value.trim().toLowerCase();
+  var resDiv = document.getElementById('allProdResults');
+
+  if (q.length < 2) {
+    // عرض الكل
+    var all = getAllDataOrdered();
+    if (all.length > 0) renderAllProdList(all, '');
+    return;
+  }
+
+  resDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
+
+  setTimeout(function() {
+    var all = getAllDataOrdered();
     var filtered = all.filter(function(p) {
       return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q);
     });
-    if (!filtered.length) {
-      resDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
-      return;
-    }
-    resDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin:0 0 8px;">' + Math.min(filtered.length,60) + ' نتيجة</div>' +
-      filtered.slice(0,60).map(function(p) { return createSheetPriceItem(p); }).join('');
-  }
-  setTimeout(trySearch, 100);
+    renderAllProdList(filtered, q);
+  }, 100);
 }
 // ===== END ALL PRODUCTS SHEET =====
 
