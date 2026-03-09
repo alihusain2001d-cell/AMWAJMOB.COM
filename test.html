@@ -909,7 +909,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="footer-tab-icon">🔍</span>
       <span class="footer-tab-label">بحث</span>
     </button>
-    <div class="footer-fab" onclick="showScreen('homeScreen')" style="background:none;box-shadow:none;overflow:hidden;padding:0;"><img src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/Logo.png" style="width:52px;height:52px;object-fit:contain;border-radius:50%;" /></div>
+    <div class="footer-fab" onclick="requireAuth(function(){openAllProductsSheet();})" style="background:none;box-shadow:none;overflow:hidden;padding:0;"><img src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/Logo.png" style="width:52px;height:52px;object-fit:contain;border-radius:50%;" /></div>
     <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
@@ -2766,6 +2766,21 @@ function openCheckFromAccount() {
 }
 
 </script>
+
+<!-- ALL PRODUCTS SHEET -->
+<div id="allProductsSheet" class="bsheet-overlay" onclick="closeSheet('allProductsSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:92vh;">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">📦 جميع المواد</span>
+      <button class="bsheet-close" onclick="closeSheet('allProductsSheet')">✕</button>
+    </div>
+    <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="allProdSearch" placeholder="ابحث في جميع المواد..." oninput="handleAllProdSearch()" autocomplete="off"></div>
+    <div id="allProdCategories" style="padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;overflow-y:auto;"></div>
+    <div id="allProdResults" style="padding:0 14px 14px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 </body>
 
 <div id="installPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:flex-end;justify-content:center;padding:16px;">
@@ -2799,6 +2814,95 @@ if (!localStorage.getItem('amwaj_install_shown')) {
     document.getElementById('installPrompt').style.display = 'flex';
   }, 2000);
 }
+
+// ===== ALL PRODUCTS SHEET =====
+var allProdCategories = [
+  {key:'screens',      label:'الشاشات',       icon:'🖥️'},
+  {key:'batteries',    label:'البطاريات',      icon:'🔋'},
+  {key:'chargeboards', label:'بورد شحن',       icon:'🔌'},
+  {key:'flatcharging', label:'شريط شحن',       icon:'⚡'},
+  {key:'flatpower',    label:'فلات بور',       icon:'⚡', sub:'FLAT POWER'},
+  {key:'flatpower',    label:'فلات صوت',       icon:'🔉', sub:'FLAT VOLUME'},
+  {key:'flatpower',    label:'سماعة جرس',      icon:'🔔', sub:'BUZZER'},
+  {key:'flatpower',    label:'سماعة اتصال',    icon:'📞', sub:'EAR SPEAKER'},
+  {key:'flatpower',    label:'باب سيم',        icon:'💳', sub:'DOOR SIM'},
+  {key:'flatpower',    label:'بصمة',           icon:'👆', sub:'FINGERPRINT'},
+  {key:'lens',         label:'عدسة كاميرا',    icon:'📷'},
+  {key:'flatpower',    label:'منوعة',          icon:'📦', sub:'OTHER'},
+  {key:'backcover',    label:'باك كفر',        icon:'📱'},
+  {key:'housing',      label:'شاصي',           icon:'🏠'},
+  {key:'camera',       label:'كاميرا',         icon:'📸'},
+];
+
+function openAllProductsSheet() {
+  document.getElementById('allProdSearch').value = '';
+  document.getElementById('allProdResults').innerHTML = '';
+  renderAllProdCategories();
+  openSheet('allProductsSheet');
+}
+
+function renderAllProdCategories() {
+  var catDiv = document.getElementById('allProdCategories');
+  catDiv.style.display = 'grid';
+  catDiv.innerHTML = allProdCategories.map(function(c) {
+    var onclick = c.sub
+      ? 'openFlatSubSheet("' + c.sub + '","' + c.label + '","' + c.icon + '")'
+      : 'openProductSheet("' + c.key + '","' + c.icon + ' ' + c.label + '")';
+    return '<div onclick="' + onclick + '" style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;padding:12px 6px;text-align:center;cursor:pointer;active:background:#E2E8F0;">' +
+      '<div style="font-size:26px;margin-bottom:4px;">' + c.icon + '</div>' +
+      '<div style="font-size:13px;font-weight:700;color:#1E293B;">' + c.label + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function getAllData() {
+  var all = [];
+  var types = ['screens','batteries','chargeboards','flatcharging','backcover','housing','lens','camera'];
+  types.forEach(function(t) {
+    var d = getDataForType(t) || [];
+    d.forEach(function(p) { all.push(Object.assign({}, p, {_type: t})); });
+  });
+  var flatSubs = ['FLAT POWER','FLAT VOLUME','BUZZER','EAR SPEAKER','DOOR SIM','FINGERPRINT','OTHER'];
+  flatSubs.forEach(function(s) {
+    var d = getFlatSubData(s) || [];
+    d.forEach(function(p) { all.push(Object.assign({}, p, {_type: 'flatpower', _sub: s})); });
+  });
+  return all;
+}
+
+function handleAllProdSearch() {
+  var q = document.getElementById('allProdSearch').value.trim().toLowerCase();
+  var catDiv = document.getElementById('allProdCategories');
+  var resDiv = document.getElementById('allProdResults');
+
+  if (q.length < 2) {
+    resDiv.innerHTML = '';
+    catDiv.style.display = 'grid';
+    return;
+  }
+
+  catDiv.style.display = 'none';
+  resDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
+
+  var attempts = 0;
+  function trySearch() {
+    attempts++;
+    var all = getAllData();
+    if (all.length === 0 && attempts < 20) { setTimeout(trySearch, 500); return; }
+    var filtered = all.filter(function(p) {
+      return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q);
+    });
+    if (!filtered.length) {
+      resDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+      return;
+    }
+    resDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin:0 0 8px;">' + Math.min(filtered.length,60) + ' نتيجة</div>' +
+      filtered.slice(0,60).map(function(p) { return createSheetPriceItem(p); }).join('');
+  }
+  setTimeout(trySearch, 100);
+}
+// ===== END ALL PRODUCTS SHEET =====
+
 </script>
 
 </body>
