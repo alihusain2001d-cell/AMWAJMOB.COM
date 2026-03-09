@@ -713,7 +713,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 </div>
 
 
-
 <!-- Search Sheet -->
 <div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
   <div class="bsheet" onclick="event.stopPropagation()">
@@ -886,7 +885,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
       </div>
-</div>
+
             <!-- Contact -->
       <div class="sec-label">تواصل معنا</div>
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:21px;padding:18px;">🟢 واتساب</a>
@@ -922,7 +921,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     </button>
   </div>
 </div>
-
 
 
 <!-- COMPAT hidden -->
@@ -1022,7 +1020,6 @@ function updateOrdersBadge(count) {
   });
 }
 // renderAccountSheet — see clean version below
-
 
 
 const CONFIG = {
@@ -1168,60 +1165,6 @@ function openFlatSub(subType, labelAr, icon) {
 
 let currentFlatSubType = null;
 
-function showPage(pageId) {
-  ["loadingPage","registerPage","loginPage","homePage","activatePage","checkPage","pricesPage","cartPage"].forEach(p => {
-    const el = document.getElementById(p);
-    if (el) el.style.display = "none";
-  });
-  const target = document.getElementById(pageId);
-  if (target) target.style.display = pageId === "loadingPage" ? "flex" : "block";
-}
-
-function showRegisterPage() { showPage("registerPage"); }
-function showLoginPage() { showPage("loginPage"); }
-function backHome() { showPage("homePage"); }
-function openAct() { openSheet("warrantySheet"); document.getElementById("start").value = formatDate(new Date()); }
-function openChk() { openSheet("checkSheet"); }
-
-let currentPriceType = 'screens';
-
-function openPrices(type) {
-  currentPriceType = type;
-  currentFlatSubType = null;
-  showPage("pricesPage");
-  showBackButton();
-  const title = document.getElementById("pricesTitle");
-  if (type === 'batteries') title.innerHTML = "🔋 البطاريات";
-  else if (type === 'chargeboards') title.innerHTML = "🔌 بورد شحن";
-  else if (type === 'flatcharging') title.innerHTML = "⚡ شريط شحن + شاشة";
-  else if (type === 'backcover') title.innerHTML = "📱 باك كفر";
-  else if (type === 'housing') title.innerHTML = "🏠 شاصي";
-  else if (type === 'lens') title.innerHTML = "📷 عدسة كاميرا";
-  else if (type === 'camera') title.innerHTML = "📸 كاميرا";
-  else title.innerHTML = "🖥️ الشاشات";
-  document.getElementById("brandsSection").style.display = "block";
-  document.getElementById("brandPrices").style.display = "none";
-  renderBrandsGrid(type);
-  const searchInput = document.getElementById("searchInput");
-  searchInput.value = "";
-  searchInput.oninput = function() {
-    const q = this.value.trim().toLowerCase();
-    if (q.length < 2) { document.getElementById("brandsSection").style.display = "block"; document.getElementById("brandPrices").style.display = "none"; return; }
-    document.getElementById("brandsSection").style.display = "none";
-    document.getElementById("brandPrices").style.display = "block";
-    const box = document.getElementById("brandPricesBox");
-    box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><div style="color:#1e88e5;font-size:18px;margin-top:15px;">جاري البحث...</div></div>`;
-    setTimeout(() => {
-      const dataToSearch = getDataForType(type);
-      if (dataToSearch.length === 0) { box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`; return; }
-      box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
-      const filtered = dataToSearch.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
-      if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
-      filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
-      if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
-    }, 300);
-  };
-}
 
 function getDataForType(type) {
   switch(type) {
@@ -1237,38 +1180,6 @@ function getDataForType(type) {
   }
 }
 
-function renderBrandsGrid(type) {
-  const grid = document.getElementById("brandsGrid");
-  const commonBrands = `
-    <div class="brand" data-brand="Huawei,Honor" onclick="openBrand(this)">هواوي + هونر<small>Huawei • Honor</small></div>
-    <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-    <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>Apple</small></div>
-    <div class="brand" data-brand="Xiaomi,Redmi,Poco" onclick="openBrand(this)">شاومي + ريدمي + بوكو<small>Xiaomi • Redmi • Poco</small></div>
-    <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo • Realme</small></div>
-    <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix • Tecno</small></div>
-    <div class="brand" data-brand="Vivo" onclick="openBrand(this)">فيفو<small>Vivo</small></div>
-  `;
-  if (type === 'screens') {
-    grid.innerHTML = `
-      <div class="brand" data-brand="Apple" onclick="openBrand(this)">ايفون<small>iPhone</small></div>
-      <div class="brand" data-brand="Samsung" onclick="openBrand(this)">سامسونج<small>Samsung</small></div>
-      <div class="brand" data-brand="Huawei" onclick="openBrand(this)">هواوي<small>Huawei</small></div>
-      <div class="brand" data-brand="Xiaomi" onclick="openBrand(this)">شاومي<small>Xiaomi</small></div>
-      <div class="brand" data-brand="Redmi,Poco" onclick="openBrand(this)">ريدمي + بوكو<small>Redmi & Poco</small></div>
-      <div class="brand" data-brand="Infinix,Tecno" onclick="openBrand(this)">انفنكس + تكنو<small>Infinix & Tecno</small></div>
-      <div class="brand" data-brand="Oppo,Realme" onclick="openBrand(this)">اوبو + ريلمي<small>Oppo & Realme</small></div>
-      <div class="brand" data-brand="Vivo,Wiko" onclick="openBrand(this)">فيفو + ويكو<small>Vivo & Wiko</small></div>
-      <div class="brand" data-brand="Asus,RedMagic,Google" onclick="openBrand(this)">ازوز + ريد ماجك + كوكل<small>Asus • RedMagic • Google</small></div>
-      <div class="brand" data-brand="ZTE,Alcatel,TCL,Blackview" onclick="openBrand(this)">ZTE + Alcatel + TCL<small>ZTE • Alcatel • TCL • Blackview</small></div>
-    `;
-  } else if (type === 'chargeboards') {
-    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل + بلاك فيو<small>Asus • Google • Blackview</small></div>`;
-  } else if (type === 'camera') {
-    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google,Blackview" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google • Blackview</small></div>`;
-  } else {
-    grid.innerHTML = commonBrands + `<div class="brand" data-brand="Asus,Google" onclick="openBrand(this)">ازوز + كوكل<small>Asus • Google</small></div>`;
-  }
-}
 
 async function submitRegistration() {
   const btn = document.getElementById("btnRegister");
@@ -1520,34 +1431,6 @@ function createPriceItem(p) {
   return `<div class="price-item" style="padding:12px;border:1px solid #ccc;margin:8px 0;border-radius:10px;background:#f9fbff"><div style="font-weight:bold;font-size:18px;color:#1e3a5f"><div style="margin-top:4px"><b>الماركة:</b> ${p.brand||"-"}</div><div style="margin-top:4px"><b>الاسم:</b> ${p.name||"-"}</div>${typeText}<div style="margin-top:4px"><b>السعر:</b> ${availableText}</div>${notesText}</div>${cartBtn}</div>`;
 }
 
-function openBrand(el) {
-  const brands = el.dataset.brand.split(",").map(b => b.trim());
-  document.getElementById("brandsSection").style.display = "none";
-  document.getElementById("brandPrices").style.display = "block";
-  const box = document.getElementById("brandPricesBox");
-  showBackButton();
-  box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><div style="color:#1e88e5;font-size:18px;margin-top:15px;">جاري تحميل الأسعار...</div></div>`;
-  const searchInput = document.getElementById("searchInput");
-  searchInput.value = "";
-  const checkPrices = () => {
-    let dataToUse = (currentPriceType === 'flatpower' && currentFlatSubType) ? getFlatSubData(currentFlatSubType) : getDataForType(currentPriceType);
-    if (dataToUse.length === 0) { setTimeout(checkPrices, 500); return; }
-    box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">أسعار ${brands.join(" / ")}</h3>`;
-    searchInput.oninput = function() {
-      const q = this.value.trim().toLowerCase();
-      box.querySelectorAll(".price-item").forEach(item => { item.style.display = item.innerText.toLowerCase().includes(q) ? "block" : "none"; });
-    };
-    const filtered = dataToUse.filter(p => brands.map(b => b.toLowerCase()).includes((p.brand || "").toLowerCase()));
-    if (filtered.length === 0) { box.innerHTML += "<div style='padding:20px;text-align:center;color:#666;'>لا توجد أسعار</div>"; return; }
-    filtered.forEach(p => { box.innerHTML += createPriceItem(p); });
-  };
-  checkPrices();
-}
-
-function backToBrands() {
-  document.getElementById("brandPrices").style.display = "none";
-  document.getElementById("brandsSection").style.display = "block";
-}
 
 function loadCart() {
   const saved = localStorage.getItem('amwaj_cart');
@@ -1837,8 +1720,6 @@ function backToBrands() {
   else if (brandsSection.style.display === "block") { showPage("homePage"); btn.style.display = "none"; }
 }
 
-function showBackButton() { document.getElementById("backToTopBtn").style.display = "block"; }
-function hideBackButton() { document.getElementById("backToTopBtn").style.display = "none"; }
 
 let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
 document.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, false);
@@ -1872,32 +1753,6 @@ function showScreen(id) {
 
 // footerTab defined above
 
-function renderAccountSheet() {
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const div = document.getElementById('accountContent');
-  if (!div) return;
-  if (user) {
-    div.innerHTML =
-      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">' +
-      '<div style="font-size:40px;margin-bottom:8px;">&#128100;</div>' +
-      '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>' +
-      '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>' +
-      '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>' +
-      '</div>' +
-      '<button class="form-btn" onclick="openWarrantyFromAccount()">&#9989; تفعيل الضمان</button>' +
-      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">&#128269; التحقق من الضمان</button>' +
-      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">&#128682; تسجيل الخروج</button>';
-  } else {
-    div.innerHTML =
-      '<div style="text-align:center;padding:20px 0;">' +
-      '<div style="font-size:48px;margin-bottom:12px;">&#128100;</div>' +
-      '<div style="font-size:18px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>' +
-      '<div style="font-size:17px;color:#64748B;margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>' +
-      '</div>' +
-      '<button class="form-btn" onclick="toLoginScreen()">تسجيل الدخول</button>' +
-      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="toRegisterScreen()">تسجيل حساب جديد</button>';
-  }
-}
 function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
 function toRegisterScreen() { closeSheet('accountSheet'); showScreen('registerScreen'); }
 
@@ -2236,28 +2091,6 @@ function showOrdersNotification(count) {
 }
 
 
-function openOrdersSheet() {
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
-  openSheet('ordersSheet');
-  loadMyOrders();
-}
-
-function openCartSheet() {
-  if (isGuest()) { showLoginPrompt(); return; }
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
-  openSheet('cartSheet');
-  renderCart();
-  const nameEl = document.getElementById('orderName');
-  const shopEl = document.getElementById('orderShop');
-  if (nameEl) nameEl.value = user.name || '';
-  if (shopEl) shopEl.value = user.shop || '';
-  const saved = localStorage.getItem('amwaj_address');
-  if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
-}
-
-
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
@@ -2274,20 +2107,6 @@ function cancelOrder(orderId) {
 }
 
 // Override old functions
-function openCart() { openCartSheet(); }
-function openFlatSub(subType, labelAr, icon) { openFlatSubSheet(subType, labelAr, icon); }
-
-function showPage(id) { /* no-op */ }
-function backHome() { showScreen('homeScreen'); }
-function showLoginPage() { showScreen('loginScreen'); }
-function showRegisterPage() { showScreen('registerScreen'); }
-function openAct() { openSheet('warrantySheet'); const s = document.getElementById('start'); if(s) s.value = formatDate(new Date()); }
-function openChk() { openSheet('checkSheet'); }
-function openMyOrders() { openOrdersSheet(); }
-function showBackButton() {}
-function hideBackButton() {}
-function backToBrands() {}
-
 // ═══════════════════
 
 // ── Search Sheet ──
@@ -2671,7 +2490,6 @@ const _origSubmitReg = window.submitRegistration;
 const _origCheckLogin = window.checkLogin;
 
 
-
 loadPrices(); loadBatteries(); loadChargeboards(); loadFlatMain();
 loadBackCover(); loadHousing(); loadLens(); loadCamera();
 loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc();
@@ -2954,4 +2772,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
