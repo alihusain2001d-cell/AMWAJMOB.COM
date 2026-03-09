@@ -1789,7 +1789,7 @@ async function submitOrder() {
       if (_day === 5) {
         _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 يوم الجمعة عطلة — سيتم تجهيز طلبك يوم السبت إن شاء الله ✨</div>';
       } else if (_hour < 9 || _hour >= 22) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه عند فتح المحل ✨</div>';
+        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه الطلب اثناء اوقات الدوام ✨</div>';
       }
       document.getElementById('orderResult').innerHTML = _offHoursMsg;
       submitBtn.disabled = false;
@@ -2941,3 +2941,4 @@ function handleAllProdSearch() {
 
 </body>
 </html>
+
