@@ -765,7 +765,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <div id="registerScreen" style="display:none;" class="auth-page">
       <div class="auth-logo"><img src="1646237145252.png" alt="" onerror="this.style.display='none'"></div>
       <div class="auth-title">تسجيل حساب جديد</div>
-      <div class="auth-sub">أهلاً بك في امواج للإلكترونيات<br>سجل بياناتك للوصول للأسعار والضمان</div>
+      <div class="auth-sub">أهلاً بك في  للإلكترونيات<br>سجل بياناتك للوصول للأسعار والضمان</div>
       <div class="form-group"><label class="form-label">الاسم الثلاثي</label><input class="form-input" type="text" id="regName" placeholder="مثال: أحمد محمد علي"></div>
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
@@ -873,18 +873,18 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openLensFromModal();})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/عدسة_كاميرا.jpg" alt="عدسة كاميرا"><div class="prod-name">عدسة كاميرا</div><div class="prod-name-en">Lens Camera</div>
         </div>
-        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
-          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/كاميرا.jpg" alt="كاميرا"><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div>
+        <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
+          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">منوعات</div><div class="prod-name-en">Misc Parts</div>
         </div>
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/باك كفر.jpg" alt="باك كفر"><div class="prod-name">باك كفر</div><div class="prod-name-en">Back Cover</div>
         </div>
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شاصي.jpg" alt="شاصي"><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
-        
         </div>
-        <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
-          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
+        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
+          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/كاميرا.jpg" alt="كاميرا"><div class="prod-name">كاميرا</div><div class="prod-name-en">Camera</div>
+        </div>
       </div>
 
             <!-- Contact -->
@@ -909,7 +909,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="footer-tab-icon">🔍</span>
       <span class="footer-tab-label">بحث</span>
     </button>
-    <div class="footer-fab" onclick="requireAuth(function(){openAllProductsSheet();})" style="background:linear-gradient(135deg,#0284C7,#0891B2);flex-direction:column;gap:1px;width:60px;height:60px;border-radius:14px;"><span style="font-size:11px;font-weight:900;color:#fff;line-height:1.2;text-align:center;">كل<br>المواد</span></div>
+    <div class="footer-fab" onclick="requireAuth(function(){openAllProductsSheet();})" style="background:linear-gradient(135deg,#0284C7,#0891B2);flex-direction:column;gap:1px;width:60px;height:60px;border-radius:14px;margin-top:0;"><span style="font-size:11px;font-weight:900;color:#fff;line-height:1.2;text-align:center;">كل<br>المواد</span></div>
     <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
@@ -2940,4 +2940,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
