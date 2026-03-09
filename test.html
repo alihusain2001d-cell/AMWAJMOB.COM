@@ -129,7 +129,7 @@ body {
   background: var(--card);
   border-top: 1px solid var(--border);
   display: flex;
-  align-items: center;
+  align-items: stretch;
   flex-shrink: 0;
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -178,16 +178,16 @@ body {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   font-size: 22px;
-  margin-top: 0;
+  margin-top: -20px;
   box-shadow: 0 4px 16px rgba(2,132,199,0.4);
   transition: all 0.2s;
   flex-shrink: 0;
-  align-self: center;
+  align-self: flex-start;
 }
 .footer-fab:active { transform: scale(0.92); }
 
 /* ═══ HOME PAGE ═══ */
-.home-page { padding: 0 0 90px; }
+.home-page { padding: 0 0 16px; }
 
 /* Store card */
 .store-card {
@@ -886,9 +886,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
       </div>
-      </div>
 
-      <!-- Contact -->
+            <!-- Contact -->
       <div class="sec-label">تواصل معنا</div>
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:21px;padding:18px;">🟢 واتساب</a>
       <div class="contact-strip" style="margin-top:8px;">
@@ -1789,9 +1788,23 @@ async function submitOrder() {
       if (_day === 5) {
         _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 يوم الجمعة عطلة — سيتم تجهيز طلبك يوم السبت إن شاء الله ✨</div>';
       } else if (_hour < 9 || _hour >= 22) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه الطلب اثناء اوقات الدوام ✨</div>';
+        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه عند فتح المحل ✨</div>';
       }
-      document.getElementById('orderResult').innerHTML = _offHoursMsg;
+      if (_offHoursMsg) {
+        // عرض الرسالة كـ popup وسط الشاشة
+        var _popup = document.createElement('div');
+        _popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        _popup.innerHTML = '<div style="background:#fff;border-radius:20px;padding:28px 22px;width:100%;max-width:340px;text-align:center;direction:rtl;">' +
+          '<div style="font-size:48px;margin-bottom:12px;">🌙</div>' +
+          '<div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:10px;">تم استلام طلبك</div>' +
+          '<div style="font-size:16px;color:#854D0E;background:#FEF9C3;border-radius:12px;padding:14px;margin-bottom:20px;line-height:1.7;">' +
+          (_day === 5 ? 'يوم الجمعة عطلة<br>سيتم تجهيز طلبك يوم السبت إن شاء الله ✨' : 'أوقات الدوام 9ص - 10م<br>سيتم تجهيز طلبك عند فتح المحل ✨') +
+          '</div>' +
+          '<button onclick="this.closest(\'[style*=fixed]\').remove()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً 👍</button>' +
+          '</div>';
+        document.body.appendChild(_popup);
+      }
+      document.getElementById('orderResult').innerHTML = '';
       submitBtn.disabled = false;
       submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
       submitBtn.style.background = '#16A34A';
@@ -2941,4 +2954,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
