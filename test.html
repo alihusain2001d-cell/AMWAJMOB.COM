@@ -896,12 +896,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 </div>
       <div style="height:16px;"></div>
-      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;">
-        <div>© 2025 أمواج للإلكترونيات — جميع الحقوق محفوظة</div>
-        <div>تصميم وبرمجة: علي الدجيلي &nbsp;·&nbsp; <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;direction:ltr;display:inline-block;">07717533595</a></div>
-      </div>
+      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;"><div>© 2025 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
     </div>
- 
+  </div>
 
   <!-- Footer nav -->
   <div class="app-footer">
@@ -1786,15 +1783,29 @@ async function submitOrder() {
       document.getElementById('cartSummary').style.display = 'none';
       // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
       var _now = new Date();
-      var _day = _now.getDay(); // 5=جمعة
+      var _day = _now.getDay();
       var _hour = _now.getHours();
-      var _offHoursMsg = '';
+      var _offHoursText = '';
       if (_day === 5) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 يوم الجمعة عطلة — سيتم تجهيز طلبك يوم السبت إن شاء الله ✨</div>';
+        _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
       } else if (_hour < 9 || _hour >= 22) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه عند فتح المحل ✨</div>';
+        _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيزه الطلب اثناء اوقات الدوام  ✨';
       }
-      document.getElementById('orderResult').innerHTML = _offHoursMsg;
+      if (_offHoursText) {
+        var _ov = document.createElement('div');
+        _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+        var _box = document.createElement('div');
+        _box.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+        var _lines = _offHoursText.split('\n').map(function(l){ return '<div>' + l + '</div>'; }).join('');
+        _box.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">🌙</div>' +
+          '<div style="font-size:17px;font-weight:700;color:#854D0E;line-height:1.8;margin-bottom:20px;">' + _lines + '</div>' +
+          '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
+        _box.querySelector('button').onclick = function(){ _ov.remove(); };
+        _ov.appendChild(_box);
+        _ov.onclick = function(e){ if(e.target===_ov) _ov.remove(); };
+        document.body.appendChild(_ov);
+      }
+      document.getElementById('orderResult').innerHTML = '';
       submitBtn.disabled = false;
       submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
       submitBtn.style.background = '#16A34A';
@@ -2944,6 +2955,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
-
-
