@@ -121,25 +121,18 @@ body {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  padding-bottom: var(--footer-h);
 }
 
 /* ── Footer Nav ── */
 .app-footer {
   height: var(--footer-h);
-  background: transparent;
-  border-top: none;
+  background: var(--card);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
   z-index: 100;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  max-width: 480px;
-  margin: 0 auto;
 }
 
 .footer-tab {
@@ -151,18 +144,16 @@ body {
   gap: 3px;
   cursor: pointer;
   border: none;
-  background: rgba(255,255,255,0.85);
+  background: none;
   font-family: 'Tajawal', sans-serif;
   transition: all 0.2s;
   position: relative;
   padding: 8px 4px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .footer-tab:active { opacity: 0.7; }
 
-.footer-tab-icon { font-size: 22px; line-height: 1; }
-.footer-tab-label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.footer-tab-icon { font-size: 26px; line-height: 1; }
+.footer-tab-label { font-size: 15px; font-weight: 600; color: var(--muted); }
 .footer-tab.active .footer-tab-label { color: var(--primary); }
 .footer-tab.active .footer-tab-icon { transform: scale(1.1); }
 
@@ -313,8 +304,8 @@ body {
 }
 .prod-card:active { transform: scale(0.94); border-color: var(--primary); background: var(--primary-light); }
 .prod-icon { width: 80px; height: 80px; object-fit: contain; display: block; border-radius: 8px; }
-.prod-name { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
-.prod-name-en { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.prod-name { font-size: 19px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.prod-name-en { font-size: 15px; color: var(--muted); margin-top: 1px; }
 
 /* Google card */
 .google-card {
@@ -454,10 +445,10 @@ body {
   background:var(--surface); border:1px solid var(--border);
   border-radius:12px; padding:12px; margin-bottom:8px;
 }
-.pi-name { font-weight:700; font-size:19px; }
-.pi-brand { font-size:16px; color:var(--muted); margin-top:2px; }
-.pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:14px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
-.pi-price { font-size:19px; font-weight:800; margin-top:6px; }
+.pi-name { font-weight:700; font-size:23px; }
+.pi-brand { font-size:20px; color:var(--muted); margin-top:2px; }
+.pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:18px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
+.pi-price { font-size:23px; font-weight:800; margin-top:6px; }
 .pi-price.avail { color:var(--primary); }
 .pi-price.unavail { color:var(--red); }
 .pi-notes { background:#FFF7ED; border-right:3px solid var(--orange); padding:7px 10px; border-radius:8px; font-size:17px; color:#92400E; font-weight:600; margin-top:6px; }
@@ -905,6 +896,10 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 
       <div style="height:16px;"></div>
+      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;">
+        <div>© 2025 أمواج للإلكترونيات — جميع الحقوق محفوظة</div>
+        <div>تصميم: علي الدجيلي &nbsp;·&nbsp; <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;direction:ltr;display:inline-block;">07717533595</a></div>
+      </div>
     </div>
   </div>
 
@@ -2949,4 +2944,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
