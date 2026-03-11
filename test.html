@@ -592,7 +592,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <div class="flatpower-handle"></div>
     <div class="fp-head">🔧 قطع غيار منوعة</div>
     <div class="fp-grid">
-      <div class="fp-btn" onclick="openFlatSub('FLAT POWER','فلات بور','⚡')"><span class="fp-icon">⚡</span><div class="fp-label">فلات بور</div><div class="fp-sub">FLAT POWER</div></div>
+      <div class="fp-btn" onclick="openFlatSub('FLAT POWER','فلات باور','⚡')"><span class="fp-icon">⚡</span><div class="fp-label">فلات باور</div><div class="fp-sub">FLAT POWER</div></div>
       <div class="fp-btn" onclick="openFlatSub('FLAT VOLUME','فلات صوت','🔉')"><span class="fp-icon">🔉</span><div class="fp-label">فلات صوت</div><div class="fp-sub">FLAT VOLUME</div></div>
       <div class="fp-btn" onclick="openFlatSub('BUZZER','سماعة جرس','🔔')"><span class="fp-icon">🔔</span><div class="fp-label">سماعة جرس</div><div class="fp-sub">BUZZER</div></div>
       <div class="fp-btn" onclick="openFlatSub('EAR SPEAKER','سماعة اتصال','📞')"><span class="fp-icon">📞</span><div class="fp-label">سماعة اتصال</div><div class="fp-sub">EAR SPEAKER</div></div>
@@ -852,8 +852,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شريط_شحن.jpg" alt="شريط شحن"><div class="prod-name">شريط شحن</div><div class="prod-name-en">Charging Flex</div>
         </div>
-        <div class="prod-card" onclick="requireAuth(function(){openFlatSub('FLAT POWER','فلات بور','⚡');})">
-          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/فلات_بور.jpg" alt="فلات بور"><div class="prod-name">فلات بور</div><div class="prod-name-en">Flat Power</div>
+        <div class="prod-card" onclick="requireAuth(function(){openFlatSub('FLAT POWER','فلات باور','⚡');})">
+          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/فلات_باور.jpg" alt="فلات باور"><div class="prod-name">فلات باور</div><div class="prod-name-en">Flat Power</div>
         </div>
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('FLAT VOLUME','فلات صوت','🔉');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/فلات_صوت.jpg" alt="فلات صوت"><div class="prod-name">فلات صوت</div><div class="prod-name-en">Flat Volume</div>
@@ -1334,7 +1334,7 @@ function handleGlobalSearch(event) {
     ...batteriesData.map(i => ({...i, source: 'بطاريات', icon: '🔋'})),
     ...chargeboardsData.map(i => ({...i, source: 'بورد شحن', icon: '🔌'})),
     ...flatchargingData.map(i => ({...i, source: 'شريط شحن', icon: '⚡'})),
-    ...flatpowerData.map(i => ({...i, source: 'فلات بور/صوت', icon: '🔊'})),
+    ...flatpowerData.map(i => ({...i, source: 'فلات باور/صوت', icon: '🔊'})),
     ...backcoverData.map(i => ({...i, source: 'باك كفر', icon: '📱'})),
     ...housingData.map(i => ({...i, source: 'شاصي', icon: '🏠'})),
     ...cameraData.map(i => ({...i, source: 'كاميرا', icon: '📷'})),
@@ -1375,7 +1375,7 @@ function handleGlobalSearch(event) {
 function addToCartFromSearch(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { alert('يرجى تسجيل الدخول أولاً'); showLoginPage(); return; }
-  const sourceTypeMap = {'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards','شريط شحن':'flatcharging','فلات بور/صوت':'flatpower','باك كفر':'backcover','شاصي':'housing','كاميرا':'camera','سماعة جرس':'flatpower','سماعة اتصال':'flatpower','باب سيم':'flatpower','بصمة':'flatpower','عدسة كاميرا':'lens','منوع':'flatpower'};
+  const sourceTypeMap = {'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards','شريط شحن':'flatcharging','فلات باور/صوت':'flatpower','باك كفر':'backcover','شاصي':'housing','كاميرا':'camera','سماعة جرس':'flatpower','سماعة اتصال':'flatpower','باب سيم':'flatpower','بصمة':'flatpower','عدسة كاميرا':'lens','منوع':'flatpower'};
   product.itemType = sourceTypeMap[product.source] || 'screens';
   addToCart(product);
 }
@@ -1490,7 +1490,7 @@ async function loadFlatMain() {
     const r = await secureApiCall('getFlatMain');
     const all = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''}));
     flatchargingData = all.filter(i=>{const n=i.name.toUpperCase();return n.includes('FLAT LCD')||n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط شحن/شاشة'}));
-    flatpowerData = all.filter(i=>{const n=i.name.toUpperCase();return !n.includes('FLAT LCD')&&!n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط بور/صوت/منوعة'}));
+    flatpowerData = all.filter(i=>{const n=i.name.toUpperCase();return !n.includes('FLAT LCD')&&!n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط باور/صوت/منوعة'}));
   } catch(e){}
 }
 async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باك كفر',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
@@ -2775,7 +2775,7 @@ var ALL_PROD_ORDER = [
   {key:'batteries',    label:'البطاريات',       icon:'🔋'},
   {key:'chargeboards', label:'بورد شحن',        icon:'🔌'},
   {key:'flatcharging', label:'شريط شحن',        icon:'⚡'},
-  {key:'flatpower',    label:'فلات بور',        icon:'⚡',  sub:'FLAT POWER'},
+  {key:'flatpower',    label:'فلات باور',        icon:'⚡',  sub:'FLAT POWER'},
   {key:'flatpower',    label:'فلات صوت',        icon:'🔉',  sub:'FLAT VOLUME'},
   {key:'flatpower',    label:'سماعة جرس',       icon:'🔔',  sub:'BUZZER'},
   {key:'flatpower',    label:'سماعة اتصال',     icon:'📞',  sub:'EAR SPEAKER'},
