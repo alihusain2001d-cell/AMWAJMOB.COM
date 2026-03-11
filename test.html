@@ -512,7 +512,8 @@ body {
 .admin-prod-row {
   display:flex; align-items:center; gap:10px; padding:10px 0;
   border-bottom:1px solid var(--border); cursor:pointer;
-  overflow:hidden; min-height:74px;
+  overflow:hidden; min-height:74px; position:relative;
+  max-width:100%;
 }
 .admin-prod-row:last-child { border-bottom:none; }
 .admin-prod-img {
@@ -524,8 +525,8 @@ body {
   border:2px dashed #CBD5E1; flex-shrink:0; display:flex;
   align-items:center; justify-content:center; font-size:22px; color:#CBD5E1;
 }
-.admin-prod-info { flex:1; min-width:0; }
-.admin-prod-name { font-size:15px; font-weight:700; color:var(--text); line-height:1.3; }
+.admin-prod-info { flex:1; min-width:0; overflow:hidden; }
+.admin-prod-name { font-size:15px; font-weight:700; color:var(--text); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .admin-prod-sheet { font-size:12px; color:var(--muted); margin-top:2px; }
 .admin-edit-btn {
   padding:7px 14px; border-radius:8px; border:none;
@@ -2903,7 +2904,7 @@ function openCheckFromAccount() {
 
 <!-- ═══ لوحة تحكم الأدمن ═══ -->
 <div id="adminSheet" class="bsheet-overlay" onclick="closeSheet('adminSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:95vh;overflow:hidden;display:flex;flex-direction:column;">
+  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:95vh;overflow:hidden;display:flex;flex-direction:column;isolation:isolate;contain:layout paint;">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
