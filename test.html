@@ -3221,7 +3221,7 @@ function adminRenderList() {
   filtered.forEach(function(p) {
     var imgUrl = p.image_url && p.image_url.trim() ? (p.image_url.startsWith('http') ? p.image_url : getDriveImageUrl(p.image_url)) : '';
     var imgHtml = imgUrl
-      ? '<img class="admin-prod-img" src="' + imgUrl + '" loading="lazy" style="width:54px;height:54px;min-width:54px;max-width:54px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"admin-prod-img-empty\\\">📷</div>\'">'
+      ? '<div style="width:54px;height:54px;min-width:54px;border-radius:10px;overflow:hidden;background:#F8FAFC;border:1px solid #E2E8F0;flex-shrink:0;"><img src="' + imgUrl + '" loading="lazy" style="width:54px;height:54px;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML=\'📷\'"></div>'
       : '<div class="admin-prod-img-empty">📷</div>';
     var sheetLabel = _adminSheetLabels[p._sheet] || p._sheet;
     var typeLabel = (p._sheet === 'SHEET' && p.type) ? ' · <span style="color:#16A34A;font-weight:700;">' + p.type + '</span>' : '';
