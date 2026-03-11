@@ -445,18 +445,51 @@ body {
   background:var(--surface); border:1px solid var(--border);
   border-radius:12px; padding:12px; margin-bottom:8px;
 }
-.pi-name { font-weight:700; font-size:19px; }
-.pi-brand { font-size:16px; color:var(--muted); margin-top:2px; }
+.price-item {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:12px; margin-bottom:10px;
+  display:flex; flex-direction:column; gap:0;
+}
+.pi-img-wrap {
+  width:100%; text-align:center; margin-bottom:10px;
+}
+.pi-img-wrap img {
+  width:100%; max-height:180px; object-fit:contain;
+  border-radius:10px; background:#F8FAFC;
+}
+.pi-info { flex:1; }
+.pi-name { font-weight:700; font-size:19px; text-align:right; }
+.pi-brand { font-size:16px; color:var(--muted); margin-top:2px; text-align:right; }
 .pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:14px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
-.pi-price { font-size:19px; font-weight:800; margin-top:6px; }
+.pi-price { font-size:19px; font-weight:800; margin-top:6px; text-align:right; }
 .pi-price.avail { color:var(--primary); }
 .pi-price.unavail { color:var(--red); }
 .pi-notes { background:#FFF7ED; border-right:3px solid var(--orange); padding:7px 10px; border-radius:8px; font-size:17px; color:#92400E; font-weight:600; margin-top:6px; }
-.add-to-cart-btn {
-  background:var(--green); color:white; padding:11px; border-radius:9px;
-  border:none; cursor:pointer; margin-top:8px; width:100%;
-  font-weight:700; font-size:18px; font-family:'Tajawal',sans-serif;
+.pi-cart-row {
+  display:flex; align-items:center; gap:8px; margin-top:10px;
 }
+.pi-qty-btn {
+  width:42px; height:42px; border-radius:10px; border:none;
+  font-size:22px; font-weight:900; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-family:'Tajawal',sans-serif;
+  transition:transform .15s;
+}
+.pi-qty-btn:active { transform:scale(0.88); }
+.pi-qty-minus { background:#FEE2E2; color:var(--red); }
+.pi-qty-plus  { background:#DCFCE7; color:var(--green); }
+.pi-qty-num {
+  min-width:32px; text-align:center; font-size:18px; font-weight:800;
+  color:var(--text);
+}
+.add-to-cart-btn {
+  flex:1; background:var(--green); color:white; padding:11px 8px;
+  border-radius:10px; border:none; cursor:pointer;
+  font-weight:700; font-size:17px; font-family:'Tajawal',sans-serif;
+  transition:background .2s;
+}
+.add-to-cart-btn:active { background:#15803D; }
+.add-to-cart-btn.gray-btn { background:#64748B; }
 
 /* Form inside sheet */
 .form-group { margin-bottom:12px; }
@@ -2140,26 +2173,56 @@ function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var priceHtml = avail
-    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
-    : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<img src="' + imgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
-  var cartBtn = '';
-  if (avail) {
-    if (isGuest()) {
-      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
-    } else {
-      var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
-      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
-    }
+  var imgHtml = imgUrl ? '<div class="pi-img-wrap"><img src="' + imgUrl + '" onerror="this.parentElement.style.display=\'none\'"></div>' : '';
+
+  var priceHtml, cartRow;
+  if (!avail) {
+    priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
+    cartRow = '';
+  } else if (isGuest()) {
+    priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button></div>';
+  } else {
+    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
+    var uid = 'q_' + Math.random().toString(36).substr(2,7);
+    cartRow =
+      '<div class="pi-cart-row">' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piQtyChange(\'' + uid + '\',-1)">−</button>' +
+        '<span class="pi-qty-num" id="' + uid + '">1</span>' +
+        '<button class="pi-qty-btn pi-qty-plus"  onclick="piQtyChange(\'' + uid + '\',1)">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piAddToCart(\'' + pid + '\',\'' + uid + '\')">&#128722; إضافة للسلة</button>' +
+      '</div>';
   }
-  return '<div class="price-item">' + imgHtml + '<div class="pi-name">' + (p.name||'-') + '</div>' +
-    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+
+  return '<div class="price-item">' + imgHtml +
+    '<div class="pi-info">' +
+      '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
+      '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
+      typeHtml + priceHtml + notesHtml +
+    '</div>' +
+    cartRow + '</div>';
+}
+
+function piQtyChange(uid, delta) {
+  var el = document.getElementById(uid);
+  if (!el) return;
+  var n = (parseInt(el.textContent) || 1) + delta;
+  if (n < 1) n = 1;
+  if (n > 99) n = 99;
+  el.textContent = n;
+}
+
+function piAddToCart(pid, uid) {
+  var p = getCachedProduct(pid);
+  if (!p) return;
+  var el = document.getElementById(uid);
+  var qty = el ? (parseInt(el.textContent) || 1) : 1;
+  for (var i = 0; i < qty; i++) addToCart(Object.assign({}, p));
+  if (el) el.textContent = '1';
 }
 
 function addToCartById(key) {
@@ -2347,43 +2410,45 @@ function openNewItemsSheet() {
     items.forEach(function(item) {
       var price = Number(item.price) || 0;
       var typeKey = _newItemsTypeMap[item.source] || 'screens';
-      var priceHtml, cartBtnHtml;
+      var priceHtml, cartRow;
+
+      var itemImgUrl = getDriveImageUrl(item.image_url);
+      var itemImgHtml = itemImgUrl ? '<div class="pi-img-wrap"><img src="' + itemImgUrl + '" onerror="this.parentElement.style.display=\'none\'"></div>' : '';
+      var dateHtml = item.date_added ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>' : '';
 
       if (isGuest()) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button></div>';
       } else {
         var pObj = {
           name: item.name, brand: item.brand||'', type: item.type||'',
           price: price, qty: item.qty||0, notes: item.notes||'',
-          image_url: item.image_url||'',
-          itemType: typeKey
+          image_url: item.image_url||'', itemType: typeKey
         };
         var pid = cacheProduct(pObj);
-        priceHtml = '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">🛒 إضافة للسلة</button>';
+        var uid = 'q_' + Math.random().toString(36).substr(2,7);
+        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+        cartRow =
+          '<div class="pi-cart-row">' +
+            '<button class="pi-qty-btn pi-qty-minus" onclick="piQtyChange(\'' + uid + '\',-1)">−</button>' +
+            '<span class="pi-qty-num" id="' + uid + '">1</span>' +
+            '<button class="pi-qty-btn pi-qty-plus"  onclick="piQtyChange(\'' + uid + '\',1)">+</button>' +
+            '<button class="add-to-cart-btn" onclick="piAddToCart(\'' + pid + '\',\'' + uid + '\')">🛒 إضافة للسلة</button>' +
+          '</div>';
       }
-
-      // صورة المادة
-      var itemImgUrl = getDriveImageUrl(item.image_url);
-      var itemImgHtml = itemImgUrl ? '<img src="' + itemImgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
-
-      // تاريخ الإضافة
-      var dateHtml = item.date_added
-        ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>'
-        : '';
 
       html +=
         '<div class="price-item">' +
           itemImgHtml +
-          '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
-          '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
-          (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
-          (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
-          priceHtml +
-          dateHtml +
-          (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
-          cartBtnHtml +
+          '<div class="pi-info">' +
+            '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
+            '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
+            (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
+            (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
+            priceHtml + dateHtml +
+            (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
+          '</div>' +
+          cartRow +
         '</div>';
     });
 
@@ -2811,26 +2876,38 @@ function createAllProdItem(p, typeKey) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var priceHtml = avail
-    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
-    : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (typeKey === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<img src="' + imgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
-  var cartBtn = '';
-  if (avail) {
-    if (isGuest()) {
-      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
-    } else {
-      var pid = cacheProduct(Object.assign({}, p, {itemType: typeKey}));
-      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
-    }
+  var imgHtml = imgUrl ? '<div class="pi-img-wrap"><img src="' + imgUrl + '" onerror="this.parentElement.style.display=\'none\'"></div>' : '';
+
+  var priceHtml, cartRow;
+  if (!avail) {
+    priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
+    cartRow = '';
+  } else if (isGuest()) {
+    priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button></div>';
+  } else {
+    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: typeKey}));
+    var uid = 'q_' + Math.random().toString(36).substr(2,7);
+    cartRow =
+      '<div class="pi-cart-row">' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piQtyChange(\'' + uid + '\',-1)">−</button>' +
+        '<span class="pi-qty-num" id="' + uid + '">1</span>' +
+        '<button class="pi-qty-btn pi-qty-plus"  onclick="piQtyChange(\'' + uid + '\',1)">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piAddToCart(\'' + pid + '\',\'' + uid + '\')">&#128722; إضافة للسلة</button>' +
+      '</div>';
   }
-  return '<div class="price-item">' + imgHtml + '<div class="pi-name">' + (p.name||'-') + '</div>' +
-    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+
+  return '<div class="price-item">' + imgHtml +
+    '<div class="pi-info">' +
+      '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
+      '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
+      typeHtml + priceHtml + notesHtml +
+    '</div>' +
+    cartRow + '</div>';
 }
 
 function getAllDataOrdered() {
