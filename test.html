@@ -512,14 +512,15 @@ body {
 .admin-prod-row {
   display:flex; align-items:center; gap:10px; padding:10px 0;
   border-bottom:1px solid var(--border); cursor:pointer;
+  overflow:hidden; min-height:74px;
 }
 .admin-prod-row:last-child { border-bottom:none; }
 .admin-prod-img {
-  width:54px; height:54px; border-radius:10px; object-fit:contain;
-  background:#F8FAFC; border:1px solid var(--border); flex-shrink:0;
+  width:54px; height:54px; min-width:54px; border-radius:10px; object-fit:cover;
+  background:#F8FAFC; border:1px solid var(--border); flex-shrink:0; display:block;
 }
 .admin-prod-img-empty {
-  width:54px; height:54px; border-radius:10px; background:#F1F5F9;
+  width:54px; height:54px; min-width:54px; border-radius:10px; background:#F1F5F9;
   border:2px dashed #CBD5E1; flex-shrink:0; display:flex;
   align-items:center; justify-content:center; font-size:22px; color:#CBD5E1;
 }
@@ -3220,7 +3221,7 @@ function adminRenderList() {
   filtered.forEach(function(p) {
     var imgUrl = p.image_url && p.image_url.trim() ? (p.image_url.startsWith('http') ? p.image_url : getDriveImageUrl(p.image_url)) : '';
     var imgHtml = imgUrl
-      ? '<img class="admin-prod-img" src="' + imgUrl + '" onerror="this.outerHTML=\'<div class=\\\"admin-prod-img-empty\\\">📷</div>\'">'
+      ? '<img class="admin-prod-img" src="' + imgUrl + '" style="width:54px;height:54px;min-width:54px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"admin-prod-img-empty\\\">📷</div>\'">'
       : '<div class="admin-prod-img-empty">📷</div>';
     var sheetLabel = _adminSheetLabels[p._sheet] || p._sheet;
     var typeLabel = (p._sheet === 'SHEET' && p.type) ? ' · <span style="color:#16A34A;font-weight:700;">' + p.type + '</span>' : '';
