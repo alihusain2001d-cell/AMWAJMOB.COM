@@ -387,6 +387,7 @@ body {
   width: 100%; max-width: 480px;
   max-height: 90dvh;
   display: flex; flex-direction: column;
+  overflow: hidden;
   animation: sheetUp .28s cubic-bezier(.32,.72,0,1);
 }
 @keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
@@ -2923,7 +2924,7 @@ function openCheckFromAccount() {
       <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
       <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
     </div>
-    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;"></div>
+    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;flex:1;"></div>
   </div>
 </div>
 
