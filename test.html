@@ -2125,6 +2125,17 @@ function backToSheetBrands() {
   document.getElementById('sheetSearch').value = '';
 }
 
+function getDriveImageUrl(url) {
+  if (!url || typeof url !== 'string' || !url.trim()) return '';
+  var u = url.trim();
+  // رابط Google Drive — حوّله لـ direct link
+  var m = u.match(/\/d\/([\w-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
+  // رابط مباشر
+  if (u.startsWith('http')) return u;
+  return '';
+}
+
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
@@ -2134,6 +2145,8 @@ function createSheetPriceItem(p) {
     : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
+  var imgUrl = getDriveImageUrl(p.image_url);
+  var imgHtml = imgUrl ? '<img src="' + imgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
   var cartBtn = '';
   if (avail) {
     if (isGuest()) {
@@ -2144,7 +2157,7 @@ function createSheetPriceItem(p) {
       cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
     }
   }
-  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
+  return '<div class="price-item">' + imgHtml + '<div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
     typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
 }
@@ -2343,12 +2356,17 @@ function openNewItemsSheet() {
         var pObj = {
           name: item.name, brand: item.brand||'', type: item.type||'',
           price: price, qty: item.qty||0, notes: item.notes||'',
+          image_url: item.image_url||'',
           itemType: typeKey
         };
         var pid = cacheProduct(pObj);
         priceHtml = '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>';
         cartBtnHtml = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">🛒 إضافة للسلة</button>';
       }
+
+      // صورة المادة
+      var itemImgUrl = getDriveImageUrl(item.image_url);
+      var itemImgHtml = itemImgUrl ? '<img src="' + itemImgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
 
       // تاريخ الإضافة
       var dateHtml = item.date_added
@@ -2357,6 +2375,7 @@ function openNewItemsSheet() {
 
       html +=
         '<div class="price-item">' +
+          itemImgHtml +
           '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
           '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
           (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
@@ -2797,6 +2816,8 @@ function createAllProdItem(p, typeKey) {
     : '<div class="pi-price unavail">غير متوفر</div>';
   var typeHtml = (typeKey === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
+  var imgUrl = getDriveImageUrl(p.image_url);
+  var imgHtml = imgUrl ? '<img src="' + imgUrl + '" style="width:100%;max-height:160px;object-fit:contain;border-radius:10px;margin-bottom:8px;background:#F8FAFC;" onerror="this.style.display=\'none\'">' : '';
   var cartBtn = '';
   if (avail) {
     if (isGuest()) {
@@ -2807,7 +2828,7 @@ function createAllProdItem(p, typeKey) {
       cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
     }
   }
-  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
+  return '<div class="price-item">' + imgHtml + '<div class="pi-name">' + (p.name||'-') + '</div>' +
     '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
     typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
 }
