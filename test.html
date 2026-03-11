@@ -481,16 +481,18 @@ body {
   font-family:'Tajawal',sans-serif; transition:opacity .15s;
 }
 .pi-qty-btn:active { opacity:0.75; }
-.pi-qty-minus { background:#EF4444; color:white; border-radius:10px 0 0 10px; }
-.pi-qty-plus  { background:#16A34A; color:white; border-radius:0 10px 10px 0; }
+.pi-qty-minus { background:#DC2626; color:white; border-radius:10px 0 0 10px; }
+.pi-qty-plus  { background:#0284C7; color:white; border-radius:0 10px 10px 0; }
 .add-to-cart-btn {
-  flex:1; background:#334155; color:white; padding:0 6px;
+  flex:1; background:#1E3A5F; color:white; padding:0 6px;
   height:44px; border:none; cursor:pointer;
   font-weight:700; font-size:15px; font-family:'Tajawal',sans-serif;
   transition:background .2s; display:flex; align-items:center; justify-content:center; gap:4px;
 }
-.add-to-cart-btn:active { background:#1E293B; }
+.add-to-cart-btn:active { background:#0F2744; }
 .add-to-cart-btn.gray-btn { background:#64748B; border-radius:10px; }
+.add-to-cart-btn.disabled-btn { background:#94A3B8; cursor:not-allowed; border-radius:0; }
+.pi-qty-btn.disabled-btn { background:#CBD5E1; color:#94A3B8; cursor:not-allowed; }
 .pi-qty-display {
   font-size:18px; font-weight:900; color:#fff; min-width:24px; text-align:center;
 }
@@ -2185,7 +2187,7 @@ function createSheetPriceItem(p) {
   var priceHtml, cartRow;
   if (!avail) {
     priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
-    cartRow = '';
+    cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
   } else if (isGuest()) {
     priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
     cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
@@ -2951,7 +2953,7 @@ function createAllProdItem(p, typeKey) {
   var priceHtml, cartRow;
   if (!avail) {
     priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
-    cartRow = '';
+    cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
   } else if (isGuest()) {
     priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
     cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
