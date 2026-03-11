@@ -2876,6 +2876,7 @@ function renderAccountSheet() {
   const div = document.getElementById('accountContent');
   if (!div) return;
   if (user) {
+    const isAdmin = user.phone && user.phone.replace(/\D/g,'').endsWith('7717533595');
     div.innerHTML = [
       '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">',
         '<div style="font-size:40px;margin-bottom:8px;">👤</div>',
@@ -2883,11 +2884,23 @@ function renderAccountSheet() {
         '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>',
         '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>',
       '</div>',
+      isAdmin ? '<button class="form-btn" style="background:#0F172A;margin-bottom:8px;" onclick="closeSheet(\'accountSheet\');openAdminPanel()">🛠️ لوحة التحكم</button>' : '',
       '<button class="form-btn" onclick="openWarrantyFromAccount()">✅ تفعيل الضمان</button>',
       '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">🔍 التحقق من الضمان</button>',
       '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>',
     ].join('');
   } else {
+    div.innerHTML = [
+      '<div style="text-align:center;padding:20px 0;">',
+        '<div style="font-size:48px;margin-bottom:12px;">👤</div>',
+        '<div style="font-size:18px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>',
+        '<div style="font-size:17px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>',
+      '</div>',
+      '<button class="form-btn" onclick="closeSheet(\'accountSheet\');showScreen(\'loginScreen\');">تسجيل الدخول</button>',
+      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet(\'accountSheet\');showScreen(\'registerScreen\');">تسجيل حساب جديد</button>',
+    ].join('');
+  }
+}
     div.innerHTML = [
       '<div style="text-align:center;padding:20px 0;">',
         '<div style="font-size:48px;margin-bottom:12px;">👤</div>',
