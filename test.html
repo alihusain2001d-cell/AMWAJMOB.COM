@@ -2936,6 +2936,7 @@ function openCheckFromAccount() {
     <!-- معاينة الصورة الحالية -->
     <div id="adminImgPreviewWrap" style="text-align:center;margin-bottom:14px;display:none;">
       <img id="adminImgPreview" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:10px;border:1px solid #E2E8F0;">
+      <button onclick="adminDeleteImage()" style="display:block;width:100%;margin-top:8px;padding:8px;border-radius:8px;border:none;background:#FEE2E2;color:#DC2626;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">🗑️ حذف الصورة</button>
     </div>
 
     <!-- رفع صورة -->
@@ -3277,7 +3278,48 @@ function adminPreviewImage(input) {
   reader.readAsDataURL(input.files[0]);
 }
 
-async function adminSaveImage() {
+async function adminDeleteImage() {
+  if (!_adminEditTarget) return;
+  var statusDiv = document.getElementById('adminImgStatus');
+  statusDiv.innerHTML = '<span style="color:#64748B;">⏳ جاري الحذف...</span>';
+
+  try {
+    var apiResp = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        apiKey: CONFIG.API_KEY,
+        action: 'updateImageUrl',
+        identifier: CONFIG.DEVICE_ID,
+        sheetName: _adminEditTarget.sheet,
+        rowName: _adminEditTarget.name,
+        imageUrl: ''
+      })
+    });
+    var result = await apiResp.json();
+    if (!result.success) throw new Error(result.error || 'فشل الحذف');
+
+    statusDiv.innerHTML = '<span style="color:#16A34A;">✅ تم حذف الصورة</span>';
+
+    // حدّث القائمة
+    var prod = _adminAllProducts.find(function(p){ return p.name === _adminEditTarget.name && p._sheet === _adminEditTarget.sheet; });
+    if (prod) prod.image_url = '';
+
+    // أخفي الصورة بالـ modal
+    document.getElementById('adminImgPreviewWrap').style.display = 'none';
+    document.getElementById('adminImgPreview').src = '';
+
+    setTimeout(function() {
+      closeAdminImgModal();
+      adminRenderList();
+    }, 900);
+
+  } catch(e) {
+    statusDiv.innerHTML = '<span style="color:#DC2626;">❌ ' + e.message + '</span>';
+  }
+}
+
+
   if (!_adminEditTarget) return;
   var fileInput = document.getElementById('adminImgFile');
   var statusDiv = document.getElementById('adminImgStatus');
