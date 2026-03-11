@@ -152,8 +152,8 @@ body {
 }
 .footer-tab:active { opacity: 0.7; }
 
-.footer-tab-icon { font-size: 26px; line-height: 1; }
-.footer-tab-label { font-size: 15px; font-weight: 600; color: var(--muted); }
+.footer-tab-icon { font-size: 22px; line-height: 1; }
+.footer-tab-label { font-size: 13px; font-weight: 600; color: var(--muted); }
 .footer-tab.active .footer-tab-label { color: var(--primary); }
 .footer-tab.active .footer-tab-icon { transform: scale(1.1); }
 
@@ -304,8 +304,8 @@ body {
 }
 .prod-card:active { transform: scale(0.94); border-color: var(--primary); background: var(--primary-light); }
 .prod-icon { width: 80px; height: 80px; object-fit: contain; display: block; border-radius: 8px; }
-.prod-name { font-size: 19px; font-weight: 700; color: var(--text); line-height: 1.3; }
-.prod-name-en { font-size: 15px; color: var(--muted); margin-top: 1px; }
+.prod-name { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.prod-name-en { font-size: 11px; color: var(--muted); margin-top: 1px; }
 
 /* Google card */
 .google-card {
@@ -445,10 +445,10 @@ body {
   background:var(--surface); border:1px solid var(--border);
   border-radius:12px; padding:12px; margin-bottom:8px;
 }
-.pi-name { font-weight:700; font-size:23px; }
-.pi-brand { font-size:20px; color:var(--muted); margin-top:2px; }
-.pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:18px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
-.pi-price { font-size:23px; font-weight:800; margin-top:6px; }
+.pi-name { font-weight:700; font-size:19px; }
+.pi-brand { font-size:16px; color:var(--muted); margin-top:2px; }
+.pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:14px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
+.pi-price { font-size:19px; font-weight:800; margin-top:6px; }
 .pi-price.avail { color:var(--primary); }
 .pi-price.unavail { color:var(--red); }
 .pi-notes { background:#FFF7ED; border-right:3px solid var(--orange); padding:7px 10px; border-radius:8px; font-size:17px; color:#92400E; font-weight:600; margin-top:6px; }
@@ -886,7 +886,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
       </div>
-</div>
+  </div>
             <!-- Contact -->
       <div class="sec-label">تواصل معنا</div>
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:21px;padding:18px;">🟢 واتساب</a>
@@ -894,11 +894,10 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <a href="tel:07709000160" class="contact-btn">📱 07709000160</a>
         <a href="tel:7696" class="contact-btn">📱 7696</a>
       </div>
-</div>
+
       <div style="height:16px;"></div>
-      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;"><div>© 2026 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم و برمجة: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
     </div>
-  
+  </div>
 
   <!-- Footer nav -->
   <div class="app-footer">
@@ -922,7 +921,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="footer-tab-badge" id="footerCartBadge" style="display:none;">0</span>
     </button>
   </div>
- </div>
+</div>
 
 
 
@@ -1783,29 +1782,15 @@ async function submitOrder() {
       document.getElementById('cartSummary').style.display = 'none';
       // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
       var _now = new Date();
-      var _day = _now.getDay();
+      var _day = _now.getDay(); // 5=جمعة
       var _hour = _now.getHours();
-      var _offHoursText = '';
+      var _offHoursMsg = '';
       if (_day === 5) {
-        _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
+        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 يوم الجمعة عطلة — سيتم تجهيز طلبك يوم السبت إن شاء الله ✨</div>';
       } else if (_hour < 9 || _hour >= 22) {
-        _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيزه الطلب اثناء اوقات الدوام  ✨';
+        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه الطلب اثناء اوقات الدوام  ✨</div>';
       }
-      if (_offHoursText) {
-        var _ov = document.createElement('div');
-        _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
-        var _box = document.createElement('div');
-        _box.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
-        var _lines = _offHoursText.split('\n').map(function(l){ return '<div>' + l + '</div>'; }).join('');
-        _box.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">🌙</div>' +
-          '<div style="font-size:17px;font-weight:700;color:#854D0E;line-height:1.8;margin-bottom:20px;">' + _lines + '</div>' +
-          '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
-        _box.querySelector('button').onclick = function(){ _ov.remove(); };
-        _ov.appendChild(_box);
-        _ov.onclick = function(e){ if(e.target===_ov) _ov.remove(); };
-        document.body.appendChild(_ov);
-      }
-      document.getElementById('orderResult').innerHTML = '';
+      document.getElementById('orderResult').innerHTML = _offHoursMsg;
       submitBtn.disabled = false;
       submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
       submitBtn.style.background = '#16A34A';
@@ -2293,58 +2278,85 @@ function backToBrands() {}
 
 // ── Search Sheet ──
 // ── Snapshot system for "جديد" detection ──
-var _prevSnapshot = null;
+// ── وصلنا حديثاً — يعتمد على date_added من الشيت (آخر 30 يوم) ──
 
+// خريطة: source من الـ API → typeKey للسلة
+var _newItemsTypeMap = {
+  'شاشات':       'screens',
+  'بطاريات':     'batteries',
+  'بورد شحن':    'chargeboards',
+  'فلات':        'flatcharging',
+  'باك كفر':     'backcover',
+  'شاصي':        'housing',
+  'عدسة كاميرا': 'lens',
+  'كاميرا':      'camera',
+  'سماعة جرس':   'flatpower',
+  'سماعة اتصال': 'flatpower',
+  'باب سيم':     'flatpower',
+  'بصمة':        'flatpower',
+  'منوعة':       'flatpower',
+};
 
 function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
   var body = document.getElementById('newItemsSheetBody');
-  body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
+  body.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل المواد الجديدة...</div></div>';
 
-  secureApiCall('getNewItems', {}).then(function(res) {
-    var items = (res && res.items) ? res.items : [];
-
-    if (!items.length) {
+  secureApiCall('getNewItems').then(function(items) {
+    if (!items || !items.length) {
       body.innerHTML =
         '<div style="text-align:center;padding:40px 20px;">' +
           '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
           '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:8px;">لا يوجد جديد</div>' +
-          '<div style="font-size:14px;color:#94A3B8;">سيظهر هنا أي منتج أُضيف خلال آخر 30 يوم</div>' +
+          '<div style="font-size:16px;color:#94A3B8;line-height:1.7;">أي مادة تُضاف للمخزون خلال آخر 30 يوم<br>ستظهر هنا تلقائياً</div>' +
         '</div>';
       return;
     }
 
-    var isLoggedIn = !!u;
-    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة جديدة</div>';
+    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة وصلت حديثاً</div>';
 
-    items.forEach(function(p) {
-      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      var qty   = Number(p.qty)||0;
-      var typeKey = p.typeKey || p.type || '';
-      var priceHtml = '';
-      if (!isLoggedIn) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      } else if (!price || !qty) {
-        priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
+    items.forEach(function(item) {
+      var price = Number(item.price) || 0;
+      var typeKey = _newItemsTypeMap[item.source] || 'screens';
+      var priceHtml, cartBtnHtml;
+
+      if (isGuest()) {
+        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>';
+        cartBtnHtml = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
       } else {
-        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+        var pObj = {
+          name: item.name, brand: item.brand||'', type: item.type||'',
+          price: price, qty: item.qty||0, notes: item.notes||'',
+          itemType: typeKey
+        };
+        var pid = cacheProduct(pObj);
+        priceHtml = '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>';
+        cartBtnHtml = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">🛒 إضافة للسلة</button>';
       }
-      var typeHtml = (p.type_label) ? '<span class="pi-type">' + p.type_label + '</span>' : '';
-      var brandHtml = p.brand ? '<div class="pi-brand">' + sanitize(p.brand) + '</div>' : '';
-      var badgeHtml = '<span style="display:inline-block;background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;">🆕 جديد</span>';
 
-      html += '<div class="price-item" onclick="addToCart(' + JSON.stringify({name:p.name,price:price,type:typeKey,brand:p.brand||''}) + ')">' +
-        badgeHtml +
-        '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
-        brandHtml + typeHtml + priceHtml +
+      // تاريخ الإضافة
+      var dateHtml = item.date_added
+        ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>'
+        : '';
+
+      html +=
+        '<div class="price-item">' +
+          '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
+          '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
+          (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
+          (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
+          priceHtml +
+          dateHtml +
+          (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
+          cartBtnHtml +
         '</div>';
     });
 
     body.innerHTML = html;
-  }).catch(function() {
-    body.innerHTML = '<div style="text-align:center;padding:30px;color:#EF4444;">⚠️ تعذّر تحميل البيانات</div>';
+  }).catch(function(e) {
+    body.innerHTML = '<div class="result error" style="margin:20px;">⚠️ فشل تحميل المواد الجديدة<br><small>' + (e.message||'') + '</small></div>';
   });
 }
 
@@ -2592,7 +2604,7 @@ loadBackCover(); loadHousing(); loadLens(); loadCamera();
 loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc();
 loadCart();
 appBoot();
-setTimeout(saveSnapshotAfterLoad, 4000);
+// (snapshot system removed — now using date_added from sheet)
 
 // ── منع النسخ والتصوير ──
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
@@ -2869,4 +2881,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
