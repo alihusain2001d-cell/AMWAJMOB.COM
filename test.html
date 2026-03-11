@@ -2903,7 +2903,7 @@ function openCheckFromAccount() {
 
 <!-- ═══ لوحة تحكم الأدمن ═══ -->
 <div id="adminSheet" class="bsheet-overlay" onclick="closeSheet('adminSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:95vh;">
+  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:95vh;overflow:hidden;display:flex;flex-direction:column;">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
@@ -2925,7 +2925,7 @@ function openCheckFromAccount() {
       <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
       <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
     </div>
-    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;flex:1;"></div>
+    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
   </div>
 </div>
 
@@ -3221,7 +3221,7 @@ function adminRenderList() {
   filtered.forEach(function(p) {
     var imgUrl = p.image_url && p.image_url.trim() ? (p.image_url.startsWith('http') ? p.image_url : getDriveImageUrl(p.image_url)) : '';
     var imgHtml = imgUrl
-      ? '<img class="admin-prod-img" src="' + imgUrl + '" style="width:54px;height:54px;min-width:54px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"admin-prod-img-empty\\\">📷</div>\'">'
+      ? '<img class="admin-prod-img" src="' + imgUrl + '" loading="lazy" style="width:54px;height:54px;min-width:54px;max-width:54px;object-fit:cover;" onerror="this.outerHTML=\'<div class=\\\"admin-prod-img-empty\\\">📷</div>\'">'
       : '<div class="admin-prod-img-empty">📷</div>';
     var sheetLabel = _adminSheetLabels[p._sheet] || p._sheet;
     var typeLabel = (p._sheet === 'SHEET' && p.type) ? ' · <span style="color:#16A34A;font-weight:700;">' + p.type + '</span>' : '';
