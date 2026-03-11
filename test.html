@@ -2295,53 +2295,6 @@ function backToBrands() {}
 // ── Snapshot system for "جديد" detection ──
 var _prevSnapshot = null;
 
-function saveSnapshot(allData) {
-  var snap = {};
-  var typeKeys = {
-    screens:'s', batteries:'b', chargeboards:'c', backcover:'bc',
-    housing:'h', camera:'cam', flatcharging:'fc'
-  };
-  Object.keys(typeKeys).forEach(function(t) {
-    var data = allData[t] || [];
-    data.forEach(function(p) {
-      var key = typeKeys[t] + '|' + (p.name||'').trim();
-      snap[key] = Number(p.qty)||0;
-    });
-  });
-  localStorage.setItem('amwaj_snap', JSON.stringify(snap));
-  localStorage.setItem('amwaj_snap_time', Date.now().toString());
-}
-
-function getPrevSnapshot() {
-  try {
-    var s = localStorage.getItem('amwaj_snap');
-    return s ? JSON.parse(s) : {};
-  } catch(e) { return {}; }
-}
-
-function isNewItem(p, type) {
-  var typeKeys = {
-    screens:'s', batteries:'b', chargeboards:'c', backcover:'bc',
-    housing:'h', camera:'cam', flatcharging:'fc'
-  };
-  var snap = getPrevSnapshot();
-  if (!Object.keys(snap).length) return false; // first load ever, nothing is "new"
-  var key = (typeKeys[type]||type) + '|' + (p.name||'').trim();
-  var prevQty = snap.hasOwnProperty(key) ? snap[key] : -1;
-  // New if: didn't exist before OR was 0 and now has stock
-  return prevQty === -1 || prevQty === 0;
-}
-
-function saveSnapshotAfterLoad() {
-  var allData = {
-    screens: pricesData||[], batteries: batteriesData||[],
-    chargeboards: chargeboardsData||[], backcover: backcoverData||[],
-    housing: housingData||[], camera: cameraData||[], flatcharging: flatchargingData||[]
-  };
-  // Only save if we have data
-  var total = Object.values(allData).reduce(function(s,a){return s+a.length;},0);
-  if (total > 0) saveSnapshot(allData);
-}
 
 function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
@@ -2350,88 +2303,49 @@ function openNewItemsSheet() {
   var body = document.getElementById('newItemsSheetBody');
   body.innerHTML = '<div style="text-align:center;padding:30px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
 
-  var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
-  var typeLabels = {
-    screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
-    backcover:'باك كفر', housing:'شاصي', camera:'كاميرا', flatcharging:'شريط شحن'
-  };
+  secureApiCall('getNewItems', {}).then(function(res) {
+    var items = (res && res.items) ? res.items : [];
 
-  var attempts = 0;
-  function tryRender() {
-    attempts++;
-    var newItems = [];
-
-    allTypes.forEach(function(t) {
-      var data = getDataForType(t) || [];
-      data.forEach(function(p, i) {
-        var qty = Number(p.qty)||0;
-        var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-        if (qty > 0 && price > 0 && isNewItem(p, t)) {
-          newItems.push({p:p, type:t, label:typeLabels[t]||t, i:i, total:data.length});
-        }
-      });
-    });
-
-    // Keep trying if no data loaded yet
-    if (!newItems.length) {
-      // Check if data actually loaded at all
-      var totalLoaded = allTypes.reduce(function(s,t){ return s+(getDataForType(t)||[]).length; },0);
-      if (totalLoaded === 0 && attempts < 12) {
-        setTimeout(tryRender, 500);
-        return;
-      }
-    }
-
-    // Save snapshot AFTER reading (next time, current items = old)
-    saveSnapshotAfterLoad();
-
-    // No new items
-    if (!newItems.length) {
+    if (!items.length) {
       body.innerHTML =
         '<div style="text-align:center;padding:40px 20px;">' +
           '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
           '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:8px;">لا يوجد جديد</div>' +
-          '<div style="font-size:18px;color:#94A3B8;">سيظهر هنا أي منتج جديد يُضاف للمخزون</div>' +
+          '<div style="font-size:14px;color:#94A3B8;">سيظهر هنا أي منتج أُضيف خلال آخر 30 يوم</div>' +
         '</div>';
       return;
     }
 
-    // Sort: screens first, then newest first
-    newItems.sort(function(a, b) {
-      var aS = a.type === 'screens' ? 0 : 1;
-      var bS = b.type === 'screens' ? 0 : 1;
-      if (aS !== bS) return aS - bS;
-      return (b.i / b.total) - (a.i / a.total);
-    });
+    var isLoggedIn = !!u;
+    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة جديدة</div>';
 
-    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + newItems.length + ' مادة جديدة</div>';
-
-    newItems.forEach(function(r) {
-      var p = r.p;
+    items.forEach(function(p) {
       var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      var priceHtml, cartBtnHtml;
-      if (isGuest()) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+      var qty   = Number(p.qty)||0;
+      var typeKey = p.typeKey || p.type || '';
+      var priceHtml = '';
+      if (!isLoggedIn) {
+        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+      } else if (!price || !qty) {
+        priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
       } else {
-        var pid = cacheProduct(Object.assign({}, p, {itemType: r.type}));
-        priceHtml = '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">🛒 إضافة للسلة</button>';
+        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
       }
-      html +=
-        '<div class="price-item">' +
-          '<span class="pi-type">' + r.label + '</span>' +
-          '<div class="pi-name" style="margin-top:5px;">' + sanitize(p.name||'-') + '</div>' +
-          '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
-          (p.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(p.type) + '</span>' : '') +
-          priceHtml +
-          (p.notes ? '<div class="pi-notes">📝 ' + sanitize(p.notes) + '</div>' : '') +
-          cartBtnHtml +
+      var typeHtml = (p.type_label) ? '<span class="pi-type">' + p.type_label + '</span>' : '';
+      var brandHtml = p.brand ? '<div class="pi-brand">' + sanitize(p.brand) + '</div>' : '';
+      var badgeHtml = '<span style="display:inline-block;background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;">🆕 جديد</span>';
+
+      html += '<div class="price-item" onclick="addToCart(' + JSON.stringify({name:p.name,price:price,type:typeKey,brand:p.brand||''}) + ')">' +
+        badgeHtml +
+        '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
+        brandHtml + typeHtml + priceHtml +
         '</div>';
     });
+
     body.innerHTML = html;
-  }
-  tryRender();
+  }).catch(function() {
+    body.innerHTML = '<div style="text-align:center;padding:30px;color:#EF4444;">⚠️ تعذّر تحميل البيانات</div>';
+  });
 }
 
 function openSearchSheet() {
@@ -2955,6 +2869,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
-
-
