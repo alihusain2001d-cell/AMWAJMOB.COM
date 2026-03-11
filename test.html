@@ -304,8 +304,8 @@ body {
 }
 .prod-card:active { transform: scale(0.94); border-color: var(--primary); background: var(--primary-light); }
 .prod-icon { width: 80px; height: 80px; object-fit: contain; display: block; border-radius: 8px; }
-.prod-name { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; }
-.prod-name-en { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.prod-name { font-size: 19px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.prod-name-en { font-size: 15px; color: var(--muted); margin-top: 1px; }
 
 /* Google card */
 .google-card {
@@ -1784,13 +1784,27 @@ async function submitOrder() {
       var _now = new Date();
       var _day = _now.getDay(); // 5=جمعة
       var _hour = _now.getHours();
-      var _offHoursMsg = '';
+      var _offHoursText = '';
       if (_day === 5) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 يوم الجمعة عطلة — سيتم تجهيز طلبك يوم السبت إن شاء الله ✨</div>';
+        _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
       } else if (_hour < 9 || _hour >= 22) {
-        _offHoursMsg = '<div style="margin-top:10px;padding:10px 14px;background:#FEF9C3;border-radius:10px;color:#854D0E;font-size:17px;font-weight:600;text-align:right;">🌙 تم استلام طلبك — أوقات الدوام 9ص-10م، سيتم تجهيزه الطلب اثناء اوقات الدوام  ✨</div>';
+        _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
       }
-      document.getElementById('orderResult').innerHTML = _offHoursMsg;
+      if (_offHoursText) {
+        var _ov = document.createElement('div');
+        _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+        var _box = document.createElement('div');
+        _box.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+        var _lines = _offHoursText.split('\n').map(function(l){ return '<div>' + l + '</div>'; }).join('');
+        _box.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">🌙</div>' +
+          '<div style="font-size:17px;font-weight:700;color:#854D0E;line-height:1.9;margin-bottom:20px;">' + _lines + '</div>' +
+          '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
+        _box.querySelector('button').onclick = function(){ _ov.remove(); };
+        _ov.onclick = function(e){ if(e.target===_ov) _ov.remove(); };
+        _ov.appendChild(_box);
+        document.body.appendChild(_ov);
+      }
+      document.getElementById('orderResult').innerHTML = '';
       submitBtn.disabled = false;
       submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
       submitBtn.style.background = '#16A34A';
@@ -2881,10 +2895,3 @@ function handleAllProdSearch() {
 
 </body>
 </html>
-
-
-
-
-
-
-
