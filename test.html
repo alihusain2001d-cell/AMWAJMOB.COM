@@ -484,13 +484,16 @@ body {
 .pi-qty-minus { background:#EF4444; color:white; border-radius:10px 0 0 10px; }
 .pi-qty-plus  { background:#16A34A; color:white; border-radius:0 10px 10px 0; }
 .add-to-cart-btn {
-  flex:1; background:var(--green); color:white; padding:0 6px;
+  flex:1; background:#334155; color:white; padding:0 6px;
   height:44px; border:none; cursor:pointer;
   font-weight:700; font-size:15px; font-family:'Tajawal',sans-serif;
   transition:background .2s; display:flex; align-items:center; justify-content:center; gap:4px;
 }
-.add-to-cart-btn:active { background:#15803D; }
+.add-to-cart-btn:active { background:#1E293B; }
 .add-to-cart-btn.gray-btn { background:#64748B; border-radius:10px; }
+.pi-qty-display {
+  font-size:18px; font-weight:900; color:#fff; min-width:24px; text-align:center;
+}
 
 /* Form inside sheet */
 .form-group { margin-bottom:12px; }
@@ -2192,13 +2195,13 @@ function createSheetPriceItem(p) {
     var uid = 'q_' + Math.random().toString(36).substr(2,7);
     cartRow =
       '<div class="pi-cart-row">' +
-        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
-        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">&#128722; <span id="' + uid + '" style="font-weight:900;color:#94A3B8;">0</span></button>' +
         '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">&#128722; <span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
       '</div>';
   }
 
-  return '<div class="price-item">' + imgHtml +
+  return '<div class="price-item" style="' + (imgUrl ? '' : 'justify-content:space-between;') + '">' + imgHtml +
     '<div class="pi-info">' +
       '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
       '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
@@ -2242,15 +2245,12 @@ function piAddToCart(pid, uid) {
   if (el) { el.textContent = '0'; el.style.color = '#94A3B8'; }
 }
 
-// + مباشر بدون زر إضافة (الزر الأخضر)
+// + مباشر يضيف للسلة
 function piDirectAdd(pid, uid) {
   var p = getCachedProduct(pid);
   if (!p) return;
   var el = document.getElementById(uid);
-  var n = el ? (parseInt(el.textContent) || 0) + 1 : 1;
-  if (n > 99) n = 99;
-  if (el) { el.textContent = n; el.style.color = 'var(--green)'; }
-  // أضف للسلة مباشرة
+  // أضف للسلة
   var existingIndex = cart.findIndex(function(item) {
     var ip = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
     var pp = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
@@ -2265,13 +2265,17 @@ function piDirectAdd(pid, uid) {
   }
   saveCart();
   showCartToast(p.name || 'المنتج');
+  // حدّث الرقم
+  if (el) {
+    var n = (parseInt(el.textContent)||0) + 1;
+    el.textContent = n;
+  }
 }
 
 // − مباشر يخفض من السلة
 function piDirectRemove(pid, uid) {
   var p = getCachedProduct(pid);
   if (!p) return;
-  var el = document.getElementById(uid);
   var existingIndex = cart.findIndex(function(item) {
     var ip = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
     var pp = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
@@ -2282,8 +2286,11 @@ function piDirectRemove(pid, uid) {
     if (cart[existingIndex].quantity <= 0) cart.splice(existingIndex, 1);
     saveCart();
   }
-  var n = el ? Math.max(0, (parseInt(el.textContent)||0) - 1) : 0;
-  if (el) { el.textContent = n; el.style.color = n === 0 ? '#94A3B8' : 'var(--green)'; }
+  var el = document.getElementById(uid);
+  if (el) {
+    var n = Math.max(0, (parseInt(el.textContent)||0) - 1);
+    el.textContent = n;
+  }
 }
 
 function addToCartById(key) {
@@ -2479,7 +2486,7 @@ function openNewItemsSheet() {
 
       if (isGuest()) {
         priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button></div>';
+        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
       } else {
         var pObj = {
           name: item.name, brand: item.brand||'', type: item.type||'',
@@ -2491,10 +2498,9 @@ function openNewItemsSheet() {
         priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
         cartRow =
           '<div class="pi-cart-row">' +
-            '<button class="pi-qty-btn pi-qty-minus" onclick="piQtyChange(\'' + uid + '\',-1)">−</button>' +
-            '<span class="pi-qty-num" id="' + uid + '">1</span>' +
-            '<button class="pi-qty-btn pi-qty-plus"  onclick="piQtyChange(\'' + uid + '\',1)">+</button>' +
-            '<button class="add-to-cart-btn" onclick="piAddToCart(\'' + pid + '\',\'' + uid + '\')">🛒 إضافة للسلة</button>' +
+            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+            '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">&#128722; <span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
           '</div>';
       }
 
@@ -2955,9 +2961,9 @@ function createAllProdItem(p, typeKey) {
     var uid = 'q_' + Math.random().toString(36).substr(2,7);
     cartRow =
       '<div class="pi-cart-row">' +
-        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
-        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">&#128722; <span id="' + uid + '" style="font-weight:900;color:#94A3B8;">0</span></button>' +
         '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">&#128722; <span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
       '</div>';
   }
 
