@@ -913,11 +913,12 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
       <!-- Search -->
       <div class="sec-label">بحث سريع</div>
-      <div class="home-search" style="margin:0 12px 0;">
+      <div class="home-search" style="margin:0 12px 0;position:relative;">
         <span style="font-size:18px;color:var(--muted);">🔍</span>
-        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" onkeyup="handleGlobalSearch(event)">
+        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
+        <span id="globalSearchClear" onclick="clearGlobalSearch()" style="display:none;font-size:18px;color:#EF4444;cursor:pointer;padding:4px;flex-shrink:0;">✕</span>
       </div>
-      <div id="globalSearchResults" style="padding:0 12px;margin-top:8px;display:none;"></div>
+      <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
       <!-- Products -->
       <div class="sec-label">المنتجات</div>
@@ -1405,12 +1406,31 @@ function logout() {
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
+function clearGlobalSearch() {
+  var input = document.getElementById('globalSearch');
+  var clearBtn = document.getElementById('globalSearchClear');
+  var resultsDiv = document.getElementById('globalSearchResults');
+  input.value = '';
+  clearBtn.style.display = 'none';
+  resultsDiv.style.display = 'none';
+  resultsDiv.innerHTML = '';
+  input.focus();
+}
+
+function closeSearchDropdown() {
+  var d = document.getElementById('globalSearchResults');
+  if (d) d.style.display = 'none';
+}
+
 function handleGlobalSearch(event) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
+  var clearBtn = document.getElementById('globalSearchClear');
+  if (clearBtn) clearBtn.style.display = event.target.value ? '' : 'none';
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
+
   const allData = [
     ...pricesData.map(i => ({...i, source: 'شاشات', icon: '🖥️'})),
     ...batteriesData.map(i => ({...i, source: 'بطاريات', icon: '🔋'})),
@@ -1427,30 +1447,45 @@ function handleGlobalSearch(event) {
     ...lensData.map(i => ({...i, source: 'عدسة كاميرا', icon: '📷'})),
     ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'}))
   ];
-  const results = allData.filter(item => (item.name && item.name.toLowerCase().includes(query)) || (item.brand && item.brand.toLowerCase().includes(query)));
+
+  const results = allData.filter(item =>
+    (item.name && item.name.toLowerCase().includes(query)) ||
+    (item.brand && item.brand.toLowerCase().includes(query))
+  );
+
   resultsDiv.style.display = 'block';
-  if (results.length === 0) { resultsDiv.innerHTML = '<div style="padding:12px;color:#666;text-align:center;">لا توجد نتائج</div>'; return; }
-  let html = `<div style="font-weight:bold;color:#1e88e5;margin-bottom:8px;">النتائج (${results.length}):</div>`;
-  results.slice(0, 20).forEach(item => {
+  if (results.length === 0) {
+    resultsDiv.innerHTML = '<div style="padding:14px;color:#94A3B8;text-align:center;font-size:15px;">لا توجد نتائج</div>';
+    return;
+  }
+
+  const guestMode = isGuest();
+  let html = '';
+  results.slice(0, 30).forEach(function(item, idx) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
     const available = qty > 0 && price > 0;
-    const guestMode = isGuest();
-    const priceText = available ? (guestMode ? '🔒 سجل لرؤية السعر' : formatPriceIQD(price) + ' د.ع') : 'غير متوفر';
-    const priceColor = available ? (guestMode ? '#94A3B8' : '#1e88e5') : '#c62828';
-    let screenTypeLabel = '';
-    if (item.source === 'شاشات' && item.type) {
-      const typeLabels = {'أصلي وكالة': '🟢', 'أصلي صيني': '🔵', 'TFT': '🟡'};
-      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
-    }
-    let notesHtml = '';
-    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:14px;color:#e65100;">📝 ${item.notes}</div>`;
-    const cartBtn = available ? (isGuest()
-      ? `<button onclick='showLoginPrompt()' style="background:#94A3B8;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🔒 سجل لرؤية السعر</button>`
-      : `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🛒 إضافة للسلة</button>`) : '';
-    html += `<div onclick='goToProductInSheet(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;cursor:pointer;"><div style="font-weight:bold;font-size:18px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:14px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:17px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
+    const priceText = !available ? '<span style="color:#EF4444;">غير متوفر</span>'
+      : guestMode ? '<span style="color:#94A3B8;">🔒 سجل</span>'
+      : '<span style="color:#0284C7;font-weight:800;">' + formatPriceIQD(price) + ' د.ع</span>';
+    const typeText = (item.source === 'شاشات' && item.type) ? item.type : '';
+    const notesText = (item.notes && item.notes.trim()) ? item.notes : '';
+    const border = idx < results.slice(0,30).length - 1 ? 'border-bottom:1px solid #F1F5F9;' : '';
+
+    html += '<div onmousedown="goToProductInSheet(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;' + border + '" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-size:20px;flex-shrink:0;">' + item.icon + '</span>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:15px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sanitize(item.name||'') + '</div>'+
+        '<div style="font-size:12px;color:#94A3B8;margin-top:1px;">' + item.source + (item.brand ? ' · ' + item.brand : '') + (typeText ? ' · <span style="color:#16A34A;">' + typeText + '</span>' : '') + (notesText ? ' · <span style="color:#F59E0B;">' + sanitize(notesText) + '</span>' : '') + '</div>'+
+      '</div>'+
+      '<div style="font-size:14px;flex-shrink:0;">' + priceText + '</div>'+
+    '</div>';
   });
-  if (results.length > 20) html += `<div style="padding:8px;color:#666;text-align:center;font-size:17px;">... و ${results.length - 20} نتيجة أخرى</div>`;
+
+  if (results.length > 30) {
+    html += '<div style="padding:10px;text-align:center;color:#94A3B8;font-size:13px;">... و ' + (results.length - 30) + ' نتيجة أخرى — دقق البحث</div>';
+  }
+
   resultsDiv.innerHTML = html;
 }
 
