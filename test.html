@@ -1448,10 +1448,53 @@ function handleGlobalSearch(event) {
     const cartBtn = available ? (isGuest()
       ? `<button onclick='showLoginPrompt()' style="background:#94A3B8;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🔒 سجل لرؤية السعر</button>`
       : `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🛒 إضافة للسلة</button>`) : '';
-    html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:18px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:14px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:17px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
+    html += `<div onclick='goToProductInSheet(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;cursor:pointer;"><div style="font-weight:bold;font-size:18px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:14px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:17px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
   });
   if (results.length > 20) html += `<div style="padding:8px;color:#666;text-align:center;font-size:17px;">... و ${results.length - 20} نتيجة أخرى</div>`;
   resultsDiv.innerHTML = html;
+}
+
+function goToProductInSheet(item) {
+  // أغلق شيت البحث
+  closeSheet('searchSheet');
+
+  // حدد نوع الشيت
+  var sourceToType = {
+    'شاشات':       { type: 'screens',      title: '🖥️ الشاشات' },
+    'بطاريات':     { type: 'batteries',    title: '🔋 البطاريات' },
+    'بورد شحن':    { type: 'chargeboards', title: '🔌 بورد شحن' },
+    'فلات':        { type: 'flatmain',     title: '⚡ فلات' },
+    'باك كفر':     { type: 'backcover',    title: '📱 باك كفر' },
+    'شاصي':        { type: 'housing',      title: '🏠 شاصي' },
+    'عدسة كاميرا': { type: 'lens',         title: '📷 عدسة كاميرا' },
+    'كاميرا':      { type: 'camera',       title: '📷 كاميرا' },
+  };
+
+  var info = sourceToType[item.source];
+  if (!info) return;
+
+  // افتح الشيت وانتقل للبراند
+  openProductSheet(info.type, info.title);
+
+  // بعد ما يفتح الشيت انتقل للبراند مباشرة
+  setTimeout(function() {
+    if (item.brand) {
+      openSheetBrand(item.brand);
+      // بعد تحميل البراند سكرول للمنتج
+      setTimeout(function() {
+        var items = document.querySelectorAll('#sheetResults .price-item');
+        for (var i = 0; i < items.length; i++) {
+          var nameEl = items[i].querySelector('.pi-name');
+          if (nameEl && nameEl.textContent.trim().toLowerCase() === (item.name||'').toLowerCase()) {
+            items[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            items[i].style.outline = '2px solid #0284C7';
+            setTimeout(function(el){ el.style.outline = ''; }, 2000);
+            break;
+          }
+        }
+      }, 800);
+    }
+  }, 300);
 }
 
 function addToCartFromSearch(product) {
