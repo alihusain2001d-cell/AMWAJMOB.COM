@@ -824,6 +824,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <button class="header-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
     <div class="header-title">أمواج للإلكترونيات</div>
     <div style="display:flex;gap:6px;">
+      <button class="header-icon-btn" id="installBtn" onclick="showInstallPrompt()" title="تثبيت التطبيق" style="display:none;font-size:18px;">📲</button>
       <button class="header-icon-btn" onclick="focusHomeSearch()" title="بحث">🔍</button>
       <button class="header-icon-btn" onclick="openCartSheet()" title="السلة" style="position:relative;">
         🛒
@@ -2967,32 +2968,100 @@ function openCheckFromAccount() {
   <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center;direction:rtl;">
     <div style="font-size:52px;margin-bottom:8px;">📲</div>
     <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:6px;">أضف التطبيق للشاشة الرئيسية</div>
-    <div style="font-size:17px;color:#64748B;margin-bottom:20px;line-height:1.6;">للوصول السريع لأمواج للإلكترونيات</div>
-    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
-      <div style="font-size:17px;color:#0F172A;margin-bottom:8px;">📱 <b>على الآيفون:</b></div>
-      <div style="font-size:14px;color:#475569;margin-bottom:4px;">١. اضغط على زر المشاركة <span style="font-size:17px;">⬆️</span></div>
-      <div style="font-size:14px;color:#475569;">٢. اضغط على "إضافة إلى الشاشة الرئيسية" <span style="font-size:17px;">＋</span></div>
+    <div style="font-size:15px;color:#64748B;margin-bottom:20px;">وصول سريع بدون متصفح</div>
+    <div id="installAndroidBtn" style="display:none;margin-bottom:12px;">
+      <button onclick="triggerInstall()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">📲 تثبيت التطبيق</button>
     </div>
-    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:20px;text-align:right;">
-      <div style="font-size:17px;color:#0F172A;margin-bottom:8px;">🤖 <b>على الأندرويد:</b></div>
-      <div style="font-size:14px;color:#475569;margin-bottom:4px;">١. اضغط على ⋮ (القائمة)</div>
-      <div style="font-size:14px;color:#475569;">٢. اضغط "إضافة إلى الشاشة الرئيسية"</div>
+    <div id="installIosInstructions" style="display:none;">
+      <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
+        <div style="font-size:16px;font-weight:800;color:#0F172A;margin-bottom:8px;">📱 على الآيفون:</div>
+        <div style="font-size:14px;color:#475569;margin-bottom:6px;">١. اضغط على زر المشاركة <b>⬆️</b> بالأسفل</div>
+        <div style="font-size:14px;color:#475569;">٢. اختار <b>"إضافة إلى الشاشة الرئيسية"</b></div>
+      </div>
     </div>
-    <button onclick="closeInstallPrompt()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً، شكراً!</button>
+    <div id="installManualInstructions" style="display:none;">
+      <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
+        <div style="font-size:16px;font-weight:800;color:#0F172A;margin-bottom:8px;">🤖 على الأندرويد:</div>
+        <div style="font-size:14px;color:#475569;margin-bottom:6px;">١. اضغط على ⋮ (القائمة) بالأعلى</div>
+        <div style="font-size:14px;color:#475569;">٢. اختار <b>"إضافة إلى الشاشة الرئيسية"</b></div>
+      </div>
+    </div>
+    <button onclick="closeInstallPrompt()" style="width:100%;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;padding:12px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:4px;">لاحقاً</button>
   </div>
 </div>
 
 <script>
+var _deferredInstallPrompt = null;
+var _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var _isInStandaloneMode = window.navigator.standalone === true;
+
+// أظهر الزر دائماً على الآيفون (ما في event تلقائي)
+if (_isIos && !_isInStandaloneMode) {
+  var installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = '';
+}
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  var btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = '';
+});
+
+window.addEventListener('appinstalled', function() {
+  _deferredInstallPrompt = null;
+  var btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+  localStorage.setItem('amwaj_installed', '1');
+});
+
+function showInstallPrompt() {
+  var prompt = document.getElementById('installPrompt');
+  var androidBtn = document.getElementById('installAndroidBtn');
+  var iosInst = document.getElementById('installIosInstructions');
+  var manualInst = document.getElementById('installManualInstructions');
+
+  // إخفاء الكل أول
+  androidBtn.style.display = 'none';
+  iosInst.style.display = 'none';
+  manualInst.style.display = 'none';
+
+  var isIos = _isIos;
+
+  if (_deferredInstallPrompt) {
+    // أندرويد — يقدر يثبت مباشرة
+    androidBtn.style.display = 'block';
+  } else if (isIos) {
+    iosInst.style.display = 'block';
+  } else {
+    manualInst.style.display = 'block';
+  }
+
+  prompt.style.display = 'flex';
+}
+
+async function triggerInstall() {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  var result = await _deferredInstallPrompt.userChoice;
+  if (result.outcome === 'accepted') {
+    _deferredInstallPrompt = null;
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  }
+  closeInstallPrompt();
+}
+
 function closeInstallPrompt() {
   document.getElementById('installPrompt').style.display = 'none';
   localStorage.setItem('amwaj_install_shown', '1');
 }
 
-// Show only once
-if (!localStorage.getItem('amwaj_install_shown')) {
+// أظهر تلقائي مرة وحدة بعد 3 ثواني (للزوار الجدد فقط)
+if (!localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
   setTimeout(function() {
-    document.getElementById('installPrompt').style.display = 'flex';
-  }, 2000);
+    showInstallPrompt();
+  }, 3000);
 }
 
 // ===== ALL PRODUCTS SHEET =====
