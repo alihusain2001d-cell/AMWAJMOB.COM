@@ -1497,7 +1497,7 @@ function goToProductInSheet(item) {
   }, 300);
 }
 
-
+function addToCartFromSearch(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user) { alert('يرجى تسجيل الدخول أولاً'); showLoginPage(); return; }
   const sourceTypeMap = {'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards','شريط شحن':'flatcharging','فلات باور/صوت':'flatpower','باك كفر':'backcover','شاصي':'housing','كاميرا':'camera','سماعة جرس':'flatpower','سماعة اتصال':'flatpower','باب سيم':'flatpower','بصمة':'flatpower','عدسة كاميرا':'lens','منوع':'flatpower'};
