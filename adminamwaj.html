@@ -484,7 +484,7 @@ tr:hover td { background: #ffffff05; }
 // ═══════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════
-const ADMIN_PASS = '1994aa';
+const ADMIN_PASS = 'AMWAJ_ADMIN_2024';
 const API_URL = 'https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
 const API_KEY  = 'AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22';
 const IMGBB_KEY = 'baec33703816b0356502051d078fc688';
@@ -576,7 +576,7 @@ async function loadDashboard() {
   showLoading();
   try {
     const [custR, ordR, warR] = await Promise.all([
-      apiCall('getCustomers'),
+      apiCall('getCustomersList', { adminKey: ADMIN_PASS }),
       apiCall('getAllOrders', { adminKey: ADMIN_PASS }),
       apiCall('getWarranties')
     ]);
@@ -677,7 +677,7 @@ let custFilter = 'all', custSearch = '';
 async function loadCustomers() {
   showLoading();
   try {
-    const r = await apiCall('getCustomers');
+    const r = await apiCall('getCustomersList', { adminKey: ADMIN_PASS });
     allCustomers = r.data || [];
     renderCustomers();
   } catch(e) { setContent('<div class="empty-state">❌ فشل التحميل</div>'); }
@@ -743,25 +743,18 @@ function custBadge(status) {
 async function approveCustomer(phone) {
   if (!confirm('موافقة على تسجيل ' + phone + '؟')) return;
   try {
-    // نستخدم Telegram callback simulate — نرسل مباشرة للـ API
-    const r = await fetch(API_URL, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ callback_query: { data: 'approve_' + phone, message: { message_id: 0, chat: { id: 0 }, text: '' } } })
-    });
-    showToast('✅ تمت الموافقة وإرسال رسالة الواتساب');
-    loadCustomers();
+    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'approved' });
+    if (r.success) { showToast('✅ تمت الموافقة وإرسال رسالة الواتساب'); loadCustomers(); }
+    else showToast('❌ ' + (r.error||'فشل'));
   } catch(e) { showToast('❌ فشل: ' + e.message); }
 }
 
 async function rejectCustomer(phone) {
   if (!confirm('رفض تسجيل ' + phone + '؟')) return;
   try {
-    await fetch(API_URL, {
-      method: 'POST', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ callback_query: { data: 'reject_' + phone, message: { message_id: 0, chat: { id: 0 }, text: '' } } })
-    });
-    showToast('❌ تم الرفض');
-    loadCustomers();
+    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'rejected' });
+    if (r.success) { showToast('❌ تم الرفض'); loadCustomers(); }
+    else showToast('❌ ' + (r.error||'فشل'));
   } catch(e) { showToast('❌ فشل: ' + e.message); }
 }
 
@@ -787,8 +780,12 @@ async function saveEditCustomer() {
 }
 
 async function deleteCustomer(phone, name) {
-  if (!confirm('حذف الزبون ' + name + '؟ هذا لا يمكن التراجع عنه')) return;
-  showToast('⚠️ الحذف يتم يدوياً من Google Sheets حالياً');
+  if (!confirm('حذف الزبون ' + name + '؟\nهذا لا يمكن التراجع عنه!')) return;
+  try {
+    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'deleted' });
+    if (r.success) { showToast('🗑️ تم الحذف'); loadCustomers(); }
+    else showToast('❌ ' + (r.error||'فشل'));
+  } catch(e) { showToast('❌ فشل: ' + e.message); }
 }
 
 // ═══════════════════════════════════
@@ -1057,7 +1054,7 @@ let allProducts = [], prodSearch = '', prodSheetFilter = 'all';
 async function loadProducts() {
   showLoading();
   try {
-    const r = await apiCall('getAllProducts');
+    const r = await apiCall('getAllProducts', { adminKey: ADMIN_PASS });
     allProducts = r.data || [];
     renderProducts();
   } catch(e) {
