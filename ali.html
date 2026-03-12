@@ -916,6 +916,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="home-search" style="margin:0 12px 0;position:relative;">
         <span style="font-size:18px;color:var(--muted);">🔍</span>
         <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
+        <span id="globalSearchClear" onclick="clearGlobalSearch()" style="display:none;font-size:18px;color:#EF4444;cursor:pointer;padding:4px;flex-shrink:0;">✕</span>
       </div>
       <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
@@ -1405,6 +1406,17 @@ function logout() {
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
+function clearGlobalSearch() {
+  var input = document.getElementById('globalSearch');
+  var clearBtn = document.getElementById('globalSearchClear');
+  var resultsDiv = document.getElementById('globalSearchResults');
+  input.value = '';
+  clearBtn.style.display = 'none';
+  resultsDiv.style.display = 'none';
+  resultsDiv.innerHTML = '';
+  input.focus();
+}
+
 function closeSearchDropdown() {
   var d = document.getElementById('globalSearchResults');
   if (d) d.style.display = 'none';
@@ -1414,6 +1426,8 @@ function handleGlobalSearch(event) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
+  var clearBtn = document.getElementById('globalSearchClear');
+  if (clearBtn) clearBtn.style.display = event.target.value ? '' : 'none';
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
 
