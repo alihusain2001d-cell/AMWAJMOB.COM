@@ -557,7 +557,7 @@ async function apiCall(action, extra = {}) {
   const resp = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ apiKey: API_KEY, action, ...extra })
+    body: JSON.stringify({ apiKey: API_KEY, adminKey: ADMIN_PASS, action, ...extra })
   });
   return await resp.json();
 }
