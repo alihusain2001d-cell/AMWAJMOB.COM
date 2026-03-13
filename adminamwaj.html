@@ -324,6 +324,7 @@ tr:hover td { background: #ffffff05; }
 @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 
 /* Responsive */
+/* ── Tablet ── */
 @media (max-width: 768px) {
   .sidebar { width: 60px; }
   .sidebar-logo-text, .sidebar-logo-sub, .nav-item span:not(.nav-icon) { display: none; }
@@ -331,6 +332,80 @@ tr:hover td { background: #ffffff05; }
   .main { margin-right: 60px; }
   .stats-grid { grid-template-columns: repeat(2,1fr); }
   .content { padding: 12px; }
+  table { font-size: 13px; }
+  th, td { padding: 8px 10px; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 520px) {
+  /* Sidebar تصير bottom nav */
+  .sidebar {
+    width: 100%; height: 60px;
+    top: auto; bottom: 0; right: 0;
+    flex-direction: row;
+    border-left: none; border-top: 1px solid var(--border);
+    padding: 0; overflow: hidden;
+    z-index: 200;
+  }
+  .sidebar-logo { display: none; }
+  .sidebar-footer { display: none; }
+  .nav-item {
+    flex: 1; flex-direction: column;
+    padding: 8px 4px; gap: 2px;
+    border-right: none; border-top: 3px solid transparent;
+    font-size: 10px; justify-content: center;
+  }
+  .nav-item.active { border-right-color: transparent; border-top-color: var(--primary); }
+  .nav-item span:not(.nav-icon) { display: block !important; font-size: 10px; }
+  .nav-icon { font-size: 20px; width: auto; }
+  .nav-badge { display: none !important; }
+
+  /* Main content فوق الـ bottom nav */
+  .main { margin-right: 0; margin-bottom: 60px; }
+
+  /* Top bar */
+  .top-bar { padding: 10px 14px; }
+  .top-bar-title { font-size: 16px; }
+  .top-bar-time { display: none; }
+  .refresh-btn { padding: 6px 10px; font-size: 13px; }
+
+  /* Content */
+  .content { padding: 10px; }
+
+  /* Stats */
+  .stats-grid { grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-card { padding: 14px 10px; }
+  .stat-icon { font-size: 22px; margin-bottom: 4px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 11px; }
+
+  /* Section cards */
+  .section-head { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+  .section-title { font-size: 14px; }
+  .search-input { min-width: 0; width: 100%; }
+
+  /* Tables — scroll horizontally */
+  .section-card { overflow-x: auto; }
+  table { min-width: 500px; font-size: 12px; }
+  th, td { padding: 8px 8px; white-space: nowrap; }
+
+  /* Filter tabs */
+  .filter-tabs { gap: 4px; }
+  .filter-tab { padding: 5px 10px; font-size: 12px; }
+
+  /* Modal */
+  .modal { padding: 16px; }
+  .modal-title { font-size: 16px; }
+
+  /* Products grid */
+  .section-card > div[style*="grid"] {
+    grid-template-columns: repeat(2,1fr) !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  /* Login */
+  .login-box { padding: 28px 20px; margin: 16px; }
 }
 
 /* Pagination */
@@ -501,6 +576,7 @@ let editTarget = null;
 function doLogin() {
   const pass = document.getElementById('loginPass').value;
   if (pass === ADMIN_PASS) {
+    localStorage.setItem('amwaj_admin_auth', ADMIN_PASS);
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('adminApp').style.display = 'block';
     startClock();
@@ -510,11 +586,25 @@ function doLogin() {
     document.getElementById('loginPass').value = '';
   }
 }
+
 function doLogout() {
+  localStorage.removeItem('amwaj_admin_auth');
   document.getElementById('adminApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginPass').value = '';
 }
+
+// تحقق تلقائي عند فتح الصفحة
+(function checkAutoLogin() {
+  const saved = localStorage.getItem('amwaj_admin_auth');
+  if (saved === ADMIN_PASS) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    startClock();
+    showPage('dashboard');
+  }
+})();
+// doLogout defined above
 
 // ═══════════════════════════════════
 // CLOCK
