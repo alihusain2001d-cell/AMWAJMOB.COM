@@ -341,10 +341,12 @@ tr:hover td { background: #ffffff05; }
   /* Sidebar تصير bottom nav */
   .sidebar {
     width: 100%; height: 60px;
-    top: auto; bottom: 0; right: 0;
+    position: fixed;
+    top: auto; bottom: 0; right: 0; left: 0;
     flex-direction: row;
     border-left: none; border-top: 1px solid var(--border);
-    padding: 0; overflow: hidden;
+    padding: 0 0 env(safe-area-inset-bottom) 0;
+    overflow: hidden;
     z-index: 200;
   }
   .sidebar-logo { display: none; }
@@ -361,7 +363,7 @@ tr:hover td { background: #ffffff05; }
   .nav-badge { display: none !important; }
 
   /* Main content فوق الـ bottom nav */
-  .main { margin-right: 0; margin-bottom: 60px; }
+  .main { margin-right: 0; margin-bottom: 70px; }
 
   /* Top bar */
   .top-bar { padding: 10px 14px; }
