@@ -816,7 +816,7 @@ function renderCustomers() {
                 <button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅</button>
                 <button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌</button>
               ` : ''}
-              <button class="action-btn btn-edit" onclick="openEditCustomer(${JSON.stringify(c).replace(/'/g,'&#39;')})">✏️</button>
+              <button class="action-btn btn-edit" onclick="openEditCustomerById('${c.phone}')">✏️</button>
               <button class="action-btn btn-delete" onclick="deleteCustomer('${c.phone}','${sanitize(c.name||'')}')">🗑️</button>
             </td>
           </tr>`).join('')}
@@ -856,6 +856,12 @@ function openEditCustomer(c) {
   document.getElementById('editCustShop').value = c.shop || '';
   document.getElementById('editCustStatus').value = c.status || 'pending';
   document.getElementById('editCustomerModal').classList.add('open');
+}
+
+function openEditCustomerById(phone) {
+  const c = allCustomers.find(x => String(x.phone||'').replace(/[^0-9]/g,'') === String(phone||'').replace(/[^0-9]/g,''));
+  if (!c) { showToast('❌ الزبون غير موجود'); return; }
+  openEditCustomer(c);
 }
 
 async function saveEditCustomer() {
