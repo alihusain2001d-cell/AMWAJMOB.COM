@@ -793,7 +793,7 @@ function renderCustomers() {
       </div>
       ${data.length === 0 ? '<div class="empty-state"><div class="empty-icon">👥</div>لا توجد نتائج</div>' : `
       <table>
-        <thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
+        <thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
         <tbody>${data.map((c,i)=>`
           <tr>
             <td style="color:var(--muted)">${i+1}</td>
