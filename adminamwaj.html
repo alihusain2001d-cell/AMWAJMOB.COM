@@ -596,16 +596,7 @@ function doLogout() {
   document.getElementById('loginPass').value = '';
 }
 
-// تحقق تلقائي عند فتح الصفحة
-(function checkAutoLogin() {
-  const saved = localStorage.getItem('amwaj_admin_auth');
-  if (saved === ADMIN_PASS) {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    startClock();
-    showPage('dashboard');
-  }
-})();
+// checkAutoLogin تشتغل في نهاية الكود
 // doLogout defined above
 
 // ═══════════════════════════════════
@@ -1339,6 +1330,17 @@ function showToast(msg) {
 function sanitize(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// تحقق تلقائي عند فتح الصفحة
+(function checkAutoLogin() {
+  const saved = localStorage.getItem('amwaj_admin_auth');
+  if (saved === ADMIN_PASS) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    startClock();
+    showPage('dashboard');
+  }
+})();
 
 // Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(m => {
