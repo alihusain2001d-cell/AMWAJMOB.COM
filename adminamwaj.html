@@ -939,12 +939,6 @@ function renderOrders() {
             <td>${o.timestamp ? new Date(o.timestamp).toLocaleDateString('ar-IQ') : '-'}</td>
             <td>
               <button class="action-btn btn-view" onclick="showOrderDetail('${o.orderId}')">📋 تفاصيل</button>
-              ${o.status==='pending' ? `
-                <button class="action-btn btn-approve" onclick="updateOrder('${o.orderId}','picked')">🚗 إرسال</button>
-                <button class="action-btn btn-reject" onclick="updateOrder('${o.orderId}','cancelled')">❌ إلغاء</button>
-              ` : o.status==='picked' ? `
-                <button class="action-btn btn-approve" onclick="updateOrder('${o.orderId}','delivered')">✅ تم</button>
-              ` : ''}
             </td>
           </tr>`).join('')}
         </tbody>
