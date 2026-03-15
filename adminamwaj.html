@@ -989,13 +989,7 @@ function showOrderDetail(orderId) {
       <span style="font-weight:800">الإجمالي</span>
       <span style="font-weight:900;color:var(--green);font-size:18px;">${(o.total||0).toLocaleString()} د.ع</span>
     </div>
-    ${o.status==='pending'?`
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="modal-btn modal-btn-primary" style="background:var(--green)" onclick="updateOrder('${o.orderId}','picked');closeModal('orderDetailModal')">🚗 إرسال المندوب</button>
-      <button class="modal-btn modal-btn-cancel" style="background:#EF444420;color:var(--red)" onclick="updateOrder('${o.orderId}','cancelled');closeModal('orderDetailModal')">❌ إلغاء</button>
-    </div>`:o.status==='picked'?`
-    <button class="modal-btn modal-btn-primary" onclick="updateOrder('${o.orderId}','delivered');closeModal('orderDetailModal')">✅ تأكيد التوصيل</button>
-    `:''}
+
   `;
   document.getElementById('orderDetailModal').classList.add('open');
 }
