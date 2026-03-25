@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الحضور - أمواج للإلكترونيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2430;
+    --border: #30363d;
+    --accent: #00b4d8;
+    --accent2: #0096c7;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--accent);
+  }
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .status-badge:hover { border-color: var(--accent); color: var(--text); }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    transition: background .3s;
+  }
+  .status-dot.connected { background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* Main layout */
+  .container { display: flex; min-height: calc(100vh - 64px); }
+
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 20px 0;
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    border-right: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--surface2);
+    color: var(--accent);
+    border-right-color: var(--accent);
+  }
+  .nav-icon { font-size: 18px; }
+
+  /* Content */
+  .content { flex: 1; padding: 28px; overflow-x: hidden; }
+
+  /* Pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-size: 22px; font-weight: 900; }
+  .page-subtitle { color: var(--text2); font-size: 13px; margin-top: 2px; }
+
+  /* Stats cards */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-label { color: var(--text2); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .stat-value { font-size: 32px; font-weight: 900; margin-top: 6px; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.blue { color: var(--accent); }
+  .stat-value.red { color: var(--red); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex: 1;
+    max-width: 300px;
+  }
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    text-align: right;
+  }
+  .search-box input::placeholder { color: var(--text2); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    padding: 12px 16px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text2);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  td {
+    padding: 13px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge.in { background: rgba(63,185,80,.15); color: var(--green); }
+  .badge.out { background: rgba(248,81,73,.15); color: var(--red); }
+  .badge.admin { background: rgba(0,180,216,.15); color: var(--accent); }
+  .badge.user { background: rgba(139,148,158,.15); color: var(--text2); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-danger { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-icon { padding: 6px; border-radius: 6px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    width: 440px;
+    max-width: 95vw;
+    transform: translateY(20px);
+    transition: transform .2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+    text-align: right;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,180,216,.1); }
+
+  /* Date filter */
+  .date-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .date-filter label { font-size: 13px; color: var(--text2); font-weight: 600; }
+  .date-filter input[type=date] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+  .date-filter input[type=date]:focus { border-color: var(--accent); }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    gap: 10px;
+    color: var(--text2);
+  }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slideUp .3s ease;
+    min-width: 200px;
+    justify-content: center;
+  }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+  /* Settings page */
+  .settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 480px;
+  }
+  .settings-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+
+  /* Avatar */
+  .avatar {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), #0077b6);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .content { padding: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    th, td { padding: 10px 8px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🌊</div>
+    أمواج — نظام البصمة
+  </div>
+  <div class="status-badge" onclick="checkStatus()">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">غير متصل</span>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="container">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="nav-item active" onclick="showPage('attendance', this)">
+      <span class="nav-icon">📋</span> الحضور والانصراف
+    </div>
+    <div class="nav-item" onclick="showPage('employees', this)">
+      <span class="nav-icon">👥</span> الموظفين
+    </div>
+    <div class="nav-item" onclick="showPage('settings', this)">
+      <span class="nav-icon">⚙️</span> الإعدادات
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ===== صفحة الحضور ===== -->
+    <div class="page active" id="page-attendance">
+      <div class="page-header">
+        <div>
+          <div class="page-title">سجل الحضور والانصراف</div>
+          <div class="page-subtitle">جميع سجلات البصمة</div>
+        </div>
+        <button class="btn btn-primary" onclick="loadAttendance()">🔄 تحديث</button>
+      </div>
+
+      <div class="stats" id="attendanceStats">
+        <div class="stat-card">
+          <div class="stat-label">إجمالي السجلات</div>
+          <div class="stat-value blue" id="statTotal">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">حضور (دخول)</div>
+          <div class="stat-value green" id="statIn">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">انصراف (خروج)</div>
+          <div class="stat-value red" id="statOut">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">عدد الموظفين اليوم</div>
+          <div class="stat-value blue" id="statToday">—</div>
+        </div>
+      </div>
+
+      <div class="date-filter">
+        <label>من:</label>
+        <input type="date" id="dateFrom" onchange="filterAttendance()">
+        <label>إلى:</label>
+        <input type="date" id="dateTo" onchange="filterAttendance()">
+        <button class="btn btn-secondary btn-sm" onclick="clearDateFilter()">الكل</button>
+        <button class="btn btn-secondary btn-sm" onclick="setToday()">اليوم فقط</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" placeholder="ابحث باسم الموظف أو ID..." id="attSearch" oninput="filterAttendance()">
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="filter-bar" style="margin:0">
+              <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">الكل</button>
+              <button class="filter-btn" id="filterIn" onclick="setFilter('in')">دخول</button>
+              <button class="filter-btn" id="filterOut" onclick="setFilter('out')">خروج</button>
+            </div>
+          </div>
+        </div>
+        <div id="attendanceBody">
+          <div class="loading"><div class="spinner"></div> جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== صفحة الموظفين ===== -->
+    <div class="page" id="page-employees">
+      <div class="page-header">
+        <div>
+          <div class="page-title">إدارة الموظفين</div>
+          <div class="page-subtitle">إضافة وتعديل وحذف الموظفين</div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="loadEmployees()">🔄 تحديث</button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ إضافة موظف</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" placeholder="ابحث بالاسم أو ID..." id="empSearch" oninput="filterEmployees()">
+          </div>
+          <span id="empCount" style="color:var(--text2);font-size:13px"></span>
+        </div>
+        <div id="employeesBody">
+          <div class="loading"><div class="spinner"></div> جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== صفحة الإعدادات ===== -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div>
+          <div class="page-title">إعدادات الاتصال</div>
+          <div class="page-subtitle">إعداد IP جهاز البصمة</div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>إعدادات البصمة</h3>
+        <div class="form-group">
+          <label class="form-label">عنوان IP للسيرفر (Node.js)</label>
+          <input class="form-input" id="serverUrl" type="text" placeholder="http://localhost:3000" value="http://localhost:3000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ملاحظة</label>
+          <div style="color:var(--text2);font-size:12px;line-height:1.6;background:var(--surface2);padding:12px;border-radius:8px;border:1px solid var(--border)">
+            السيرفر يشتغل على جهازك اللي بنفس الشبكة مع البصمة.<br>
+            شغّل السيرفر أول: <code style="color:var(--accent)">node server.js</code><br>
+            IP البصمة يتغير من server.js مباشرة.
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ وتحقق</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal إضافة/تعديل موظف -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">إضافة موظف جديد</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">رقم السجل (UID)</label>
+        <input class="form-input" id="fUid" type="number" placeholder="1" min="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">رقم الموظف (ID)</label>
+        <input class="form-input" id="fUserid" type="text" placeholder="EMP001">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">الاسم الكامل</label>
+      <input class="form-input" id="fName" type="text" placeholder="محمد علي الكربلائي">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">كلمة المرور</label>
+        <input class="form-input" id="fPassword" type="text" placeholder="اختياري">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الصلاحية</label>
+        <select class="form-input" id="fRole">
+          <option value="0">موظف</option>
+          <option value="14">مدير</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-primary" onclick="submitEmployee()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+let API = localStorage.getItem('zkApi') || 'http://localhost:3000';
+let allAttendance = [];
+let allEmployees = [];
+let currentFilter = 'all';
+let editingUid = null;
+
+// ===== Init =====
+document.getElementById('serverUrl').value = API;
+document.addEventListener('DOMContentLoaded', () => {
+  checkStatus();
+  loadAttendance();
+});
+
+// ===== Navigation =====
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'employees') loadEmployees();
+}
+
+// ===== Status =====
+async function checkStatus() {
+  try {
+    const r = await fetch(`${API}/api/status`);
+    const d = await r.json();
+    if (d.connected) {
+      document.getElementById('statusDot').classList.add('connected');
+      document.getElementById('statusText').textContent = `متصل — ${d.ip}`;
+    } else {
+      document.getElementById('statusDot').classList.remove('connected');
+      document.getElementById('statusText').textContent = 'غير متصل';
+    }
+  } catch {
+    document.getElementById('statusDot').classList.remove('connected');
+    document.getElementById('statusText').textContent = 'السيرفر مو شغال';
+  }
+}
+
+// ===== Attendance =====
+async function loadAttendance() {
+  document.getElementById('attendanceBody').innerHTML = '<div class="loading"><div class="spinner"></div> جاري جلب السجلات...</div>';
+  try {
+    const r = await fetch(`${API}/api/attendance`);
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message);
+    allAttendance = d.data.sort((a, b) => new Date(b.attTime) - new Date(a.attTime));
+    updateStats();
+    filterAttendance();
+    toast('تم تحميل ' + allAttendance.length + ' سجل ✓', 'success');
+  } catch (e) {
+    document.getElementById('attendanceBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${e.message}</div></div>`;
+    toast('فشل الاتصال: ' + e.message, 'error');
+  }
+}
+
+function updateStats() {
+  const today = new Date().toDateString();
+  const ins = allAttendance.filter(r => r.type === 0 || r.type === 1);
+  const outs = allAttendance.filter(r => r.type === 4 || r.type === 2);
+  const todayIds = new Set(allAttendance.filter(r => new Date(r.attTime).toDateString() === today).map(r => r.userId));
+  document.getElementById('statTotal').textContent = allAttendance.length;
+  document.getElementById('statIn').textContent = ins.length;
+  document.getElementById('statOut').textContent = outs.length;
+  document.getElementById('statToday').textContent = todayIds.size;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+  filterAttendance();
+}
+
+function setToday() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateFrom').value = today;
+  document.getElementById('dateTo').value = today;
+  filterAttendance();
+}
+
+function clearDateFilter() {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  filterAttendance();
+}
+
+function filterAttendance() {
+  const search = document.getElementById('attSearch').value.toLowerCase();
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+
+  let data = allAttendance.filter(r => {
+    const matchSearch = !search || (r.userId + '').toLowerCase().includes(search) || (r.userName || '').toLowerCase().includes(search);
+    const d = new Date(r.attTime);
+    const ds = d.toISOString().split('T')[0];
+    const matchFrom = !from || ds >= from;
+    const matchTo = !to || ds <= to;
+    const matchType = currentFilter === 'all' ? true : currentFilter === 'in' ? (r.type === 0 || r.type === 1) : (r.type === 4 || r.type === 2);
+    return matchSearch && matchFrom && matchTo && matchType;
+  });
+
+  if (data.length === 0) {
+    document.getElementById('attendanceBody').innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">لا توجد سجلات</div></div>';
+    return;
+  }
+
+  const rows = data.map(r => {
+    const dt = new Date(r.attTime);
+    const isIn = r.type === 0 || r.type === 1;
+    return `<tr>
+      <td><div class="avatar">${(r.userName || r.userId || '?').charAt(0)}</div></td>
+      <td><strong>${r.userName || '—'}</strong></td>
+      <td style="color:var(--text2)">${r.userId}</td>
+      <td>${dt.toLocaleDateString('ar-IQ')}</td>
+      <td>${dt.toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'})}</td>
+      <td><span class="badge ${isIn ? 'in' : 'out'}">${isIn ? '↗ دخول' : '↙ خروج'}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('attendanceBody').innerHTML = `
+    <table>
+      <thead><tr>
+        <th></th><th>الاسم</th><th>رقم الموظف</th><th>التاريخ</th><th>الوقت</th><th>النوع</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ===== Employees =====
+async function loadEmployees() {
+  document.getElementById('employeesBody').innerHTML = '<div class="loading"><div class="spinner"></div> جاري التحميل...</div>';
+  try {
+    const r = await fetch(`${API}/api/users`);
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message);
+    allEmployees = d.data;
+    document.getElementById('empCount').textContent = allEmployees.length + ' موظف';
+    renderEmployees(allEmployees);
+  } catch (e) {
+    document.getElementById('employeesBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${e.message}</div></div>`;
+    toast('فشل تحميل الموظفين: ' + e.message, 'error');
+  }
+}
+
+function filterEmployees() {
+  const s = document.getElementById('empSearch').value.toLowerCase();
+  const filtered = allEmployees.filter(e => (e.name || '').toLowerCase().includes(s) || (e.userId + '').toLowerCase().includes(s));
+  renderEmployees(filtered);
+}
+
+function renderEmployees(list) {
+  if (list.length === 0) {
+    document.getElementById('employeesBody').innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">لا يوجد موظفين</div></div>';
+    return;
+  }
+  const rows = list.map(e => `<tr>
+    <td><div class="avatar">${(e.name || '?').charAt(0)}</div></td>
+    <td><strong>${e.name || '—'}</strong></td>
+    <td style="color:var(--text2)">${e.userId}</td>
+    <td style="color:var(--text2)">${e.uid}</td>
+    <td><span class="badge ${e.role > 0 ? 'admin' : 'user'}">${e.role > 0 ? '👑 مدير' : '👤 موظف'}</span></td>
+    <td>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal(${JSON.stringify(e).replace(/"/g,'&quot;')})" title="تعديل">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEmployee(${e.uid},'${e.name}')" title="حذف">🗑️</button>
+      </div>
+    </td>
+  </tr>`).join('');
+
+  document.getElementById('employeesBody').innerHTML = `
+    <table>
+      <thead><tr>
+        <th></th><th>الاسم</th><th>رقم الموظف</th><th>UID</th><th>الصلاحية</th><th>إجراءات</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ===== Modal =====
+function openAddModal() {
+  editingUid = null;
+  document.getElementById('modalTitle').textContent = 'إضافة موظف جديد';
+  document.getElementById('fUid').value = '';
+  document.getElementById('fUserid').value = '';
+  document.getElementById('fName').value = '';
+  document.getElementById('fPassword').value = '';
+  document.getElementById('fRole').value = '0';
+  document.getElementById('fUid').disabled = false;
+  document.getElementById('empModal').classList.add('open');
+}
+
+function openEditModal(emp) {
+  editingUid = emp.uid;
+  document.getElementById('modalTitle').textContent = 'تعديل موظف';
+  document.getElementById('fUid').value = emp.uid;
+  document.getElementById('fUserid').value = emp.userId;
+  document.getElementById('fName').value = emp.name;
+  document.getElementById('fPassword').value = emp.password || '';
+  document.getElementById('fRole').value = emp.role || 0;
+  document.getElementById('fUid').disabled = true;
+  document.getElementById('empModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('empModal').classList.remove('open');
+}
+
+async function submitEmployee() {
+  const uid = parseInt(document.getElementById('fUid').value);
+  const userid = document.getElementById('fUserid').value.trim();
+  const name = document.getElementById('fName').value.trim();
+  const password = document.getElementById('fPassword').value.trim();
+  const role = parseInt(document.getElementById('fRole').value);
+
+  if (!uid || !userid || !name) { toast('يرجى تعبئة الحقول المطلوبة', 'error'); return; }
+
+  const isEdit = editingUid !== null;
+  const url = isEdit ? `${API}/api/users/${editingUid}` : `${API}/api/users`;
+  const method = isEdit ? 'PUT' : 'POST';
+
+  try {
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, userid, name, password, role })
+    });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message);
+    toast(d.message, 'success');
+    closeModal();
+    loadEmployees();
+  } catch (e) {
+    toast('خطأ: ' + e.message, 'error');
+  }
+}
+
+async function deleteEmployee(uid, name) {
+  if (!confirm(`هل تريد حذف الموظف "${name}"؟`)) return;
+  try {
+    const r = await fetch(`${API}/api/users/${uid}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message);
+    toast(d.message, 'success');
+    loadEmployees();
+  } catch (e) {
+    toast('خطأ: ' + e.message, 'error');
+  }
+}
+
+// ===== Settings =====
+async function saveSettings() {
+  API = document.getElementById('serverUrl').value.trim().replace(/\/$/, '');
+  localStorage.setItem('zkApi', API);
+  await checkStatus();
+  toast('تم الحفظ', 'success');
+}
+
+// ===== Toast =====
+function toast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+</script>
+</body>
+</html>
