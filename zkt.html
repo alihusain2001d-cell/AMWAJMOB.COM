@@ -2,22 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>نظام الحضور - أمواج للإلكترونيات</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #1c2430;
-    --border: #30363d;
-    --accent: #00b4d8;
-    --accent2: #0096c7;
-    --green: #3fb950;
-    --red: #f85149;
-    --yellow: #d29922;
-    --text: #e6edf3;
-    --text2: #8b949e;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #e0e4ea;
+    --accent: #0096c7;
+    --accent2: #0077b6;
+    --green: #2da44e;
+    --red: #d1242f;
+    --yellow: #9a6700;
+    --text: #1a1f2e;
+    --text2: #656d76;
     --radius: 12px;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -414,13 +414,63 @@
     flex-shrink: 0;
   }
 
+  /* Prevent double-tap zoom */
+  * { touch-action: manipulation; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .sidebar { display: none; }
-    .content { padding: 16px; }
-    .stats { grid-template-columns: 1fr 1fr; }
+    .content { padding: 12px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-value { font-size: 24px; }
     th, td { padding: 10px 8px; font-size: 12px; }
+    .page-header { flex-wrap: wrap; gap: 10px; }
+    .page-title { font-size: 18px; }
+    .date-filter { flex-wrap: wrap; gap: 8px; }
+    .date-filter input[type=date] { width: 100%; }
+    .table-header { flex-wrap: wrap; gap: 8px; }
+    .search-box { max-width: 100%; }
+    .filter-bar { margin: 0; }
+    .modal { padding: 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .header { padding: 0 14px; }
+    .logo { font-size: 16px; }
+    .logo-icon { width: 32px; height: 32px; font-size: 16px; }
+    .btn { font-size: 12px; padding: 7px 12px; }
   }
+
+  /* Bottom nav for mobile */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 0;
+    z-index: 200;
+    justify-content: space-around;
+  }
+  @media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    .content { padding-bottom: 70px; }
+  }
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 20px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+    transition: all .2s;
+  }
+  .mobile-nav-item.active { color: var(--accent); }
+  .mobile-nav-item span:first-child { font-size: 20px; }
 </style>
 </head>
 <body>
@@ -609,6 +659,19 @@
   </div>
 </div>
 
+<!-- Mobile Bottom Nav -->
+<div class="mobile-nav">
+  <div class="mobile-nav-item active" id="mnav-attendance" onclick="showPage('attendance', document.querySelectorAll('.nav-item')[0]); setMobileNav('attendance')">
+    <span>📋</span><span>الحضور</span>
+  </div>
+  <div class="mobile-nav-item" id="mnav-employees" onclick="showPage('employees', document.querySelectorAll('.nav-item')[1]); setMobileNav('employees')">
+    <span>👥</span><span>الموظفين</span>
+  </div>
+  <div class="mobile-nav-item" id="mnav-settings" onclick="showPage('settings', document.querySelectorAll('.nav-item')[2]); setMobileNav('settings')">
+    <span>⚙️</span><span>الإعدادات</span>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -618,6 +681,11 @@ let allAttendance = [];
 let allEmployees = [];
 let currentFilter = 'all';
 let editingUid = null;
+
+function setMobileNav(name) {
+  document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('mnav-' + name).classList.add('active');
+}
 
 // ===== Init =====
 document.getElementById('serverUrl').value = API;
@@ -701,6 +769,16 @@ function clearDateFilter() {
   filterAttendance();
 }
 
+function parseDate(val) {
+  if (!val) return null;
+  const d = new Date(val);
+  if (!isNaN(d.getTime())) return d;
+  // ZK format: "yyyy-MM-dd HH:mm:ss"
+  const s = String(val).replace(' ', 'T');
+  const d2 = new Date(s);
+  return isNaN(d2.getTime()) ? null : d2;
+}
+
 function filterAttendance() {
   const search = document.getElementById('attSearch').value.toLowerCase();
   const from = document.getElementById('dateFrom').value;
@@ -708,8 +786,8 @@ function filterAttendance() {
 
   let data = allAttendance.filter(r => {
     const matchSearch = !search || (r.userId + '').toLowerCase().includes(search) || (r.userName || '').toLowerCase().includes(search);
-    const d = new Date(r.attTime);
-    const ds = d.toISOString().split('T')[0];
+    const d = parseDate(r.attTime);
+    const ds = d ? d.toISOString().split('T')[0] : '';
     const matchFrom = !from || ds >= from;
     const matchTo = !to || ds <= to;
     const matchType = currentFilter === 'all' ? true : currentFilter === 'in' ? (r.type === 0 || r.type === 1) : (r.type === 4 || r.type === 2);
@@ -722,14 +800,14 @@ function filterAttendance() {
   }
 
   const rows = data.map(r => {
-    const dt = new Date(r.attTime);
+    const dt = parseDate(r.attTime);
     const isIn = r.type === 0 || r.type === 1;
     return `<tr>
       <td><div class="avatar">${(r.userName || r.userId || '?').charAt(0)}</div></td>
       <td><strong>${r.userName || '—'}</strong></td>
       <td style="color:var(--text2)">${r.userId}</td>
-      <td>${dt.toLocaleDateString('ar-IQ')}</td>
-      <td>${dt.toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'})}</td>
+      <td>${dt ? dt.toLocaleDateString('ar-IQ') : r.attTime}</td>
+      <td>${dt ? dt.toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'}) : ''}</td>
       <td><span class="badge ${isIn ? 'in' : 'out'}">${isIn ? '↗ دخول' : '↙ خروج'}</span></td>
     </tr>`;
   }).join('');
@@ -765,11 +843,16 @@ function filterEmployees() {
   renderEmployees(filtered);
 }
 
+// خزّن بيانات الموظفين للتعديل
+let empMap = {};
+
 function renderEmployees(list) {
   if (list.length === 0) {
     document.getElementById('employeesBody').innerHTML = '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">لا يوجد موظفين</div></div>';
     return;
   }
+  empMap = {};
+  list.forEach(e => { empMap[e.uid] = e; });
   const rows = list.map(e => `<tr>
     <td><div class="avatar">${(e.name || '?').charAt(0)}</div></td>
     <td><strong>${e.name || '—'}</strong></td>
@@ -778,8 +861,8 @@ function renderEmployees(list) {
     <td><span class="badge ${e.role > 0 ? 'admin' : 'user'}">${e.role > 0 ? '👑 مدير' : '👤 موظف'}</span></td>
     <td>
       <div style="display:flex;gap:6px">
-        <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal(${JSON.stringify(e).replace(/"/g,'&quot;')})" title="تعديل">✏️</button>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEmployee(${e.uid},'${e.name}')" title="حذف">🗑️</button>
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="openEditModal(empMap[${e.uid}])" title="تعديل">✏️</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEmployee(${e.uid}, empMap[${e.uid}].name)" title="حذف">🗑️</button>
       </div>
     </td>
   </tr>`).join('');
