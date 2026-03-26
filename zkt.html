@@ -407,20 +407,26 @@ function calcStatus(empId, dateStr) {
   if(hasEve) eveInTime = eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
 
   // تحديد الحالة
-  if(hasMorn && hasEve) {
+  if(hasMorn) {
     const mornInMin = getTimeMin(mornInTime);
-    const isLate = mornInMin > (mornStartMin + lateMin);
-    if(isLate) return { status:'late', label:'⚠️ متأخر صباحي', class:'late', mornIn:mornInTime, eveIn:eveInTime };
-    return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
+    const diffMin = mornInMin - mornStartMin;
+    
+    if(diffMin <= lateMin) {
+      // بصم في الوقت أو خلال 15 دقيقة = حاضر
+      if(hasEve) return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
+      return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
+    } else if(diffMin <= 30) {
+      // بصم بعد 15 وقبل 30 دقيقة = متأخر
+      if(hasEve) return { status:'late', label:'⚠️ متأخر', class:'late', mornIn:mornInTime, eveIn:eveInTime };
+      return { status:'late', label:'⚠️ متأخر / غائب مسائي', class:'late', mornIn:mornInTime, eveIn:null };
+    } else {
+      // بصم بعد 30 دقيقة = غائب صباحي (لكن يطلع الوقت)
+      if(hasEve) return { status:'absent', label:'❌ غائب صباحي', class:'absent', mornIn:mornInTime, eveIn:eveInTime };
+      return { status:'absent', label:'❌ غائب', class:'absent', mornIn:mornInTime, eveIn:null };
+    }
   }
   if(!hasMorn && hasEve) {
     return { status:'evening-only', label:'🌙 مسائي فقط', class:'evening-only', mornIn:null, eveIn:eveInTime };
-  }
-  if(hasMorn && !hasEve) {
-    const mornInMin = getTimeMin(mornInTime);
-    const isLate = mornInMin > (mornStartMin + lateMin);
-    if(isLate) return { status:'absent', label:'❌ غائب (تأخر كثير)', class:'absent', mornIn:mornInTime, eveIn:null };
-    return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
   }
   return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
 }
