@@ -426,7 +426,11 @@ function calcStatus(empId, dateStr) {
     }
   }
   if(!hasMorn && hasEve) {
-    return { status:'evening-only', label:'🌙 مسائي فقط', class:'evening-only', mornIn:null, eveIn:eveInTime };
+    const eveInMin = getTimeMin(eveInTime);
+    const eveDiff = eveInMin - eveStartMin;
+    if(eveDiff <= lateMin) return { status:'evening-only', label:'🌙 مسائي فقط', class:'evening-only', mornIn:null, eveIn:eveInTime };
+    if(eveDiff <= 30) return { status:'late', label:'⚠️ متأخر مسائي', class:'late', mornIn:null, eveIn:eveInTime };
+    return { status:'absent', label:'❌ غائب مسائي (تأخر)', class:'absent', mornIn:null, eveIn:eveInTime };
   }
   return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
 }
