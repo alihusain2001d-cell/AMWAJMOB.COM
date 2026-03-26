@@ -317,7 +317,7 @@ function filterAttendance() {
     const dt = parseDate(r.attTime);
     const isIn = r.type==0||r.type=='0';
     return `<tr>
-      <td><div class="avatar">${(r.userName||r.userId||'?').charAt(0)}</div></td>
+     <td><div class="avatar">${String(r.userName||r.userId||'?').charAt(0)}</div></td>
       <td><strong>${r.userName||'—'}</strong></td>
       <td style="color:var(--text2)">${r.userId}</td>
       <td>${dt?dt.toLocaleDateString('ar-IQ'):r.attTime}</td>
