@@ -6,207 +6,270 @@
 <title>نظام الحضور - أمواج</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f4f6f9;
-    --surface: #ffffff;
-    --surface2: #f0f2f5;
-    --border: #e0e4ea;
-    --accent: #0096c7;
-    --accent2: #0077b6;
-    --green: #2da44e;
-    --red: #d1242f;
-    --text: #1a1f2e;
-    --text2: #656d76;
-    --radius: 12px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; touch-action:manipulation; }
-  body { font-family:'Cairo',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+:root {
+  --bg:#f4f6f9; --surface:#fff; --surface2:#f0f2f5; --border:#e0e4ea;
+  --accent:#0096c7; --accent2:#0077b6; --green:#2da44e; --red:#d1242f;
+  --yellow:#d4a017; --orange:#e07b00; --text:#1a1f2e; --text2:#656d76; --radius:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-  .header {
-    background:var(--surface); border-bottom:1px solid var(--border);
-    padding:0 20px; display:flex; align-items:center; justify-content:space-between;
-    height:60px; position:sticky; top:0; z-index:100;
-  }
-  .logo { display:flex; align-items:center; gap:10px; font-size:18px; font-weight:900; color:var(--accent); }
-  .logo-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; }
-  .status-badge { display:flex; align-items:center; gap:7px; padding:5px 12px; border-radius:20px; border:1px solid var(--border); font-size:12px; color:var(--text2); cursor:pointer; }
-  .status-dot { width:7px; height:7px; border-radius:50%; background:var(--red); }
-  .status-dot.on { background:var(--green); animation:pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900;color:var(--accent);}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.status-badge{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px;color:var(--text2);cursor:pointer;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--red);}
+.status-dot.on{background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  .container { display:flex; min-height:calc(100vh - 60px); }
-  .sidebar { width:210px; background:var(--surface); border-left:1px solid var(--border); padding:16px 0; flex-shrink:0; }
-  .nav-item { display:flex; align-items:center; gap:10px; padding:11px 18px; cursor:pointer; transition:all .2s; color:var(--text2); font-size:14px; font-weight:600; border-right:3px solid transparent; }
-  .nav-item:hover { background:var(--surface2); color:var(--text); }
-  .nav-item.active { background:var(--surface2); color:var(--accent); border-right-color:var(--accent); }
+.container{display:flex;min-height:calc(100vh - 60px);}
+.sidebar{width:210px;background:var(--surface);border-left:1px solid var(--border);padding:16px 0;flex-shrink:0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 18px;cursor:pointer;transition:all .2s;color:var(--text2);font-size:14px;font-weight:600;border-right:3px solid transparent;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--surface2);color:var(--accent);border-right-color:var(--accent);}
 
-  .content { flex:1; padding:24px; overflow-x:hidden; padding-bottom:80px; }
-  .page { display:none; }
-  .page.active { display:block; }
+.content{flex:1;padding:20px;overflow-x:hidden;padding-bottom:80px;}
+.page{display:none;}
+.page.active{display:block;}
 
-  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
-  .page-title { font-size:20px; font-weight:900; }
-  .page-subtitle { color:var(--text2); font-size:12px; margin-top:2px; }
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.page-title{font-size:20px;font-weight:900;}
+.page-subtitle{color:var(--text2);font-size:12px;margin-top:2px;}
 
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
-  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-  .stat-label { color:var(--text2); font-size:11px; font-weight:700; text-transform:uppercase; }
-  .stat-value { font-size:28px; font-weight:900; margin-top:4px; }
-  .stat-value.blue { color:var(--accent); }
-  .stat-value.green { color:var(--green); }
-  .stat-value.red { color:var(--red); }
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.stat-label{color:var(--text2);font-size:11px;font-weight:700;text-transform:uppercase;}
+.stat-value{font-size:26px;font-weight:900;margin-top:4px;}
+.stat-value.blue{color:var(--accent);}
+.stat-value.green{color:var(--green);}
+.stat-value.red{color:var(--red);}
+.stat-value.yellow{color:var(--yellow);}
+.stat-value.orange{color:var(--orange);}
 
-  .sync-info { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text2); }
+/* Table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.table-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;max-width:280px;}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;width:100%;text-align:right;}
+table{width:100%;border-collapse:collapse;}
+th{padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:var(--text2);background:var(--surface2);border-bottom:1px solid var(--border);text-transform:uppercase;}
+td{padding:11px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
 
-  .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-  .table-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-  .search-box { display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 12px; flex:1; max-width:280px; }
-  .search-box input { background:none; border:none; outline:none; color:var(--text); font-family:'Cairo',sans-serif; font-size:13px; width:100%; text-align:right; }
-  table { width:100%; border-collapse:collapse; }
-  th { padding:11px 14px; text-align:right; font-size:11px; font-weight:700; color:var(--text2); background:var(--surface2); border-bottom:1px solid var(--border); text-transform:uppercase; }
-  td { padding:12px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:var(--surface2); }
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge.present{background:rgba(45,164,78,.12);color:var(--green);}
+.badge.absent{background:rgba(209,36,47,.12);color:var(--red);}
+.badge.late{background:rgba(212,160,23,.15);color:var(--yellow);}
+.badge.evening-only{background:rgba(0,150,199,.12);color:var(--accent);}
+.badge.absent-evening{background:rgba(224,123,0,.12);color:var(--orange);}
+.badge.in{background:rgba(45,164,78,.12);color:var(--green);}
+.badge.out{background:rgba(209,36,47,.12);color:var(--red);}
 
-  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-  .badge.in { background:rgba(45,164,78,.12); color:var(--green); }
-  .badge.out { background:rgba(209,36,47,.12); color:var(--red); }
-  .badge.user { background:rgba(101,109,118,.12); color:var(--text2); }
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 9px;font-size:12px;}
 
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; font-family:'Cairo',sans-serif; font-size:13px; font-weight:700; transition:all .2s; }
-  .btn-primary { background:var(--accent); color:#fff; }
-  .btn-primary:hover { background:var(--accent2); }
-  .btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-  .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
-  .btn-danger { background:rgba(209,36,47,.1); color:var(--red); border:1px solid rgba(209,36,47,.2); }
-  .btn-danger:hover { background:var(--red); color:#fff; }
-  .btn-sm { padding:5px 9px; font-size:12px; }
+/* Date filter */
+.filter-bar-top{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar-top label{font-size:13px;color:var(--text2);font-weight:600;}
+.filter-bar-top input[type=date]{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;}
+.filter-bar-top input[type=date]:focus{border-color:var(--accent);}
 
-  .date-filter { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-  .date-filter label { font-size:13px; color:var(--text2); font-weight:600; }
-  .date-filter input[type=date] { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:6px 10px; color:var(--text); font-family:'Cairo',sans-serif; font-size:13px; outline:none; }
+/* Shift settings */
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.settings-card h3{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:16px;text-transform:uppercase;font-size:12px;letter-spacing:.5px;}
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;}
+.form-group{margin-bottom:0;}
+.form-label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;outline:none;transition:border-color .2s;text-align:right;}
+.form-input:focus{border-color:var(--accent);}
 
-  .filter-bar { display:flex; gap:6px; flex-wrap:wrap; }
-  .filter-btn { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text2); font-family:'Cairo',sans-serif; font-size:12px; font-weight:700; cursor:pointer; transition:all .2s; }
-  .filter-btn.active, .filter-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,150,199,.08); }
+/* Avatar */
+.avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#0077b6);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
 
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:999; opacity:0; pointer-events:none; transition:opacity .2s; }
-  .modal-overlay.open { opacity:1; pointer-events:all; }
-  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; width:420px; max-width:95vw; transform:translateY(20px); transition:transform .2s; }
-  .modal-overlay.open .modal { transform:translateY(0); }
-  .modal-title { font-size:17px; font-weight:900; margin-bottom:18px; }
-  .form-group { margin-bottom:14px; }
-  .form-label { display:block; font-size:11px; font-weight:700; color:var(--text2); margin-bottom:5px; text-transform:uppercase; }
-  .form-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-family:'Cairo',sans-serif; font-size:14px; outline:none; transition:border-color .2s; text-align:right; }
-  .form-input:focus { border-color:var(--accent); }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+/* Sync info */
+.sync-info{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);}
 
-  .empty { text-align:center; padding:50px 20px; color:var(--text2); }
-  .empty-icon { font-size:44px; margin-bottom:10px; }
-  .loading { display:flex; align-items:center; justify-content:center; padding:50px; gap:10px; color:var(--text2); }
-  .spinner { width:22px; height:22px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
-  @keyframes spin { to{transform:rotate(360deg)} }
+/* Filter tabs */
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,150,199,.08);}
 
-  .avatar { width:32px; height:32px; background:linear-gradient(135deg,var(--accent),#0077b6); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#fff; flex-shrink:0; }
+/* Mobile */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:6px 0;z-index:200;justify-content:space-around;}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;cursor:pointer;color:var(--text2);font-size:10px;font-weight:700;border-radius:10px;transition:all .2s;}
+.mobile-nav-item.active{color:var(--accent);}
+.mobile-nav-item span:first-child{font-size:19px;}
 
-  .mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); padding:6px 0; z-index:200; justify-content:space-around; }
-  .mobile-nav-item { display:flex; flex-direction:column; align-items:center; gap:2px; padding:5px 18px; cursor:pointer; color:var(--text2); font-size:10px; font-weight:700; border-radius:10px; transition:all .2s; }
-  .mobile-nav-item.active { color:var(--accent); }
-  .mobile-nav-item span:first-child { font-size:20px; }
+.toast-container{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;animation:slideUp .3s ease;min-width:180px;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.toast.success{border-color:var(--green);color:var(--green);}
+.toast.error{border-color:var(--red);color:var(--red);}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-  .toast-container { position:fixed; bottom:70px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:6px; align-items:center; }
-  .toast { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 18px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:7px; animation:slideUp .3s ease; min-width:180px; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,.1); }
-  .toast.success { border-color:var(--green); color:var(--green); }
-  .toast.error { border-color:var(--red); color:var(--red); }
-  @keyframes slideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.empty{text-align:center;padding:50px 20px;color:var(--text2);}
+.empty-icon{font-size:44px;margin-bottom:10px;}
+.loading{display:flex;align-items:center;justify-content:center;padding:50px;gap:10px;color:var(--text2);}
+.spinner{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  @media(max-width:768px) {
-    .sidebar { display:none; }
-    .mobile-nav { display:flex; }
-    .content { padding:14px; padding-bottom:75px; }
-    .stats { grid-template-columns:1fr 1fr; }
-    th,td { padding:9px 8px; font-size:12px; }
-    .page-header { flex-wrap:wrap; }
-    .form-row { grid-template-columns:1fr; }
-  }
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .mobile-nav{display:flex;}
+  .content{padding:12px;padding-bottom:75px;}
+  .stats{grid-template-columns:1fr 1fr;}
+  th,td{padding:8px 7px;font-size:11px;}
+  .page-header{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo"><div class="logo-icon">🌊</div>أمواج — البصمة</div>
+  <div class="logo"><div class="logo-icon">🌊</div>أمواج — الحضور</div>
   <div class="status-badge" onclick="checkStatus()">
     <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">جاري التحقق...</span>
+    <span id="statusText">...</span>
   </div>
 </div>
 
 <div class="container">
   <div class="sidebar">
-    <div class="nav-item active" onclick="showPage('attendance',this)"><span>📋</span> الحضور والانصراف</div>
+    <div class="nav-item active" onclick="showPage('attendance',this)"><span>📋</span> الحضور والغياب</div>
+    <div class="nav-item" onclick="showPage('logs',this)"><span>🕐</span> سجل البصمات</div>
     <div class="nav-item" onclick="showPage('employees',this)"><span>👥</span> الموظفين</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span>⚙️</span> إعدادات الدوام</div>
   </div>
 
   <div class="content">
 
-    <!-- صفحة الحضور -->
+    <!-- صفحة الحضور والغياب -->
     <div class="page active" id="page-attendance">
       <div class="page-header">
-        <div><div class="page-title">سجل الحضور والانصراف</div><div class="page-subtitle">مزامنة تلقائية كل 5 دقائق</div></div>
-        <button class="btn btn-primary" onclick="loadAttendance()">🔄 تحديث</button>
+        <div><div class="page-title">تقرير الحضور والغياب</div><div class="page-subtitle">محسوب تلقائياً من البصمات</div></div>
+        <button class="btn btn-primary" onclick="loadAll()">🔄 تحديث</button>
       </div>
 
       <div class="sync-info" id="syncInfo">⏱ آخر مزامنة: جاري التحميل...</div>
 
-      <div class="stats">
-        <div class="stat-card"><div class="stat-label">إجمالي</div><div class="stat-value blue" id="statTotal">—</div></div>
-        <div class="stat-card"><div class="stat-label">دخول</div><div class="stat-value green" id="statIn">—</div></div>
-        <div class="stat-card"><div class="stat-label">خروج</div><div class="stat-value red" id="statOut">—</div></div>
-        <div class="stat-card"><div class="stat-label">اليوم</div><div class="stat-value blue" id="statToday">—</div></div>
+      <div class="filter-bar-top">
+        <label>التاريخ:</label>
+        <input type="date" id="reportDate" onchange="buildReport()">
+        <button class="btn btn-secondary btn-sm" onclick="setReportToday()">اليوم</button>
+        <button class="btn btn-secondary btn-sm" onclick="setReportYesterday()">أمس</button>
       </div>
 
-      <div class="date-filter">
-        <label>من:</label><input type="date" id="dateFrom" onchange="filterAttendance()">
-        <label>إلى:</label><input type="date" id="dateTo" onchange="filterAttendance()">
-        <button class="btn btn-secondary btn-sm" onclick="clearDateFilter()">الكل</button>
-        <button class="btn btn-secondary btn-sm" onclick="setToday()">اليوم</button>
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">إجمالي</div><div class="stat-value blue" id="rTotal">—</div></div>
+        <div class="stat-card"><div class="stat-label">✅ حاضر</div><div class="stat-value green" id="rPresent">—</div></div>
+        <div class="stat-card"><div class="stat-label">❌ غائب</div><div class="stat-value red" id="rAbsent">—</div></div>
+        <div class="stat-card"><div class="stat-label">⚠️ متأخر</div><div class="stat-value yellow" id="rLate">—</div></div>
+        <div class="stat-card"><div class="stat-label">🌙 مسائي فقط</div><div class="stat-value blue" id="rEveOnly">—</div></div>
+        <div class="stat-card"><div class="stat-label">🌙 غائب مسائي</div><div class="stat-value orange" id="rAbsEve">—</div></div>
       </div>
 
       <div class="table-wrap">
         <div class="table-header">
-          <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..." id="attSearch" oninput="filterAttendance()"></div>
-          <div class="filter-bar">
-            <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">الكل</button>
-            <button class="filter-btn" id="filterIn" onclick="setFilter('in')">دخول</button>
-            <button class="filter-btn" id="filterOut" onclick="setFilter('out')">خروج</button>
+          <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..." id="reportSearch" oninput="renderReport()"></div>
+          <div class="filter-tabs">
+            <button class="filter-btn active" id="rf-all" onclick="setRFilter('all')">الكل</button>
+            <button class="filter-btn" id="rf-present" onclick="setRFilter('present')">حاضر</button>
+            <button class="filter-btn" id="rf-absent" onclick="setRFilter('absent')">غائب</button>
+            <button class="filter-btn" id="rf-late" onclick="setRFilter('late')">متأخر</button>
           </div>
         </div>
-        <div id="attendanceBody"><div class="loading"><div class="spinner"></div> جاري التحميل...</div></div>
+        <div id="reportBody"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">اختر تاريخ لعرض التقرير</div></div></div>
+      </div>
+    </div>
+
+    <!-- صفحة سجل البصمات -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div><div class="page-title">سجل البصمات</div><div class="page-subtitle">جميع سجلات الدخول والخروج</div></div>
+        <button class="btn btn-primary" onclick="renderLogs()">🔄 عرض</button>
+      </div>
+      <div class="filter-bar-top">
+        <label>من:</label><input type="date" id="logFrom" onchange="renderLogs()">
+        <label>إلى:</label><input type="date" id="logTo" onchange="renderLogs()">
+        <button class="btn btn-secondary btn-sm" onclick="setLogToday()">اليوم</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearLogFilter()">الكل</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..." id="logSearch" oninput="renderLogs()"></div>
+          <div class="filter-tabs">
+            <button class="filter-btn active" id="lf-all" onclick="setLFilter('all')">الكل</button>
+            <button class="filter-btn" id="lf-in" onclick="setLFilter('in')">دخول</button>
+            <button class="filter-btn" id="lf-out" onclick="setLFilter('out')">خروج</button>
+          </div>
+        </div>
+        <div id="logsBody"><div class="empty"><div class="empty-icon">🕐</div><div class="empty-text">اضغط عرض لتحميل السجلات</div></div></div>
       </div>
     </div>
 
     <!-- صفحة الموظفين -->
     <div class="page" id="page-employees">
       <div class="page-header">
-        <div><div class="page-title">إدارة الموظفين</div><div class="page-subtitle">عرض الموظفين</div></div>
-        <button class="btn btn-secondary" onclick="loadEmployees()">🔄 تحديث</button>
+        <div><div class="page-title">الموظفين</div></div>
+        <button class="btn btn-secondary" onclick="renderEmployees(allEmployees)">🔄 تحديث</button>
       </div>
       <div class="table-wrap">
         <div class="table-header">
-          <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..." id="empSearch" oninput="filterEmployees()"></div>
+          <div class="search-box"><span>🔍</span><input type="text" placeholder="ابحث..." id="empSearch" oninput="filterEmp()"></div>
           <span id="empCount" style="color:var(--text2);font-size:13px"></span>
         </div>
         <div id="employeesBody"><div class="loading"><div class="spinner"></div> جاري التحميل...</div></div>
       </div>
     </div>
 
+    <!-- صفحة الإعدادات -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">إعدادات الدوام</div><div class="page-subtitle">تحديد أوقات الدوام الصباحي والمسائي</div></div>
+      </div>
+
+      <div class="settings-card">
+        <h3>🌅 الدوام الصباحي</h3>
+        <div class="settings-grid">
+          <div class="form-group"><label class="form-label">وقت البداية</label><input class="form-input" type="time" id="mornStart" value="09:00"></div>
+          <div class="form-group"><label class="form-label">وقت النهاية</label><input class="form-input" type="time" id="mornEnd" value="13:00"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>🌙 الدوام المسائي</h3>
+        <div class="settings-grid">
+          <div class="form-group"><label class="form-label">وقت البداية</label><input class="form-input" type="time" id="eveStart" value="15:30"></div>
+          <div class="form-group"><label class="form-label">وقت النهاية</label><input class="form-input" type="time" id="eveEnd" value="22:00"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>⏱ التأخير المسموح</h3>
+        <div class="settings-grid">
+          <div class="form-group"><label class="form-label">دقائق التأخير (بعدها غياب)</label><input class="form-input" type="number" id="lateMin" value="15" min="0" max="60"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+    </div>
+
   </div>
 </div>
 
+<!-- Mobile Nav -->
 <div class="mobile-nav">
-  <div class="mobile-nav-item active" id="mnav-attendance" onclick="showPage('attendance',document.querySelectorAll('.nav-item')[0]);setMNav('attendance')"><span>📋</span><span>الحضور</span></div>
-  <div class="mobile-nav-item" id="mnav-employees" onclick="showPage('employees',document.querySelectorAll('.nav-item')[1]);setMNav('employees')"><span>👥</span><span>الموظفين</span></div>
+  <div class="mobile-nav-item active" id="mn-attendance" onclick="showPage('attendance',document.querySelectorAll('.nav-item')[0]);setMN('attendance')"><span>📋</span><span>الحضور</span></div>
+  <div class="mobile-nav-item" id="mn-logs" onclick="showPage('logs',document.querySelectorAll('.nav-item')[1]);setMN('logs')"><span>🕐</span><span>السجل</span></div>
+  <div class="mobile-nav-item" id="mn-employees" onclick="showPage('employees',document.querySelectorAll('.nav-item')[2]);setMN('employees')"><span>👥</span><span>الموظفين</span></div>
+  <div class="mobile-nav-item" id="mn-settings" onclick="showPage('settings',document.querySelectorAll('.nav-item')[3]);setMN('settings')"><span>⚙️</span><span>الإعدادات</span></div>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
@@ -214,21 +277,50 @@
 <script>
 const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqYpFBFE7SCPrmkzuob0XlM1AqujTosg_7MQqwv4MHBrQ/exec';
 
-let allAttendance = [], allEmployees = [], currentFilter = 'all';
+let allAttendance = [], allEmployees = [];
+let reportData = [], rFilter = 'all', lFilter = 'all';
 
-function setMNav(n) {
-  document.querySelectorAll('.mobile-nav-item').forEach(i=>i.classList.remove('active'));
-  document.getElementById('mnav-'+n).classList.add('active');
+// إعدادات الدوام
+let settings = {
+  mornStart: '09:00', mornEnd: '13:00',
+  eveStart: '15:30', eveEnd: '22:00',
+  lateMin: 15
+};
+
+function loadSettings() {
+  const s = localStorage.getItem('shiftSettings');
+  if(s) settings = JSON.parse(s);
+  document.getElementById('mornStart').value = settings.mornStart;
+  document.getElementById('mornEnd').value = settings.mornEnd;
+  document.getElementById('eveStart').value = settings.eveStart;
+  document.getElementById('eveEnd').value = settings.eveEnd;
+  document.getElementById('lateMin').value = settings.lateMin;
 }
 
+function saveSettings() {
+  settings.mornStart = document.getElementById('mornStart').value;
+  settings.mornEnd = document.getElementById('mornEnd').value;
+  settings.eveStart = document.getElementById('eveStart').value;
+  settings.eveEnd = document.getElementById('eveEnd').value;
+  settings.lateMin = parseInt(document.getElementById('lateMin').value);
+  localStorage.setItem('shiftSettings', JSON.stringify(settings));
+  toast('تم حفظ الإعدادات ✓', 'success');
+  buildReport();
+}
+
+// Navigation
+function setMN(n) {
+  document.querySelectorAll('.mobile-nav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('mn-'+n).classList.add('active');
+}
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el) el.classList.add('active');
-  if(name==='employees') loadEmployees();
 }
 
+// GAS API
 async function gasGet(action) {
   const r = await fetch(`${GAS}?action=${action}`);
   return r.json();
@@ -246,128 +338,248 @@ async function checkStatus() {
   }
 }
 
-async function loadAttendance() {
-  document.getElementById('attendanceBody').innerHTML = '<div class="loading"><div class="spinner"></div> جاري التحميل...</div>';
+async function loadAll() {
   try {
-    const d = await gasGet('attendance');
-    if(!d.success) throw new Error(d.message);
-    allAttendance = d.data.sort((a,b) => new Date(b.attTime)-new Date(a.attTime));
-    updateStats();
-    filterAttendance();
-    document.getElementById('syncInfo').textContent = '⏱ آخر تحديث: ' + new Date().toLocaleTimeString('ar-IQ');
-    toast('تم تحميل '+allAttendance.length+' سجل ✓','success');
+    const [att, emp] = await Promise.all([gasGet('attendance'), gasGet('users')]);
+    if(att.success) {
+      allAttendance = att.data.map(r => ({...r, attTime: String(r.attTime), type: parseInt(r.type)||0}));
+      document.getElementById('syncInfo').textContent = '⏱ آخر تحديث: ' + new Date().toLocaleTimeString('ar-IQ');
+    }
+    if(emp.success) {
+      allEmployees = emp.data;
+      document.getElementById('empCount').textContent = allEmployees.length + ' موظف';
+      renderEmployees(allEmployees);
+    }
+    buildReport();
+    toast('تم التحديث ✓', 'success');
   } catch(e) {
-    document.getElementById('attendanceBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${e.message}</div></div>`;
-    toast('فشل: '+e.message,'error');
+    toast('فشل: '+e.message, 'error');
   }
 }
 
-function updateStats() {
-  const today = new Date().toDateString();
-  const ins = allAttendance.filter(r=>r.type==0||r.type=='0');
-  const outs = allAttendance.filter(r=>r.type==4||r.type=='4');
-  const todayIds = new Set(allAttendance.filter(r=>new Date(r.attTime).toDateString()===today).map(r=>r.userId));
-  document.getElementById('statTotal').textContent = allAttendance.length;
-  document.getElementById('statIn').textContent = ins.length;
-  document.getElementById('statOut').textContent = outs.length;
-  document.getElementById('statToday').textContent = todayIds.size;
+// تحويل وقت النص لدقائق من منتصف الليل
+function timeToMin(t) {
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
 }
 
-function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('filter'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('active');
-  filterAttendance();
+// استخراج الوقت من تاريخ
+function getTimeMin(dateStr) {
+  const d = new Date(String(dateStr).replace(' ','T'));
+  return d.getHours()*60 + d.getMinutes();
 }
 
-function setToday() {
-  const t = new Date().toISOString().split('T')[0];
-  document.getElementById('dateFrom').value = t;
-  document.getElementById('dateTo').value = t;
-  filterAttendance();
+function getDateStr(dateStr) {
+  const d = new Date(String(dateStr).replace(' ','T'));
+  return d.toISOString().split('T')[0];
 }
 
-function clearDateFilter() {
-  document.getElementById('dateFrom').value = '';
-  document.getElementById('dateTo').value = '';
-  filterAttendance();
-}
-
-function parseDate(v) {
-  if(!v) return null;
-  const d = new Date(v);
-  if(!isNaN(d)) return d;
-  return new Date(String(v).replace(' ','T'));
-}
-
-function filterAttendance() {
-  const search = document.getElementById('attSearch').value.toLowerCase();
-  const from = document.getElementById('dateFrom').value;
-  const to = document.getElementById('dateTo').value;
-  let data = allAttendance.filter(r => {
-    const ms = !search||(r.userId+'').toLowerCase().includes(search)||(r.userName||'').toLowerCase().includes(search);
-    const d = parseDate(r.attTime);
-    const ds = d ? d.toISOString().split('T')[0] : '';
-    const mf = !from||ds>=from, mt = !to||ds<=to;
-    const mt2 = currentFilter==='all'?true:currentFilter==='in'?(r.type==0||r.type=='0'):(r.type==4||r.type=='4');
-    return ms&&mf&&mt&&mt2;
+// حساب حالة الموظف ليوم معين
+function calcStatus(empId, dateStr) {
+  const dayLogs = allAttendance.filter(r => {
+    const ds = getDateStr(r.attTime);
+    return String(r.userId) === String(empId) && ds === dateStr;
   });
-  if(!data.length) { document.getElementById('attendanceBody').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">لا توجد سجلات</div></div>'; return; }
-  const rows = data.map(r => {
-    const dt = parseDate(r.attTime);
-    const isIn = r.type==0||r.type=='0';
+
+  if(!dayLogs.length) return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
+
+  const mornStartMin = timeToMin(settings.mornStart);
+  const mornEndMin = timeToMin(settings.mornEnd);
+  const eveStartMin = timeToMin(settings.eveStart);
+  const eveEndMin = timeToMin(settings.eveEnd);
+  const lateMin = settings.lateMin;
+
+  // سجلات الصباح والمساء
+  const mornLogs = dayLogs.filter(r => {
+    const t = getTimeMin(r.attTime);
+    return t >= (mornStartMin - 60) && t <= (mornEndMin + 60);
+  });
+  const eveLogs = dayLogs.filter(r => {
+    const t = getTimeMin(r.attTime);
+    return t >= (eveStartMin - 60) && t <= (eveEndMin + 60);
+  });
+
+  const hasMorn = mornLogs.length > 0;
+  const hasEve = eveLogs.length > 0;
+
+  let mornInTime = null, eveInTime = null;
+  if(hasMorn) mornInTime = mornLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
+  if(hasEve) eveInTime = eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
+
+  // تحديد الحالة
+  if(hasMorn && hasEve) {
+    const mornInMin = getTimeMin(mornInTime);
+    const isLate = mornInMin > (mornStartMin + lateMin);
+    if(isLate) return { status:'late', label:'⚠️ متأخر صباحي', class:'late', mornIn:mornInTime, eveIn:eveInTime };
+    return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
+  }
+  if(!hasMorn && hasEve) {
+    return { status:'evening-only', label:'🌙 مسائي فقط', class:'evening-only', mornIn:null, eveIn:eveInTime };
+  }
+  if(hasMorn && !hasEve) {
+    const mornInMin = getTimeMin(mornInTime);
+    const isLate = mornInMin > (mornStartMin + lateMin);
+    if(isLate) return { status:'absent', label:'❌ غائب (تأخر كثير)', class:'absent', mornIn:mornInTime, eveIn:null };
+    return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
+  }
+  return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
+}
+
+function formatTime(dateStr) {
+  if(!dateStr) return '—';
+  const d = new Date(String(dateStr).replace(' ','T'));
+  return d.toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'});
+}
+
+// بناء التقرير
+function buildReport() {
+  const date = document.getElementById('reportDate').value;
+  if(!date || !allEmployees.length) return;
+
+  reportData = allEmployees.map(emp => {
+    const s = calcStatus(emp.userId, date);
+    return { ...emp, ...s };
+  });
+
+  // إحصائيات
+  const present = reportData.filter(r=>r.status==='present').length;
+  const absent = reportData.filter(r=>r.status==='absent').length;
+  const late = reportData.filter(r=>r.status==='late').length;
+  const eveOnly = reportData.filter(r=>r.status==='evening-only').length;
+  const absEve = reportData.filter(r=>r.status==='absent-evening').length;
+
+  document.getElementById('rTotal').textContent = reportData.length;
+  document.getElementById('rPresent').textContent = present;
+  document.getElementById('rAbsent').textContent = absent;
+  document.getElementById('rLate').textContent = late;
+  document.getElementById('rEveOnly').textContent = eveOnly;
+  document.getElementById('rAbsEve').textContent = absEve;
+
+  renderReport();
+}
+
+function setRFilter(f) {
+  rFilter = f;
+  document.querySelectorAll('#page-attendance .filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('rf-'+f).classList.add('active');
+  renderReport();
+}
+
+function renderReport() {
+  const search = document.getElementById('reportSearch').value.toLowerCase();
+  let data = reportData.filter(r => {
+    const ms = !search || (r.name||'').toLowerCase().includes(search) || (r.userId+'').includes(search);
+    const mf = rFilter==='all' || r.status===rFilter || (rFilter==='absent' && (r.status==='absent'||r.status==='absent-evening'));
+    return ms && mf;
+  });
+
+  if(!data.length) { document.getElementById('reportBody').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">لا توجد نتائج</div></div>'; return; }
+
+  const rows = data.map(r=>`<tr>
+    <td><div class="avatar">${String(r.name||'?').charAt(0)}</div></td>
+    <td><strong>${r.name||'—'}</strong></td>
+    <td style="color:var(--text2)">${r.userId}</td>
+    <td><span class="badge ${r.class}">${r.label}</span></td>
+    <td style="color:var(--green);font-weight:700">${formatTime(r.mornIn)}</td>
+    <td style="color:var(--accent);font-weight:700">${formatTime(r.eveIn)}</td>
+  </tr>`).join('');
+
+  document.getElementById('reportBody').innerHTML = `
+    <table><thead><tr>
+      <th></th><th>الاسم</th><th>رقم الموظف</th><th>الحالة</th><th>دخول صباحي</th><th>دخول مسائي</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// صفحة السجل
+function setLFilter(f) {
+  lFilter = f;
+  document.querySelectorAll('#page-logs .filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('lf-'+f).classList.add('active');
+  renderLogs();
+}
+function setLogToday() {
+  const t = new Date().toISOString().split('T')[0];
+  document.getElementById('logFrom').value = t;
+  document.getElementById('logTo').value = t;
+  renderLogs();
+}
+function clearLogFilter() {
+  document.getElementById('logFrom').value = '';
+  document.getElementById('logTo').value = '';
+  renderLogs();
+}
+function renderLogs() {
+  const search = document.getElementById('logSearch').value.toLowerCase();
+  const from = document.getElementById('logFrom').value;
+  const to = document.getElementById('logTo').value;
+
+  let data = allAttendance.filter(r => {
+    const ms = !search||(String(r.userId)).includes(search)||(r.userName||'').toLowerCase().includes(search);
+    const ds = getDateStr(r.attTime);
+    const mf = !from||ds>=from, mt = !to||ds<=to;
+    const mt2 = lFilter==='all'||( lFilter==='in'&&(r.type===0||r.type==='0'))||(lFilter==='out'&&(r.type===4||r.type==='4'));
+    return ms&&mf&&mt&&mt2;
+  }).sort((a,b)=>new Date(String(b.attTime).replace(' ','T'))-new Date(String(a.attTime).replace(' ','T')));
+
+  if(!data.length) { document.getElementById('logsBody').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">لا توجد سجلات</div></div>'; return; }
+
+  const rows = data.map(r=>{
+    const d = new Date(String(r.attTime).replace(' ','T'));
+    const isIn = r.type===0||r.type==='0';
     return `<tr>
-     <td><div class="avatar">${String(r.userName||r.userId||'?').charAt(0)}</div></td>
+      <td><div class="avatar">${String(r.userName||r.userId||'?').charAt(0)}</div></td>
       <td><strong>${r.userName||'—'}</strong></td>
       <td style="color:var(--text2)">${r.userId}</td>
-      <td>${dt?dt.toLocaleDateString('ar-IQ'):r.attTime}</td>
-      <td>${dt?dt.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'}):''}</td>
+      <td>${d.toLocaleDateString('ar-IQ')}</td>
+      <td>${d.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'})}</td>
       <td><span class="badge ${isIn?'in':'out'}">${isIn?'↗ دخول':'↙ خروج'}</span></td>
     </tr>`;
   }).join('');
-  document.getElementById('attendanceBody').innerHTML = `<table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>التاريخ</th><th>الوقت</th><th>النوع</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  document.getElementById('logsBody').innerHTML = `
+    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>التاريخ</th><th>الوقت</th><th>النوع</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-async function loadEmployees() {
-  document.getElementById('employeesBody').innerHTML = '<div class="loading"><div class="spinner"></div> جاري التحميل...</div>';
-  try {
-    const d = await gasGet('users');
-    if(!d.success) throw new Error(d.message);
-    allEmployees = d.data;
-    document.getElementById('empCount').textContent = allEmployees.length+' موظف';
-    renderEmployees(allEmployees);
-  } catch(e) {
-    document.getElementById('employeesBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${e.message}</div></div>`;
-  }
-}
-
-function filterEmployees() {
+// الموظفين
+function filterEmp() {
   const s = document.getElementById('empSearch').value.toLowerCase();
-  renderEmployees(allEmployees.filter(e=>(e.name||'').toLowerCase().includes(s)||(e.userId+'').toLowerCase().includes(s)));
+  renderEmployees(allEmployees.filter(e=>(e.name||'').toLowerCase().includes(s)||(e.userId+'').includes(s)));
 }
-
 function renderEmployees(list) {
   if(!list.length) { document.getElementById('employeesBody').innerHTML='<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">لا يوجد موظفين</div></div>'; return; }
   const rows = list.map(e=>`<tr>
-    <td><div class="avatar">${(e.name||'?').charAt(0)}</div></td>
+    <td><div class="avatar">${String(e.name||'?').charAt(0)}</div></td>
     <td><strong>${e.name||'—'}</strong></td>
     <td style="color:var(--text2)">${e.userId}</td>
     <td style="color:var(--text2)">${e.department||'—'}</td>
   </tr>`).join('');
-  document.getElementById('employeesBody').innerHTML = `<table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('employeesBody').innerHTML = `
+    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-function toast(msg, type='success') {
+// تاريخ التقرير
+function setReportToday() {
+  document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+  buildReport();
+}
+function setReportYesterday() {
+  const d = new Date(); d.setDate(d.getDate()-1);
+  document.getElementById('reportDate').value = d.toISOString().split('T')[0];
+  buildReport();
+}
+
+function toast(msg,type='success') {
   const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.textContent = msg;
+  t.className=`toast ${type}`; t.textContent=msg;
   document.getElementById('toastContainer').appendChild(t);
-  setTimeout(()=>t.remove(), 3000);
+  setTimeout(()=>t.remove(),3000);
 }
 
-// تشغيل أولي
+// تشغيل
+loadSettings();
 checkStatus();
-loadAttendance();
+loadAll();
+setReportToday();
 </script>
 </body>
 </html>
