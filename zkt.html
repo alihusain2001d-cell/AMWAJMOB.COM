@@ -690,7 +690,7 @@ function buildRangeReport() {
   let thead = '<tr><th>الموظف</th>';
   dates.forEach(d => {
     const dd = new Date(d);
-    thead += `<th style="min-width:70px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
+    thead += `<th style="min-width:80px;text-align:center;font-size:12px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
   });
   thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th></tr>';
 
@@ -717,14 +717,14 @@ function buildRangeReport() {
       const eveLabel  = det.eve.status==='present'  ? 'حاضر' : det.eve.status==='late'  ? 'متأخر' : 'غائب';
 
       const mornLine = det.morn.time
-        ? `<div style="color:${mornColor};font-size:10px;font-weight:700;white-space:nowrap">ص ${formatTime(det.morn.time)}</div><div style="color:${mornColor};font-size:9px">${mornLabel}</div>`
-        : `<div style="color:var(--red);font-size:9px;font-weight:700">ص غائب</div>`;
+        ? `<div style="color:${mornColor};font-size:12px;font-weight:700;white-space:nowrap">ص ${formatTime(det.morn.time)}</div><div style="color:${mornColor};font-size:11px">${mornLabel}</div>`
+        : `<div style="color:var(--red);font-size:11px;font-weight:700">ص غائب</div>`;
 
       const eveLine = det.eve.time
-        ? `<div style="color:${eveColor};font-size:10px;font-weight:700;white-space:nowrap">م ${formatTime(det.eve.time)}</div><div style="color:${eveColor};font-size:9px">${eveLabel}</div>`
-        : `<div style="color:var(--red);font-size:9px;font-weight:700">م غائب</div>`;
+        ? `<div style="color:${eveColor};font-size:12px;font-weight:700;white-space:nowrap">م ${formatTime(det.eve.time)}</div><div style="color:${eveColor};font-size:11px">${eveLabel}</div>`
+        : `<div style="color:var(--red);font-size:11px;font-weight:700">م غائب</div>`;
 
-      row += `<td style="text-align:center;padding:5px 4px;${bg}">${mornLine}${eveLine}</td>`;
+      row += `<td style="text-align:center;padding:8px 6px;${bg}">${mornLine}${eveLine}</td>`;
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
