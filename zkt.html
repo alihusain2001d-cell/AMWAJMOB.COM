@@ -483,22 +483,22 @@ function calcDetailedStatus(empId, dateStr) {
     return t >= (eveStartMin - 60) && t <= (eveEndMin + 60);
   });
 
-  let mornResult = { status:'absent', label:'❌ غائب', class:'absent', time:null };
-  let eveResult  = { status:'absent', label:'❌ غائب', class:'absent', time:null };
+  let mornResult = { status:'absent', label:'غائب', class:'absent', time:null };
+  let eveResult  = { status:'absent', label:'غائب', class:'absent', time:null };
 
   if(mornLogs.length > 0) {
     const t = mornLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
     const diff = getTimeMin(t) - mornStartMin;
-    if(diff <= lateMin)      mornResult = { status:'present', label:'✅ حاضر',   class:'present', time:t };
-    else if(diff <= 30)      mornResult = { status:'late',    label:'⚠️ متأخر',  class:'late',    time:t };
-    else                     mornResult = { status:'absent',  label:'❌ غائب',   class:'absent',  time:t };
+    if(diff <= lateMin)      mornResult = { status:'present', label:'حاضر',   class:'present', time:t };
+    else if(diff <= 30)      mornResult = { status:'late',    label:'متأخر',  class:'late',    time:t };
+    else                     mornResult = { status:'absent',  label:'غائب',   class:'absent',  time:t };
   }
   if(eveLogs.length > 0) {
     const t = eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
     const diff = getTimeMin(t) - eveStartMin;
-    if(diff <= lateMin)      eveResult = { status:'present', label:'✅ حاضر',   class:'present', time:t };
-    else if(diff <= 30)      eveResult = { status:'late',    label:'⚠️ متأخر',  class:'late',    time:t };
-    else                     eveResult = { status:'absent',  label:'❌ غائب',   class:'absent',  time:t };
+    if(diff <= lateMin)      eveResult = { status:'present', label:'حاضر',   class:'present', time:t };
+    else if(diff <= 30)      eveResult = { status:'late',    label:'متأخر',  class:'late',    time:t };
+    else                     eveResult = { status:'absent',  label:'غائب',   class:'absent',  time:t };
   }
   return { morn: mornResult, eve: eveResult };
 }
@@ -560,11 +560,11 @@ function renderReport() {
     <td style="color:var(--text2)">${r.userId}</td>
     <td>
       <span class="badge ${r.mornDet.class}">${r.mornDet.label}</span>
-      ${r.mornDet.time ? `<div style="font-size:11px;color:var(--text2);margin-top:3px">${formatTime(r.mornDet.time)}</div>` : ''}
+      ${r.mornDet.time ? `<div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:4px">${formatTime(r.mornDet.time)}</div>` : ''}
     </td>
     <td>
       <span class="badge ${r.eveDet.class}">${r.eveDet.label}</span>
-      ${r.eveDet.time ? `<div style="font-size:11px;color:var(--text2);margin-top:3px">${formatTime(r.eveDet.time)}</div>` : ''}
+      ${r.eveDet.time ? `<div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:4px">${formatTime(r.eveDet.time)}</div>` : ''}
     </td>
   </tr>`).join('');
 
