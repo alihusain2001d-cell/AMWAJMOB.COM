@@ -205,6 +205,10 @@ tr:hover td{background:var(--surface2);}
         </div>
         <div id="reportBody"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">اختر تاريخ لعرض التقرير</div></div></div>
       </div>
+      <!-- فلتر بحث الفترة الكاملة -->
+      <div id="rangeSearchWrap" style="display:none;margin-bottom:8px;">
+        <div class="search-box" style="max-width:260px"><span>🔍</span><input type="text" placeholder="ابحث بالاسم..." id="rangeSearch" oninput="buildRangeReport()"></div>
+      </div>
       <!-- جدول الفترة الكاملة -->
       <div class="table-wrap" id="rangeReportWrap" style="display:none;overflow-x:auto;margin-top:16px;">
         <div id="rangeReportBody"></div>
@@ -457,6 +461,48 @@ function calcStatus(empId, dateStr) {
   return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
 }
 
+// حساب حالة صباحية ومسائية منفصلة
+function calcDetailedStatus(empId, dateStr) {
+  const dayLogs = allAttendance.filter(r => {
+    const ds = getDateStr(r.attTime);
+    return String(r.userId) === String(empId) && ds === dateStr;
+  });
+
+  const mornStartMin = timeToMin(settings.mornStart);
+  const mornEndMin = timeToMin(settings.mornEnd);
+  const eveStartMin = timeToMin(settings.eveStart);
+  const eveEndMin = timeToMin(settings.eveEnd);
+  const lateMin = settings.lateMin;
+
+  const mornLogs = dayLogs.filter(r => {
+    const t = getTimeMin(r.attTime);
+    return t >= (mornStartMin - 60) && t <= (mornEndMin + 60);
+  });
+  const eveLogs = dayLogs.filter(r => {
+    const t = getTimeMin(r.attTime);
+    return t >= (eveStartMin - 60) && t <= (eveEndMin + 60);
+  });
+
+  let mornResult = { status:'absent', label:'❌ غائب', class:'absent', time:null };
+  let eveResult  = { status:'absent', label:'❌ غائب', class:'absent', time:null };
+
+  if(mornLogs.length > 0) {
+    const t = mornLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
+    const diff = getTimeMin(t) - mornStartMin;
+    if(diff <= lateMin)      mornResult = { status:'present', label:'✅ حاضر',   class:'present', time:t };
+    else if(diff <= 30)      mornResult = { status:'late',    label:'⚠️ متأخر',  class:'late',    time:t };
+    else                     mornResult = { status:'absent',  label:'❌ غائب',   class:'absent',  time:t };
+  }
+  if(eveLogs.length > 0) {
+    const t = eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
+    const diff = getTimeMin(t) - eveStartMin;
+    if(diff <= lateMin)      eveResult = { status:'present', label:'✅ حاضر',   class:'present', time:t };
+    else if(diff <= 30)      eveResult = { status:'late',    label:'⚠️ متأخر',  class:'late',    time:t };
+    else                     eveResult = { status:'absent',  label:'❌ غائب',   class:'absent',  time:t };
+  }
+  return { morn: mornResult, eve: eveResult };
+}
+
 function formatTime(dateStr) {
   if(!dateStr) return '—';
   const d = new Date(String(dateStr).replace(' ','T'));
@@ -470,7 +516,8 @@ function buildReport() {
 
   reportData = allEmployees.map(emp => {
     const s = calcStatus(emp.userId, date);
-    return { ...emp, ...s };
+    const det = calcDetailedStatus(emp.userId, date);
+    return { ...emp, ...s, mornDet: det.morn, eveDet: det.eve };
   });
 
   // إحصائيات
@@ -511,14 +558,19 @@ function renderReport() {
     <td><div class="avatar">${String(r.name||'?').charAt(0)}</div></td>
     <td><strong>${r.name||'—'}</strong></td>
     <td style="color:var(--text2)">${r.userId}</td>
-    <td><span class="badge ${r.class}">${r.label}</span></td>
-    <td style="color:var(--green);font-weight:700">${formatTime(r.mornIn)}</td>
-    <td style="color:var(--accent);font-weight:700">${formatTime(r.eveIn)}</td>
+    <td>
+      <span class="badge ${r.mornDet.class}">${r.mornDet.label}</span>
+      ${r.mornDet.time ? `<div style="font-size:11px;color:var(--text2);margin-top:3px">${formatTime(r.mornDet.time)}</div>` : ''}
+    </td>
+    <td>
+      <span class="badge ${r.eveDet.class}">${r.eveDet.label}</span>
+      ${r.eveDet.time ? `<div style="font-size:11px;color:var(--text2);margin-top:3px">${formatTime(r.eveDet.time)}</div>` : ''}
+    </td>
   </tr>`).join('');
 
   document.getElementById('reportBody').innerHTML = `
     <table><thead><tr>
-      <th></th><th>الاسم</th><th>رقم الموظف</th><th>الحالة</th><th>دخول صباحي</th><th>دخول مسائي</th>
+      <th></th><th>الاسم</th><th>رقم الموظف</th><th>🌅 الصباحي</th><th>🌙 المسائي</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -594,6 +646,7 @@ function toggleReportMode() {
   document.getElementById('singleDateFilter').style.display = mode === 'single' ? 'flex' : 'none';
   document.getElementById('rangeDateFilter').style.display = mode === 'range' ? 'flex' : 'none';
   document.getElementById('rangeReportWrap').style.display = 'none';
+  document.getElementById('rangeSearchWrap').style.display = mode === 'range' ? 'block' : 'none';
   document.getElementById('reportBody').style.display = mode === 'single' ? 'block' : 'none';
   document.querySelector('.stats').style.display = mode === 'single' ? 'grid' : 'none';
   document.querySelector('.table-wrap').style.display = mode === 'single' ? 'block' : 'none';
@@ -630,30 +683,48 @@ function buildRangeReport() {
   const dates = getDatesInRange(from, to);
   if (dates.length > 31) { toast('الفترة أكثر من 31 يوم — اختر فترة أقصر', 'error'); return; }
 
+  const searchVal = (document.getElementById('rangeSearch')?.value || '').toLowerCase();
+  const filteredEmps = allEmployees.filter(e => !searchVal || (e.name||'').toLowerCase().includes(searchVal) || (e.userId+'').includes(searchVal));
+
   // بناء هيدر الجدول
   let thead = '<tr><th>الموظف</th>';
   dates.forEach(d => {
     const dd = new Date(d);
-    thead += `<th style="min-width:55px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
+    thead += `<th style="min-width:70px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
   });
   thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th></tr>';
 
   // بناء صفوف الموظفين
   let tbody = '';
-  allEmployees.forEach(emp => {
+  filteredEmps.forEach(emp => {
     let row = `<tr><td><strong>${emp.name||emp.userId}</strong></td>`;
     let presentCount = 0, absentCount = 0, lateCount = 0;
 
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
-      const icon = statusIcon(s.status);
+      const det = calcDetailedStatus(emp.userId, d);
       let bg = '';
-      if(s.status === 'present') { bg = 'background:rgba(45,164,78,.1)'; presentCount++; }
-      else if(s.status === 'late') { bg = 'background:rgba(212,160,23,.1)'; lateCount++; presentCount++; }
-      else if(s.status === 'absent') { bg = 'background:rgba(209,36,47,.08)'; absentCount++; }
+      if(s.status === 'present')       { bg = 'background:rgba(45,164,78,.08)';  presentCount++; }
+      else if(s.status === 'late')      { bg = 'background:rgba(212,160,23,.1)';  lateCount++; presentCount++; }
+      else if(s.status === 'absent')    { bg = 'background:rgba(209,36,47,.06)';  absentCount++; }
       else if(s.status === 'evening-only') { bg = 'background:rgba(0,150,199,.08)'; presentCount++; }
       else if(s.status === 'absent-evening') { bg = 'background:rgba(224,123,0,.08)'; absentCount++; }
-      row += `<td style="text-align:center;${bg}">${icon}</td>`;
+
+      const mornColor = det.morn.status==='present' ? 'var(--green)' : det.morn.status==='late' ? 'var(--yellow)' : 'var(--red)';
+      const eveColor  = det.eve.status==='present'  ? 'var(--accent)' : det.eve.status==='late' ? 'var(--yellow)' : 'var(--red)';
+
+      const mornLabel = det.morn.status==='present' ? 'حاضر' : det.morn.status==='late' ? 'متأخر' : 'غائب';
+      const eveLabel  = det.eve.status==='present'  ? 'حاضر' : det.eve.status==='late'  ? 'متأخر' : 'غائب';
+
+      const mornLine = det.morn.time
+        ? `<div style="color:${mornColor};font-size:10px;font-weight:700;white-space:nowrap">ص ${formatTime(det.morn.time)}</div><div style="color:${mornColor};font-size:9px">${mornLabel}</div>`
+        : `<div style="color:var(--red);font-size:9px;font-weight:700">ص غائب</div>`;
+
+      const eveLine = det.eve.time
+        ? `<div style="color:${eveColor};font-size:10px;font-weight:700;white-space:nowrap">م ${formatTime(det.eve.time)}</div><div style="color:${eveColor};font-size:9px">${eveLabel}</div>`
+        : `<div style="color:var(--red);font-size:9px;font-weight:700">م غائب</div>`;
+
+      row += `<td style="text-align:center;padding:5px 4px;${bg}">${mornLine}${eveLine}</td>`;
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
@@ -665,7 +736,7 @@ function buildRangeReport() {
 
   document.getElementById('rangeReportBody').innerHTML = `
     <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text2)">
-      تقرير من ${from} إلى ${to} — ${allEmployees.length} موظف × ${dates.length} يوم
+      تقرير من ${from} إلى ${to} — ${filteredEmps.length} موظف × ${dates.length} يوم
     </div>
     <div style="overflow-x:auto">
     <table>
