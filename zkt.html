@@ -290,6 +290,46 @@ tr:hover td{background:var(--surface2);}
   </div>
 </div>
 
+<!-- Modal إعدادات موظف -->
+<div id="empShiftModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:16px;padding:24px;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-size:16px;font-weight:900" id="modalEmpName">—</div>
+      <button onclick="closeEmpModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+
+    <div style="background:var(--surface2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);">
+      اتركها فارغة لاستخدام الإعدادات العامة
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">🌅 الصباحي</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label class="form-label">بداية</label><input class="form-input" type="time" id="empMornStart"></div>
+        <div><label class="form-label">نهاية</label><input class="form-input" type="time" id="empMornEnd"></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">🌙 المسائي</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label class="form-label">بداية</label><input class="form-input" type="time" id="empEveStart"></div>
+        <div><label class="form-label">نهاية</label><input class="form-input" type="time" id="empEveEnd"></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">⏱ تأخير مسموح (دقائق)</div>
+      <input class="form-input" type="number" id="empLateMin" min="0" max="60" style="width:120px">
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" style="flex:1" onclick="saveEmpShift()">💾 حفظ</button>
+      <button class="btn btn-secondary" onclick="clearEmpShift()">🗑 مسح الخاص</button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Nav -->
 <div class="mobile-nav">
   <div class="mobile-nav-item active" id="mn-attendance" onclick="showPage('attendance',document.querySelectorAll('.nav-item')[0]);setMN('attendance')"><span>📋</span><span>الحضور</span></div>
@@ -305,6 +345,71 @@ const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqY
 
 let allAttendance = [], allEmployees = [];
 let reportData = [], rFilter = 'all', lFilter = 'all';
+let empShifts = {}; // إعدادات خاصة لكل موظف
+
+function loadEmpShifts() {
+  const s = localStorage.getItem('empShifts');
+  if(s) empShifts = JSON.parse(s);
+}
+function saveEmpShifts() {
+  localStorage.setItem('empShifts', JSON.stringify(empShifts));
+}
+
+// إرجاع إعدادات الموظف (خاصة أو عامة)
+function getEmpSettings(empId) {
+  const c = empShifts[String(empId)];
+  return {
+    mornStart: (c && c.mornStart) || settings.mornStart,
+    mornEnd:   (c && c.mornEnd)   || settings.mornEnd,
+    eveStart:  (c && c.eveStart)  || settings.eveStart,
+    eveEnd:    (c && c.eveEnd)    || settings.eveEnd,
+    lateMin:   (c && c.lateMin != null) ? c.lateMin : settings.lateMin,
+  };
+}
+
+let modalEmpId = null;
+function openEmpModal(userId, name) {
+  modalEmpId = String(userId);
+  document.getElementById('modalEmpName').textContent = '⚙️ ' + name;
+  const c = empShifts[modalEmpId] || {};
+  document.getElementById('empMornStart').value = c.mornStart || '';
+  document.getElementById('empMornEnd').value   = c.mornEnd   || '';
+  document.getElementById('empEveStart').value  = c.eveStart  || '';
+  document.getElementById('empEveEnd').value    = c.eveEnd    || '';
+  document.getElementById('empLateMin').value   = c.lateMin != null ? c.lateMin : '';
+  document.getElementById('empShiftModal').style.display = 'flex';
+}
+function closeEmpModal() {
+  document.getElementById('empShiftModal').style.display = 'none';
+  modalEmpId = null;
+}
+function saveEmpShift() {
+  if(!modalEmpId) return;
+  const ms = document.getElementById('empMornStart').value;
+  const me = document.getElementById('empMornEnd').value;
+  const es = document.getElementById('empEveStart').value;
+  const ee = document.getElementById('empEveEnd').value;
+  const lm = document.getElementById('empLateMin').value;
+  empShifts[modalEmpId] = {
+    mornStart: ms || null,
+    mornEnd:   me || null,
+    eveStart:  es || null,
+    eveEnd:    ee || null,
+    lateMin:   lm !== '' ? parseInt(lm) : null,
+  };
+  saveEmpShifts();
+  renderEmployees(allEmployees);
+  closeEmpModal();
+  toast('تم حفظ وقت الموظف ✓', 'success');
+}
+function clearEmpShift() {
+  if(!modalEmpId) return;
+  delete empShifts[modalEmpId];
+  saveEmpShifts();
+  renderEmployees(allEmployees);
+  closeEmpModal();
+  toast('تم مسح الوقت الخاص ✓', 'success');
+}
 
 // إعدادات الدوام
 let settings = {
@@ -409,11 +514,12 @@ function calcStatus(empId, dateStr) {
 
   if(!dayLogs.length) return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
 
-  const mornStartMin = timeToMin(settings.mornStart);
-  const mornEndMin = timeToMin(settings.mornEnd);
-  const eveStartMin = timeToMin(settings.eveStart);
-  const eveEndMin = timeToMin(settings.eveEnd);
-  const lateMin = settings.lateMin;
+  const emp = getEmpSettings(empId);
+  const mornStartMin = timeToMin(emp.mornStart);
+  const mornEndMin = timeToMin(emp.mornEnd);
+  const eveStartMin = timeToMin(emp.eveStart);
+  const eveEndMin = timeToMin(emp.eveEnd);
+  const lateMin = emp.lateMin;
 
   // سجلات الصباح والمساء
   const mornLogs = dayLogs.filter(r => {
@@ -468,11 +574,12 @@ function calcDetailedStatus(empId, dateStr) {
     return String(r.userId) === String(empId) && ds === dateStr;
   });
 
-  const mornStartMin = timeToMin(settings.mornStart);
-  const mornEndMin = timeToMin(settings.mornEnd);
-  const eveStartMin = timeToMin(settings.eveStart);
-  const eveEndMin = timeToMin(settings.eveEnd);
-  const lateMin = settings.lateMin;
+  const emp = getEmpSettings(empId);
+  const mornStartMin = timeToMin(emp.mornStart);
+  const mornEndMin = timeToMin(emp.mornEnd);
+  const eveStartMin = timeToMin(emp.eveStart);
+  const eveEndMin = timeToMin(emp.eveEnd);
+  const lateMin = emp.lateMin;
 
   const mornLogs = dayLogs.filter(r => {
     const t = getTimeMin(r.attTime);
@@ -631,14 +738,18 @@ function filterEmp() {
 }
 function renderEmployees(list) {
   if(!list.length) { document.getElementById('employeesBody').innerHTML='<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">لا يوجد موظفين</div></div>'; return; }
-  const rows = list.map(e=>`<tr>
-    <td><div class="avatar">${String(e.name||'?').charAt(0)}</div></td>
-    <td><strong>${e.name||'—'}</strong></td>
-    <td style="color:var(--text2)">${e.userId}</td>
-    <td style="color:var(--text2)">${e.department||'—'}</td>
-  </tr>`).join('');
+  const rows = list.map(e=>{
+    const hasCustom = !!empShifts[e.userId];
+    return `<tr>
+      <td><div class="avatar">${String(e.name||'?').charAt(0)}</div></td>
+      <td><strong>${e.name||'—'}</strong>${hasCustom ? ' <span style="font-size:11px;background:rgba(0,150,199,.12);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700">وقت خاص</span>' : ''}</td>
+      <td style="color:var(--text2)">${e.userId}</td>
+      <td style="color:var(--text2)">${e.department||'—'}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openEmpModal('${e.userId}','${(e.name||'').replace(/'/g,"\\'")}')">⚙️ وقت الدوام</button></td>
+    </tr>`;
+  }).join('');
   document.getElementById('employeesBody').innerHTML = `
-    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function toggleReportMode() {
@@ -767,6 +878,7 @@ function toast(msg,type='success') {
 
 // تشغيل
 loadSettings();
+loadEmpShifts();
 checkStatus();
 loadAll();
 setReportToday();
