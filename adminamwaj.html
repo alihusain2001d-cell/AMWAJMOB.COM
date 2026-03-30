@@ -583,11 +583,19 @@ tr:hover td { background: #ffffff05; }
     </div>
 
     <div class="modal-row">
-      <div class="modal-label">الكلمة المشتركة (prefix) — مثال: "Samsung" أو "Camera"</div>
-      <div style="display:flex;gap:8px;">
-        <input class="modal-input" id="bulkPrefix" placeholder="اكتب أو اختر..." oninput="filterBulkPreview()" style="flex:1;">
-        <button class="action-btn btn-view" onclick="filterBulkPreview()" style="white-space:nowrap;">🔍 معاينة</button>
-      </div>
+      <div class="modal-label">فلتر بالاسم (اختياري) — مثال: "Camera" أو "Samsung"</div>
+      <input class="modal-input" id="bulkPrefix" placeholder="اكتب جزء من الاسم..." oninput="filterBulkPreview()">
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-label">فلتر بالنوع (اختياري)</div>
+      <select class="modal-select" id="bulkType" onchange="filterBulkPreview()">
+        <option value="">-- كل الأنواع --</option>
+      </select>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button class="action-btn btn-view" onclick="filterBulkPreview()">🔍 معاينة</button>
     </div>
 
     <!-- معاينة المنتجات -->
@@ -1384,22 +1392,40 @@ function openBulkImgModal() {
   document.getElementById('bulkSaveStatus').textContent = '';
   document.getElementById('bulkImgPreview').style.display = 'none';
   document.getElementById('bulkImgEmpty').style.display = '';
-  document.getElementById('bulkPreview').innerHTML = 'اكتب prefix لمعاينة المنتجات';
+  document.getElementById('bulkPreview').innerHTML = 'اختر فلتر لمعاينة المنتجات';
+  // عبّي قائمة الأنواع من allProducts
+  const types = [...new Set(allProducts.map(p => p.type||'').filter(Boolean))].sort();
+  const sel = document.getElementById('bulkType');
+  sel.innerHTML = '<option value="">-- كل الأنواع --</option>' +
+    types.map(t => `<option value="${t}">${t}</option>`).join('');
   document.getElementById('bulkImgModal').classList.add('open');
 }
 
 function filterBulkPreview() {
   const sheet  = document.getElementById('bulkSheet').value;
   const prefix = document.getElementById('bulkPrefix').value.trim().toLowerCase();
+  const type   = document.getElementById('bulkType').value;
   const prev   = document.getElementById('bulkPreview');
-  if (!prefix) { prev.innerHTML = '<span style="color:var(--muted)">اكتب prefix لمعاينة المنتجات</span>'; return; }
-  const matches = allProducts.filter(p =>
-    (!sheet || p.sheet === sheet) &&
-    (p.name||'').toLowerCase().includes(prefix)
-  );
-  if (!matches.length) { prev.innerHTML = '<span style="color:var(--red)">لا توجد منتجات تطابق</span>'; return; }
+
+  if (!prefix && !type) {
+    prev.innerHTML = '<span style="color:var(--muted)">اختر فلتر لمعاينة المنتجات</span>';
+    return;
+  }
+
+  const matches = allProducts.filter(p => {
+    if (sheet && p.sheet !== sheet) return false;
+    if (prefix && !(p.name||'').toLowerCase().includes(prefix)) return false;
+    if (type   && (p.type||'') !== type) return false;
+    return true;
+  });
+
+  if (!matches.length) { prev.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات تطابق</span>'; return; }
   prev.innerHTML = `<div style="color:var(--green);margin-bottom:6px;font-weight:700;">✅ ${matches.length} منتج سيتغير</div>` +
-    matches.slice(0,20).map(p => `<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--muted);font-size:11px;">(${p.sheet})</span></div>`).join('') +
+    matches.slice(0,20).map(p => `<div style="padding:2px 0;border-bottom:1px solid var(--border)">
+      ${p.name}
+      ${p.type ? `<span style="color:var(--purple);font-size:11px;margin-right:4px;">${p.type}</span>` : ''}
+      <span style="color:var(--muted);font-size:11px;">(${p.sheet})</span>
+    </div>`).join('') +
     (matches.length > 20 ? `<div style="color:var(--muted);margin-top:4px;">و ${matches.length-20} أخرى...</div>` : '');
 }
 
@@ -1441,10 +1467,13 @@ async function saveBulkImg() {
   if (!prefix) { status.innerHTML = '<span style="color:var(--red)">⚠️ اكتب prefix</span>'; return; }
   if (!url)    { status.innerHTML = '<span style="color:var(--red)">⚠️ أضف صورة</span>'; return; }
 
-  const matches = allProducts.filter(p =>
-    (!sheet || p.sheet === sheet) &&
-    (p.name||'').toLowerCase().includes(prefix)
-  );
+  const type = document.getElementById('bulkType').value;
+  const matches = allProducts.filter(p => {
+    if (sheet && p.sheet !== sheet) return false;
+    if (prefix && !(p.name||'').toLowerCase().includes(prefix)) return false;
+    if (type   && (p.type||'') !== type) return false;
+    return true;
+  });
   if (!matches.length) { status.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات</span>'; return; }
 
   status.innerHTML = `<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
