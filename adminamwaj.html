@@ -1419,28 +1419,54 @@ async function searchImages() {
   const query = document.getElementById('imgSearchQuery').value.trim();
   if (!query) return;
   const resultsDiv = document.getElementById('imgSearchResults');
-  resultsDiv.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;grid-column:1/-1;"><div class="spinner" style="margin:0 auto 8px;"></div>جاري البحث...</div>';
 
-  // نستخدم Google Custom Search JSON API (مجاني 100 بحث يومياً)
-  // بديل: نفتح iframe مباشرة لـ maxbhi
-  const searchUrl = `https://www.maxbhi.com/search?q=${encodeURIComponent(query)}`;
+  // فتح Google Images بتاب جديد + مربع إدخال رابط يدوي
+  const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(query + ' screen spare part')}&tbm=isch&tbs=simg:0`;
+  const maxbhiUrl = `https://www.maxbhi.com/search?q=${encodeURIComponent(query)}`;
 
-  // نعرض iframe لـ maxbhi + خيار إدخال رابط يدوي
   resultsDiv.innerHTML = `
     <div style="grid-column:1/-1;">
-      <div style="background:var(--card);border-radius:10px;overflow:hidden;margin-bottom:10px;">
-        <iframe src="${searchUrl}" style="width:100%;height:380px;border:none;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <a href="${maxbhiUrl}" target="_blank"
+           style="flex:1;padding:12px;background:var(--primary);color:#fff;border-radius:10px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;">
+          🛒 بحث بـ maxbhi.com
+        </a>
+        <a href="${googleUrl}" target="_blank"
+           style="flex:1;padding:12px;background:#4285F4;color:#fff;border-radius:10px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;">
+          🖼️ بحث بـ Google Images
+        </a>
       </div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">انسخ رابط الصورة من الموقع وضعه هنا:</div>
+
+      <div style="background:var(--card);border-radius:10px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">📋 كيف تحفظ الصورة:</div>
+        <div style="font-size:13px;color:var(--muted);line-height:2;">
+          1️⃣ افتح أحد الروابط أعلاه<br>
+          2️⃣ ابحث عن الصورة اللي تريدها<br>
+          3️⃣ اضغط عليها بزر اليمين ← <b style="color:var(--text)">نسخ عنوان الصورة</b><br>
+          4️⃣ ارجع هنا والصق الرابط بالمربع أدناه
+        </div>
+      </div>
+
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px;">رابط الصورة:</div>
       <div style="display:flex;gap:8px;">
-        <input class="modal-input" id="imgSearchManualUrl" placeholder="https://www.maxbhi.com/images/..." style="flex:1;">
+        <input class="modal-input" id="imgSearchManualUrl" placeholder="https://..." style="flex:1;" oninput="previewSearchImg()">
         <button class="action-btn btn-approve" style="padding:8px 14px;white-space:nowrap;" onclick="saveImgFromSearch()">💾 حفظ</button>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;">
-        💡 كيف تنسخ رابط الصورة: اضغط على الصورة بزر اليمين ← "نسخ عنوان الصورة"
+      <div id="imgSearchPreview" style="margin-top:10px;height:120px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:var(--muted);font-size:13px;">معاينة الصورة</span>
       </div>
     </div>
   `;
+}
+
+function previewSearchImg() {
+  const url = document.getElementById('imgSearchManualUrl').value.trim();
+  const prev = document.getElementById('imgSearchPreview');
+  if (url) {
+    prev.innerHTML = `<img src="${url}" style="max-width:100%;max-height:120px;object-fit:contain;border-radius:8px;" onerror="this.parentElement.innerHTML='<span style=color:var(--red)>❌ الرابط غير صحيح</span>'">`;
+  } else {
+    prev.innerHTML = '<span style="color:var(--muted);font-size:13px;">معاينة الصورة</span>';
+  }
 }
 
 async function saveImgFromSearch() {
