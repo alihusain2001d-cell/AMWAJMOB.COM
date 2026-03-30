@@ -557,6 +557,22 @@ tr:hover td { background: #ffffff05; }
 
 <div class="toast" id="toast"></div>
 
+<!-- Modal بحث صور -->
+<div class="modal-overlay" id="imgSearchModal">
+  <div class="modal" style="max-width:700px;max-height:90vh;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="modal-title" style="margin:0" id="imgSearchTitle">🔍 بحث عن صورة</div>
+      <button class="action-btn btn-reject" style="padding:4px 10px;" onclick="closeModal('imgSearchModal')">✕</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input class="modal-input" id="imgSearchQuery" placeholder="اكتب اسم الجهاز..." style="flex:1;" onkeyup="if(event.key==='Enter')searchImages()">
+      <button class="action-btn btn-view" style="padding:8px 16px;white-space:nowrap;" onclick="searchImages()">🔍 بحث</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">اضغط على الصورة لحفظها مباشرة للمنتج</div>
+    <div id="imgSearchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:480px;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- Modal صور جماعية -->
 <div class="modal-overlay" id="bulkImgModal">
   <div class="modal" style="max-width:520px;">
@@ -1260,6 +1276,7 @@ function renderProducts() {
               <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${sanitize(p.sheet||p.sheetName||'-')}</div>
               <div style="display:flex;gap:6px;">
                 <button class="action-btn btn-edit" style="flex:1;font-size:12px;padding:5px 4px;" onclick="openProductImgModal(${JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')})">📷 ${hasImg?'تغيير':'إضافة'}</button>
+                <button class="action-btn btn-view" style="font-size:12px;padding:5px 8px;" title="بحث عن صورة" onclick="openImgSearch('${p.name.replace(/'/g,'')}','${p.sheet}')">🔍</button>
                 ${hasImg ? `<button class="action-btn btn-delete" style="font-size:12px;padding:5px 8px;" onclick="deleteProductImg('${sanitize(p.name||'')}','${sanitize(p.sheet||p.sheetName||'')}')">🗑️</button>` : ''}
               </div>
             </div>
@@ -1383,6 +1400,68 @@ async function deleteProductImg(name, sheet) {
 // ═══════════════════════════════════
 // BULK IMAGE
 // ═══════════════════════════════════
+
+// ═══════════════════════════════════
+// IMAGE SEARCH (maxbhi / Google Images)
+// ═══════════════════════════════════
+let _imgSearchTarget = null;
+
+function openImgSearch(name, sheet) {
+  _imgSearchTarget = allProducts.find(p => p.name === name && p.sheet === sheet);
+  document.getElementById('imgSearchTitle').textContent = '🔍 ' + name;
+  document.getElementById('imgSearchQuery').value = name;
+  document.getElementById('imgSearchResults').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">اضغط بحث للبدء</div>';
+  document.getElementById('imgSearchModal').classList.add('open');
+  searchImages();
+}
+
+async function searchImages() {
+  const query = document.getElementById('imgSearchQuery').value.trim();
+  if (!query) return;
+  const resultsDiv = document.getElementById('imgSearchResults');
+  resultsDiv.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;grid-column:1/-1;"><div class="spinner" style="margin:0 auto 8px;"></div>جاري البحث...</div>';
+
+  // نستخدم Google Custom Search JSON API (مجاني 100 بحث يومياً)
+  // بديل: نفتح iframe مباشرة لـ maxbhi
+  const searchUrl = `https://www.maxbhi.com/search?q=${encodeURIComponent(query)}`;
+
+  // نعرض iframe لـ maxbhi + خيار إدخال رابط يدوي
+  resultsDiv.innerHTML = `
+    <div style="grid-column:1/-1;">
+      <div style="background:var(--card);border-radius:10px;overflow:hidden;margin-bottom:10px;">
+        <iframe src="${searchUrl}" style="width:100%;height:380px;border:none;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">انسخ رابط الصورة من الموقع وضعه هنا:</div>
+      <div style="display:flex;gap:8px;">
+        <input class="modal-input" id="imgSearchManualUrl" placeholder="https://www.maxbhi.com/images/..." style="flex:1;">
+        <button class="action-btn btn-approve" style="padding:8px 14px;white-space:nowrap;" onclick="saveImgFromSearch()">💾 حفظ</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;">
+        💡 كيف تنسخ رابط الصورة: اضغط على الصورة بزر اليمين ← "نسخ عنوان الصورة"
+      </div>
+    </div>
+  `;
+}
+
+async function saveImgFromSearch() {
+  const url = document.getElementById('imgSearchManualUrl').value.trim();
+  if (!url) { showToast('⚠️ أضف رابط الصورة'); return; }
+  if (!_imgSearchTarget) { showToast('❌ المنتج غير موجود'); return; }
+  showToast('⏳ جاري الحفظ...');
+  try {
+    const r = await apiCall('updateImageUrl', {
+      sheetName: _imgSearchTarget.sheet,
+      rowName:   _imgSearchTarget.name,
+      imageUrl:  url
+    });
+    if (r.success) {
+      _imgSearchTarget.image_url = url;
+      showToast('✅ تم حفظ الصورة');
+      closeModal('imgSearchModal');
+      renderProducts();
+    } else showToast('❌ ' + (r.error||'فشل'));
+  } catch(e) { showToast('❌ ' + e.message); }
+}
 
 function openBulkImgModal() {
   document.getElementById('bulkSheet').value = '';
