@@ -557,6 +557,72 @@ tr:hover td { background: #ffffff05; }
 
 <div class="toast" id="toast"></div>
 
+<!-- Modal صور جماعية -->
+<div class="modal-overlay" id="bulkImgModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title">🖼️ إضافة صورة جماعية</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">اختر شيت ومنتجات، أضف صورة — تنطبق على كل المنتجات المختارة تلقائياً</div>
+
+    <div class="modal-row">
+      <div class="modal-label">الشيت</div>
+      <select class="modal-select" id="bulkSheet" onchange="loadBulkPrefixes()">
+        <option value="">-- اختر الشيت --</option>
+        <option value="SHEET">SHEET (شاشات)</option>
+        <option value="battery">battery</option>
+        <option value="CHARGE BOARD">CHARGE BOARD</option>
+        <option value="FLAT MAIN">FLAT MAIN</option>
+        <option value="BACK COVER">BACK COVER</option>
+        <option value="HOUSING">HOUSING</option>
+        <option value="LENS CAMERA">LENS CAMERA</option>
+        <option value="Camera">Camera</option>
+        <option value="Buzzer">Buzzer</option>
+        <option value="EAR SPEAKER">EAR SPEAKER</option>
+        <option value="DOOR SIM">DOOR SIM</option>
+        <option value="INVENTORY">INVENTORY</option>
+      </select>
+    </div>
+
+    <div class="modal-row">
+      <div class="modal-label">الكلمة المشتركة (prefix) — مثال: "Samsung" أو "Camera"</div>
+      <div style="display:flex;gap:8px;">
+        <input class="modal-input" id="bulkPrefix" placeholder="اكتب أو اختر..." oninput="filterBulkPreview()" style="flex:1;">
+        <button class="action-btn btn-view" onclick="filterBulkPreview()" style="white-space:nowrap;">🔍 معاينة</button>
+      </div>
+    </div>
+
+    <!-- معاينة المنتجات -->
+    <div id="bulkPreview" style="background:var(--card);border-radius:10px;padding:10px;margin-bottom:14px;max-height:160px;overflow-y:auto;font-size:13px;color:var(--muted);">
+      اكتب prefix لمعاينة المنتجات
+    </div>
+
+    <!-- الصورة -->
+    <div class="modal-row">
+      <div class="modal-label">رابط الصورة</div>
+      <input class="modal-input" id="bulkImgUrl" placeholder="https://..." oninput="previewBulkImg()">
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0;">— أو —</div>
+    <div class="modal-row">
+      <div class="modal-label">رفع صورة من الجهاز</div>
+      <input type="file" accept="image/*" id="bulkImgFile" style="display:none" onchange="uploadBulkImgFile()">
+      <button class="action-btn btn-view" style="width:100%;padding:10px;" onclick="document.getElementById('bulkImgFile').click()">📁 اختيار صورة</button>
+      <div id="bulkUploadStatus" style="font-size:13px;text-align:center;margin-top:6px;min-height:18px;color:var(--muted);"></div>
+    </div>
+
+    <!-- معاينة الصورة -->
+    <div style="height:100px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
+      <img id="bulkImgPreview" style="max-width:100%;max-height:100px;object-fit:contain;display:none;border-radius:8px;">
+      <div id="bulkImgEmpty" style="color:var(--muted);font-size:13px;">معاينة الصورة</div>
+    </div>
+
+    <div id="bulkSaveStatus" style="font-size:14px;text-align:center;min-height:20px;margin-bottom:8px;"></div>
+
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal('bulkImgModal')">إلغاء</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveBulkImg()">💾 تطبيق على الكل</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════
 // CONFIG
@@ -1161,7 +1227,10 @@ function renderProducts() {
     <div class="section-card">
       <div class="section-head">
         <div class="section-title">🖼️ المنتجات</div>
-        <input class="search-input" placeholder="🔍 بحث بالاسم..." oninput="prodSearch=this.value.toLowerCase();renderProducts()">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="refresh-btn" style="background:var(--purple);color:#fff;border-color:var(--purple);" onclick="openBulkImgModal()">🖼️ صور جماعية</button>
+          <input class="search-input" placeholder="🔍 بحث بالاسم..." oninput="prodSearch=this.value.toLowerCase();renderProducts()">
+        </div>
       </div>
       <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">
         ${sheets.map(s=>`<button class="filter-tab ${prodSheetFilter===s?'active':''}" onclick="prodSheetFilter='${s}';renderProducts()">${s==='all'?'الكل':s}</button>`).join('')}
@@ -1301,6 +1370,106 @@ async function deleteProductImg(name, sheet) {
       renderProducts();
     } else showToast('❌ ' + (r.error||'فشل'));
   } catch(e) { showToast('❌ ' + e.message); }
+}
+
+// ═══════════════════════════════════
+// BULK IMAGE
+// ═══════════════════════════════════
+
+function openBulkImgModal() {
+  document.getElementById('bulkSheet').value = '';
+  document.getElementById('bulkPrefix').value = '';
+  document.getElementById('bulkImgUrl').value = '';
+  document.getElementById('bulkUploadStatus').textContent = '';
+  document.getElementById('bulkSaveStatus').textContent = '';
+  document.getElementById('bulkImgPreview').style.display = 'none';
+  document.getElementById('bulkImgEmpty').style.display = '';
+  document.getElementById('bulkPreview').innerHTML = 'اكتب prefix لمعاينة المنتجات';
+  document.getElementById('bulkImgModal').classList.add('open');
+}
+
+function filterBulkPreview() {
+  const sheet  = document.getElementById('bulkSheet').value;
+  const prefix = document.getElementById('bulkPrefix').value.trim().toLowerCase();
+  const prev   = document.getElementById('bulkPreview');
+  if (!prefix) { prev.innerHTML = '<span style="color:var(--muted)">اكتب prefix لمعاينة المنتجات</span>'; return; }
+  const matches = allProducts.filter(p =>
+    (!sheet || p.sheet === sheet) &&
+    (p.name||'').toLowerCase().includes(prefix)
+  );
+  if (!matches.length) { prev.innerHTML = '<span style="color:var(--red)">لا توجد منتجات تطابق</span>'; return; }
+  prev.innerHTML = `<div style="color:var(--green);margin-bottom:6px;font-weight:700;">✅ ${matches.length} منتج سيتغير</div>` +
+    matches.slice(0,20).map(p => `<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--muted);font-size:11px;">(${p.sheet})</span></div>`).join('') +
+    (matches.length > 20 ? `<div style="color:var(--muted);margin-top:4px;">و ${matches.length-20} أخرى...</div>` : '');
+}
+
+function loadBulkPrefixes() { filterBulkPreview(); }
+
+function previewBulkImg() {
+  const url = document.getElementById('bulkImgUrl').value.trim();
+  const img  = document.getElementById('bulkImgPreview');
+  const empty= document.getElementById('bulkImgEmpty');
+  if (url) { img.src=url; img.style.display=''; empty.style.display='none'; }
+  else { img.style.display='none'; empty.style.display=''; }
+}
+
+async function uploadBulkImgFile() {
+  const file = document.getElementById('bulkImgFile').files[0];
+  if (!file) return;
+  const status = document.getElementById('bulkUploadStatus');
+  status.textContent = '⏳ جاري الرفع...';
+  try {
+    const fd = new FormData();
+    fd.append('key', IMGBB_KEY);
+    fd.append('image', file);
+    const r = await fetch('https://api.imgbb.com/1/upload', { method:'POST', body: fd });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('bulkImgUrl').value = d.data.url;
+      previewBulkImg();
+      status.innerHTML = '<span style="color:var(--green)">✅ تم الرفع</span>';
+    } else { status.innerHTML = '<span style="color:var(--red)">❌ فشل الرفع</span>'; }
+  } catch(e) { status.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>'; }
+}
+
+async function saveBulkImg() {
+  const sheet  = document.getElementById('bulkSheet').value;
+  const prefix = document.getElementById('bulkPrefix').value.trim().toLowerCase();
+  const url    = document.getElementById('bulkImgUrl').value.trim();
+  const status = document.getElementById('bulkSaveStatus');
+
+  if (!prefix) { status.innerHTML = '<span style="color:var(--red)">⚠️ اكتب prefix</span>'; return; }
+  if (!url)    { status.innerHTML = '<span style="color:var(--red)">⚠️ أضف صورة</span>'; return; }
+
+  const matches = allProducts.filter(p =>
+    (!sheet || p.sheet === sheet) &&
+    (p.name||'').toLowerCase().includes(prefix)
+  );
+  if (!matches.length) { status.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات</span>'; return; }
+
+  status.innerHTML = `<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
+
+  let done = 0, failed = 0;
+  // batch — نرسلهم متتابعين
+  for (const p of matches) {
+    try {
+      const r = await apiCall('updateImageUrl', {
+        sheetName: p.sheet,
+        rowName:   p.name,
+        imageUrl:  url
+      });
+      if (r.success) { p.image_url = url; done++; }
+      else failed++;
+    } catch(e) { failed++; }
+    status.innerHTML = `<span style="color:var(--muted)">⏳ ${done+failed}/${matches.length}...</span>`;
+  }
+
+  if (failed === 0) {
+    status.innerHTML = `<span style="color:var(--green)">✅ تم تحديث ${done} منتج بنجاح</span>`;
+    setTimeout(() => { closeModal('bulkImgModal'); renderProducts(); }, 1500);
+  } else {
+    status.innerHTML = `<span style="color:var(--yellow)">✅ ${done} نجح | ❌ ${failed} فشل</span>`;
+  }
 }
 
 // ═══════════════════════════════════
