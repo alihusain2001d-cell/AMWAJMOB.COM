@@ -1464,14 +1464,15 @@ async function saveBulkImg() {
   const url    = document.getElementById('bulkImgUrl').value.trim();
   const status = document.getElementById('bulkSaveStatus');
 
-  if (!prefix && !type && !sheet) { status.innerHTML = '<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>'; return; }
+  const bulkTypeVal2 = document.getElementById('bulkType').value;
+  if (!prefix && !bulkTypeVal2 && !sheet) { status.innerHTML = '<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>'; return; }
   if (!url)    { status.innerHTML = '<span style="color:var(--red)">⚠️ أضف صورة</span>'; return; }
 
-  const type = document.getElementById('bulkType').value;
+  const bulkTypeVal = document.getElementById('bulkType').value;
   const matches = allProducts.filter(p => {
     if (sheet && p.sheet !== sheet) return false;
     if (prefix && !(p.name||'').toLowerCase().includes(prefix)) return false;
-    if (type   && (p.type||'') !== type) return false;
+    if (bulkTypeVal && (p.type||'') !== bulkTypeVal) return false;
     return true;
   });
   if (!matches.length) { status.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات</span>'; return; }
