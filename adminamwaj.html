@@ -1407,7 +1407,7 @@ function filterBulkPreview() {
   const type   = document.getElementById('bulkType').value;
   const prev   = document.getElementById('bulkPreview');
 
-  if (!prefix && !type) {
+  if (!prefix && !type && !sheet) {
     prev.innerHTML = '<span style="color:var(--muted)">اختر فلتر لمعاينة المنتجات</span>';
     return;
   }
@@ -1464,7 +1464,7 @@ async function saveBulkImg() {
   const url    = document.getElementById('bulkImgUrl').value.trim();
   const status = document.getElementById('bulkSaveStatus');
 
-  if (!prefix) { status.innerHTML = '<span style="color:var(--red)">⚠️ اكتب prefix</span>'; return; }
+  if (!prefix && !type && !sheet) { status.innerHTML = '<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>'; return; }
   if (!url)    { status.innerHTML = '<span style="color:var(--red)">⚠️ أضف صورة</span>'; return; }
 
   const type = document.getElementById('bulkType').value;
