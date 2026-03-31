@@ -200,6 +200,14 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
       <button class="type-tab" id="tab-sick" onclick="setType('sick')">⏰ زمنية</button>
     </div>
     <div class="form-group">
+      <label class="form-label2">الفترة</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <button class="type-tab active" id="period-full" onclick="setPeriod('full')">📅 يوم كامل</button>
+        <button class="type-tab" id="period-morning" onclick="setPeriod('morning')">🌅 صباحي</button>
+        <button class="type-tab" id="period-evening" onclick="setPeriod('evening')">🌙 مسائي</button>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="form-label2">من تاريخ</label>
       <input class="form-input2" type="date" id="fromDate">
     </div>
@@ -222,6 +230,7 @@ const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqY
 
 let currentEmp = null;
 let leaveType = 'leave';
+let leavePeriod = 'full';
 let allAttendance = [];
 
 // إعدادات الدوام
@@ -335,13 +344,14 @@ function renderMyLeaves(leaves) {
     document.getElementById('myLeaves').innerHTML = '<div class="empty">لا توجد طلبات سابقة</div>';
     return;
   }
-  const statusMap = { pending: 'قيد الانتظار', approved: 'موافق', rejected: 'مرفوض' };
+  const statusMap = { pending: '⏳ قيد الانتظار', approved: '✅ موافق', rejected: '❌ مرفوض' };
   const typeMap = { leave: '🏖 إجازة', sick: '⏰ زمنية' };
-  const sorted = leaves.sort((a,b) => new Date(b.requestDate) - new Date(a.requestDate));
+  const periodMap = { full: '📅 يوم كامل', morning: '🌅 صباحي', evening: '🌙 مسائي' };
+  const sorted = [...leaves].sort((a,b) => new Date(b.requestDate) - new Date(a.requestDate));
   document.getElementById('myLeaves').innerHTML = sorted.map(l => `
     <div class="leave-item ${l.status}">
       <div class="leave-header">
-        <div class="leave-type">${typeMap[l.type] || l.type}</div>
+        <div class="leave-type">${typeMap[l.type] || l.type} — ${periodMap[l.period] || ''}</div>
         <div class="leave-status ${l.status}">${statusMap[l.status] || l.status}</div>
       </div>
       <div class="leave-dates">📅 ${l.fromDate} → ${l.toDate}</div>
@@ -362,11 +372,18 @@ function openModal(type) {
   document.getElementById('fromDate').value = todayStr;
   document.getElementById('toDate').value = todayStr;
   document.getElementById('reason').value = '';
+  setPeriod('full');
   document.getElementById('requestModal').classList.add('open');
 }
 
 function closeModal() {
   document.getElementById('requestModal').classList.remove('open');
+}
+
+function setPeriod(p) {
+  leavePeriod = p;
+  document.querySelectorAll('[id^="period-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`period-${p}`).classList.add('active');
 }
 
 function setType(t) {
@@ -388,6 +405,7 @@ async function submitRequest() {
   try {
     const params = new URLSearchParams({
       action: 'leave_request',
+      period: leavePeriod,
       empId: currentEmp.userId,
       empName: currentEmp.name,
       leaveType,
