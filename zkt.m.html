@@ -377,17 +377,14 @@ async function submitRequest() {
   if(!fromDate || !toDate || !reason) { toast('أكمل جميع الحقول', 'error'); return; }
 
   try {
-    const r = await fetch(GAS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'leave_request',
-        empId: currentEmp.userId,
-        empName: currentEmp.name,
-        leaveType,
-        fromDate, toDate, reason
-      })
+    const params = new URLSearchParams({
+      action: 'leave_request',
+      empId: currentEmp.userId,
+      empName: currentEmp.name,
+      leaveType,
+      fromDate, toDate, reason
     });
+    const r = await fetch(`${GAS}?${params}`);
     const d = await r.json();
     if(d.success) {
       toast('تم إرسال الطلب ✓', 'success');
