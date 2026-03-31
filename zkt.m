@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>بوابة الموظف - أمواج</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f4f6f9; --surface:#fff; --border:#e0e4ea;
+  --accent:#0096c7; --accent2:#0077b6; --green:#2da44e; --red:#d1242f;
+  --yellow:#d4a017; --orange:#e07b00; --text:#1a1f2e; --text2:#656d76; --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* Header */
+.header{background:var(--accent);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.header-title{color:#fff;font-size:20px;font-weight:900;}
+.header-sub{color:rgba(255,255,255,.8);font-size:13px;}
+.logout-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:8px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* Login */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-card{background:var(--surface);border-radius:20px;padding:36px 28px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.1);}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo .wave{font-size:56px;}
+.login-logo h1{font-size:24px;font-weight:900;color:var(--accent);margin-top:8px;}
+.login-logo p{color:var(--text2);font-size:14px;}
+.form-group{margin-bottom:18px;}
+.form-label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:7px;}
+.form-input{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Cairo',sans-serif;font-size:16px;outline:none;transition:border-color .2s;text-align:center;letter-spacing:2px;}
+.form-input:focus{border-color:var(--accent);}
+.btn-login{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:900;cursor:pointer;margin-top:8px;transition:background .2s;}
+.btn-login:hover{background:var(--accent2);}
+.login-error{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none;}
+
+/* Main */
+.main{padding:16px;max-width:600px;margin:0 auto;}
+
+/* Employee card */
+.emp-card{background:var(--accent);border-radius:var(--radius);padding:20px;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:16px;}
+.emp-avatar{width:56px;height:56px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;flex-shrink:0;}
+.emp-info h2{font-size:20px;font-weight:900;}
+.emp-info p{font-size:13px;opacity:.85;margin-top:2px;}
+
+/* Today status */
+.today-card{background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:16px;border:1px solid var(--border);}
+.today-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:14px;}
+.today-status{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900;}
+.today-times{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.time-box{background:var(--bg);border-radius:10px;padding:12px;text-align:center;}
+.time-label{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;}
+.time-value{font-size:18px;font-weight:900;margin-top:4px;color:var(--accent);}
+
+/* Request button */
+.request-btn{width:100%;background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:16px;text-align:right;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px;transition:all .2s;}
+.request-btn:hover{background:rgba(0,150,199,.05);}
+.request-btn .icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.request-btn .icon.leave{background:rgba(45,164,78,.12);}
+.request-btn .icon.sick{background:rgba(0,150,199,.12);}
+.request-btn-text h3{font-size:16px;font-weight:700;}
+.request-btn-text p{font-size:12px;color:var(--text2);margin-top:2px;}
+
+/* Leaves list */
+.section-title{font-size:16px;font-weight:900;margin:20px 0 12px;}
+.leave-item{background:var(--surface);border-radius:12px;padding:16px;margin-bottom:10px;border:1px solid var(--border);border-right:4px solid var(--border);}
+.leave-item.approved{border-right-color:var(--green);}
+.leave-item.rejected{border-right-color:var(--red);}
+.leave-item.pending{border-right-color:var(--yellow);}
+.leave-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.leave-type{font-size:14px;font-weight:700;}
+.leave-status{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.leave-status.approved{background:rgba(45,164,78,.12);color:var(--green);}
+.leave-status.rejected{background:rgba(209,36,47,.12);color:var(--red);}
+.leave-status.pending{background:rgba(212,160,23,.12);color:var(--yellow);}
+.leave-dates{font-size:13px;color:var(--text2);}
+.leave-reason{font-size:13px;margin-top:6px;color:var(--text);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:600px;transform:translateY(100%);transition:transform .3s ease;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-title{font-size:18px;font-weight:900;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{background:var(--bg);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;}
+.form-group{margin-bottom:16px;}
+.form-label2{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+.form-input2{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:15px;outline:none;transition:border-color .2s;text-align:right;}
+.form-input2:focus{border-color:var(--accent);}
+.type-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.type-tab{padding:12px;border-radius:10px;border:2px solid var(--border);background:transparent;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.type-tab.active{border-color:var(--accent);background:rgba(0,150,199,.08);color:var(--accent);}
+.btn-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Cairo',sans-serif;font-size:16px;font-weight:900;cursor:pointer;margin-top:8px;}
+
+.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;align-items:center;}
+.toast{background:#1a1f2e;color:#fff;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:600;animation:slideDown .3s ease;min-width:200px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+.loading-wrap{text-align:center;padding:40px;color:var(--text2);}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:30px;color:var(--text2);font-size:14px;}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginWrap" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="wave">🌊</div>
+      <h1>أمواج للإلكترونيات</h1>
+      <p>بوابة الموظف</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">رقم الموظف</label>
+      <input class="form-input" type="number" id="loginId" placeholder="مثال: 1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">الرقم السري (PIN)</label>
+      <input class="form-input" type="password" id="loginPin" placeholder="••••" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="btn-login" onclick="doLogin()">تسجيل الدخول</button>
+    <div class="login-error" id="loginError">رقم الموظف أو PIN غلط</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="mainApp" style="display:none">
+  <div class="header">
+    <div>
+      <div class="header-title">🌊 أمواج</div>
+      <div class="header-sub">بوابة الموظف</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">خروج</button>
+  </div>
+
+  <div class="main">
+    <!-- بطاقة الموظف -->
+    <div class="emp-card">
+      <div class="emp-avatar" id="empAvatar">م</div>
+      <div class="emp-info">
+        <h2 id="empName">—</h2>
+        <p id="empDept">—</p>
+      </div>
+    </div>
+
+    <!-- حالة اليوم -->
+    <div class="today-card">
+      <div class="today-title">📅 حالتك اليوم</div>
+      <div class="today-status" id="todayStatus">⏳ جاري التحميل...</div>
+      <div class="today-times">
+        <div class="time-box">
+          <div class="time-label">🌅 دخول صباحي</div>
+          <div class="time-value" id="mornTime">—</div>
+        </div>
+        <div class="time-box">
+          <div class="time-label">🌙 دخول مسائي</div>
+          <div class="time-value" id="eveTime">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- أزرار الطلبات -->
+    <div class="section-title">تقديم طلب</div>
+    <button class="request-btn" onclick="openModal('leave')">
+      <div class="icon leave">🏖</div>
+      <div class="request-btn-text">
+        <h3>طلب إجازة</h3>
+        <p>تقديم طلب إجازة سنوية أو استثنائية</p>
+      </div>
+    </button>
+    <button class="request-btn" onclick="openModal('sick')">
+      <div class="icon sick">⏰</div>
+      <div class="request-btn-text">
+        <h3>طلب زمنية</h3>
+        <p>تقديم طلب مغادرة مبكرة أو تأخير</p>
+      </div>
+    </button>
+
+    <!-- طلباتي -->
+    <div class="section-title">طلباتي السابقة</div>
+    <div id="myLeaves"><div class="loading-wrap"><div class="spinner"></div>جاري التحميل...</div></div>
+  </div>
+</div>
+
+<!-- Modal الطلب -->
+<div class="modal-overlay" id="requestModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">طلب إجازة</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="type-tabs">
+      <button class="type-tab active" id="tab-leave" onclick="setType('leave')">🏖 إجازة</button>
+      <button class="type-tab" id="tab-sick" onclick="setType('sick')">⏰ زمنية</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label2">من تاريخ</label>
+      <input class="form-input2" type="date" id="fromDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label2">إلى تاريخ</label>
+      <input class="form-input2" type="date" id="toDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label2">السبب</label>
+      <textarea class="form-input2" id="reason" rows="3" placeholder="اكتب سبب الطلب..."></textarea>
+    </div>
+    <button class="btn-submit" onclick="submitRequest()">إرسال الطلب</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqYpFBFE7SCPrmkzuob0XlM1AqujTosg_7MQqwv4MHBrQ/exec';
+
+let currentEmp = null;
+let leaveType = 'leave';
+let allAttendance = [];
+
+// إعدادات الدوام
+const settings = {
+  mornStart: '09:00', mornEnd: '13:00',
+  eveStart: '15:30', eveEnd: '22:00',
+  lateMin: 15
+};
+
+function timeToMin(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+function getTimeMin(d) { const dt=new Date(String(d).replace(' ','T')); return dt.getHours()*60+dt.getMinutes(); }
+function getDateStr(d) { return new Date(String(d).replace(' ','T')).toISOString().split('T')[0]; }
+function formatTime(d) {
+  if(!d) return '—';
+  return new Date(String(d).replace(' ','T')).toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'});
+}
+
+async function doLogin() {
+  const userId = document.getElementById('loginId').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  if(!userId || !pin) { showError('أدخل رقم الموظف والـ PIN'); return; }
+  
+  try {
+    const r = await fetch(`${GAS}?action=login&userId=${userId}&pin=${pin}`);
+    const d = await r.json();
+    if(d.success) {
+      currentEmp = d.emp;
+      localStorage.setItem('emp', JSON.stringify(d.emp));
+      showApp();
+    } else {
+      showError(d.message || 'رقم الموظف أو PIN غلط');
+    }
+  } catch(e) {
+    showError('خطأ في الاتصال');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function showApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('empName').textContent = currentEmp.name || currentEmp.userId;
+  document.getElementById('empDept').textContent = currentEmp.department || 'موظف';
+  document.getElementById('empAvatar').textContent = String(currentEmp.name||'م').charAt(0);
+  loadMyData();
+}
+
+function doLogout() {
+  localStorage.removeItem('emp');
+  currentEmp = null;
+  document.getElementById('loginWrap').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPin').value = '';
+}
+
+async function loadMyData() {
+  try {
+    const [attRes, leavesRes] = await Promise.all([
+      fetch(`${GAS}?action=attendance`).then(r=>r.json()),
+      fetch(`${GAS}?action=my_leaves&empId=${currentEmp.userId}`).then(r=>r.json())
+    ]);
+
+    if(attRes.success) {
+      allAttendance = attRes.data.map(r=>({...r, attTime:String(r.attTime), type:parseInt(r.type)||0}));
+      showTodayStatus();
+    }
+
+    if(leavesRes.success) renderMyLeaves(leavesRes.data);
+  } catch(e) {
+    toast('خطأ في التحميل', 'error');
+  }
+}
+
+function showTodayStatus() {
+  const today = new Date().toISOString().split('T')[0];
+  const mornStartMin = timeToMin(settings.mornStart);
+  const eveStartMin = timeToMin(settings.eveStart);
+  const lateMin = settings.lateMin;
+
+  const dayLogs = allAttendance.filter(r => String(r.userId) === String(currentEmp.userId) && getDateStr(r.attTime) === today);
+
+  const mornLogs = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(mornStartMin-60)&&t<=(mornStartMin+120); });
+  const eveLogs = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(eveStartMin-60)&&t<=(eveStartMin+120); });
+
+  const hasMorn = mornLogs.length > 0;
+  const hasEve = eveLogs.length > 0;
+
+  const mornIn = hasMorn ? mornLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
+  const eveIn = hasEve ? eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
+
+  document.getElementById('mornTime').textContent = formatTime(mornIn);
+  document.getElementById('eveTime').textContent = formatTime(eveIn);
+
+  let statusText = '';
+  if(!dayLogs.length) statusText = '❌ لم تبصم اليوم';
+  else if(hasMorn && hasEve) statusText = '✅ حاضر صباحي ومسائي';
+  else if(hasMorn && !hasEve) statusText = '🌗 حاضر صباحي فقط';
+  else if(!hasMorn && hasEve) statusText = '🌙 حاضر مسائي فقط';
+  
+  document.getElementById('todayStatus').textContent = statusText;
+}
+
+function renderMyLeaves(leaves) {
+  if(!leaves.length) {
+    document.getElementById('myLeaves').innerHTML = '<div class="empty">لا توجد طلبات سابقة</div>';
+    return;
+  }
+  const statusMap = { pending: 'قيد الانتظار', approved: 'موافق', rejected: 'مرفوض' };
+  const typeMap = { leave: '🏖 إجازة', sick: '⏰ زمنية' };
+  const sorted = leaves.sort((a,b) => new Date(b.requestDate) - new Date(a.requestDate));
+  document.getElementById('myLeaves').innerHTML = sorted.map(l => `
+    <div class="leave-item ${l.status}">
+      <div class="leave-header">
+        <div class="leave-type">${typeMap[l.type] || l.type}</div>
+        <div class="leave-status ${l.status}">${statusMap[l.status] || l.status}</div>
+      </div>
+      <div class="leave-dates">📅 ${l.fromDate} → ${l.toDate}</div>
+      <div class="leave-reason">${l.reason}</div>
+    </div>
+  `).join('');
+}
+
+function openModal(type) {
+  leaveType = type;
+  setType(type);
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fromDate').value = today;
+  document.getElementById('toDate').value = today;
+  document.getElementById('reason').value = '';
+  document.getElementById('requestModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('requestModal').classList.remove('open');
+}
+
+function setType(t) {
+  leaveType = t;
+  document.querySelectorAll('.type-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${t}`).classList.add('active');
+}
+
+async function submitRequest() {
+  const fromDate = document.getElementById('fromDate').value;
+  const toDate = document.getElementById('toDate').value;
+  const reason = document.getElementById('reason').value.trim();
+  if(!fromDate || !toDate || !reason) { toast('أكمل جميع الحقول', 'error'); return; }
+
+  try {
+    const r = await fetch(GAS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'leave_request',
+        empId: currentEmp.userId,
+        empName: currentEmp.name,
+        leaveType,
+        fromDate, toDate, reason
+      })
+    });
+    const d = await r.json();
+    if(d.success) {
+      toast('تم إرسال الطلب ✓', 'success');
+      closeModal();
+      loadMyData();
+    } else {
+      toast('فشل الإرسال', 'error');
+    }
+  } catch(e) {
+    toast('خطأ في الاتصال', 'error');
+  }
+}
+
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(), 3000);
+}
+
+// تحقق من جلسة محفوظة
+const saved = localStorage.getItem('emp');
+if(saved) {
+  currentEmp = JSON.parse(saved);
+  showApp();
+}
+
+// Enter للدخول
+document.getElementById('loginPin').addEventListener('keyup', e => { if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
