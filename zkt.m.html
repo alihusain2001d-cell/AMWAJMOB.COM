@@ -376,6 +376,10 @@ async function submitRequest() {
   const reason = document.getElementById('reason').value.trim();
   if(!fromDate || !toDate || !reason) { toast('أكمل جميع الحقول', 'error'); return; }
 
+  const btn = document.querySelector('.btn-submit');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الإرسال...';
+
   try {
     const params = new URLSearchParams({
       action: 'leave_request',
@@ -395,6 +399,9 @@ async function submitRequest() {
     }
   } catch(e) {
     toast('خطأ في الاتصال', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'إرسال الطلب';
   }
 }
 
