@@ -666,6 +666,24 @@ function statusIcon(status) {
   return map[status] || '—';
 }
 
+function statusCell(status, mornIn, eveIn) {
+  const map = {
+    'present':        {text:'حاضر',    color:'var(--green)'},
+    'late':           {text:'متأخر',   color:'var(--yellow)'},
+    'absent':         {text:'غائب',    color:'var(--red)'},
+    'evening-only':   {text:'مسائي',   color:'var(--accent)'},
+    'absent-evening': {text:'غ.مسائي', color:'var(--orange)'},
+    'on-leave':       {text:'مجاز',    color:'var(--accent)'},
+  };
+  const s = map[status] || {text:'—', color:'var(--text2)'};
+  const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` : 
+               eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
+  return `<td style="text-align:center;background:${s.color}15;padding:6px 4px">
+    <div style="color:${s.color};font-weight:700;font-size:11px">${s.text}</div>
+    ${time}
+  </td>`;
+}
+
 function buildRangeReport() {
   const from = document.getElementById('reportFrom').value;
   const to = document.getElementById('reportTo').value;
@@ -691,14 +709,13 @@ function buildRangeReport() {
 
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
-      const icon = statusIcon(s.status);
-      let bg = '';
-      if(s.status === 'present') { bg = 'background:rgba(45,164,78,.1)'; presentCount++; }
-      else if(s.status === 'late') { bg = 'background:rgba(212,160,23,.1)'; lateCount++; presentCount++; }
-      else if(s.status === 'absent') { bg = 'background:rgba(209,36,47,.08)'; absentCount++; }
-      else if(s.status === 'evening-only') { bg = 'background:rgba(0,150,199,.08)'; presentCount++; }
-      else if(s.status === 'absent-evening') { bg = 'background:rgba(224,123,0,.08)'; absentCount++; }
-      row += `<td style="text-align:center;${bg}">${icon}</td>`;
+      if(s.status === 'present') presentCount++;
+      else if(s.status === 'late') { lateCount++; presentCount++; }
+      else if(s.status === 'absent') absentCount++;
+      else if(s.status === 'evening-only') presentCount++;
+      else if(s.status === 'absent-evening') absentCount++;
+      else if(s.status === 'on-leave') presentCount++;
+      row += statusCell(s.status, s.mornIn, s.eveIn);
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
