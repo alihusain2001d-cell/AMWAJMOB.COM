@@ -61,6 +61,7 @@ tr:hover td{background:var(--surface2);}
 /* Badges */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:13px;font-weight:700;}
 .badge.present{background:rgba(45,164,78,.12);color:var(--green);}
+.badge.on-leave{background:rgba(0,150,199,.12);color:var(--accent);}
 .badge.absent{background:rgba(209,36,47,.12);color:var(--red);}
 .badge.late{background:rgba(212,160,23,.15);color:var(--yellow);}
 .badge.evening-only{background:rgba(0,150,199,.12);color:var(--accent);}
@@ -205,10 +206,6 @@ tr:hover td{background:var(--surface2);}
         </div>
         <div id="reportBody"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">اختر تاريخ لعرض التقرير</div></div></div>
       </div>
-      <!-- فلتر بحث الفترة الكاملة -->
-      <div id="rangeSearchWrap" style="display:none;margin-bottom:8px;">
-        <div class="search-box" style="max-width:260px"><span>🔍</span><input type="text" placeholder="ابحث بالاسم..." id="rangeSearch" oninput="buildRangeReport()"></div>
-      </div>
       <!-- جدول الفترة الكاملة -->
       <div class="table-wrap" id="rangeReportWrap" style="display:none;overflow-x:auto;margin-top:16px;">
         <div id="rangeReportBody"></div>
@@ -290,46 +287,6 @@ tr:hover td{background:var(--surface2);}
   </div>
 </div>
 
-<!-- Modal إعدادات موظف -->
-<div id="empShiftModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:24px;width:90%;max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.18);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-      <div style="font-size:16px;font-weight:900" id="modalEmpName">—</div>
-      <button onclick="closeEmpModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
-    </div>
-
-    <div style="background:var(--surface2);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text2);">
-      اتركها فارغة لاستخدام الإعدادات العامة
-    </div>
-
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">🌅 الصباحي</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><label class="form-label">بداية</label><input class="form-input" type="time" id="empMornStart"></div>
-        <div><label class="form-label">نهاية</label><input class="form-input" type="time" id="empMornEnd"></div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">🌙 المسائي</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><label class="form-label">بداية</label><input class="form-input" type="time" id="empEveStart"></div>
-        <div><label class="form-label">نهاية</label><input class="form-input" type="time" id="empEveEnd"></div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">⏱ تأخير مسموح (دقائق)</div>
-      <input class="form-input" type="number" id="empLateMin" min="0" max="60" style="width:120px">
-    </div>
-
-    <div style="display:flex;gap:10px;">
-      <button class="btn btn-primary" style="flex:1" onclick="saveEmpShift()">💾 حفظ</button>
-      <button class="btn btn-secondary" onclick="clearEmpShift()">🗑 مسح الخاص</button>
-    </div>
-  </div>
-</div>
-
 <!-- Mobile Nav -->
 <div class="mobile-nav">
   <div class="mobile-nav-item active" id="mn-attendance" onclick="showPage('attendance',document.querySelectorAll('.nav-item')[0]);setMN('attendance')"><span>📋</span><span>الحضور</span></div>
@@ -343,73 +300,8 @@ tr:hover td{background:var(--surface2);}
 <script>
 const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqYpFBFE7SCPrmkzuob0XlM1AqujTosg_7MQqwv4MHBrQ/exec';
 
-let allAttendance = [], allEmployees = [];
+let allAttendance = [], allEmployees = [], allLeaves = [];
 let reportData = [], rFilter = 'all', lFilter = 'all';
-let empShifts = {}; // إعدادات خاصة لكل موظف
-
-function loadEmpShifts() {
-  const s = localStorage.getItem('empShifts');
-  if(s) empShifts = JSON.parse(s);
-}
-function saveEmpShifts() {
-  localStorage.setItem('empShifts', JSON.stringify(empShifts));
-}
-
-// إرجاع إعدادات الموظف (خاصة أو عامة)
-function getEmpSettings(empId) {
-  const c = empShifts[String(empId)];
-  return {
-    mornStart: (c && c.mornStart) || settings.mornStart,
-    mornEnd:   (c && c.mornEnd)   || settings.mornEnd,
-    eveStart:  (c && c.eveStart)  || settings.eveStart,
-    eveEnd:    (c && c.eveEnd)    || settings.eveEnd,
-    lateMin:   (c && c.lateMin != null) ? c.lateMin : settings.lateMin,
-  };
-}
-
-let modalEmpId = null;
-function openEmpModal(userId, name) {
-  modalEmpId = String(userId);
-  document.getElementById('modalEmpName').textContent = '⚙️ ' + name;
-  const c = empShifts[modalEmpId] || {};
-  document.getElementById('empMornStart').value = c.mornStart || '';
-  document.getElementById('empMornEnd').value   = c.mornEnd   || '';
-  document.getElementById('empEveStart').value  = c.eveStart  || '';
-  document.getElementById('empEveEnd').value    = c.eveEnd    || '';
-  document.getElementById('empLateMin').value   = c.lateMin != null ? c.lateMin : '';
-  document.getElementById('empShiftModal').style.display = 'flex';
-}
-function closeEmpModal() {
-  document.getElementById('empShiftModal').style.display = 'none';
-  modalEmpId = null;
-}
-function saveEmpShift() {
-  if(!modalEmpId) return;
-  const ms = document.getElementById('empMornStart').value;
-  const me = document.getElementById('empMornEnd').value;
-  const es = document.getElementById('empEveStart').value;
-  const ee = document.getElementById('empEveEnd').value;
-  const lm = document.getElementById('empLateMin').value;
-  empShifts[modalEmpId] = {
-    mornStart: ms || null,
-    mornEnd:   me || null,
-    eveStart:  es || null,
-    eveEnd:    ee || null,
-    lateMin:   lm !== '' ? parseInt(lm) : null,
-  };
-  saveEmpShifts();
-  renderEmployees(allEmployees);
-  closeEmpModal();
-  toast('تم حفظ وقت الموظف ✓', 'success');
-}
-function clearEmpShift() {
-  if(!modalEmpId) return;
-  delete empShifts[modalEmpId];
-  saveEmpShifts();
-  renderEmployees(allEmployees);
-  closeEmpModal();
-  toast('تم مسح الوقت الخاص ✓', 'success');
-}
 
 // إعدادات الدوام
 let settings = {
@@ -471,7 +363,11 @@ async function checkStatus() {
 
 async function loadAll() {
   try {
-    const [att, emp] = await Promise.all([gasGet('attendance'), gasGet('users')]);
+    const [att, emp, leaves] = await Promise.all([
+      gasGet('attendance'),
+      gasGet('users'),
+      gasGet('all_leaves')
+    ]);
     if(att.success) {
       allAttendance = att.data.map(r => ({...r, attTime: String(r.attTime), type: parseInt(r.type)||0}));
       document.getElementById('syncInfo').textContent = '⏱ آخر تحديث: ' + new Date().toLocaleTimeString('ar-IQ');
@@ -480,6 +376,9 @@ async function loadAll() {
       allEmployees = emp.data;
       document.getElementById('empCount').textContent = allEmployees.length + ' موظف';
       renderEmployees(allEmployees);
+    }
+    if(leaves.success) {
+      allLeaves = leaves.data.filter(l => l.status === 'approved');
     }
     buildReport();
     toast('تم التحديث ✓', 'success');
@@ -505,21 +404,45 @@ function getDateStr(dateStr) {
   return d.toISOString().split('T')[0];
 }
 
+// تحقق من إجازة أو زمنية موافق عليها
+function getApprovedLeave(empId, dateStr) {
+  return allLeaves.find(l => {
+    if (String(l.empId) !== String(empId)) return false;
+    const from = l.fromDate;
+    const to = l.toDate;
+    return dateStr >= from && dateStr <= to;
+  }) || null;
+}
+
 // حساب حالة الموظف ليوم معين
 function calcStatus(empId, dateStr) {
+  // أول شي تحقق من إجازة أو زمنية موافق عليها
+  const approvedLeave = getApprovedLeave(empId, dateStr);
+
   const dayLogs = allAttendance.filter(r => {
     const ds = getDateStr(r.attTime);
     return String(r.userId) === String(empId) && ds === dateStr;
   });
 
-  if(!dayLogs.length) return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
+  if(!dayLogs.length) {
+    // غائب — بس تحقق إذا عنده إجازة
+    if(approvedLeave) {
+      if(approvedLeave.type === 'leave') {
+        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
+        return { status:'on-leave', label:`🏖 مجاز (${periodLabel})`, class:'present', mornIn:null, eveIn:null };
+      } else {
+        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
+        return { status:'on-leave', label:`⏰ زمنية (${periodLabel})`, class:'evening-only', mornIn:null, eveIn:null };
+      }
+    }
+    return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
+  }
 
-  const emp = getEmpSettings(empId);
-  const mornStartMin = timeToMin(emp.mornStart);
-  const mornEndMin = timeToMin(emp.mornEnd);
-  const eveStartMin = timeToMin(emp.eveStart);
-  const eveEndMin = timeToMin(emp.eveEnd);
-  const lateMin = emp.lateMin;
+  const mornStartMin = timeToMin(settings.mornStart);
+  const mornEndMin = timeToMin(settings.mornEnd);
+  const eveStartMin = timeToMin(settings.eveStart);
+  const eveEndMin = timeToMin(settings.eveEnd);
+  const lateMin = settings.lateMin;
 
   // سجلات الصباح والمساء
   const mornLogs = dayLogs.filter(r => {
@@ -548,7 +471,12 @@ function calcStatus(empId, dateStr) {
       if(hasEve) return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
       return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
     } else if(diffMin <= 30) {
-      // بصم بعد 15 وقبل 30 دقيقة = متأخر
+      // متأخر — تحقق إذا عنده زمنية
+      if(approvedLeave && approvedLeave.type === 'sick') {
+        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : '';
+        if(hasEve) return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
+        return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:null };
+      }
       if(hasEve) return { status:'late', label:'⚠️ متأخر', class:'late', mornIn:mornInTime, eveIn:eveInTime };
       return { status:'late', label:'⚠️ متأخر / غائب مسائي', class:'late', mornIn:mornInTime, eveIn:null };
     } else {
@@ -567,49 +495,6 @@ function calcStatus(empId, dateStr) {
   return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
 }
 
-// حساب حالة صباحية ومسائية منفصلة
-function calcDetailedStatus(empId, dateStr) {
-  const dayLogs = allAttendance.filter(r => {
-    const ds = getDateStr(r.attTime);
-    return String(r.userId) === String(empId) && ds === dateStr;
-  });
-
-  const emp = getEmpSettings(empId);
-  const mornStartMin = timeToMin(emp.mornStart);
-  const mornEndMin = timeToMin(emp.mornEnd);
-  const eveStartMin = timeToMin(emp.eveStart);
-  const eveEndMin = timeToMin(emp.eveEnd);
-  const lateMin = emp.lateMin;
-
-  const mornLogs = dayLogs.filter(r => {
-    const t = getTimeMin(r.attTime);
-    return t >= (mornStartMin - 60) && t <= (mornEndMin + 60);
-  });
-  const eveLogs = dayLogs.filter(r => {
-    const t = getTimeMin(r.attTime);
-    return t >= (eveStartMin - 60) && t <= (eveEndMin + 60);
-  });
-
-  let mornResult = { status:'absent', label:'غائب', class:'absent', time:null };
-  let eveResult  = { status:'absent', label:'غائب', class:'absent', time:null };
-
-  if(mornLogs.length > 0) {
-    const t = mornLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
-    const diff = getTimeMin(t) - mornStartMin;
-    if(diff <= lateMin)      mornResult = { status:'present', label:'حاضر',   class:'present', time:t };
-    else if(diff <= 30)      mornResult = { status:'late',    label:'متأخر',  class:'late',    time:t };
-    else                     mornResult = { status:'absent',  label:'غائب',   class:'absent',  time:t };
-  }
-  if(eveLogs.length > 0) {
-    const t = eveLogs.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime;
-    const diff = getTimeMin(t) - eveStartMin;
-    if(diff <= lateMin)      eveResult = { status:'present', label:'حاضر',   class:'present', time:t };
-    else if(diff <= 30)      eveResult = { status:'late',    label:'متأخر',  class:'late',    time:t };
-    else                     eveResult = { status:'absent',  label:'غائب',   class:'absent',  time:t };
-  }
-  return { morn: mornResult, eve: eveResult };
-}
-
 function formatTime(dateStr) {
   if(!dateStr) return '—';
   const d = new Date(String(dateStr).replace(' ','T'));
@@ -623,8 +508,7 @@ function buildReport() {
 
   reportData = allEmployees.map(emp => {
     const s = calcStatus(emp.userId, date);
-    const det = calcDetailedStatus(emp.userId, date);
-    return { ...emp, ...s, mornDet: det.morn, eveDet: det.eve };
+    return { ...emp, ...s };
   });
 
   // إحصائيات
@@ -665,19 +549,14 @@ function renderReport() {
     <td><div class="avatar">${String(r.name||'?').charAt(0)}</div></td>
     <td><strong>${r.name||'—'}</strong></td>
     <td style="color:var(--text2)">${r.userId}</td>
-    <td>
-      <span class="badge ${r.mornDet.class}">${r.mornDet.label}</span>
-      ${r.mornDet.time ? `<div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:4px">${formatTime(r.mornDet.time)}</div>` : ''}
-    </td>
-    <td>
-      <span class="badge ${r.eveDet.class}">${r.eveDet.label}</span>
-      ${r.eveDet.time ? `<div style="font-size:14px;font-weight:700;color:var(--text2);margin-top:4px">${formatTime(r.eveDet.time)}</div>` : ''}
-    </td>
+    <td><span class="badge ${r.class}">${r.label}</span></td>
+    <td style="color:var(--green);font-weight:700">${formatTime(r.mornIn)}</td>
+    <td style="color:var(--accent);font-weight:700">${formatTime(r.eveIn)}</td>
   </tr>`).join('');
 
   document.getElementById('reportBody').innerHTML = `
     <table><thead><tr>
-      <th></th><th>الاسم</th><th>رقم الموظف</th><th>🌅 الصباحي</th><th>🌙 المسائي</th>
+      <th></th><th>الاسم</th><th>رقم الموظف</th><th>الحالة</th><th>دخول صباحي</th><th>دخول مسائي</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -738,18 +617,14 @@ function filterEmp() {
 }
 function renderEmployees(list) {
   if(!list.length) { document.getElementById('employeesBody').innerHTML='<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">لا يوجد موظفين</div></div>'; return; }
-  const rows = list.map(e=>{
-    const hasCustom = !!empShifts[e.userId];
-    return `<tr>
-      <td><div class="avatar">${String(e.name||'?').charAt(0)}</div></td>
-      <td><strong>${e.name||'—'}</strong>${hasCustom ? ' <span style="font-size:11px;background:rgba(0,150,199,.12);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700">وقت خاص</span>' : ''}</td>
-      <td style="color:var(--text2)">${e.userId}</td>
-      <td style="color:var(--text2)">${e.department||'—'}</td>
-      <td><button class="btn btn-secondary btn-sm" onclick="openEmpModal('${e.userId}','${(e.name||'').replace(/'/g,"\\'")}')">⚙️ وقت الدوام</button></td>
-    </tr>`;
-  }).join('');
+  const rows = list.map(e=>`<tr>
+    <td><div class="avatar">${String(e.name||'?').charAt(0)}</div></td>
+    <td><strong>${e.name||'—'}</strong></td>
+    <td style="color:var(--text2)">${e.userId}</td>
+    <td style="color:var(--text2)">${e.department||'—'}</td>
+  </tr>`).join('');
   document.getElementById('employeesBody').innerHTML = `
-    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+    <table><thead><tr><th></th><th>الاسم</th><th>رقم الموظف</th><th>القسم</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function toggleReportMode() {
@@ -757,7 +632,6 @@ function toggleReportMode() {
   document.getElementById('singleDateFilter').style.display = mode === 'single' ? 'flex' : 'none';
   document.getElementById('rangeDateFilter').style.display = mode === 'range' ? 'flex' : 'none';
   document.getElementById('rangeReportWrap').style.display = 'none';
-  document.getElementById('rangeSearchWrap').style.display = mode === 'range' ? 'block' : 'none';
   document.getElementById('reportBody').style.display = mode === 'single' ? 'block' : 'none';
   document.querySelector('.stats').style.display = mode === 'single' ? 'grid' : 'none';
   document.querySelector('.table-wrap').style.display = mode === 'single' ? 'block' : 'none';
@@ -794,48 +668,30 @@ function buildRangeReport() {
   const dates = getDatesInRange(from, to);
   if (dates.length > 31) { toast('الفترة أكثر من 31 يوم — اختر فترة أقصر', 'error'); return; }
 
-  const searchVal = (document.getElementById('rangeSearch')?.value || '').toLowerCase();
-  const filteredEmps = allEmployees.filter(e => !searchVal || (e.name||'').toLowerCase().includes(searchVal) || (e.userId+'').includes(searchVal));
-
   // بناء هيدر الجدول
   let thead = '<tr><th>الموظف</th>';
   dates.forEach(d => {
     const dd = new Date(d);
-    thead += `<th style="min-width:80px;text-align:center;font-size:12px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
+    thead += `<th style="min-width:55px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
   });
   thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th></tr>';
 
   // بناء صفوف الموظفين
   let tbody = '';
-  filteredEmps.forEach(emp => {
+  allEmployees.forEach(emp => {
     let row = `<tr><td><strong>${emp.name||emp.userId}</strong></td>`;
     let presentCount = 0, absentCount = 0, lateCount = 0;
 
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
-      const det = calcDetailedStatus(emp.userId, d);
+      const icon = statusIcon(s.status);
       let bg = '';
-      if(s.status === 'present')       { bg = 'background:rgba(45,164,78,.08)';  presentCount++; }
-      else if(s.status === 'late')      { bg = 'background:rgba(212,160,23,.1)';  lateCount++; presentCount++; }
-      else if(s.status === 'absent')    { bg = 'background:rgba(209,36,47,.06)';  absentCount++; }
+      if(s.status === 'present') { bg = 'background:rgba(45,164,78,.1)'; presentCount++; }
+      else if(s.status === 'late') { bg = 'background:rgba(212,160,23,.1)'; lateCount++; presentCount++; }
+      else if(s.status === 'absent') { bg = 'background:rgba(209,36,47,.08)'; absentCount++; }
       else if(s.status === 'evening-only') { bg = 'background:rgba(0,150,199,.08)'; presentCount++; }
       else if(s.status === 'absent-evening') { bg = 'background:rgba(224,123,0,.08)'; absentCount++; }
-
-      const mornColor = det.morn.status==='present' ? 'var(--green)' : det.morn.status==='late' ? 'var(--yellow)' : 'var(--red)';
-      const eveColor  = det.eve.status==='present'  ? 'var(--accent)' : det.eve.status==='late' ? 'var(--yellow)' : 'var(--red)';
-
-      const mornLabel = det.morn.status==='present' ? 'حاضر' : det.morn.status==='late' ? 'متأخر' : 'غائب';
-      const eveLabel  = det.eve.status==='present'  ? 'حاضر' : det.eve.status==='late'  ? 'متأخر' : 'غائب';
-
-      const mornLine = det.morn.time
-        ? `<div style="color:${mornColor};font-size:12px;font-weight:700;white-space:nowrap">ص ${formatTime(det.morn.time)}</div><div style="color:${mornColor};font-size:11px">${mornLabel}</div>`
-        : `<div style="color:var(--red);font-size:11px;font-weight:700">ص غائب</div>`;
-
-      const eveLine = det.eve.time
-        ? `<div style="color:${eveColor};font-size:12px;font-weight:700;white-space:nowrap">م ${formatTime(det.eve.time)}</div><div style="color:${eveColor};font-size:11px">${eveLabel}</div>`
-        : `<div style="color:var(--red);font-size:11px;font-weight:700">م غائب</div>`;
-
-      row += `<td style="text-align:center;padding:8px 6px;${bg}">${mornLine}${eveLine}</td>`;
+      row += `<td style="text-align:center;${bg}">${icon}</td>`;
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
@@ -847,7 +703,7 @@ function buildRangeReport() {
 
   document.getElementById('rangeReportBody').innerHTML = `
     <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text2)">
-      تقرير من ${from} إلى ${to} — ${filteredEmps.length} موظف × ${dates.length} يوم
+      تقرير من ${from} إلى ${to} — ${allEmployees.length} موظف × ${dates.length} يوم
     </div>
     <div style="overflow-x:auto">
     <table>
@@ -878,7 +734,6 @@ function toast(msg,type='success') {
 
 // تشغيل
 loadSettings();
-loadEmpShifts();
 checkStatus();
 loadAll();
 setReportToday();
