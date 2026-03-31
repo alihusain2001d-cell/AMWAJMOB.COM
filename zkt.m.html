@@ -353,9 +353,14 @@ function renderMyLeaves(leaves) {
 function openModal(type) {
   leaveType = type;
   setType(type);
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('fromDate').value = today;
-  document.getElementById('toDate').value = today;
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  // أول الشهر الحالي كحد أدنى
+  const minDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-01`;
+  document.getElementById('fromDate').min = minDate;
+  document.getElementById('toDate').min = minDate;
+  document.getElementById('fromDate').value = todayStr;
+  document.getElementById('toDate').value = todayStr;
   document.getElementById('reason').value = '';
   document.getElementById('requestModal').classList.add('open');
 }
