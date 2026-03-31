@@ -472,15 +472,22 @@ function calcStatus(empId, dateStr) {
       return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
     } else if(diffMin <= 30) {
       // متأخر — تحقق إذا عنده زمنية
-      if(approvedLeave && approvedLeave.type === 'sick') {
+      if(approvedLeave) {
+        const isLeave = approvedLeave.type === 'leave';
         const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : '';
-        if(hasEve) return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
-        return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:null };
+        const lbl = isLeave ? `🏖 مجاز ${periodLabel}` : `⏰ زمنية ${periodLabel}`;
+        if(hasEve) return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
+        return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mornInTime, eveIn:null };
       }
       if(hasEve) return { status:'late', label:'⚠️ متأخر', class:'late', mornIn:mornInTime, eveIn:eveInTime };
       return { status:'late', label:'⚠️ متأخر / غائب مسائي', class:'late', mornIn:mornInTime, eveIn:null };
     } else {
-      // بصم بعد 30 دقيقة = غائب صباحي (لكن يطلع الوقت)
+      // بصم بعد 30 دقيقة — تحقق إذا عنده زمنية
+      if(approvedLeave && approvedLeave.type !== 'leave') {
+        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : '';
+        if(hasEve) return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
+        return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:null };
+      }
       if(hasEve) return { status:'absent', label:'❌ غائب صباحي', class:'absent', mornIn:mornInTime, eveIn:eveInTime };
       return { status:'absent', label:'❌ غائب', class:'absent', mornIn:mornInTime, eveIn:null };
     }
