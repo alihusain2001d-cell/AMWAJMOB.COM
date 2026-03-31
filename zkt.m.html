@@ -445,6 +445,16 @@ if(saved) {
 
 // Enter للدخول
 document.getElementById('loginPin').addEventListener('keyup', e => { if(e.key==='Enter') doLogin(); });
+
+// تحديث تلقائي كل 30 ثانية للطلبات
+setInterval(() => {
+  if(currentEmp) {
+    fetch(`${GAS}?action=my_leaves&empId=${currentEmp.userId}`)
+      .then(r=>r.json())
+      .then(d=>{ if(d.success) renderMyLeaves(d.data); })
+      .catch(()=>{});
+  }
+}, 30000);
 </script>
 </body>
 </html>
