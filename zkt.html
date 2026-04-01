@@ -378,7 +378,8 @@ async function loadAll() {
       renderEmployees(allEmployees);
     }
     if(leaves.success) {
-      allLeaves = leaves.data.filter(l => l.status === 'approved');
+      allLeaves = leaves.data.filter(l => String(l.status).trim() === 'approved');
+      console.log('إجازات موافق عليها:', allLeaves.length, allLeaves);
     }
     buildReport();
     toast('تم التحديث ✓', 'success');
@@ -406,11 +407,13 @@ function getDateStr(dateStr) {
 
 // تحقق من إجازة أو زمنية موافق عليها
 function getApprovedLeave(empId, dateStr) {
+  if(!allLeaves.length) return null;
   return allLeaves.find(l => {
-    if (String(l.empId) !== String(empId)) return false;
-    const from = l.fromDate;
-    const to = l.toDate;
-    return dateStr >= from && dateStr <= to;
+    const matchEmp = String(l.empId).trim() === String(empId).trim();
+    const from = String(l.fromDate).trim();
+    const to = String(l.toDate).trim();
+    const matchDate = dateStr >= from && dateStr <= to;
+    return matchEmp && matchDate;
   }) || null;
 }
 
@@ -551,18 +554,25 @@ function renderReport() {
 
   if(!data.length) { document.getElementById('reportBody').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">لا توجد نتائج</div></div>'; return; }
 
-  const rows = data.map(r=>`<tr>
+  const rows = data.map(r => {
+    const leave = getApprovedLeave(r.userId, document.getElementById('reportDate').value);
+    const leaveCell = leave 
+      ? `<span style="color:var(--accent);font-size:12px;font-weight:700">${leave.type==='leave'?'🏖 إجازة':'⏰ زمنية'} (${leave.period==='morning'?'صباحي':leave.period==='evening'?'مسائي':'يوم كامل'})</span>`
+      : '—';
+    return `<tr>
     <td><div class="avatar">${String(r.name||'?').charAt(0)}</div></td>
     <td><strong>${r.name||'—'}</strong></td>
     <td style="color:var(--text2)">${r.userId}</td>
     <td><span class="badge ${r.class}">${r.label}</span></td>
     <td style="color:var(--green);font-weight:700">${formatTime(r.mornIn)}</td>
     <td style="color:var(--accent);font-weight:700">${formatTime(r.eveIn)}</td>
-  </tr>`).join('');
+    <td>${leaveCell}</td>
+  </tr>`;
+  }).join('');
 
   document.getElementById('reportBody').innerHTML = `
     <table><thead><tr>
-      <th></th><th>الاسم</th><th>رقم الموظف</th><th>الحالة</th><th>دخول صباحي</th><th>دخول مسائي</th>
+      <th></th><th>الاسم</th><th>رقم الموظف</th><th>الحالة</th><th>دخول صباحي</th><th>دخول مسائي</th><th>إجازة/زمنية</th>
     </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -698,13 +708,13 @@ function buildRangeReport() {
     const dd = new Date(d);
     thead += `<th style="min-width:55px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
   });
-  thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th></tr>';
+  thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th><th>إجازات</th></tr>';
 
   // بناء صفوف الموظفين
   let tbody = '';
   allEmployees.forEach(emp => {
     let row = `<tr><td><strong>${emp.name||emp.userId}</strong></td>`;
-    let presentCount = 0, absentCount = 0, lateCount = 0;
+    let presentCount = 0, absentCount = 0, lateCount = 0, leaveCount = 0;
 
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
@@ -712,14 +722,15 @@ function buildRangeReport() {
       else if(s.status === 'late') { lateCount++; presentCount++; }
       else if(s.status === 'absent') absentCount++;
       else if(s.status === 'evening-only') presentCount++;
-      else if(s.status === 'absent-evening') presentCount++; // حاضر صباحي
-      else if(s.status === 'on-leave') presentCount++;
+      else if(s.status === 'absent-evening') presentCount++;
+      else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
       row += statusCell(s.status, s.mornIn, s.eveIn);
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
     row += `<td style="color:var(--red);font-weight:700;text-align:center">${absentCount}</td>`;
     row += `<td style="color:var(--yellow);font-weight:700;text-align:center">${lateCount}</td>`;
+    row += `<td style="color:var(--accent);font-weight:700;text-align:center">${leaveCount}</td>`;
     row += '</tr>';
     tbody += row;
   });
