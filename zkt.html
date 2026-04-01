@@ -12,7 +12,7 @@
   --yellow:#d4a017; --orange:#e07b00; --text:#1a1f2e; --text2:#656d76; --radius:12px;
 }
 *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation;}
-body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:17px;}
 
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
 .logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900;color:var(--accent);}
@@ -33,7 +33,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .page.active{display:block;}
 
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
-.page-title{font-size:20px;font-weight:900;}
+.page-title{font-size:22px;font-weight:900;}
 .page-subtitle{color:var(--text2);font-size:12px;margin-top:2px;}
 
 /* Stats */
@@ -53,13 +53,13 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-h
 .search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;max-width:280px;}
 .search-box input{background:none;border:none;outline:none;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;width:100%;text-align:right;}
 table{width:100%;border-collapse:collapse;}
-th{padding:12px 14px;text-align:right;font-size:13px;font-weight:700;color:var(--text2);background:var(--surface2);border-bottom:1px solid var(--border);text-transform:uppercase;}
-td{padding:13px 14px;font-size:15px;border-bottom:1px solid var(--border);vertical-align:middle;}
+th{padding:12px 14px;text-align:right;font-size:14px;font-weight:700;color:var(--text2);background:var(--surface2);border-bottom:1px solid var(--border);text-transform:uppercase;}
+td{padding:13px 14px;font-size:16px;border-bottom:1px solid var(--border);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:var(--surface2);}
 
 /* Badges */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:13px;font-weight:700;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:15px;font-weight:700;}
 .badge.present{background:rgba(45,164,78,.12);color:var(--green);}
 .badge.on-leave{background:rgba(0,150,199,.12);color:var(--accent);}
 .badge.absent{background:rgba(209,36,47,.12);color:var(--red);}
@@ -79,7 +79,7 @@ tr:hover td{background:var(--surface2);}
 
 /* Date filter */
 .filter-bar-top{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.filter-bar-top label{font-size:13px;color:var(--text2);font-weight:600;}
+.filter-bar-top label{font-size:14px;color:var(--text2);font-weight:600;}
 .filter-bar-top input[type=date]{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;outline:none;}
 .filter-bar-top input[type=date]:focus{border-color:var(--accent);}
 
@@ -100,7 +100,7 @@ tr:hover td{background:var(--surface2);}
 
 /* Filter tabs */
 .filter-tabs{display:flex;gap:6px;flex-wrap:wrap;}
-.filter-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.filter-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
 .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,150,199,.08);}
 
 /* Mobile */
@@ -767,7 +767,7 @@ async function buildRangeReport() {
   });
 
   document.getElementById('rangeReportBody').innerHTML = `
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text2)">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700;color:var(--text2)">
       تقرير من ${from} إلى ${to} — ${allEmployees.length} موظف × ${dates.length} يوم
     </div>
     <div style="overflow-x:auto">
