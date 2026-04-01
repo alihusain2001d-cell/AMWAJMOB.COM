@@ -436,7 +436,6 @@ function calcStatus(empId, dateStr) {
   });
 
   if(!dayLogs.length) {
-    // غائب — بس تحقق إذا عنده إجازة
     if(approvedLeave) {
       if(approvedLeave.type === 'leave') {
         const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
@@ -447,6 +446,16 @@ function calcStatus(empId, dateStr) {
       }
     }
     return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
+  }
+
+  // إذا عنده بصمة وإجازة — الإجازة تأخذ أولوية
+  if(approvedLeave) {
+    const mornLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(settings.mornStart)-60)&&t<=(timeToMin(settings.mornEnd)+60); });
+    const eveLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(settings.eveStart)-60)&&t<=(timeToMin(settings.eveEnd)+60); });
+    const mIn = mornLogs2.length ? mornLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
+    const eIn = eveLogs2.length ? eveLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
+    const lbl = approvedLeave.type === 'leave' ? '🏖 مجاز' : '⏰ زمنية';
+    return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mIn, eveIn:eIn };
   }
 
   const mornStartMin = timeToMin(settings.mornStart);
@@ -738,9 +747,6 @@ async function buildRangeReport() {
       else if(s.status === 'evening-only') presentCount++;
       else if(s.status === 'absent-evening') presentCount++;
       else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
-      // تحقق إضافي من الإجازة حتى لو calcStatus ما أرجعها
-      const lv = getApprovedLeave(emp.userId, d);
-      if(lv && s.status !== 'on-leave') leaveCount++;
       row += statusCell(s.status, s.mornIn, s.eveIn);
     });
 
