@@ -467,9 +467,8 @@ function calcStatus(empId, dateStr) {
     const diffMin = mornInMin - mornStartMin;
     
     if(diffMin <= lateMin) {
-      // بصم في الوقت أو خلال 15 دقيقة = حاضر
       if(hasEve) return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
-      return { status:'absent-evening', label:'🌙 غائب مسائي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
+      return { status:'absent-evening', label:'🌅 حاضر صباحي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
     } else if(diffMin <= 30) {
       // متأخر — تحقق إذا عنده زمنية
       if(approvedLeave) {
@@ -668,12 +667,12 @@ function statusIcon(status) {
 
 function statusCell(status, mornIn, eveIn) {
   const map = {
-    'present':        {text:'حاضر',    color:'var(--green)'},
-    'late':           {text:'متأخر',   color:'var(--yellow)'},
-    'absent':         {text:'غائب',    color:'var(--red)'},
-    'evening-only':   {text:'مسائي',   color:'var(--accent)'},
-    'absent-evening': {text:'غ.مسائي', color:'var(--orange)'},
-    'on-leave':       {text:'مجاز',    color:'var(--accent)'},
+    'present':        {text:'حاضر',       color:'var(--green)'},
+    'late':           {text:'متأخر',      color:'var(--yellow)'},
+    'absent':         {text:'غائب',       color:'var(--red)'},
+    'evening-only':   {text:'مسائي',      color:'var(--accent)'},
+    'absent-evening': {text:'ص.فقط',      color:'var(--orange)'},
+    'on-leave':       {text:'مجاز',       color:'var(--accent)'},
   };
   const s = map[status] || {text:'—', color:'var(--text2)'};
   const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` : 
@@ -713,7 +712,7 @@ function buildRangeReport() {
       else if(s.status === 'late') { lateCount++; presentCount++; }
       else if(s.status === 'absent') absentCount++;
       else if(s.status === 'evening-only') presentCount++;
-      else if(s.status === 'absent-evening') absentCount++;
+      else if(s.status === 'absent-evening') presentCount++; // حاضر صباحي
       else if(s.status === 'on-leave') presentCount++;
       row += statusCell(s.status, s.mornIn, s.eveIn);
     });
