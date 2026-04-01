@@ -701,7 +701,7 @@ function statusCell(status, mornIn, eveIn) {
   </td>`;
 }
 
-function buildRangeReport() {
+async function buildRangeReport() {
   const from = document.getElementById('reportFrom').value;
   const to = document.getElementById('reportTo').value;
   if (!from || !to) return;
@@ -709,6 +709,12 @@ function buildRangeReport() {
 
   const dates = getDatesInRange(from, to);
   if (dates.length > 31) { toast('الفترة أكثر من 31 يوم — اختر فترة أقصر', 'error'); return; }
+
+  // تحميل الإجازات الحالية
+  try {
+    const leavesRes = await gasGet('all_leaves');
+    if(leavesRes.success) allLeaves = leavesRes.data.filter(l => String(l.status).trim() === 'approved');
+  } catch(_) {}
 
   // بناء هيدر الجدول
   let thead = '<tr><th>الموظف</th>';
