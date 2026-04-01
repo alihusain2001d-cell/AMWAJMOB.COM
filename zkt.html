@@ -700,14 +700,6 @@ function statusCell(status, mornIn, eveIn) {
     ${time}
   </td>`;
 }
-  const s = map[status] || {text:'—', color:'var(--text2)'};
-  const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` : 
-               eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
-  return `<td style="text-align:center;background:${s.color}15;padding:6px 4px">
-    <div style="color:${s.color};font-weight:700;font-size:11px">${s.text}</div>
-    ${time}
-  </td>`;
-}
 
 async function buildRangeReport() {
   const from = document.getElementById('reportFrom').value;
