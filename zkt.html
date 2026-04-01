@@ -454,7 +454,8 @@ function calcStatus(empId, dateStr) {
     const eveLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(settings.eveStart)-60)&&t<=(timeToMin(settings.eveEnd)+60); });
     const mIn = mornLogs2.length ? mornLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
     const eIn = eveLogs2.length ? eveLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
-    const lbl = approvedLeave.type === 'leave' ? '🏖 مجاز' : '⏰ زمنية';
+    const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
+    const lbl = approvedLeave.type === 'leave' ? `🏖 مجاز (${periodLabel})` : `⏰ زمنية (${periodLabel})`;
     return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mIn, eveIn:eIn };
   }
 
@@ -692,20 +693,27 @@ function statusIcon(status) {
   return map[status] || '—';
 }
 
-function statusCell(status, mornIn, eveIn) {
-  const map = {
-    'present':        {text:'حاضر',       color:'var(--green)'},
-    'late':           {text:'متأخر',      color:'var(--yellow)'},
-    'absent':         {text:'غائب',       color:'var(--red)'},
-    'evening-only':   {text:'مسائي',      color:'var(--accent)'},
-    'absent-evening': {text:'ص.فقط',      color:'var(--orange)'},
-    'on-leave':       {text:'مجاز',       color:'var(--accent2)'},
-  };
-  const s = map[status] || {text:'—', color:'var(--text2)'};
+function statusCell(status, mornIn, eveIn, label) {
+  let text, color;
+  if(status === 'on-leave') {
+    const isLeave = label && label.includes('مجاز');
+    text = isLeave ? 'مجاز' : 'زمنية';
+    color = 'var(--accent2)';
+  } else {
+    const map = {
+      'present':        {text:'حاضر',   color:'var(--green)'},
+      'late':           {text:'متأخر',  color:'var(--yellow)'},
+      'absent':         {text:'غائب',   color:'var(--red)'},
+      'evening-only':   {text:'مسائي',  color:'var(--accent)'},
+      'absent-evening': {text:'ص.فقط',  color:'var(--orange)'},
+    };
+    const s = map[status] || {text:'—', color:'var(--text2)'};
+    text = s.text; color = s.color;
+  }
   const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` :
                eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
-  return `<td style="text-align:center;background:${s.color}20;padding:6px 4px">
-    <div style="color:${s.color};font-weight:700;font-size:11px">${s.text}</div>
+  return `<td style="text-align:center;background:${color}20;padding:6px 4px">
+    <div style="color:${color};font-weight:700;font-size:11px">${text}</div>
     ${time}
   </td>`;
 }
@@ -747,7 +755,7 @@ async function buildRangeReport() {
       else if(s.status === 'evening-only') presentCount++;
       else if(s.status === 'absent-evening') presentCount++;
       else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
-      row += statusCell(s.status, s.mornIn, s.eveIn);
+      row += statusCell(s.status, s.mornIn, s.eveIn, s.label);
     });
 
     row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
