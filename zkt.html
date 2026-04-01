@@ -690,8 +690,16 @@ function statusCell(status, mornIn, eveIn) {
     'absent':         {text:'غائب',       color:'var(--red)'},
     'evening-only':   {text:'مسائي',      color:'var(--accent)'},
     'absent-evening': {text:'ص.فقط',      color:'var(--orange)'},
-    'on-leave':       {text:'مجاز',       color:'var(--accent)'},
+    'on-leave':       {text:'مجاز',       color:'var(--accent2)'},
   };
+  const s = map[status] || {text:'—', color:'var(--text2)'};
+  const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` :
+               eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
+  return `<td style="text-align:center;background:${s.color}20;padding:6px 4px">
+    <div style="color:${s.color};font-weight:700;font-size:11px">${s.text}</div>
+    ${time}
+  </td>`;
+}
   const s = map[status] || {text:'—', color:'var(--text2)'};
   const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` : 
                eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
@@ -738,6 +746,9 @@ async function buildRangeReport() {
       else if(s.status === 'evening-only') presentCount++;
       else if(s.status === 'absent-evening') presentCount++;
       else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
+      // تحقق إضافي من الإجازة حتى لو calcStatus ما أرجعها
+      const lv = getApprovedLeave(emp.userId, d);
+      if(lv && s.status !== 'on-leave') leaveCount++;
       row += statusCell(s.status, s.mornIn, s.eveIn);
     });
 
