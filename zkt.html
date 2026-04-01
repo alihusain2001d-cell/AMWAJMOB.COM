@@ -410,8 +410,16 @@ function getApprovedLeave(empId, dateStr) {
   if(!allLeaves.length) return null;
   return allLeaves.find(l => {
     const matchEmp = String(l.empId).trim() === String(empId).trim();
-    const from = String(l.fromDate).trim();
-    const to = String(l.toDate).trim();
+    // تحويل التاريخ سواء كان string أو Date object
+    const toDateStr = (d) => {
+      if(!d) return '';
+      if(d instanceof Date) return d.toISOString().split('T')[0];
+      const parsed = new Date(String(d));
+      if(!isNaN(parsed)) return parsed.toISOString().split('T')[0];
+      return String(d).trim();
+    };
+    const from = toDateStr(l.fromDate);
+    const to = toDateStr(l.toDate);
     const matchDate = dateStr >= from && dateStr <= to;
     return matchEmp && matchDate;
   }) || null;
