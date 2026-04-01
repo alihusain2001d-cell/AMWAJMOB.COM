@@ -178,10 +178,10 @@ tr:hover td{background:var(--surface2);}
         </div>
         <div id="rangeDateFilter" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;display:none">
           <label>من:</label>
-          <input type="date" id="reportFrom" onchange="buildRangeReport()">
+          <input type="date" id="reportFrom" onchange="buildRangeReport().catch(console.error)">
           <label>إلى:</label>
-          <input type="date" id="reportTo" onchange="buildRangeReport()">
-          <button class="btn btn-primary btn-sm" onclick="buildRangeReport()">عرض</button>
+          <input type="date" id="reportTo" onchange="buildRangeReport().catch(console.error)">
+          <button class="btn btn-primary btn-sm" onclick="buildRangeReport().catch(console.error)">عرض</button>
         </div>
       </div>
 
