@@ -499,9 +499,9 @@ function openBulkImgModal(){document.getElementById('bulkSheet').value='';docume
 function filterBulkPreview(){
   const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),prev=document.getElementById('bulkPreview');
   if(!prefix&&!sheet){prev.innerHTML='<span style="color:var(--muted)">اختر شيت واكتب فلتر</span>';return;}
-  const matches=allProducts.filter(p=>{if(sheet&&p.sheet!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
+  const matches=allProducts.filter(p=>{if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
   if(!matches.length){prev.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
-  prev.innerHTML=`<div style="color:var(--green);margin-bottom:6px;font-weight:700">✅ ${matches.length} منتج</div>`+matches.slice(0,20).map(p=>`<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--muted);font-size:11px">(${p.sheet})</span></div>`).join('')+(matches.length>20?`<div style="color:var(--muted);margin-top:4px">و ${matches.length-20} أخرى...</div>`:'');
+  prev.innerHTML=`<div style="color:var(--green);margin-bottom:6px;font-weight:700">✅ ${matches.length} منتج</div>`+matches.slice(0,20).map(p=>`<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--muted);font-size:11px">(${p.sheet||p.sheetName})</span></div>`).join('')+(matches.length>20?`<div style="color:var(--muted);margin-top:4px">و ${matches.length-20} أخرى...</div>`:'');
 }
 function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
 async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
@@ -509,7 +509,7 @@ async function saveBulkImg(){
   const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
   if(!prefix&&!sheet){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
   if(!url){status.innerHTML='<span style="color:var(--red)">⚠️ أضف صورة</span>';return;}
-  const matches=allProducts.filter(p=>{if(sheet&&p.sheet!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
+  const matches=allProducts.filter(p=>{if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
   if(!matches.length){status.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
   status.innerHTML=`<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
   let done=0,failed=0;
