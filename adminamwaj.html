@@ -182,7 +182,7 @@ tr:hover td{background:#ffffff05}
     <div class="modal-title">🖼️ إضافة صورة جماعية</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:16px">الصورة تنطبق على كل المنتجات المطابقة في نفس الشيت فقط</div>
     <div class="modal-row"><div class="modal-label">الشيت</div>
-      <select class="modal-select" id="bulkSheet" onchange="filterBulkPreview()">
+      <select class="modal-select" id="bulkSheet" onchange="updateBulkTypes();filterBulkPreview()">
         <option value="">-- اختر الشيت --</option>
         <option value="SHEET">SHEET (شاشات)</option><option value="battery">battery</option>
         <option value="CHARGE BOARD">CHARGE BOARD</option><option value="FLAT MAIN">FLAT MAIN</option>
@@ -193,10 +193,13 @@ tr:hover td{background:#ffffff05}
       </select>
     </div>
     <div class="modal-row"><div class="modal-label">فلتر بالاسم — مثال: "Infinix"</div>
-      <input class="modal-input" id="bulkPrefix" placeholder="اكتب جزء من الاسم..." oninput="filterBulkPreview()">
+      <input class="modal-input" id="bulkPrefix" placeholder="اكتب جزء من الاسم..." oninput="updateBulkTypes();filterBulkPreview()">
     </div>
-    <div class="modal-row"><div class="modal-label">فلتر بالنوع — مثال: "OLED" أو "TFT"</div>
-      <input class="modal-input" id="bulkType" placeholder="اكتب جزء من النوع..." oninput="filterBulkPreview()">
+    <div class="modal-row">
+      <div class="modal-label">النوع — اختر نوع أو أكثر</div>
+      <div id="bulkTypeList" style="background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:10px;max-height:140px;overflow-y:auto;color:var(--muted);font-size:13px">
+        اختر شيت أو اسم أولاً
+      </div>
     </div>
     <div id="bulkPreview" style="background:var(--card);border-radius:10px;padding:10px;margin-bottom:14px;max-height:160px;overflow-y:auto;font-size:13px;color:var(--muted)">اختر شيت واكتب فلتر لمعاينة المنتجات</div>
     <div class="modal-row"><div class="modal-label">رابط الصورة</div><input class="modal-input" id="bulkImgUrl" placeholder="https://..." oninput="previewBulkImg()"></div>
@@ -498,21 +501,59 @@ async function saveProdImg(){
 async function deleteProductImg(name,sheet){if(!confirm('حذف صورة '+name+'؟'))return;showToast('⏳ جاري الحذف...');try{const r=await apiCall('updateImageUrl',{sheetName:sheet,rowName:name,imageUrl:''});if(r.success){const p=allProducts.find(x=>x.name===name&&(x.sheet||x.sheetName)===sheet);if(p)p.image_url='';showToast('✅ تم الحذف');renderProducts();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
 
 // BULK IMAGE
-function openBulkImgModal(){document.getElementById('bulkSheet').value='';document.getElementById('bulkPrefix').value='';document.getElementById('bulkType').value='';document.getElementById('bulkImgUrl').value='';document.getElementById('bulkUploadStatus').textContent='';document.getElementById('bulkSaveStatus').textContent='';document.getElementById('bulkImgPreview').style.display='none';document.getElementById('bulkImgEmpty').style.display='';document.getElementById('bulkPreview').innerHTML='اختر شيت واكتب فلتر لمعاينة المنتجات';document.getElementById('bulkImgModal').classList.add('open');}
+function openBulkImgModal(){document.getElementById('bulkSheet').value='';document.getElementById('bulkPrefix').value='';document.getElementById('bulkTypeList').innerHTML='<span style="color:var(--muted)">اختر شيت أو اسم أولاً</span>';document.getElementById('bulkImgUrl').value='';document.getElementById('bulkUploadStatus').textContent='';document.getElementById('bulkSaveStatus').textContent='';document.getElementById('bulkImgPreview').style.display='none';document.getElementById('bulkImgEmpty').style.display='';document.getElementById('bulkPreview').innerHTML='اختر شيت واكتب فلتر لمعاينة المنتجات';document.getElementById('bulkImgModal').classList.add('open');}
+function updateBulkTypes(){
+  var sheet=document.getElementById('bulkSheet').value;
+  var prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase();
+  var list=document.getElementById('bulkTypeList');
+  var candidates=allProducts.filter(function(p){
+    if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;
+    if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;
+    return true;
+  });
+  var types=[...new Set(candidates.map(function(p){return (p.type||'').trim();}).filter(Boolean))].sort();
+  if(!types.length){list.innerHTML='<span style="color:var(--muted)">لا توجد أنواع</span>';return;}
+  var html='';
+  for(var i=0;i<types.length;i++){
+    var t=types[i];
+    html+='<label style="display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:6px">'
+         +'<input type="checkbox" value="'+t+'" onchange="filterBulkPreview()" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer">'
+         +'<span style="color:var(--text);font-size:13px">'+t+'</span></label>';
+  }
+  list.innerHTML=html;
+}
+function getSelectedTypes(){return[...document.querySelectorAll('#bulkTypeList input[type=checkbox]:checked')].map(c=>c.value.toLowerCase());}
 function filterBulkPreview(){
-  const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),type=document.getElementById('bulkType').value.trim().toLowerCase(),prev=document.getElementById('bulkPreview');
-  if(!prefix&&!sheet&&!type){prev.innerHTML='<span style="color:var(--muted)">اختر شيت واكتب فلتر</span>';return;}
-  const matches=allProducts.filter(p=>{if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;if(type&&!(p.type||'').toLowerCase().includes(type))return false;return true;});
+  var sheet=document.getElementById('bulkSheet').value;
+  var prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase();
+  var selTypes=getSelectedTypes();
+  var prev=document.getElementById('bulkPreview');
+  if(!prefix&&!sheet&&!selTypes.length){prev.innerHTML='<span style="color:var(--muted)">اختر شيت واكتب فلتر</span>';return;}
+  var matches=allProducts.filter(function(p){
+    if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;
+    if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;
+    if(selTypes.length&&!selTypes.includes((p.type||'').toLowerCase()))return false;
+    return true;
+  });
   if(!matches.length){prev.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
-  prev.innerHTML=`<div style="color:var(--green);margin-bottom:6px;font-weight:700">✅ ${matches.length} منتج</div>`+matches.slice(0,20).map(p=>`<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name}${p.type?` <span style="color:var(--primary);font-size:11px">[${p.type}]</span>`:''} <span style="color:var(--muted);font-size:11px">(${p.sheet||p.sheetName})</span></div>`).join('')+(matches.length>20?`<div style="color:var(--muted);margin-top:4px">و ${matches.length-20} أخرى...</div>`:'');
+  var html='<div style="color:var(--green);margin-bottom:6px;font-weight:700">✅ '+matches.length+' منتج</div>';
+  var shown=matches.slice(0,25);
+  for(var i=0;i<shown.length;i++){
+    var p=shown[i];
+    var typeTag=p.type?(' <span style="color:var(--primary);font-size:11px">['+p.type+']</span>'):'';
+    var sheetTag=' <span style="color:var(--muted);font-size:11px">('+( p.sheet||p.sheetName)+')</span>';
+    html+='<div style="padding:3px 0;border-bottom:1px solid var(--border)">'+(p.name||'')+typeTag+sheetTag+'</div>';
+  }
+  if(matches.length>25)html+='<div style="color:var(--muted);margin-top:4px">و '+(matches.length-25)+' أخرى...</div>';
+  prev.innerHTML=html;
 }
 function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
 async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 async function saveBulkImg(){
-  const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),type=document.getElementById('bulkType').value.trim().toLowerCase(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
-  if(!prefix&&!sheet&&!type){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
+  const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),selTypes=getSelectedTypes(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
+  if(!prefix&&!sheet&&!selTypes.length){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
   if(!url){status.innerHTML='<span style="color:var(--red)">⚠️ أضف صورة</span>';return;}
-  const matches=allProducts.filter(p=>{if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;if(type&&!(p.type||'').toLowerCase().includes(type))return false;return true;});
+  const matches=allProducts.filter(p=>{if(sheet&&(p.sheet||p.sheetName)!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;if(selTypes.length&&!selTypes.includes((p.type||'').toLowerCase()))return false;return true;});
   if(!matches.length){status.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
   status.innerHTML=`<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
   let done=0,failed=0;
