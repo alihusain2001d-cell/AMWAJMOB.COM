@@ -6,437 +6,87 @@
 <title>لوحة تحكم أمواج</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #0F172A;
-  --surface: #1E293B;
-  --card: #253347;
-  --border: #334155;
-  --primary: #0EA5E9;
-  --primary-dark: #0284C7;
-  --green: #22C55E;
-  --red: #EF4444;
-  --yellow: #F59E0B;
-  --purple: #A78BFA;
-  --text: #F1F5F9;
-  --muted: #94A3B8;
-  --radius: 14px;
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0F172A;--surface:#1E293B;--card:#253347;--border:#334155;--primary:#0EA5E9;--primary-dark:#0284C7;--green:#22C55E;--red:#EF4444;--yellow:#F59E0B;--purple:#A78BFA;--text:#F1F5F9;--muted:#94A3B8;--radius:14px}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl}
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 60% 40%,#0EA5E920 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,#A78BFA10 0%,transparent 50%),var(--bg)}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:40px 32px;width:100%;max-width:380px;text-align:center}
+.login-logo{font-size:52px;margin-bottom:8px}.login-title{font-size:22px;font-weight:800;margin-bottom:4px}.login-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.login-input{width:100%;padding:12px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-family:'Tajawal',sans-serif;margin-bottom:12px;outline:none;text-align:right;transition:border-color .2s}
+.login-input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:17px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:background .2s}
+.login-btn:hover{background:var(--primary-dark)}.login-err{color:var(--red);font-size:14px;margin-top:10px}
+#adminApp{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;right:0;width:220px;height:100vh;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:100;padding:20px 0}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}.sidebar-logo-icon{font-size:28px}.sidebar-logo-text{font-size:15px;font-weight:800;color:var(--primary)}.sidebar-logo-sub{font-size:11px;color:var(--muted)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;color:var(--muted);font-size:15px;font-weight:600;transition:all .15s;border-right:3px solid transparent;margin:1px 0}
+.nav-item:hover{background:var(--card);color:var(--text)}.nav-item.active{background:var(--card);color:var(--primary);border-right-color:var(--primary)}
+.nav-icon{font-size:18px;width:22px;text-align:center}.nav-badge{margin-right:auto;background:var(--red);color:#fff;border-radius:20px;font-size:11px;padding:1px 7px;font-weight:800}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border)}
+.logout-btn{width:100%;padding:9px;background:transparent;border:1.5px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+.main{margin-right:220px;min-height:100vh;display:flex;flex-direction:column}
+.top-bar{padding:16px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.top-bar-title{font-size:20px;font-weight:800}.top-bar-time{font-size:13px;color:var(--muted)}
+.refresh-btn{padding:8px 16px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:border-color .2s}
+.refresh-btn:hover{border-color:var(--primary);color:var(--primary)}.content{padding:24px;flex:1}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat-icon{font-size:28px;margin-bottom:8px}.stat-value{font-size:28px;font-weight:900}.stat-label{font-size:13px;color:var(--muted);margin-top:2px}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
+.section-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:16px;font-weight:800}
+.search-input{padding:8px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:'Tajawal',sans-serif;outline:none;min-width:200px}
+.search-input:focus{border-color:var(--primary)}.filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.filter-tab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .15s}
+.filter-tab:hover{border-color:var(--primary);color:var(--primary)}.filter-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+table{width:100%;border-collapse:collapse}thead{background:var(--card)}
+th{padding:11px 16px;font-size:13px;font-weight:700;color:var(--muted);text-align:right;white-space:nowrap}
+td{padding:12px 16px;font-size:14px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:#ffffff05}
+.badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block}
+.badge-green{background:#22C55E20;color:var(--green)}.badge-red{background:#EF444420;color:var(--red)}.badge-yellow{background:#F59E0B20;color:var(--yellow)}.badge-blue{background:#0EA5E920;color:var(--primary)}.badge-gray{background:#94A3B820;color:var(--muted)}
+.action-btn{padding:5px 12px;border-radius:7px;border:1.5px solid;font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .15s;background:transparent;margin:0 2px}
+.btn-approve{border-color:var(--green);color:var(--green)}.btn-approve:hover{background:var(--green);color:#fff}
+.btn-reject{border-color:var(--red);color:var(--red)}.btn-reject:hover{background:var(--red);color:#fff}
+.btn-delete{border-color:var(--red);color:var(--red)}.btn-delete:hover{background:var(--red);color:#fff}
+.btn-edit{border-color:var(--yellow);color:var(--yellow)}.btn-edit:hover{background:var(--yellow);color:#000}
+.btn-view{border-color:var(--primary);color:var(--primary)}.btn-view:hover{background:var(--primary);color:#fff}
+.empty-state{padding:40px;text-align:center;color:var(--muted);font-size:15px}.empty-icon{font-size:40px;margin-bottom:8px}
+.loading-row{padding:30px;text-align:center;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:16px}.modal-row{margin-bottom:14px}.modal-label{font-size:13px;color:var(--muted);margin-bottom:5px}
+.modal-input{width:100%;padding:10px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;font-family:'Tajawal',sans-serif;outline:none}
+.modal-input:focus{border-color:var(--primary)}
+.modal-select{width:100%;padding:10px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;font-family:'Tajawal',sans-serif;outline:none}
+.modal-btns{display:flex;gap:10px;margin-top:20px}
+.modal-btn{flex:1;padding:11px;border-radius:10px;border:none;font-size:16px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer}
+.modal-btn-primary{background:var(--primary);color:#fff}.modal-btn-cancel{background:var(--card);color:var(--muted)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:15px;font-weight:700;z-index:9999;display:none;box-shadow:0 8px 30px rgba(0,0,0,.4);white-space:nowrap}
+.toast.show{display:block;animation:toastIn .3s}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media(max-width:768px){.sidebar{width:60px}.sidebar-logo-text,.sidebar-logo-sub,.nav-item span:not(.nav-icon){display:none}.nav-item{padding:14px;justify-content:center}.main{margin-right:60px}.stats-grid{grid-template-columns:repeat(2,1fr)}.content{padding:12px}table{font-size:13px}th,td{padding:8px 10px}}
+@media(max-width:520px){
+  .sidebar{width:100%;height:60px;position:fixed;top:auto;bottom:0;right:0;left:0;flex-direction:row;border-left:none;border-top:1px solid var(--border);padding:0 0 env(safe-area-inset-bottom) 0;overflow:hidden;z-index:200}
+  .sidebar-logo,.sidebar-footer{display:none}
+  .nav-item{flex:1;flex-direction:column;padding:8px 4px;gap:2px;border-right:none;border-top:3px solid transparent;font-size:10px;justify-content:center}
+  .nav-item.active{border-right-color:transparent;border-top-color:var(--primary)}
+  .nav-item span:not(.nav-icon){display:block!important;font-size:10px}.nav-icon{font-size:20px;width:auto}.nav-badge{display:none!important}
+  .main{margin-right:0;margin-bottom:70px}.top-bar{padding:10px 14px}.top-bar-title{font-size:16px}.top-bar-time{display:none}
+  .content{padding:10px}.stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}.stat-card{padding:14px 10px}.stat-value{font-size:22px}.stat-label{font-size:11px}
+  .section-head{padding:12px 14px;flex-wrap:wrap;gap:8px}.search-input{min-width:0;width:100%}
+  .section-card{overflow-x:auto}table{min-width:500px;font-size:12px}th,td{padding:8px;white-space:nowrap}
+  .modal{padding:16px}.login-box{padding:28px 20px;margin:16px}
 }
-
-body {
-  font-family: 'Tajawal', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  direction: rtl;
-}
-
-/* ── Login ── */
-#loginPage {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(ellipse at 60% 40%, #0EA5E920 0%, transparent 60%),
-              radial-gradient(ellipse at 20% 80%, #A78BFA10 0%, transparent 50%),
-              var(--bg);
-}
-.login-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 40px 32px;
-  width: 100%;
-  max-width: 380px;
-  text-align: center;
-}
-.login-logo { font-size: 52px; margin-bottom: 8px; }
-.login-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-.login-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
-.login-input {
-  width: 100%; padding: 12px 16px;
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: 10px; color: var(--text);
-  font-size: 16px; font-family: 'Tajawal', sans-serif;
-  margin-bottom: 12px; outline: none; text-align: right;
-  transition: border-color .2s;
-}
-.login-input:focus { border-color: var(--primary); }
-.login-btn {
-  width: 100%; padding: 13px;
-  background: var(--primary); color: #fff;
-  border: none; border-radius: 10px;
-  font-size: 17px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif;
-  cursor: pointer; transition: background .2s;
-}
-.login-btn:hover { background: var(--primary-dark); }
-.login-err { color: var(--red); font-size: 14px; margin-top: 10px; }
-
-/* ── Layout ── */
-#adminApp { display: none; min-height: 100vh; }
-
-.sidebar {
-  position: fixed; top: 0; right: 0;
-  width: 220px; height: 100vh;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  z-index: 100; padding: 20px 0;
-}
-.sidebar-logo {
-  padding: 0 20px 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 12px;
-}
-.sidebar-logo-icon { font-size: 28px; }
-.sidebar-logo-text { font-size: 15px; font-weight: 800; color: var(--primary); }
-.sidebar-logo-sub { font-size: 11px; color: var(--muted); }
-
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 20px; cursor: pointer;
-  color: var(--muted); font-size: 15px; font-weight: 600;
-  transition: all .15s; border-right: 3px solid transparent;
-  margin: 1px 0;
-}
-.nav-item:hover { background: var(--card); color: var(--text); }
-.nav-item.active { background: var(--card); color: var(--primary); border-right-color: var(--primary); }
-.nav-icon { font-size: 18px; width: 22px; text-align: center; }
-.nav-badge {
-  margin-right: auto; background: var(--red);
-  color: #fff; border-radius: 20px; font-size: 11px;
-  padding: 1px 7px; font-weight: 800;
-}
-
-.sidebar-footer {
-  margin-top: auto; padding: 16px 20px;
-  border-top: 1px solid var(--border);
-}
-.logout-btn {
-  width: 100%; padding: 9px;
-  background: transparent; border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--muted);
-  font-size: 14px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif; cursor: pointer;
-  transition: all .2s;
-}
-.logout-btn:hover { border-color: var(--red); color: var(--red); }
-
-.main {
-  margin-right: 220px;
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-}
-
-.top-bar {
-  padding: 16px 24px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 50;
-}
-.top-bar-title { font-size: 20px; font-weight: 800; }
-.top-bar-time { font-size: 13px; color: var(--muted); }
-.refresh-btn {
-  padding: 8px 16px; background: var(--card);
-  border: 1.5px solid var(--border); border-radius: 8px;
-  color: var(--text); font-size: 14px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif; cursor: pointer;
-  transition: border-color .2s;
-}
-.refresh-btn:hover { border-color: var(--primary); color: var(--primary); }
-
-.content { padding: 24px; flex: 1; }
-
-/* ── Stats Cards ── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px; margin-bottom: 24px;
-}
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-}
-.stat-icon { font-size: 28px; margin-bottom: 8px; }
-.stat-value { font-size: 28px; font-weight: 900; }
-.stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
-
-/* ── Tables ── */
-.section-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 20px;
-  overflow: hidden;
-}
-.section-head {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-}
-.section-title { font-size: 16px; font-weight: 800; }
-
-.search-input {
-  padding: 8px 14px;
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--text);
-  font-size: 14px; font-family: 'Tajawal', sans-serif;
-  outline: none; min-width: 200px;
-}
-.search-input:focus { border-color: var(--primary); }
-
-.filter-tabs {
-  display: flex; gap: 6px; flex-wrap: wrap;
-}
-.filter-tab {
-  padding: 6px 14px; border-radius: 20px;
-  border: 1.5px solid var(--border);
-  background: transparent; color: var(--muted);
-  font-size: 13px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif; cursor: pointer;
-  transition: all .15s;
-}
-.filter-tab:hover { border-color: var(--primary); color: var(--primary); }
-.filter-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-table {
-  width: 100%; border-collapse: collapse;
-}
-thead { background: var(--card); }
-th {
-  padding: 11px 16px; font-size: 13px;
-  font-weight: 700; color: var(--muted);
-  text-align: right; white-space: nowrap;
-}
-td {
-  padding: 12px 16px; font-size: 14px;
-  border-top: 1px solid var(--border);
-  vertical-align: middle;
-}
-tr:hover td { background: #ffffff05; }
-
-.badge {
-  padding: 3px 10px; border-radius: 20px;
-  font-size: 12px; font-weight: 700; display: inline-block;
-}
-.badge-green  { background: #22C55E20; color: var(--green); }
-.badge-red    { background: #EF444420; color: var(--red); }
-.badge-yellow { background: #F59E0B20; color: var(--yellow); }
-.badge-blue   { background: #0EA5E920; color: var(--primary); }
-.badge-purple { background: #A78BFA20; color: var(--purple); }
-.badge-gray   { background: #94A3B820; color: var(--muted); }
-
-.action-btn {
-  padding: 5px 12px; border-radius: 7px;
-  border: 1.5px solid; font-size: 13px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif; cursor: pointer;
-  transition: all .15s; background: transparent; margin: 0 2px;
-}
-.btn-approve { border-color: var(--green); color: var(--green); }
-.btn-approve:hover { background: var(--green); color: #fff; }
-.btn-reject  { border-color: var(--red); color: var(--red); }
-.btn-reject:hover  { background: var(--red); color: #fff; }
-.btn-delete  { border-color: var(--red); color: var(--red); }
-.btn-delete:hover  { background: var(--red); color: #fff; }
-.btn-edit    { border-color: var(--yellow); color: var(--yellow); }
-.btn-edit:hover    { background: var(--yellow); color: #000; }
-.btn-view    { border-color: var(--primary); color: var(--primary); }
-.btn-view:hover    { background: var(--primary); color: #fff; }
-
-.empty-state {
-  padding: 40px; text-align: center;
-  color: var(--muted); font-size: 15px;
-}
-.empty-icon { font-size: 40px; margin-bottom: 8px; }
-
-.loading-row {
-  padding: 30px; text-align: center; color: var(--muted);
-}
-.spinner {
-  width: 28px; height: 28px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  margin: 0 auto 10px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Modal ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.7); z-index: 999;
-  align-items: center; justify-content: center;
-  padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  width: 100%; max-width: 480px;
-  max-height: 90vh; overflow-y: auto;
-  padding: 24px;
-}
-.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
-.modal-row { margin-bottom: 14px; }
-.modal-label { font-size: 13px; color: var(--muted); margin-bottom: 5px; }
-.modal-input {
-  width: 100%; padding: 10px 14px;
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--text);
-  font-size: 15px; font-family: 'Tajawal', sans-serif; outline: none;
-}
-.modal-input:focus { border-color: var(--primary); }
-.modal-select {
-  width: 100%; padding: 10px 14px;
-  background: var(--card); border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--text);
-  font-size: 15px; font-family: 'Tajawal', sans-serif; outline: none;
-}
-.modal-btns { display: flex; gap: 10px; margin-top: 20px; }
-.modal-btn {
-  flex: 1; padding: 11px;
-  border-radius: 10px; border: none;
-  font-size: 16px; font-weight: 700;
-  font-family: 'Tajawal', sans-serif; cursor: pointer;
-}
-.modal-btn-primary { background: var(--primary); color: #fff; }
-.modal-btn-cancel  { background: var(--card); color: var(--muted); }
-
-/* Toast */
-.toast {
-  position: fixed; bottom: 24px; left: 50%;
-  transform: translateX(-50%);
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 12px 20px;
-  font-size: 15px; font-weight: 700;
-  z-index: 9999; display: none;
-  box-shadow: 0 8px 30px rgba(0,0,0,.4);
-  white-space: nowrap;
-}
-.toast.show { display: block; animation: toastIn .3s; }
-@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
-
-/* Responsive */
-/* ── Tablet ── */
-@media (max-width: 768px) {
-  .sidebar { width: 60px; }
-  .sidebar-logo-text, .sidebar-logo-sub, .nav-item span:not(.nav-icon) { display: none; }
-  .nav-item { padding: 14px; justify-content: center; }
-  .main { margin-right: 60px; }
-  .stats-grid { grid-template-columns: repeat(2,1fr); }
-  .content { padding: 12px; }
-  table { font-size: 13px; }
-  th, td { padding: 8px 10px; }
-}
-
-/* ── Mobile ── */
-@media (max-width: 520px) {
-  /* Sidebar تصير bottom nav */
-  .sidebar {
-    width: 100%; height: 60px;
-    position: fixed;
-    top: auto; bottom: 0; right: 0; left: 0;
-    flex-direction: row;
-    border-left: none; border-top: 1px solid var(--border);
-    padding: 0 0 env(safe-area-inset-bottom) 0;
-    overflow: hidden;
-    z-index: 200;
-  }
-  .sidebar-logo { display: none; }
-  .sidebar-footer { display: none; }
-  .nav-item {
-    flex: 1; flex-direction: column;
-    padding: 8px 4px; gap: 2px;
-    border-right: none; border-top: 3px solid transparent;
-    font-size: 10px; justify-content: center;
-  }
-  .nav-item.active { border-right-color: transparent; border-top-color: var(--primary); }
-  .nav-item span:not(.nav-icon) { display: block !important; font-size: 10px; }
-  .nav-icon { font-size: 20px; width: auto; }
-  .nav-badge { display: none !important; }
-
-  /* Main content فوق الـ bottom nav */
-  .main { margin-right: 0; margin-bottom: 70px; }
-
-  /* Top bar */
-  .top-bar { padding: 10px 14px; }
-  .top-bar-title { font-size: 16px; }
-  .top-bar-time { display: none; }
-  .refresh-btn { padding: 6px 10px; font-size: 13px; }
-
-  /* Content */
-  .content { padding: 10px; }
-
-  /* Stats */
-  .stats-grid { grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
-  .stat-card { padding: 14px 10px; }
-  .stat-icon { font-size: 22px; margin-bottom: 4px; }
-  .stat-value { font-size: 22px; }
-  .stat-label { font-size: 11px; }
-
-  /* Section cards */
-  .section-head { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
-  .section-title { font-size: 14px; }
-  .search-input { min-width: 0; width: 100%; }
-
-  /* Tables — scroll horizontally */
-  .section-card { overflow-x: auto; }
-  table { min-width: 500px; font-size: 12px; }
-  th, td { padding: 8px 8px; white-space: nowrap; }
-
-  /* Filter tabs */
-  .filter-tabs { gap: 4px; }
-  .filter-tab { padding: 5px 10px; font-size: 12px; }
-
-  /* Modal */
-  .modal { padding: 16px; }
-  .modal-title { font-size: 16px; }
-
-  /* Products grid */
-  .section-card > div[style*="grid"] {
-    grid-template-columns: repeat(2,1fr) !important;
-    gap: 10px !important;
-    padding: 10px !important;
-  }
-
-  /* Login */
-  .login-box { padding: 28px 20px; margin: 16px; }
-}
-
-/* Pagination */
-.pagination {
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; padding: 16px;
-}
-.page-btn {
-  padding: 6px 14px; border-radius: 8px;
-  border: 1.5px solid var(--border);
-  background: transparent; color: var(--text);
-  font-size: 14px; font-family: 'Tajawal', sans-serif;
-  cursor: pointer; transition: all .15s;
-}
-.page-btn:hover, .page-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-.page-info { font-size: 13px; color: var(--muted); }
-
-/* Orders detail */
-.order-items-list { font-size: 13px; }
-.order-item-row {
-  display: flex; justify-content: space-between;
-  padding: 5px 0; border-bottom: 1px solid var(--border);
-}
-.order-item-row:last-child { border-bottom: none; }
+.order-item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}.order-item-row:last-child{border-bottom:none}
 </style>
 </head>
 <body>
 
-<!-- Login -->
 <div id="loginPage">
   <div class="login-box">
     <div class="login-logo">🛠️</div>
@@ -448,55 +98,35 @@ tr:hover td { background: #ffffff05; }
   </div>
 </div>
 
-<!-- App -->
 <div id="adminApp">
-
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">🌊</div>
       <div class="sidebar-logo-text">أمواج للإلكترونيات</div>
       <div class="sidebar-logo-sub">لوحة التحكم</div>
     </div>
-    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
-      <span class="nav-icon">📊</span><span>الرئيسية</span>
-    </div>
-    <div class="nav-item" onclick="showPage('customers')" id="nav-customers">
-      <span class="nav-icon">👥</span><span>الزبائن</span>
-      <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('orders')" id="nav-orders">
-      <span class="nav-icon">📦</span><span>الطلبات</span>
-      <span class="nav-badge" id="ordersBadge" style="display:none">0</span>
-    </div>
-    <div class="nav-item" onclick="showPage('warranties')" id="nav-warranties">
-      <span class="nav-icon">🛡️</span><span>الضمانات</span>
-    </div>
-    <div class="nav-item" onclick="showPage('products')" id="nav-products">
-      <span class="nav-icon">🖼️</span><span>صور المنتجات</span>
-    </div>
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">📊</span><span>الرئيسية</span></div>
+    <div class="nav-item" onclick="showPage('customers')" id="nav-customers"><span class="nav-icon">👥</span><span>الزبائن</span><span class="nav-badge" id="pendingBadge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><span class="nav-icon">📦</span><span>الطلبات</span><span class="nav-badge" id="ordersBadge" style="display:none">0</span></div>
+    <div class="nav-item" onclick="showPage('warranties')" id="nav-warranties"><span class="nav-icon">🛡️</span><span>الضمانات</span></div>
+    <div class="nav-item" onclick="showPage('products')" id="nav-products"><span class="nav-icon">🖼️</span><span>صور المنتجات</span></div>
     <div class="sidebar-footer">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center;" id="sidebarTime"></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center" id="sidebarTime"></div>
       <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
     </div>
   </div>
-
-  <!-- Main -->
   <div class="main">
     <div class="top-bar">
       <div class="top-bar-title" id="pageTitle">الرئيسية</div>
-      <div style="display:flex;gap:10px;align-items:center;">
+      <div style="display:flex;gap:10px;align-items:center">
         <div class="top-bar-time" id="topTime"></div>
         <button class="refresh-btn" onclick="refreshCurrentPage()">🔄 تحديث</button>
       </div>
     </div>
-    <div class="content" id="mainContent">
-      <div class="loading-row"><div class="spinner"></div>جاري التحميل...</div>
-    </div>
+    <div class="content" id="mainContent"><div class="loading-row"><div class="spinner"></div>جاري التحميل...</div></div>
   </div>
 </div>
 
-<!-- Modal Edit Customer -->
 <div class="modal-overlay" id="editCustomerModal">
   <div class="modal">
     <div class="modal-title">✏️ تعديل بيانات الزبون</div>
@@ -504,9 +134,7 @@ tr:hover td { background: #ffffff05; }
     <div class="modal-row"><div class="modal-label">المحل</div><input class="modal-input" id="editCustShop"></div>
     <div class="modal-row"><div class="modal-label">الحالة</div>
       <select class="modal-select" id="editCustStatus">
-        <option value="pending">انتظار</option>
-        <option value="approved">موافق</option>
-        <option value="rejected">مرفوض</option>
+        <option value="pending">انتظار</option><option value="approved">موافق</option><option value="rejected">مرفوض</option>
       </select>
     </div>
     <div class="modal-btns">
@@ -516,18 +144,14 @@ tr:hover td { background: #ffffff05; }
   </div>
 </div>
 
-<!-- Modal Order Detail -->
 <div class="modal-overlay" id="orderDetailModal">
   <div class="modal">
     <div class="modal-title" id="orderDetailTitle">تفاصيل الطلب</div>
     <div id="orderDetailContent"></div>
-    <div class="modal-btns">
-      <button class="modal-btn modal-btn-cancel" onclick="closeModal('orderDetailModal')">إغلاق</button>
-    </div>
+    <div class="modal-btns"><button class="modal-btn modal-btn-cancel" onclick="closeModal('orderDetailModal')">إغلاق</button></div>
   </div>
 </div>
 
-<!-- Modal Add Warranty -->
 <div class="modal-overlay" id="addWarrantyModal">
   <div class="modal">
     <div class="modal-title">🛡️ تسجيل ضمان جديد</div>
@@ -538,16 +162,14 @@ tr:hover td { background: #ffffff05; }
     <div class="modal-row"><div class="modal-label">رقم الهاتف</div><input class="modal-input" id="wPhone" placeholder="07xxxxxxxxx" type="tel"></div>
     <div class="modal-row"><div class="modal-label">النوع</div>
       <select class="modal-select" id="wType">
-        <option value="screen">شاشة (30 يوم)</option>
-        <option value="battery">باطري (365 يوم)</option>
-        <option value="other">أخرى (30 يوم)</option>
+        <option value="screen">شاشة (30 يوم)</option><option value="battery">باطري (365 يوم)</option><option value="other">أخرى (30 يوم)</option>
       </select>
     </div>
-    <div id="wDatesRow" style="display:flex;gap:10px;">
+    <div style="display:flex;gap:10px">
       <div class="modal-row" style="flex:1"><div class="modal-label">تاريخ البدء</div><input class="modal-input" id="wStart" type="date"></div>
       <div class="modal-row" style="flex:1"><div class="modal-label">تاريخ الانتهاء</div><input class="modal-input" id="wEnd" type="date" readonly style="opacity:.7"></div>
     </div>
-    <div id="wStatus" style="font-size:14px;text-align:center;min-height:20px;margin-bottom:4px;"></div>
+    <div id="wStatus" style="font-size:14px;text-align:center;min-height:20px;margin-bottom:4px"></div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeModal('addWarrantyModal')">إلغاء</button>
       <button class="modal-btn modal-btn-primary" onclick="saveNewWarranty()">💾 حفظ الضمان</button>
@@ -555,91 +177,37 @@ tr:hover td { background: #ffffff05; }
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<!-- Modal بحث صور -->
-<div class="modal-overlay" id="imgSearchModal">
-  <div class="modal" style="max-width:700px;max-height:90vh;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="modal-title" style="margin:0" id="imgSearchTitle">🔍 بحث عن صورة</div>
-      <button class="action-btn btn-reject" style="padding:4px 10px;" onclick="closeModal('imgSearchModal')">✕</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <input class="modal-input" id="imgSearchQuery" placeholder="اكتب اسم الجهاز..." style="flex:1;" onkeyup="if(event.key==='Enter')searchImages()">
-      <button class="action-btn btn-view" style="padding:8px 16px;white-space:nowrap;" onclick="searchImages()">🔍 بحث</button>
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">اضغط على الصورة لحفظها مباشرة للمنتج</div>
-    <div id="imgSearchResults" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:480px;overflow-y:auto;"></div>
-  </div>
-</div>
-
-<!-- Modal صور جماعية -->
 <div class="modal-overlay" id="bulkImgModal">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal" style="max-width:520px">
     <div class="modal-title">🖼️ إضافة صورة جماعية</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">اختر شيت ومنتجات، أضف صورة — تنطبق على كل المنتجات المختارة تلقائياً</div>
-
-    <div class="modal-row">
-      <div class="modal-label">الشيت</div>
-      <select class="modal-select" id="bulkSheet" onchange="loadBulkPrefixes()">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">الصورة تنطبق على كل المنتجات المطابقة في نفس الشيت فقط</div>
+    <div class="modal-row"><div class="modal-label">الشيت</div>
+      <select class="modal-select" id="bulkSheet" onchange="filterBulkPreview()">
         <option value="">-- اختر الشيت --</option>
-        <option value="SHEET">SHEET (شاشات)</option>
-        <option value="battery">battery</option>
-        <option value="CHARGE BOARD">CHARGE BOARD</option>
-        <option value="FLAT MAIN">FLAT MAIN</option>
-        <option value="BACK COVER">BACK COVER</option>
-        <option value="HOUSING">HOUSING</option>
-        <option value="LENS CAMERA">LENS CAMERA</option>
-        <option value="Camera">Camera</option>
-        <option value="Buzzer">Buzzer</option>
-        <option value="EAR SPEAKER">EAR SPEAKER</option>
-        <option value="DOOR SIM">DOOR SIM</option>
-        <option value="INVENTORY">INVENTORY</option>
+        <option value="SHEET">SHEET (شاشات)</option><option value="battery">battery</option>
+        <option value="CHARGE BOARD">CHARGE BOARD</option><option value="FLAT MAIN">FLAT MAIN</option>
+        <option value="BACK COVER">BACK COVER</option><option value="HOUSING">HOUSING</option>
+        <option value="LENS CAMERA">LENS CAMERA</option><option value="Camera">Camera</option>
+        <option value="Buzzer">Buzzer</option><option value="EAR SPEAKER">EAR SPEAKER</option>
+        <option value="DOOR SIM">DOOR SIM</option><option value="INVENTORY">INVENTORY</option>
       </select>
     </div>
-
-    <div class="modal-row">
-      <div class="modal-label">فلتر بالاسم (اختياري) — مثال: "Camera" أو "Samsung"</div>
+    <div class="modal-row"><div class="modal-label">فلتر بالاسم — مثال: "Infinix"</div>
       <input class="modal-input" id="bulkPrefix" placeholder="اكتب جزء من الاسم..." oninput="filterBulkPreview()">
     </div>
-
-    <div class="modal-row">
-      <div class="modal-label">فلتر بالنوع (اختياري)</div>
-      <select class="modal-select" id="bulkType" onchange="filterBulkPreview()">
-        <option value="">-- كل الأنواع --</option>
-      </select>
-    </div>
-
-    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
-      <button class="action-btn btn-view" onclick="filterBulkPreview()">🔍 معاينة</button>
-    </div>
-
-    <!-- معاينة المنتجات -->
-    <div id="bulkPreview" style="background:var(--card);border-radius:10px;padding:10px;margin-bottom:14px;max-height:160px;overflow-y:auto;font-size:13px;color:var(--muted);">
-      اكتب prefix لمعاينة المنتجات
-    </div>
-
-    <!-- الصورة -->
-    <div class="modal-row">
-      <div class="modal-label">رابط الصورة</div>
-      <input class="modal-input" id="bulkImgUrl" placeholder="https://..." oninput="previewBulkImg()">
-    </div>
-    <div style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0;">— أو —</div>
-    <div class="modal-row">
-      <div class="modal-label">رفع صورة من الجهاز</div>
+    <div id="bulkPreview" style="background:var(--card);border-radius:10px;padding:10px;margin-bottom:14px;max-height:160px;overflow-y:auto;font-size:13px;color:var(--muted)">اختر شيت واكتب فلتر لمعاينة المنتجات</div>
+    <div class="modal-row"><div class="modal-label">رابط الصورة</div><input class="modal-input" id="bulkImgUrl" placeholder="https://..." oninput="previewBulkImg()"></div>
+    <div style="text-align:center;color:var(--muted);font-size:13px;margin:6px 0">— أو —</div>
+    <div class="modal-row"><div class="modal-label">رفع صورة من الجهاز</div>
       <input type="file" accept="image/*" id="bulkImgFile" style="display:none" onchange="uploadBulkImgFile()">
-      <button class="action-btn btn-view" style="width:100%;padding:10px;" onclick="document.getElementById('bulkImgFile').click()">📁 اختيار صورة</button>
-      <div id="bulkUploadStatus" style="font-size:13px;text-align:center;margin-top:6px;min-height:18px;color:var(--muted);"></div>
+      <button class="action-btn btn-view" style="width:100%;padding:10px" onclick="document.getElementById('bulkImgFile').click()">📁 اختيار صورة</button>
+      <div id="bulkUploadStatus" style="font-size:13px;text-align:center;margin-top:6px;min-height:18px;color:var(--muted)"></div>
     </div>
-
-    <!-- معاينة الصورة -->
-    <div style="height:100px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
-      <img id="bulkImgPreview" style="max-width:100%;max-height:100px;object-fit:contain;display:none;border-radius:8px;">
-      <div id="bulkImgEmpty" style="color:var(--muted);font-size:13px;">معاينة الصورة</div>
+    <div style="height:100px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+      <img id="bulkImgPreview" style="max-width:100%;max-height:100px;object-fit:contain;display:none;border-radius:8px">
+      <div id="bulkImgEmpty" style="color:var(--muted);font-size:13px">معاينة الصورة</div>
     </div>
-
-    <div id="bulkSaveStatus" style="font-size:14px;text-align:center;min-height:20px;margin-bottom:8px;"></div>
-
+    <div id="bulkSaveStatus" style="font-size:14px;text-align:center;min-height:20px;margin-bottom:8px"></div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-cancel" onclick="closeModal('bulkImgModal')">إلغاء</button>
       <button class="modal-btn modal-btn-primary" onclick="saveBulkImg()">💾 تطبيق على الكل</button>
@@ -647,993 +215,316 @@ tr:hover td { background: #ffffff05; }
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-// ═══════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════
-const ADMIN_PASS = '1994';
-const API_URL = 'https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
-const API_KEY  = 'AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22';
-const IMGBB_KEY = 'baec33703816b0356502051d078fc688';
+const ADMIN_PASS='1994';
+const API_URL='https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
+const API_KEY='AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22';
+const IMGBB_KEY='baec33703816b0356502051d078fc688';
+let currentPage='dashboard',allCustomers=[],allOrders=[],allWarranties=[],allProducts=[],editTarget=null;
 
-let currentPage = 'dashboard';
-let allCustomers = [];
-let allOrders = [];
-let allWarranties = [];
-let editTarget = null;
+function doLogin(){const p=document.getElementById('loginPass').value;if(p===ADMIN_PASS){localStorage.setItem('amwaj_admin_auth',ADMIN_PASS);document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}else{document.getElementById('loginErr').textContent='❌ كلمة السر غير صحيحة';document.getElementById('loginPass').value='';}}
+function doLogout(){localStorage.removeItem('amwaj_admin_auth');document.getElementById('adminApp').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('loginPass').value='';}
+function startClock(){function tick(){const s=new Date().toLocaleString('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('topTime').textContent=s;document.getElementById('sidebarTime').textContent=s;}tick();setInterval(tick,1000);}
+const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات'};
+function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p];({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts}[p])();}
+function refreshCurrentPage(){showPage(currentPage);}
+async function apiCall(action,extra={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,adminKey:ADMIN_PASS,action,...extra})});return r.json();}
+function setContent(h){document.getElementById('mainContent').innerHTML=h;}
+function showLoading(){setContent('<div class="loading-row"><div class="spinner"></div><div>جاري التحميل...</div></div>');}
 
-// ═══════════════════════════════════
-// AUTH
-// ═══════════════════════════════════
-function doLogin() {
-  const pass = document.getElementById('loginPass').value;
-  if (pass === ADMIN_PASS) {
-    localStorage.setItem('amwaj_admin_auth', ADMIN_PASS);
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    startClock();
-    showPage('dashboard');
-  } else {
-    document.getElementById('loginErr').textContent = '❌ كلمة السر غير صحيحة';
-    document.getElementById('loginPass').value = '';
-  }
-}
-
-function doLogout() {
-  localStorage.removeItem('amwaj_admin_auth');
-  document.getElementById('adminApp').style.display = 'none';
-  document.getElementById('loginPage').style.display = 'flex';
-  document.getElementById('loginPass').value = '';
-}
-
-// checkAutoLogin تشتغل في نهاية الكود
-// doLogout defined above
-
-// ═══════════════════════════════════
-// CLOCK
-// ═══════════════════════════════════
-function startClock() {
-  function tick() {
-    const now = new Date();
-    const str = now.toLocaleString('ar-IQ', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12: true });
-    document.getElementById('topTime').textContent = str;
-    document.getElementById('sidebarTime').textContent = str;
-  }
-  tick(); setInterval(tick, 1000);
-}
-
-// ═══════════════════════════════════
-// NAV
-// ═══════════════════════════════════
-const pageTitles = { dashboard:'📊 الرئيسية', customers:'👥 الزبائن', orders:'📦 الطلبات', warranties:'🛡️ الضمانات', products:'🖼️ صور المنتجات' };
-
-function showPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('nav-' + page).classList.add('active');
-  document.getElementById('pageTitle').textContent = pageTitles[page];
-  switch(page) {
-    case 'dashboard':  loadDashboard(); break;
-    case 'customers':  loadCustomers(); break;
-    case 'orders':     loadOrders();    break;
-    case 'warranties': loadWarranties();break;
-    case 'products':   loadProducts();  break;
-  }
-}
-
-function refreshCurrentPage() { showPage(currentPage); }
-
-// ═══════════════════════════════════
-// API
-// ═══════════════════════════════════
-async function apiCall(action, extra = {}) {
-  const resp = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ apiKey: API_KEY, adminKey: ADMIN_PASS, action, ...extra })
-  });
-  return await resp.json();
-}
-
-function setContent(html) {
-  document.getElementById('mainContent').innerHTML = html;
-}
-function showLoading() {
-  setContent('<div class="loading-row"><div class="spinner"></div><div>جاري التحميل...</div></div>');
-}
-
-// ═══════════════════════════════════
 // DASHBOARD
-// ═══════════════════════════════════
-async function loadDashboard() {
+async function loadDashboard(){
   showLoading();
-  try {
-    const [custR, ordR, warR] = await Promise.all([
-      apiCall('getCustomersList', { adminKey: ADMIN_PASS }),
-      apiCall('getAllOrders', { adminKey: ADMIN_PASS }),
-      apiCall('getWarranties')
-    ]);
-    allCustomers = custR.data || [];
-    allOrders    = ordR.data  || [];
-    allWarranties= warR.data  || [];
-
-    const pending  = allCustomers.filter(c => c.status === 'pending').length;
-    const approved = allCustomers.filter(c => c.status === 'approved').length;
-    const pendOrders = allOrders.filter(o => o.status === 'pending').length;
-    const todayOrders = allOrders.filter(o => {
-      if (!o.timestamp) return false;
-      const d = new Date(o.timestamp);
-      const now = new Date();
-      return d.toDateString() === now.toDateString();
-    }).length;
-
-    // Update badges
-    if (pending > 0) { document.getElementById('pendingBadge').style.display=''; document.getElementById('pendingBadge').textContent=pending; }
-    if (pendOrders > 0) { document.getElementById('ordersBadge').style.display=''; document.getElementById('ordersBadge').textContent=pendOrders; }
-
-    setContent(`
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">👥</div>
-          <div class="stat-value">${allCustomers.length}</div>
-          <div class="stat-label">إجمالي الزبائن</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="color:var(--yellow)">⏳</div>
-          <div class="stat-value" style="color:var(--yellow)">${pending}</div>
-          <div class="stat-label">طلبات تسجيل جديدة</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="color:var(--primary)">📦</div>
-          <div class="stat-value" style="color:var(--primary)">${allOrders.length}</div>
-          <div class="stat-label">إجمالي الطلبات</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="color:var(--green)">🛡️</div>
-          <div class="stat-value" style="color:var(--green)">${allWarranties.length}</div>
-          <div class="stat-label">الضمانات المسجلة</div>
-        </div>
-      </div>
-
-      ${pending > 0 ? `
-      <div class="section-card">
-        <div class="section-head">
-          <div class="section-title">⏳ طلبات تسجيل بانتظار الموافقة (${pending})</div>
-          <button class="refresh-btn" onclick="showPage('customers')">عرض الكل</button>
-        </div>
-        <table>
-          <thead><tr><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>التاريخ</th><th>الإجراء</th></tr></thead>
-          <tbody>${allCustomers.filter(c=>c.status==='pending').slice(0,5).map(c=>`
-            <tr>
-              <td><b>${sanitize(c.name||'-')}</b></td>
-              <td>${sanitize(c.shop||'-')}</td>
-              <td dir="ltr">${c.phone||'-'}</td>
-              <td>${c.date||'-'}</td>
-              <td>
-                <button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅ قبول</button>
-                <button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌ رفض</button>
-              </td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>` : ''}
-
-      <div class="section-card">
-        <div class="section-head">
-          <div class="section-title">📦 آخر الطلبات</div>
-          <button class="refresh-btn" onclick="showPage('orders')">عرض الكل</button>
-        </div>
-        <table>
-          <thead><tr><th>رقم الطلب</th><th>الزبون</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead>
-          <tbody>${allOrders.slice(0,8).map(o=>`
-            <tr onclick="showOrderDetail('${o.orderId}')" style="cursor:pointer;">
-              <td><b>${o.orderId||'-'}</b></td>
-              <td>${sanitize(o.name||'-')}</td>
-              <td>${(o.total||0).toLocaleString()} د.ع</td>
-              <td>${orderBadge(o.status)}</td>
-              <td>${o.timestamp ? new Date(o.timestamp).toLocaleDateString('ar-IQ') : '-'}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    `);
-  } catch(e) {
-    setContent('<div class="empty-state"><div class="empty-icon">❌</div>فشل تحميل البيانات: ' + e.message + '</div>');
-  }
+  try{
+    const[cR,oR,wR]=await Promise.all([apiCall('getCustomersList',{adminKey:ADMIN_PASS}),apiCall('getAllOrders',{adminKey:ADMIN_PASS}),apiCall('getWarranties')]);
+    allCustomers=cR.data||[];allOrders=oR.data||[];allWarranties=wR.data||[];
+    const pending=allCustomers.filter(c=>c.status==='pending').length,pendOrders=allOrders.filter(o=>o.status==='pending').length;
+    if(pending>0){document.getElementById('pendingBadge').style.display='';document.getElementById('pendingBadge').textContent=pending;}
+    if(pendOrders>0){document.getElementById('ordersBadge').style.display='';document.getElementById('ordersBadge').textContent=pendOrders;}
+    setContent(`<div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${allCustomers.length}</div><div class="stat-label">إجمالي الزبائن</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--yellow)">⏳</div><div class="stat-value" style="color:var(--yellow)">${pending}</div><div class="stat-label">طلبات تسجيل جديدة</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--primary)">📦</div><div class="stat-value" style="color:var(--primary)">${allOrders.length}</div><div class="stat-label">إجمالي الطلبات</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:var(--green)">🛡️</div><div class="stat-value" style="color:var(--green)">${allWarranties.length}</div><div class="stat-label">الضمانات المسجلة</div></div>
+    </div>
+    ${pending>0?`<div class="section-card"><div class="section-head"><div class="section-title">⏳ طلبات تسجيل (${pending})</div><button class="refresh-btn" onclick="showPage('customers')">عرض الكل</button></div>
+    <table><thead><tr><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>التاريخ</th><th>الإجراء</th></tr></thead>
+    <tbody>${allCustomers.filter(c=>c.status==='pending').slice(0,5).map(c=>`<tr><td><b>${sanitize(c.name||'-')}</b></td><td>${sanitize(c.shop||'-')}</td><td dir="ltr">${c.phone||'-'}</td><td>${c.date||'-'}</td>
+    <td><button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅ قبول</button><button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌ رفض</button></td></tr>`).join('')}
+    </tbody></table></div>`:''}
+    <div class="section-card"><div class="section-head"><div class="section-title">📦 آخر الطلبات</div><button class="refresh-btn" onclick="showPage('orders')">عرض الكل</button></div>
+    <table><thead><tr><th>رقم الطلب</th><th>الزبون</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+    <tbody>${allOrders.slice(0,8).map(o=>`<tr style="cursor:pointer" onclick="showOrderDetail('${o.orderId}')"><td><b>${o.orderId||'-'}</b></td><td>${sanitize(o.name||'-')}</td><td>${(o.total||0).toLocaleString()} د.ع</td><td>${orderBadge(o.status)}</td><td>${o.timestamp?new Date(o.timestamp).toLocaleDateString('ar-IQ'):'-'}</td></tr>`).join('')}
+    </tbody></table></div>`);
+  }catch(e){setContent('<div class="empty-state"><div class="empty-icon">❌</div>فشل التحميل: '+e.message+'</div>');}
 }
 
-// ═══════════════════════════════════
 // CUSTOMERS
-// ═══════════════════════════════════
-let custFilter = 'all', custSearch = '';
-
-async function loadCustomers() {
-  showLoading();
-  try {
-    const r = await apiCall('getCustomersList', { adminKey: ADMIN_PASS });
-    allCustomers = r.data || [];
-    renderCustomers();
-  } catch(e) { setContent('<div class="empty-state">❌ فشل التحميل</div>'); }
-}
-
-function renderCustomers() {
-  let data = allCustomers;
-  if (custFilter !== 'all') data = data.filter(c => c.status === custFilter);
-  if (custSearch) data = data.filter(c =>
-    (c.name||'').toLowerCase().includes(custSearch) ||
-    (c.shop||'').toLowerCase().includes(custSearch) ||
-    (c.phone||'').includes(custSearch)
-  );
-
-  const pending  = allCustomers.filter(c=>c.status==='pending').length;
-  const approved = allCustomers.filter(c=>c.status==='approved').length;
-  const rejected = allCustomers.filter(c=>c.status==='rejected').length;
-
-  setContent(`
-    <div class="section-card">
-      <div class="section-head">
-        <div class="section-title">👥 الزبائن (${allCustomers.length})</div>
-        <input class="search-input" placeholder="🔍 بحث..." oninput="custSearch=this.value.toLowerCase();renderCustomers()">
-      </div>
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="filter-tab ${custFilter==='all'?'active':''}" onclick="custFilter='all';renderCustomers()">الكل (${allCustomers.length})</button>
-        <button class="filter-tab ${custFilter==='pending'?'active':''}" onclick="custFilter='pending';renderCustomers()">انتظار (${pending})</button>
-        <button class="filter-tab ${custFilter==='approved'?'active':''}" onclick="custFilter='approved';renderCustomers()">موافق (${approved})</button>
-        <button class="filter-tab ${custFilter==='rejected'?'active':''}" onclick="custFilter='rejected';renderCustomers()">مرفوض (${rejected})</button>
-      </div>
-      ${data.length === 0 ? '<div class="empty-state"><div class="empty-icon">👥</div>لا توجد نتائج</div>' : `
-      <table>
-        <thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-        <tbody>${data.map((c,i)=>`
-          <tr>
-            <td style="color:var(--muted)">${i+1}</td>
-            <td><b>${sanitize(c.name||'-')}</b></td>
-            <td>${sanitize(c.shop||'-')}</td>
-            <td dir="ltr">${c.phone||'-'}</td>
-            <td>${sanitize(c.address||'-')}</td>
-            <td>${custBadge(c.status)}</td>
-            <td>${c.date||'-'}</td>
-            <td>
-              ${c.status==='pending' ? `
-                <button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅</button>
-                <button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌</button>
-              ` : ''}
-              <button class="action-btn btn-edit" onclick="openEditCustomerById('${c.phone}')">✏️</button>
-              <button class="action-btn btn-delete" onclick="deleteCustomer('${c.phone}','${sanitize(c.name||'')}')">🗑️</button>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>`}
+let custFilter='all',custSearch='';
+async function loadCustomers(){showLoading();try{const r=await apiCall('getCustomersList',{adminKey:ADMIN_PASS});allCustomers=r.data||[];renderCustomers();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
+function renderCustomers(){
+  let data=allCustomers;
+  if(custFilter!=='all')data=data.filter(c=>c.status===custFilter);
+  if(custSearch)data=data.filter(c=>(c.name||'').toLowerCase().includes(custSearch)||(c.shop||'').toLowerCase().includes(custSearch)||(c.phone||'').includes(custSearch));
+  const p=allCustomers.filter(c=>c.status==='pending').length,a=allCustomers.filter(c=>c.status==='approved').length,rej=allCustomers.filter(c=>c.status==='rejected').length;
+  setContent(`<div class="section-card">
+    <div class="section-head"><div class="section-title">👥 الزبائن (${allCustomers.length})</div><input class="search-input" placeholder="🔍 بحث..." oninput="custSearch=this.value.toLowerCase();renderCustomers()"></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+      <button class="filter-tab ${custFilter==='all'?'active':''}" onclick="custFilter='all';renderCustomers()">الكل (${allCustomers.length})</button>
+      <button class="filter-tab ${custFilter==='pending'?'active':''}" onclick="custFilter='pending';renderCustomers()">انتظار (${p})</button>
+      <button class="filter-tab ${custFilter==='approved'?'active':''}" onclick="custFilter='approved';renderCustomers()">موافق (${a})</button>
+      <button class="filter-tab ${custFilter==='rejected'?'active':''}" onclick="custFilter='rejected';renderCustomers()">مرفوض (${rej})</button>
     </div>
-  `);
+    ${data.length===0?'<div class="empty-state"><div class="empty-icon">👥</div>لا توجد نتائج</div>':`
+    <table><thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
+    <tbody>${data.map((c,i)=>`<tr><td style="color:var(--muted)">${i+1}</td><td><b>${sanitize(c.name||'-')}</b></td><td>${sanitize(c.shop||'-')}</td><td dir="ltr">${c.phone||'-'}</td><td>${sanitize(c.address||'-')}</td><td>${custBadge(c.status)}</td><td>${c.date||'-'}</td>
+    <td>${c.status==='pending'?`<button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅</button><button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌</button>`:''}
+    <button class="action-btn btn-edit" onclick="openEditCustomerById('${c.phone}')">✏️</button>
+    <button class="action-btn btn-delete" onclick="deleteCustomer('${c.phone}','${sanitize(c.name||'')}')">🗑️</button></td></tr>`).join('')}
+    </tbody></table>`}
+  </div>`);
 }
+function custBadge(s){const m={pending:'badge-yellow',approved:'badge-green',rejected:'badge-red'};const l={pending:'⏳ انتظار',approved:'✅ موافق',rejected:'❌ مرفوض'};return`<span class="badge ${m[s]||'badge-gray'}">${l[s]||s}</span>`;}
+async function approveCustomer(phone){if(!confirm('موافقة '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'approved'});if(r.success){showToast('✅ تمت الموافقة');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
+async function rejectCustomer(phone){if(!confirm('رفض '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'rejected'});if(r.success){showToast('❌ تم الرفض');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
+function openEditCustomerById(phone){const c=allCustomers.find(x=>String(x.phone||'').replace(/[^0-9]/g,'')===String(phone||'').replace(/[^0-9]/g,''));if(!c){showToast('❌ الزبون غير موجود');return;}editTarget=c;document.getElementById('editCustName').value=c.name||'';document.getElementById('editCustShop').value=c.shop||'';document.getElementById('editCustStatus').value=c.status||'pending';document.getElementById('editCustomerModal').classList.add('open');}
+async function saveEditCustomer(){showToast('⏳ جاري الحفظ...');const ns=document.getElementById('editCustStatus').value;if(ns!==editTarget.status){if(ns==='approved')await approveCustomer(editTarget.phone);else if(ns==='rejected')await rejectCustomer(editTarget.phone);}closeModal('editCustomerModal');showToast('✅ تم الحفظ');loadCustomers();}
+async function deleteCustomer(phone,name){if(!confirm('حذف '+name+'؟\nلا يمكن التراجع!'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'deleted'});if(r.success){showToast('🗑️ تم الحذف');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
 
-function custBadge(status) {
-  const map = { pending:'badge-yellow', approved:'badge-green', rejected:'badge-red' };
-  const labels = { pending:'⏳ انتظار', approved:'✅ موافق', rejected:'❌ مرفوض' };
-  return `<span class="badge ${map[status]||'badge-gray'}">${labels[status]||status}</span>`;
-}
-
-async function approveCustomer(phone) {
-  if (!confirm('موافقة على تسجيل ' + phone + '؟')) return;
-  try {
-    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'approved' });
-    if (r.success) { showToast('✅ تمت الموافقة وإرسال رسالة الواتساب'); loadCustomers(); }
-    else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ فشل: ' + e.message); }
-}
-
-async function rejectCustomer(phone) {
-  if (!confirm('رفض تسجيل ' + phone + '؟')) return;
-  try {
-    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'rejected' });
-    if (r.success) { showToast('❌ تم الرفض'); loadCustomers(); }
-    else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ فشل: ' + e.message); }
-}
-
-function openEditCustomer(c) {
-  editTarget = c;
-  document.getElementById('editCustName').value = c.name || '';
-  document.getElementById('editCustShop').value = c.shop || '';
-  document.getElementById('editCustStatus').value = c.status || 'pending';
-  document.getElementById('editCustomerModal').classList.add('open');
-}
-
-function openEditCustomerById(phone) {
-  const c = allCustomers.find(x => String(x.phone||'').replace(/[^0-9]/g,'') === String(phone||'').replace(/[^0-9]/g,''));
-  if (!c) { showToast('❌ الزبون غير موجود'); return; }
-  openEditCustomer(c);
-}
-
-async function saveEditCustomer() {
-  showToast('⏳ جاري الحفظ...');
-  // تحديث الحالة عبر approve/reject
-  const newStatus = document.getElementById('editCustStatus').value;
-  if (newStatus !== editTarget.status) {
-    if (newStatus === 'approved') await approveCustomer(editTarget.phone);
-    else if (newStatus === 'rejected') await rejectCustomer(editTarget.phone);
-  }
-  closeModal('editCustomerModal');
-  showToast('✅ تم الحفظ');
-  loadCustomers();
-}
-
-async function deleteCustomer(phone, name) {
-  if (!confirm('حذف الزبون ' + name + '؟\nهذا لا يمكن التراجع عنه!')) return;
-  try {
-    const r = await apiCall('updateCustomerStatusAdmin', { adminKey: ADMIN_PASS, phone: phone, status: 'deleted' });
-    if (r.success) { showToast('🗑️ تم الحذف'); loadCustomers(); }
-    else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ فشل: ' + e.message); }
-}
-
-// ═══════════════════════════════════
 // ORDERS
-// ═══════════════════════════════════
-let ordFilter = 'all', ordSearch = '';
-
-async function loadOrders() {
-  showLoading();
-  try {
-    const r = await apiCall('getAllOrders', { adminKey: ADMIN_PASS });
-    allOrders = r.data || [];
-    renderOrders();
-  } catch(e) { setContent('<div class="empty-state">❌ فشل التحميل</div>'); }
+let ordFilter='all',ordSearch='';
+async function loadOrders(){showLoading();try{const r=await apiCall('getAllOrders',{adminKey:ADMIN_PASS});allOrders=r.data||[];renderOrders();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
+function renderOrders(){
+  let data=allOrders;
+  if(ordFilter!=='all')data=data.filter(o=>o.status===ordFilter);
+  if(ordSearch)data=data.filter(o=>(o.orderId||'').toLowerCase().includes(ordSearch)||(o.name||'').toLowerCase().includes(ordSearch)||(o.phone||'').includes(ordSearch));
+  const c={pending:0,picked:0,delivered:0,cancelled:0};allOrders.forEach(o=>{if(c[o.status]!==undefined)c[o.status]++;});
+  const tr=allOrders.filter(o=>o.status==='delivered').reduce((s,o)=>s+(o.total||0),0);
+  setContent(`<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--yellow)">${c.pending}</div><div class="stat-label">انتظار</div></div>
+    <div class="stat-card"><div class="stat-icon">🚗</div><div class="stat-value" style="color:var(--primary)">${c.picked}</div><div class="stat-label">في الطريق</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--green)">${c.delivered}</div><div class="stat-label">تم التوصيل</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" style="color:var(--green);font-size:20px">${tr.toLocaleString()}</div><div class="stat-label">إجمالي المبيعات (د.ع)</div></div>
+  </div>
+  <div class="section-card">
+    <div class="section-head"><div class="section-title">📦 الطلبات (${allOrders.length})</div><input class="search-input" placeholder="🔍 بحث..." oninput="ordSearch=this.value.toLowerCase();renderOrders()"></div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">
+      <button class="filter-tab ${ordFilter==='all'?'active':''}" onclick="ordFilter='all';renderOrders()">الكل (${allOrders.length})</button>
+      <button class="filter-tab ${ordFilter==='pending'?'active':''}" onclick="ordFilter='pending';renderOrders()">انتظار (${c.pending})</button>
+      <button class="filter-tab ${ordFilter==='picked'?'active':''}" onclick="ordFilter='picked';renderOrders()">في الطريق (${c.picked})</button>
+      <button class="filter-tab ${ordFilter==='delivered'?'active':''}" onclick="ordFilter='delivered';renderOrders()">تم التوصيل (${c.delivered})</button>
+      <button class="filter-tab ${ordFilter==='cancelled'?'active':''}" onclick="ordFilter='cancelled';renderOrders()">ملغي (${c.cancelled})</button>
+    </div>
+    ${data.length===0?'<div class="empty-state"><div class="empty-icon">📦</div>لا توجد طلبات</div>':`
+    <table><thead><tr><th>رقم الطلب</th><th>الزبون</th><th>الهاتف</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
+    <tbody>${data.map(o=>`<tr><td><b style="color:var(--primary)">${o.orderId||'-'}</b></td>
+    <td><div style="font-weight:700">${sanitize(o.name||'-')}</div><div style="font-size:12px;color:var(--muted)">${sanitize(o.shop||'-')}</div></td>
+    <td dir="ltr">${o.phone||'-'}</td><td style="font-weight:700;color:var(--green)">${(o.total||0).toLocaleString()} د.ع</td>
+    <td>${orderBadge(o.status)}</td><td>${o.timestamp?new Date(o.timestamp).toLocaleDateString('ar-IQ'):'-'}</td>
+    <td><button class="action-btn btn-view" onclick="showOrderDetail('${o.orderId}')">📋 تفاصيل</button></td></tr>`).join('')}
+    </tbody></table>`}
+  </div>`);
 }
-
-function renderOrders() {
-  let data = allOrders;
-  if (ordFilter !== 'all') data = data.filter(o => o.status === ordFilter);
-  if (ordSearch) data = data.filter(o =>
-    (o.orderId||'').toLowerCase().includes(ordSearch) ||
-    (o.name||'').toLowerCase().includes(ordSearch) ||
-    (o.phone||'').includes(ordSearch)
-  );
-
-  const counts = { pending:0, picked:0, delivered:0, cancelled:0 };
-  allOrders.forEach(o => { if (counts[o.status]!==undefined) counts[o.status]++; });
-  const totalRevenue = allOrders.filter(o=>o.status==='delivered').reduce((s,o)=>s+(o.total||0),0);
-
-  setContent(`
-    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px;">
-      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-value" style="color:var(--yellow)">${counts.pending}</div><div class="stat-label">انتظار</div></div>
-      <div class="stat-card"><div class="stat-icon">🚗</div><div class="stat-value" style="color:var(--primary)">${counts.picked}</div><div class="stat-label">في الطريق</div></div>
-      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" style="color:var(--green)">${counts.delivered}</div><div class="stat-label">تم التوصيل</div></div>
-      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" style="color:var(--green);font-size:20px;">${totalRevenue.toLocaleString()}</div><div class="stat-label">إجمالي المبيعات (د.ع)</div></div>
-    </div>
-    <div class="section-card">
-      <div class="section-head">
-        <div class="section-title">📦 الطلبات (${allOrders.length})</div>
-        <input class="search-input" placeholder="🔍 بحث بالاسم أو رقم الطلب..." oninput="ordSearch=this.value.toLowerCase();renderOrders()">
-      </div>
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="filter-tab ${ordFilter==='all'?'active':''}" onclick="ordFilter='all';renderOrders()">الكل (${allOrders.length})</button>
-        <button class="filter-tab ${ordFilter==='pending'?'active':''}" onclick="ordFilter='pending';renderOrders()">انتظار (${counts.pending})</button>
-        <button class="filter-tab ${ordFilter==='picked'?'active':''}" onclick="ordFilter='picked';renderOrders()">في الطريق (${counts.picked})</button>
-        <button class="filter-tab ${ordFilter==='delivered'?'active':''}" onclick="ordFilter='delivered';renderOrders()">تم التوصيل (${counts.delivered})</button>
-        <button class="filter-tab ${ordFilter==='cancelled'?'active':''}" onclick="ordFilter='cancelled';renderOrders()">ملغي (${counts.cancelled})</button>
-      </div>
-      ${data.length===0 ? '<div class="empty-state"><div class="empty-icon">📦</div>لا توجد طلبات</div>' : `
-      <table>
-        <thead><tr><th>رقم الطلب</th><th>الزبون</th><th>الهاتف</th><th>المبلغ</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-        <tbody>${data.map(o=>`
-          <tr>
-            <td><b style="color:var(--primary)">${o.orderId||'-'}</b></td>
-            <td>
-              <div style="font-weight:700">${sanitize(o.name||'-')}</div>
-              <div style="font-size:12px;color:var(--muted)">${sanitize(o.shop||'-')}</div>
-            </td>
-            <td dir="ltr">${o.phone||'-'}</td>
-            <td style="font-weight:700;color:var(--green)">${(o.total||0).toLocaleString()} د.ع</td>
-            <td>${orderBadge(o.status)}</td>
-            <td>${o.timestamp ? new Date(o.timestamp).toLocaleDateString('ar-IQ') : '-'}</td>
-            <td>
-              <button class="action-btn btn-view" onclick="showOrderDetail('${o.orderId}')">📋 تفاصيل</button>
-            </td>
-          </tr>`).join('')}
-        </tbody>
-      </table>`}
-    </div>
-  `);
-}
-
-function orderBadge(status) {
-  const map = { pending:'badge-yellow', picked:'badge-blue', delivered:'badge-green', cancelled:'badge-red' };
-  const labels = { pending:'⏳ انتظار', picked:'🚗 في الطريق', delivered:'✅ تم التوصيل', cancelled:'❌ ملغي' };
-  return `<span class="badge ${map[status]||'badge-gray'}">${labels[status]||status}</span>`;
-}
-
-function showOrderDetail(orderId) {
-  const o = allOrders.find(x => x.orderId === orderId);
-  if (!o) return;
-  let items = [];
-  try { items = typeof o.items === 'string' ? JSON.parse(o.items) : (o.items||[]); } catch(e){}
-  document.getElementById('orderDetailTitle').textContent = '📋 طلب رقم ' + orderId;
-  document.getElementById('orderDetailContent').innerHTML = `
-    <div style="display:grid;gap:8px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">الزبون</span><b>${sanitize(o.name||'-')}</b>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">المحل</span><span>${sanitize(o.shop||'-')}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">الهاتف</span><span dir="ltr">${o.phone||'-'}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">العنوان</span><span>${sanitize(o.address||'-')}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">الحالة</span>${orderBadge(o.status)}
-      </div>
-    </div>
-    <div style="font-weight:800;margin-bottom:10px;">المنتجات:</div>
-    <div class="order-items-list">${items.map(item=>`
-      <div class="order-item-row">
-        <span>${sanitize(item.name||'')} ${item.type?'('+item.type+')':''}</span>
-        <span style="color:var(--primary)">${item.quantity||1} × ${(item.price||0).toLocaleString()} د.ع</span>
-      </div>`).join('')}
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:8px;border-top:2px solid var(--border);">
-      <span style="font-weight:800">الإجمالي</span>
-      <span style="font-weight:900;color:var(--green);font-size:18px;">${(o.total||0).toLocaleString()} د.ع</span>
-    </div>
-
-  `;
+function orderBadge(s){const m={pending:'badge-yellow',picked:'badge-blue',delivered:'badge-green',cancelled:'badge-red'};const l={pending:'⏳ انتظار',picked:'🚗 في الطريق',delivered:'✅ تم التوصيل',cancelled:'❌ ملغي'};return`<span class="badge ${m[s]||'badge-gray'}">${l[s]||s}</span>`;}
+function showOrderDetail(orderId){
+  const o=allOrders.find(x=>x.orderId===orderId);if(!o)return;
+  let items=[];try{items=typeof o.items==='string'?JSON.parse(o.items):(o.items||[]);}catch(e){}
+  document.getElementById('orderDetailTitle').textContent='📋 طلب رقم '+orderId;
+  document.getElementById('orderDetailContent').innerHTML=`<div style="display:grid;gap:8px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">الزبون</span><b>${sanitize(o.name||'-')}</b></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">المحل</span><span>${sanitize(o.shop||'-')}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">الهاتف</span><span dir="ltr">${o.phone||'-'}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">العنوان</span><span>${sanitize(o.address||'-')}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">الحالة</span>${orderBadge(o.status)}</div>
+  </div>
+  <div style="font-weight:800;margin-bottom:10px">المنتجات:</div>
+  <div>${items.map(item=>`<div class="order-item-row"><span>${sanitize(item.name||'')} ${item.type?'('+item.type+')':''}</span><span style="color:var(--primary)">${item.quantity||1} × ${(item.price||0).toLocaleString()} د.ع</span></div>`).join('')}</div>
+  <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:8px;border-top:2px solid var(--border)"><span style="font-weight:800">الإجمالي</span><span style="font-weight:900;color:var(--green);font-size:18px">${(o.total||0).toLocaleString()} د.ع</span></div>`;
   document.getElementById('orderDetailModal').classList.add('open');
 }
 
-async function updateOrder(orderId, status) {
-  if (!confirm(`تغيير حالة الطلب ${orderId} إلى "${status}"؟`)) return;
-  try {
-    const r = await apiCall('updateOrderStatus', { adminKey: ADMIN_PASS, orderId, status });
-    if (r.success) { showToast('✅ تم تحديث الطلب'); loadOrders(); }
-    else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ خطأ: ' + e.message); }
-}
-
-// ═══════════════════════════════════
 // WARRANTIES
-// ═══════════════════════════════════
-let warSearch = '';
-
-async function loadWarranties() {
-  showLoading();
-  try {
-    const r = await apiCall('getWarranties');
-    allWarranties = r.data || [];
-    renderWarranties();
-  } catch(e) { setContent('<div class="empty-state">❌ فشل التحميل</div>'); }
-}
-
-function renderWarranties() {
-  let data = allWarranties;
-  if (warSearch) data = data.filter(w =>
-    (w.name||'').toLowerCase().includes(warSearch) ||
-    (w.screenname||w.screenName||'').toLowerCase().includes(warSearch) ||
-    (w.phone||'').includes(warSearch) ||
-    (w.screencode||w.screenCode||'').toLowerCase().includes(warSearch)
-  );
-
-  const now = Date.now();
-  const active  = allWarranties.filter(w => new Date(w.expiry||w['expiry']||0).getTime() > now).length;
-  const expired = allWarranties.length - active;
-
-  setContent(`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="display:flex;gap:12px;">
-        <div class="stat-card" style="padding:14px 20px;"><div class="stat-icon">🛡️</div><div class="stat-value">${allWarranties.length}</div><div class="stat-label">إجمالي الضمانات</div></div>
-        <div class="stat-card" style="padding:14px 20px;"><div class="stat-icon" style="color:var(--green)">✅</div><div class="stat-value" style="color:var(--green)">${active}</div><div class="stat-label">ساري</div></div>
-        <div class="stat-card" style="padding:14px 20px;"><div class="stat-icon" style="color:var(--red)">❌</div><div class="stat-value" style="color:var(--red)">${expired}</div><div class="stat-label">منتهي</div></div>
-      </div>
-      <button class="refresh-btn" style="background:var(--primary);color:#fff;border-color:var(--primary);" onclick="document.getElementById('addWarrantyModal').classList.add('open');initWarrantyModal()">➕ تسجيل ضمان</button>
+let warSearch='';
+async function loadWarranties(){showLoading();try{const r=await apiCall('getWarranties');allWarranties=r.data||[];renderWarranties();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
+function renderWarranties(){
+  let data=allWarranties;
+  if(warSearch)data=data.filter(w=>(w.name||'').toLowerCase().includes(warSearch)||(w.screenname||w.screenName||'').toLowerCase().includes(warSearch)||(w.phone||'').includes(warSearch)||(w.screencode||w.screenCode||'').toLowerCase().includes(warSearch));
+  const now=Date.now(),active=allWarranties.filter(w=>new Date(w.expiry||0).getTime()>now).length,expired=allWarranties.length-active;
+  setContent(`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="stat-card" style="padding:14px 20px"><div class="stat-icon">🛡️</div><div class="stat-value">${allWarranties.length}</div><div class="stat-label">إجمالي</div></div>
+      <div class="stat-card" style="padding:14px 20px"><div class="stat-icon" style="color:var(--green)">✅</div><div class="stat-value" style="color:var(--green)">${active}</div><div class="stat-label">ساري</div></div>
+      <div class="stat-card" style="padding:14px 20px"><div class="stat-icon" style="color:var(--red)">❌</div><div class="stat-value" style="color:var(--red)">${expired}</div><div class="stat-label">منتهي</div></div>
     </div>
-    <div class="section-card">
-      <div class="section-head">
-        <div class="section-title">🛡️ سجل الضمانات</div>
-        <input class="search-input" placeholder="🔍 بحث بالاسم أو الكود..." oninput="warSearch=this.value.toLowerCase();renderWarranties()">
+    <button class="refresh-btn" style="background:var(--primary);color:#fff;border-color:var(--primary)" onclick="document.getElementById('addWarrantyModal').classList.add('open');initWarrantyModal()">➕ تسجيل ضمان</button>
+  </div>
+  <div class="section-card">
+    <div class="section-head"><div class="section-title">🛡️ سجل الضمانات</div><input class="search-input" placeholder="🔍 بحث..." oninput="warSearch=this.value.toLowerCase();renderWarranties()"></div>
+    ${data.length===0?'<div class="empty-state"><div class="empty-icon">🛡️</div>لا توجد ضمانات</div>':`
+    <table><thead><tr><th>#</th><th>الزبون</th><th>الهاتف</th><th>الكود</th><th>المنتج</th><th>النوع</th><th>البدء</th><th>الانتهاء</th><th>الحالة</th></tr></thead>
+    <tbody>${data.map((w,i)=>{const exp=w.expiry||'',isActive=exp&&new Date(exp).getTime()>now,name=w.screenname||w.screenName||'-',code=w.screencode||w.screenCode||'-';
+      return`<tr><td style="color:var(--muted)">${i+1}</td><td><b>${sanitize(w.name||'-')}</b></td><td dir="ltr">${w.phone||'-'}</td>
+      <td><code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:13px">${sanitize(code)}</code></td>
+      <td>${sanitize(name)}</td><td><span class="badge badge-blue">${w.type||'-'}</span></td>
+      <td>${w.start_date||'-'}</td><td>${exp||'-'}</td>
+      <td>${isActive?'<span class="badge badge-green">✅ ساري</span>':'<span class="badge badge-red">❌ منتهي</span>'}</td></tr>`;}).join('')}
+    </tbody></table>`}
+  </div>`);
+}
+function initWarrantyModal(){const today=new Date().toISOString().split('T')[0];['wName','wInvoice','wCode','wScreen','wPhone'].forEach(id=>document.getElementById(id).value='');document.getElementById('wStart').value=today;document.getElementById('wType').value='screen';document.getElementById('wStatus').textContent='';calcWarrantyEnd();}
+document.addEventListener('DOMContentLoaded',function(){const wt=document.getElementById('wType'),ws=document.getElementById('wStart');if(wt)wt.addEventListener('change',calcWarrantyEnd);if(ws)ws.addEventListener('change',calcWarrantyEnd);});
+function calcWarrantyEnd(){const start=document.getElementById('wStart').value;if(!start)return;const days=document.getElementById('wType').value==='battery'?365:30;const end=new Date(start);end.setDate(end.getDate()+days);document.getElementById('wEnd').value=end.toISOString().split('T')[0];}
+async function saveNewWarranty(){
+  const name=document.getElementById('wName').value.trim(),invoice=document.getElementById('wInvoice').value.trim(),code=document.getElementById('wCode').value.trim(),screen=document.getElementById('wScreen').value.trim(),phone=document.getElementById('wPhone').value.trim(),type=document.getElementById('wType').value,start=document.getElementById('wStart').value,end=document.getElementById('wEnd').value,status=document.getElementById('wStatus');
+  if(!name||!phone||!code||!start){status.innerHTML='<span style="color:var(--red)">⚠️ أكمل الحقول المطلوبة</span>';return;}
+  status.innerHTML='<span style="color:var(--muted)">⏳ جاري الحفظ...</span>';
+  try{const r=await apiCall('addWarranty',{name,invoice,screenCode:code,screenName:screen,phone,type,start,end});if(r.success){status.innerHTML='<span style="color:var(--green)">✅ تم تسجيل الضمان</span>';setTimeout(()=>{closeModal('addWarrantyModal');loadWarranties();},1200);}else status.innerHTML='<span style="color:var(--red)">❌ '+(r.error||'فشل')+'</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
+
+// PRODUCTS
+let prodSearch='',prodSheetFilter='all';
+async function loadProducts(){showLoading();try{const r=await apiCall('getAllProducts',{adminKey:ADMIN_PASS});allProducts=r.data||[];renderProducts();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل: '+e.message+'</div>');}}
+function renderProducts(){
+  const sheets=['all',...new Set(allProducts.map(p=>p.sheet||p.sheetName||'').filter(Boolean))];
+  let data=allProducts;
+  if(prodSheetFilter!=='all')data=data.filter(p=>(p.sheet||p.sheetName||'')===prodSheetFilter);
+  if(prodSearch)data=data.filter(p=>(p.name||'').toLowerCase().includes(prodSearch)||(p.brand||'').toLowerCase().includes(prodSearch));
+  const withImg=allProducts.filter(p=>p.image_url).length;
+  setContent(`<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+    <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">${allProducts.length}</div><div class="stat-label">إجمالي المنتجات</div></div>
+    <div class="stat-card"><div class="stat-icon" style="color:var(--green)">🖼️</div><div class="stat-value" style="color:var(--green)">${withImg}</div><div class="stat-label">لديها صورة</div></div>
+    <div class="stat-card"><div class="stat-icon" style="color:var(--yellow)">⚠️</div><div class="stat-value" style="color:var(--yellow)">${allProducts.length-withImg}</div><div class="stat-label">بدون صورة</div></div>
+  </div>
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-title">🖼️ المنتجات</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="refresh-btn" style="background:var(--purple);color:#fff;border-color:var(--purple)" onclick="openBulkImgModal()">🖼️ صور جماعية</button>
+        <input class="search-input" placeholder="🔍 بحث بالاسم..." oninput="prodSearch=this.value.toLowerCase();renderProducts()">
       </div>
-      ${data.length===0 ? '<div class="empty-state"><div class="empty-icon">🛡️</div>لا توجد ضمانات</div>' : `
-      <table>
-        <thead><tr><th>#</th><th>الزبون</th><th>الهاتف</th><th>الكود</th><th>المنتج</th><th>النوع</th><th>تاريخ البدء</th><th>الانتهاء</th><th>الحالة</th></tr></thead>
-        <tbody>${data.map((w,i)=>{
-          const exp = w.expiry || w['expiry'] || '';
-          const isActive = exp && new Date(exp).getTime() > now;
-          const name = w.screenname || w.screenName || w['screenname'] || '-';
-          const code = w.screencode || w.screenCode || w['screencode'] || '-';
-          return `<tr>
-            <td style="color:var(--muted)">${i+1}</td>
-            <td><b>${sanitize(w.name||'-')}</b></td>
-            <td dir="ltr">${w.phone||'-'}</td>
-            <td><code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:13px">${sanitize(code)}</code></td>
-            <td>${sanitize(name)}</td>
-            <td><span class="badge badge-blue">${w.type||'-'}</span></td>
-            <td>${w.start_date||w['start_date']||'-'}</td>
-            <td>${exp||'-'}</td>
-            <td>${isActive ? '<span class="badge badge-green">✅ ساري</span>' : '<span class="badge badge-red">❌ منتهي</span>'}</td>
-          </tr>`;}).join('')}
-        </tbody>
-      </table>`}
     </div>
-  `);
-}
-
-function initWarrantyModal() {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('wStart').value = today;
-  document.getElementById('wName').value = '';
-  document.getElementById('wInvoice').value = '';
-  document.getElementById('wCode').value = '';
-  document.getElementById('wScreen').value = '';
-  document.getElementById('wPhone').value = '';
-  document.getElementById('wType').value = 'screen';
-  document.getElementById('wStatus').textContent = '';
-  calcWarrantyEnd();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  const wType = document.getElementById('wType');
-  const wStart = document.getElementById('wStart');
-  if(wType) wType.addEventListener('change', calcWarrantyEnd);
-  if(wStart) wStart.addEventListener('change', calcWarrantyEnd);
-});
-
-function calcWarrantyEnd() {
-  const start = document.getElementById('wStart').value;
-  const type  = document.getElementById('wType').value;
-  if (!start) return;
-  const days  = type === 'battery' ? 365 : 30;
-  const end   = new Date(start);
-  end.setDate(end.getDate() + days);
-  document.getElementById('wEnd').value = end.toISOString().split('T')[0];
-}
-
-async function saveNewWarranty() {
-  const name   = document.getElementById('wName').value.trim();
-  const invoice= document.getElementById('wInvoice').value.trim();
-  const code   = document.getElementById('wCode').value.trim();
-  const screen = document.getElementById('wScreen').value.trim();
-  const phone  = document.getElementById('wPhone').value.trim();
-  const type   = document.getElementById('wType').value;
-  const start  = document.getElementById('wStart').value;
-  const end    = document.getElementById('wEnd').value;
-  const status = document.getElementById('wStatus');
-
-  if (!name||!phone||!code||!start) { status.innerHTML = '<span style="color:var(--red)">⚠️ أكمل الحقول المطلوبة</span>'; return; }
-
-  status.innerHTML = '<span style="color:var(--muted)">⏳ جاري الحفظ...</span>';
-  try {
-    const r = await apiCall('addWarranty', { name, invoice, screenCode:code, screenName:screen, phone, type, start, end });
-    if (r.success) {
-      status.innerHTML = '<span style="color:var(--green)">✅ تم تسجيل الضمان وإرسال رسالة واتساب</span>';
-      setTimeout(() => { closeModal('addWarrantyModal'); loadWarranties(); }, 1200);
-    } else {
-      status.innerHTML = '<span style="color:var(--red)">❌ ' + (r.error||'فشل') + '</span>';
-    }
-  } catch(e) { status.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>'; }
-}
-
-// ═══════════════════════════════════
-// PRODUCTS (صور المنتجات)
-// ═══════════════════════════════════
-let allProducts = [], prodSearch = '', prodSheetFilter = 'all';
-
-async function loadProducts() {
-  showLoading();
-  try {
-    const r = await apiCall('getAllProducts', { adminKey: ADMIN_PASS });
-    allProducts = r.data || [];
-    renderProducts();
-  } catch(e) {
-    setContent('<div class="empty-state">❌ فشل التحميل: ' + e.message + '</div>');
-  }
-}
-
-function renderProducts() {
-  const sheets = ['all', ...new Set(allProducts.map(p => p.sheet||p.sheetName||'').filter(Boolean))];
-  let data = allProducts;
-  if (prodSheetFilter !== 'all') data = data.filter(p => (p.sheet||p.sheetName||'') === prodSheetFilter);
-  if (prodSearch) data = data.filter(p =>
-    (p.name||'').toLowerCase().includes(prodSearch) ||
-    (p.brand||'').toLowerCase().includes(prodSearch)
-  );
-
-  const withImg    = allProducts.filter(p => p.image_url).length;
-  const withoutImg = allProducts.length - withImg;
-
-  setContent(`
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
-      <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value">${allProducts.length}</div><div class="stat-label">إجمالي المنتجات</div></div>
-      <div class="stat-card"><div class="stat-icon" style="color:var(--green)">🖼️</div><div class="stat-value" style="color:var(--green)">${withImg}</div><div class="stat-label">لديها صورة</div></div>
-      <div class="stat-card"><div class="stat-icon" style="color:var(--yellow)">⚠️</div><div class="stat-value" style="color:var(--yellow)">${withoutImg}</div><div class="stat-label">بدون صورة</div></div>
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap">
+      ${sheets.map(s=>`<button class="filter-tab ${prodSheetFilter===s?'active':''}" onclick="prodSheetFilter='${s}';renderProducts()">${s==='all'?'الكل':s}</button>`).join('')}
     </div>
-    <div class="section-card">
-      <div class="section-head">
-        <div class="section-title">🖼️ المنتجات</div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="refresh-btn" style="background:var(--purple);color:#fff;border-color:var(--purple);" onclick="openBulkImgModal()">🖼️ صور جماعية</button>
-          <input class="search-input" placeholder="🔍 بحث بالاسم..." oninput="prodSearch=this.value.toLowerCase();renderProducts()">
+    ${data.length===0?'<div class="empty-state"><div class="empty-icon">📦</div>لا توجد منتجات</div>':`
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;padding:16px">
+      ${data.map(p=>{const hasImg=!!p.image_url;return`
+      <div style="background:var(--card);border:1.5px solid ${hasImg?'var(--border)':'#F59E0B40'};border-radius:12px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:130px;background:#1a2535;display:flex;align-items:center;justify-content:center">
+          ${hasImg?`<img src="${p.image_url}" style="max-width:100%;max-height:130px;object-fit:contain" onerror="this.style.display='none'">`:`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">📷<br>بدون صورة</div>`}
         </div>
+        <div style="padding:10px">
+          <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px">${sanitize(p.name||'-')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${sanitize(p.sheet||p.sheetName||'-')}</div>
+          <div style="display:flex;gap:6px">
+            <button class="action-btn btn-edit" style="flex:1;font-size:12px;padding:5px 4px" onclick='openProductImgModal(${JSON.stringify(p)})'>📷 ${hasImg?'تغيير':'إضافة'}</button>
+            ${hasImg?`<button class="action-btn btn-delete" style="font-size:12px;padding:5px 8px" onclick="deleteProductImg('${sanitize(p.name||'')}','${sanitize(p.sheet||p.sheetName||'')}')">🗑️</button>`:''}
+          </div>
+        </div>
+      </div>`;}).join('')}
+    </div>`}
+  </div>`);
+}
+
+let _prodImgTarget=null;
+function openProductImgModal(p){
+  _prodImgTarget=p;
+  let modal=document.getElementById('productImgModal');
+  if(!modal){
+    modal=document.createElement('div');modal.className='modal-overlay';modal.id='productImgModal';
+    modal.innerHTML=`<div class="modal">
+      <div class="modal-title">📷 تعديل صورة المنتج</div>
+      <div id="prodImgName" style="font-size:14px;color:var(--muted);margin-bottom:14px"></div>
+      <div style="height:140px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <img id="prodImgPreview" style="max-width:100%;max-height:140px;object-fit:contain;display:none">
+        <div id="prodImgEmpty" style="color:var(--muted);font-size:13px">لا توجد صورة حالية</div>
       </div>
-      <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;">
-        ${sheets.map(s=>`<button class="filter-tab ${prodSheetFilter===s?'active':''}" onclick="prodSheetFilter='${s}';renderProducts()">${s==='all'?'الكل':s}</button>`).join('')}
+      <div class="modal-row"><div class="modal-label">رابط الصورة</div><input class="modal-input" id="prodImgUrl" placeholder="https://..." oninput="previewProdImg()"></div>
+      <div style="text-align:center;color:var(--muted);font-size:13px;margin:8px 0">— أو —</div>
+      <div class="modal-row"><div class="modal-label">رفع صورة من الجهاز</div>
+        <input type="file" accept="image/*" id="prodImgFile" style="display:none" onchange="uploadProdImgFile()">
+        <button class="action-btn btn-view" style="width:100%;padding:10px;font-size:14px" onclick="document.getElementById('prodImgFile').click()">📁 اختيار صورة</button>
+        <div id="prodImgUploadStatus" style="font-size:13px;text-align:center;margin-top:6px;min-height:18px;color:var(--muted)"></div>
       </div>
-      ${data.length===0 ? '<div class="empty-state"><div class="empty-icon">📦</div>لا توجد منتجات</div>' : `
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;padding:16px;">
-        ${data.map(p => {
-          const hasImg = !!p.image_url;
-          const safe = sanitize(p.name||'-');
-          return `
-          <div style="background:var(--card);border:1.5px solid ${hasImg?'var(--border)':'#F59E0B40'};border-radius:12px;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="height:130px;background:#1a2535;display:flex;align-items:center;justify-content:center;position:relative;">
-              ${hasImg
-                ? `<img src="${p.image_url}" style="max-width:100%;max-height:130px;object-fit:contain;" onerror="this.style.display='none'">`
-                : `<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px;">📷<br>بدون صورة</div>`}
-            </div>
-            <div style="padding:10px;">
-              <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px;">${safe}</div>
-              <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">${sanitize(p.sheet||p.sheetName||'-')}</div>
-              <div style="display:flex;gap:6px;">
-                <button class="action-btn btn-edit" style="flex:1;font-size:12px;padding:5px 4px;" onclick="openProductImgModal(${JSON.stringify(p).replace(/'/g,'&#39;').replace(/"/g,'&quot;')})">📷 ${hasImg?'تغيير':'إضافة'}</button>
-                ${hasImg ? `<button class="action-btn btn-delete" style="font-size:12px;padding:5px 8px;" onclick="deleteProductImg('${sanitize(p.name||'')}','${sanitize(p.sheet||p.sheetName||'')}')">🗑️</button>` : ''}
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`}
-    </div>
-  `);
-}
-
-// modal state
-let _prodImgTarget = null;
-
-function openProductImgModal(p) {
-  _prodImgTarget = p;
-  // build modal dynamically
-  let modal = document.getElementById('productImgModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.id = 'productImgModal';
-    modal.innerHTML = `
-      <div class="modal">
-        <div class="modal-title">📷 تعديل صورة المنتج</div>
-        <div id="prodImgName" style="font-size:14px;color:var(--muted);margin-bottom:14px;"></div>
-        <div style="height:140px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;">
-          <img id="prodImgPreview" style="max-width:100%;max-height:140px;object-fit:contain;display:none;">
-          <div id="prodImgEmpty" style="color:var(--muted);font-size:13px;">لا توجد صورة حالية</div>
-        </div>
-        <!-- URL -->
-        <div class="modal-row">
-          <div class="modal-label">رابط الصورة (ImgBB / Drive / أي رابط)</div>
-          <input class="modal-input" id="prodImgUrl" placeholder="https://..." oninput="previewProdImg()">
-        </div>
-        <div style="text-align:center;color:var(--muted);font-size:13px;margin:8px 0;">— أو —</div>
-        <!-- Upload file -->
-        <div class="modal-row">
-          <div class="modal-label">رفع صورة من الجهاز</div>
-          <input type="file" accept="image/*" id="prodImgFile" style="display:none" onchange="uploadProdImgFile()">
-          <button class="action-btn btn-view" style="width:100%;padding:10px;font-size:14px;" onclick="document.getElementById('prodImgFile').click()">📁 اختيار صورة</button>
-          <div id="prodImgUploadStatus" style="font-size:13px;text-align:center;margin-top:6px;min-height:18px;color:var(--muted);"></div>
-        </div>
-        <div class="modal-btns">
-          <button class="modal-btn modal-btn-cancel" onclick="closeModal('productImgModal')">إلغاء</button>
-          <button class="modal-btn modal-btn-primary" onclick="saveProdImg()">💾 حفظ الصورة</button>
-        </div>
-      </div>`;
-    modal.addEventListener('click', e => { if(e.target===modal) modal.classList.remove('open'); });
+      <div class="modal-btns">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal('productImgModal')">إلغاء</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveProdImg()">💾 حفظ الصورة</button>
+      </div>
+    </div>`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
     document.body.appendChild(modal);
   }
-
-  document.getElementById('prodImgName').textContent = (p.name||'-') + ' — ' + (p.sheet||p.sheetName||'');
-  document.getElementById('prodImgUrl').value = p.image_url || '';
-  document.getElementById('prodImgUploadStatus').textContent = '';
+  document.getElementById('prodImgName').textContent=(p.name||'-')+' — '+(p.sheet||p.sheetName||'');
+  document.getElementById('prodImgUrl').value=p.image_url||'';
+  document.getElementById('prodImgUploadStatus').textContent='';
   previewProdImg();
   modal.classList.add('open');
 }
+function previewProdImg(){const url=document.getElementById('prodImgUrl').value.trim(),img=document.getElementById('prodImgPreview'),empty=document.getElementById('prodImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
+async function uploadProdImgFile(){const file=document.getElementById('prodImgFile').files[0];if(!file)return;const status=document.getElementById('prodImgUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('prodImgUrl').value=d.data.url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 
-function previewProdImg() {
-  const url = document.getElementById('prodImgUrl').value.trim();
-  const img  = document.getElementById('prodImgPreview');
-  const empty= document.getElementById('prodImgEmpty');
-  if (url) { img.src=url; img.style.display=''; empty.style.display='none'; }
-  else { img.style.display='none'; empty.style.display=''; }
-}
+// ══════════════════════════════════════════════
+// saveProdImg — نفس الاسم + نفس الشيت فقط
+// ══════════════════════════════════════════════
+async function saveProdImg(){
+  const url=document.getElementById('prodImgUrl').value.trim();
+  if(!_prodImgTarget)return;
 
-async function uploadProdImgFile() {
-  const file = document.getElementById('prodImgFile').files[0];
-  if (!file) return;
-  const status = document.getElementById('prodImgUploadStatus');
-  status.textContent = '⏳ جاري الرفع إلى ImgBB...';
-  try {
-    const fd = new FormData();
-    fd.append('key', IMGBB_KEY);
-    fd.append('image', file);
-    const r = await fetch('https://api.imgbb.com/1/upload', { method:'POST', body: fd });
-    const d = await r.json();
-    if (d.success) {
-      document.getElementById('prodImgUrl').value = d.data.url;
-      previewProdImg();
-      status.innerHTML = '<span style="color:var(--green)">✅ تم الرفع بنجاح</span>';
-    } else { status.innerHTML = '<span style="color:var(--red)">❌ فشل الرفع</span>'; }
-  } catch(e) { status.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>'; }
-}
+  // نفس الاسم ونفس الشيت فقط — لا يتجاوز الى شيتات أخرى
+  const targetSheet=_prodImgTarget.sheet||_prodImgTarget.sheetName;
+  const sameNameProducts=allProducts.filter(x=>
+    x.name===_prodImgTarget.name &&
+    (x.sheet||x.sheetName)===targetSheet
+  );
 
-async function saveProdImg() {
-  const url = document.getElementById('prodImgUrl').value.trim();
-  if (!_prodImgTarget) return;
   showToast('⏳ جاري الحفظ...');
-  try {
-    const r = await apiCall('updateImageUrl', {
-      sheetName: _prodImgTarget.sheet || _prodImgTarget.sheetName,
-      rowName:   _prodImgTarget.name,
-      imageUrl:  url
-    });
-    if (r.success) {
-      // update local data
-      const p = allProducts.find(x => x.name === _prodImgTarget.name && (x.sheet||x.sheetName) === (_prodImgTarget.sheet||_prodImgTarget.sheetName));
-      if (p) p.image_url = url;
-      closeModal('productImgModal');
-      showToast('✅ تم حفظ الصورة');
-      renderProducts();
-    } else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ ' + e.message); }
+  try{
+    let done=0,failed=0;
+    for(const p of sameNameProducts){
+      const r=await apiCall('updateImageUrl',{sheetName:p.sheet||p.sheetName,rowName:p.name,imageUrl:url});
+      if(r.success){p.image_url=url;done++;}else failed++;
+    }
+    closeModal('productImgModal');
+    showToast(failed===0?`✅ تم حفظ الصورة لـ ${done} منتج`:`✅ ${done} نجح | ❌ ${failed} فشل`);
+    renderProducts();
+  }catch(e){showToast('❌ '+e.message);}
 }
 
-async function deleteProductImg(name, sheet) {
-  if (!confirm('حذف صورة ' + name + '؟')) return;
-  showToast('⏳ جاري الحذف...');
-  try {
-    const r = await apiCall('updateImageUrl', { sheetName: sheet, rowName: name, imageUrl: '' });
-    if (r.success) {
-      const p = allProducts.find(x => x.name===name && (x.sheet||x.sheetName)===sheet);
-      if (p) p.image_url = '';
-      showToast('✅ تم حذف الصورة');
-      renderProducts();
-    } else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ ' + e.message); }
-}
+async function deleteProductImg(name,sheet){if(!confirm('حذف صورة '+name+'؟'))return;showToast('⏳ جاري الحذف...');try{const r=await apiCall('updateImageUrl',{sheetName:sheet,rowName:name,imageUrl:''});if(r.success){const p=allProducts.find(x=>x.name===name&&(x.sheet||x.sheetName)===sheet);if(p)p.image_url='';showToast('✅ تم الحذف');renderProducts();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
 
-// ═══════════════════════════════════
 // BULK IMAGE
-// ═══════════════════════════════════
-
-// ═══════════════════════════════════
-// IMAGE SEARCH (maxbhi / Google Images)
-// ═══════════════════════════════════
-let _imgSearchTarget = null;
-
-function openImgSearch(name, sheet) {
-  _imgSearchTarget = allProducts.find(p => p.name === name && p.sheet === sheet);
-  document.getElementById('imgSearchTitle').textContent = '🔍 ' + name;
-  document.getElementById('imgSearchQuery').value = name;
-  document.getElementById('imgSearchResults').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">اضغط بحث للبدء</div>';
-  document.getElementById('imgSearchModal').classList.add('open');
-  searchImages();
+function openBulkImgModal(){document.getElementById('bulkSheet').value='';document.getElementById('bulkPrefix').value='';document.getElementById('bulkImgUrl').value='';document.getElementById('bulkUploadStatus').textContent='';document.getElementById('bulkSaveStatus').textContent='';document.getElementById('bulkImgPreview').style.display='none';document.getElementById('bulkImgEmpty').style.display='';document.getElementById('bulkPreview').innerHTML='اختر شيت واكتب فلتر لمعاينة المنتجات';document.getElementById('bulkImgModal').classList.add('open');}
+function filterBulkPreview(){
+  const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),prev=document.getElementById('bulkPreview');
+  if(!prefix&&!sheet){prev.innerHTML='<span style="color:var(--muted)">اختر شيت واكتب فلتر</span>';return;}
+  const matches=allProducts.filter(p=>{if(sheet&&p.sheet!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
+  if(!matches.length){prev.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
+  prev.innerHTML=`<div style="color:var(--green);margin-bottom:6px;font-weight:700">✅ ${matches.length} منتج</div>`+matches.slice(0,20).map(p=>`<div style="padding:2px 0;border-bottom:1px solid var(--border)">${p.name} <span style="color:var(--muted);font-size:11px">(${p.sheet})</span></div>`).join('')+(matches.length>20?`<div style="color:var(--muted);margin-top:4px">و ${matches.length-20} أخرى...</div>`:'');
+}
+function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
+async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
+async function saveBulkImg(){
+  const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
+  if(!prefix&&!sheet){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
+  if(!url){status.innerHTML='<span style="color:var(--red)">⚠️ أضف صورة</span>';return;}
+  const matches=allProducts.filter(p=>{if(sheet&&p.sheet!==sheet)return false;if(prefix&&!(p.name||'').toLowerCase().includes(prefix))return false;return true;});
+  if(!matches.length){status.innerHTML='<span style="color:var(--red)">❌ لا توجد منتجات</span>';return;}
+  status.innerHTML=`<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
+  let done=0,failed=0;
+  for(const p of matches){try{const r=await apiCall('updateImageUrl',{sheetName:p.sheet,rowName:p.name,imageUrl:url});if(r.success){p.image_url=url;done++;}else failed++;}catch(e){failed++;}status.innerHTML=`<span style="color:var(--muted)">⏳ ${done+failed}/${matches.length}...</span>`;}
+  if(failed===0){status.innerHTML=`<span style="color:var(--green)">✅ تم تحديث ${done} منتج</span>`;setTimeout(()=>{closeModal('bulkImgModal');renderProducts();},1500);}
+  else status.innerHTML=`<span style="color:var(--yellow)">✅ ${done} نجح | ❌ ${failed} فشل</span>`;
 }
 
-async function searchImages() {
-  const query = document.getElementById('imgSearchQuery').value.trim();
-  if (!query) return;
-  const resultsDiv = document.getElementById('imgSearchResults');
-  const maxbhiUrl  = `https://www.maxbhi.com/search?q=${encodeURIComponent(query)}`;
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function sanitize(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  // افتح maxbhi بتاب جديد تلقائياً
-  window.open(maxbhiUrl, '_blank');
-
-  resultsDiv.innerHTML = `
-    <div style="grid-column:1/-1;">
-      <div style="background:var(--card);border-radius:12px;padding:16px;margin-bottom:14px;text-align:center;">
-        <div style="font-size:32px;margin-bottom:8px;">🛒</div>
-        <div style="font-weight:800;font-size:15px;margin-bottom:4px;">فُتح maxbhi.com بتاب جديد</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">ابحث عن المنتج واتبع الخطوات:</div>
-        <div style="text-align:right;font-size:13px;line-height:2.2;color:var(--text);">
-          1️⃣ افتح الصورة اللي تريدها<br>
-          2️⃣ اضغط عليها بزر اليمين<br>
-          3️⃣ اختر <b>"نسخ عنوان الصورة"</b><br>
-          4️⃣ ارجع هنا والصق الرابط 👇
-        </div>
-        <button class="action-btn btn-view" style="margin-top:10px;padding:8px 20px;" onclick="window.open('${maxbhiUrl}','_blank')">🔄 افتح maxbhi مجدداً</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <input class="modal-input" id="imgSearchManualUrl" placeholder="الصق رابط الصورة هنا..." style="flex:1;" oninput="previewSearchImg()">
-        <button class="action-btn btn-approve" style="padding:8px 14px;white-space:nowrap;" onclick="saveImgFromSearch()">💾 حفظ</button>
-      </div>
-      <div id="imgSearchPreview" style="height:120px;background:var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-        <span style="color:var(--muted);font-size:13px;">معاينة الصورة</span>
-      </div>
-    </div>
-  `;
-}
-
-function previewSearchImg() {
-  const url = document.getElementById('imgSearchManualUrl').value.trim();
-  const prev = document.getElementById('imgSearchPreview');
-  if (url) {
-    prev.innerHTML = `<img src="${url}" style="max-width:100%;max-height:100px;object-fit:contain;border-radius:8px;" onerror="this.parentElement.innerHTML='<span style=color:var(--red)>❌ رابط غير صحيح</span>'">`;
-  } else {
-    prev.innerHTML = '<span style="color:var(--muted);font-size:13px;">معاينة الصورة</span>';
-  }
-}
-
-async function saveImgFromSearch() {
-  const url = document.getElementById('imgSearchManualUrl').value.trim();
-  if (!url) { showToast('⚠️ أضف رابط الصورة'); return; }
-  if (!_imgSearchTarget) { showToast('❌ المنتج غير موجود'); return; }
-  showToast('⏳ جاري الحفظ...');
-  try {
-    const r = await apiCall('updateImageUrl', {
-      sheetName: _imgSearchTarget.sheet,
-      rowName:   _imgSearchTarget.name,
-      imageUrl:  url
-    });
-    if (r.success) {
-      _imgSearchTarget.image_url = url;
-      showToast('✅ تم حفظ الصورة');
-      closeModal('imgSearchModal');
-      renderProducts();
-    } else showToast('❌ ' + (r.error||'فشل'));
-  } catch(e) { showToast('❌ ' + e.message); }
-}
-
-function openBulkImgModal() {
-  document.getElementById('bulkSheet').value = '';
-  document.getElementById('bulkPrefix').value = '';
-  document.getElementById('bulkImgUrl').value = '';
-  document.getElementById('bulkUploadStatus').textContent = '';
-  document.getElementById('bulkSaveStatus').textContent = '';
-  document.getElementById('bulkImgPreview').style.display = 'none';
-  document.getElementById('bulkImgEmpty').style.display = '';
-  document.getElementById('bulkPreview').innerHTML = 'اختر فلتر لمعاينة المنتجات';
-  // عبّي قائمة الأنواع من allProducts
-  const types = [...new Set(allProducts.map(p => p.type||'').filter(Boolean))].sort();
-  const sel = document.getElementById('bulkType');
-  sel.innerHTML = '<option value="">-- كل الأنواع --</option>' +
-    types.map(t => `<option value="${t}">${t}</option>`).join('');
-  document.getElementById('bulkImgModal').classList.add('open');
-}
-
-function filterBulkPreview() {
-  const sheet  = document.getElementById('bulkSheet').value;
-  const prefix = document.getElementById('bulkPrefix').value.trim().toLowerCase();
-  const type   = document.getElementById('bulkType').value;
-  const prev   = document.getElementById('bulkPreview');
-
-  if (!prefix && !type && !sheet) {
-    prev.innerHTML = '<span style="color:var(--muted)">اختر فلتر لمعاينة المنتجات</span>';
-    return;
-  }
-
-  const matches = allProducts.filter(p => {
-    if (sheet && p.sheet !== sheet) return false;
-    if (prefix && !(p.name||'').toLowerCase().includes(prefix)) return false;
-    if (type   && (p.type||'') !== type) return false;
-    return true;
-  });
-
-  if (!matches.length) { prev.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات تطابق</span>'; return; }
-  prev.innerHTML = `<div style="color:var(--green);margin-bottom:6px;font-weight:700;">✅ ${matches.length} منتج سيتغير</div>` +
-    matches.slice(0,20).map(p => `<div style="padding:2px 0;border-bottom:1px solid var(--border)">
-      ${p.name}
-      ${p.type ? `<span style="color:var(--purple);font-size:11px;margin-right:4px;">${p.type}</span>` : ''}
-      <span style="color:var(--muted);font-size:11px;">(${p.sheet})</span>
-    </div>`).join('') +
-    (matches.length > 20 ? `<div style="color:var(--muted);margin-top:4px;">و ${matches.length-20} أخرى...</div>` : '');
-}
-
-function loadBulkPrefixes() { filterBulkPreview(); }
-
-function previewBulkImg() {
-  const url = document.getElementById('bulkImgUrl').value.trim();
-  const img  = document.getElementById('bulkImgPreview');
-  const empty= document.getElementById('bulkImgEmpty');
-  if (url) { img.src=url; img.style.display=''; empty.style.display='none'; }
-  else { img.style.display='none'; empty.style.display=''; }
-}
-
-async function uploadBulkImgFile() {
-  const file = document.getElementById('bulkImgFile').files[0];
-  if (!file) return;
-  const status = document.getElementById('bulkUploadStatus');
-  status.textContent = '⏳ جاري الرفع...';
-  try {
-    const fd = new FormData();
-    fd.append('key', IMGBB_KEY);
-    fd.append('image', file);
-    const r = await fetch('https://api.imgbb.com/1/upload', { method:'POST', body: fd });
-    const d = await r.json();
-    if (d.success) {
-      document.getElementById('bulkImgUrl').value = d.data.url;
-      previewBulkImg();
-      status.innerHTML = '<span style="color:var(--green)">✅ تم الرفع</span>';
-    } else { status.innerHTML = '<span style="color:var(--red)">❌ فشل الرفع</span>'; }
-  } catch(e) { status.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>'; }
-}
-
-async function saveBulkImg() {
-  const sheet  = document.getElementById('bulkSheet').value;
-  const prefix = document.getElementById('bulkPrefix').value.trim().toLowerCase();
-  const url    = document.getElementById('bulkImgUrl').value.trim();
-  const status = document.getElementById('bulkSaveStatus');
-
-  const selectedType = document.getElementById('bulkType').value;
-  if (!prefix && !selectedType && !sheet) { status.innerHTML = '<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>'; return; }
-  if (!url) { status.innerHTML = '<span style="color:var(--red)">⚠️ أضف صورة</span>'; return; }
-
-  const matches = allProducts.filter(p => {
-    if (sheet && p.sheet !== sheet) return false;
-    if (prefix && !(p.name||'').toLowerCase().includes(prefix)) return false;
-    if (selectedType && (p.type||'') !== selectedType) return false;
-    return true;
-  });
-  if (!matches.length) { status.innerHTML = '<span style="color:var(--red)">❌ لا توجد منتجات</span>'; return; }
-
-  status.innerHTML = `<span style="color:var(--muted)">⏳ جاري التحديث (${matches.length} منتج)...</span>`;
-
-  let done = 0, failed = 0;
-  // batch — نرسلهم متتابعين
-  for (const p of matches) {
-    try {
-      const r = await apiCall('updateImageUrl', {
-        sheetName: p.sheet,
-        rowName:   p.name,
-        imageUrl:  url
-      });
-      if (r.success) { p.image_url = url; done++; }
-      else failed++;
-    } catch(e) { failed++; }
-    status.innerHTML = `<span style="color:var(--muted)">⏳ ${done+failed}/${matches.length}...</span>`;
-  }
-
-  if (failed === 0) {
-    status.innerHTML = `<span style="color:var(--green)">✅ تم تحديث ${done} منتج بنجاح</span>`;
-    setTimeout(() => { closeModal('bulkImgModal'); renderProducts(); }, 1500);
-  } else {
-    status.innerHTML = `<span style="color:var(--yellow)">✅ ${done} نجح | ❌ ${failed} فشل</span>`;
-  }
-}
-
-// ═══════════════════════════════════
-// UTILS
-// ═══════════════════════════════════
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function sanitize(str) {
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// تحقق تلقائي عند فتح الصفحة
-(function checkAutoLogin() {
-  const saved = localStorage.getItem('amwaj_admin_auth');
-  if (saved === ADMIN_PASS) {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    startClock();
-    showPage('dashboard');
-  }
-})();
-
-// Close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', function(e) {
-    if (e.target === m) m.classList.remove('open');
-  });
-});
-
-// Enter to login
-document.addEventListener('keyup', function(e) {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
-});
+(function(){const saved=localStorage.getItem('amwaj_admin_auth');if(saved===ADMIN_PASS){document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}})();
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');}));
+document.addEventListener('keyup',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));});
 </script>
 </body>
 </html>
