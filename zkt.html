@@ -115,7 +115,22 @@ tr:hover td{background:var(--surface2);}
 .toast.error{border-color:var(--red);color:var(--red);}
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-.empty{text-align:center;padding:50px 20px;color:var(--text2);}
+.badge.friday{background:rgba(101,109,118,.12);color:var(--text2);}
+
+/* emp shifts table */
+.emp-shifts-table{width:100%;border-collapse:collapse;font-size:13px;}
+.emp-shifts-table th{padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text2);text-align:right;}
+.emp-shifts-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.emp-shifts-table tr:last-child td{border-bottom:none;}
+.emp-shifts-table input[type=time]{width:90px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'Cairo',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.emp-shifts-table input[type=time]:focus{border-color:var(--accent);}
+.emp-shifts-table input[type=time].custom{border-color:var(--accent);background:rgba(0,150,199,.07);}
+.emp-shift-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2);}
+.emp-shift-toggle input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer;}
+
+@media(max-width:768px){
+  .emp-shifts-table input[type=time]{width:75px;font-size:11px;}
+}
 .empty-icon{font-size:44px;margin-bottom:10px;}
 .loading{display:flex;align-items:center;justify-content:center;padding:50px;gap:10px;color:var(--text2);}
 .spinner{width:22px;height:22px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
@@ -289,7 +304,15 @@ tr:hover td{background:var(--surface2);}
         </div>
       </div>
 
-      <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+      <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ الإعدادات العامة</button>
+
+      <!-- إعدادات فردية -->
+      <div class="settings-card" style="margin-top:20px">
+        <h3>👤 إعدادات دوام فردية لكل موظف</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px">اتركها فارغة لاستخدام الإعدادات العامة — الجمعة عطلة تلقائية لجميع الموظفين</p>
+        <div id="empShiftsList"><div class="empty"><div class="empty-icon">👥</div><div>حمّل البيانات أولاً</div></div></div>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="saveEmpShifts()">💾 حفظ الإعدادات الفردية</button>
+      </div>
     </div>
 
   </div>
@@ -310,6 +333,7 @@ const GAS = 'https://script.google.com/macros/s/AKfycbwnkxjfkooIpZ2c-Qi8ez-n2QqY
 
 let allAttendance = [], allEmployees = [], allLeaves = [];
 let reportData = [], rFilter = 'all', lFilter = 'all';
+let empShifts = {}; // { userId: { mornStart, mornEnd, eveStart, eveEnd, lateMin } or null }
 
 // إعدادات الدوام
 let settings = {
@@ -326,6 +350,94 @@ function loadSettings() {
   document.getElementById('eveStart').value = settings.eveStart;
   document.getElementById('eveEnd').value = settings.eveEnd;
   document.getElementById('lateMin').value = settings.lateMin;
+  const es = localStorage.getItem('empShifts');
+  if(es) empShifts = JSON.parse(es);
+}
+
+// إرجاع إعدادات موظف معين (أو الإعدادات العامة إن لم تكن فردية)
+function getEmpSettings(empId) {
+  const es = empShifts[String(empId)];
+  if(es && es.custom) return { ...settings, ...es };
+  return settings;
+}
+
+// عرض جدول الإعدادات الفردية
+function renderEmpShifts() {
+  if(!allEmployees.length) return;
+  const rows = allEmployees.map(emp => {
+    const id = String(emp.userId);
+    const es = empShifts[id] || {};
+    const isCustom = es.custom || false;
+    return `<tr id="esr-${id}">
+      <td><strong>${emp.name||id}</strong><br><span style="font-size:10px;color:var(--text2)">#${id}</span></td>
+      <td><label class="emp-shift-toggle"><input type="checkbox" id="esc-${id}" ${isCustom?'checked':''} onchange="toggleEmpCustom('${id}')"> مخصص</label></td>
+      <td>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--text2)">ص من</span>
+          <input type="time" id="ems-${id}" value="${es.mornStart||settings.mornStart}" class="${isCustom?'custom':''}" ${isCustom?'':'disabled'}>
+          <span style="font-size:10px;color:var(--text2)">إلى</span>
+          <input type="time" id="eme-${id}" value="${es.mornEnd||settings.mornEnd}" class="${isCustom?'custom':''}" ${isCustom?'':'disabled'}>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--text2)">م من</span>
+          <input type="time" id="ees-${id}" value="${es.eveStart||settings.eveStart}" class="${isCustom?'custom':''}" ${isCustom?'':'disabled'}>
+          <span style="font-size:10px;color:var(--text2)">إلى</span>
+          <input type="time" id="eee-${id}" value="${es.eveEnd||settings.eveEnd}" class="${isCustom?'custom':''}" ${isCustom?'':'disabled'}>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex;gap:4px;align-items:center">
+          <span style="font-size:10px;color:var(--text2)">تأخير</span>
+          <input type="number" id="elm-${id}" value="${es.lateMin||settings.lateMin}" min="0" max="60" style="width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'Cairo',sans-serif;font-size:12px;color:var(--text);outline:none;${isCustom?'border-color:var(--accent);background:rgba(0,150,199,.07)':''}" ${isCustom?'':'disabled'}>
+          <span style="font-size:10px;color:var(--text2)">د</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('empShiftsList').innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="emp-shifts-table">
+      <thead><tr>
+        <th>الموظف</th><th>نوع</th><th>🌅 صباحي</th><th>🌙 مسائي</th><th>تأخير</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+function toggleEmpCustom(id) {
+  const isCustom = document.getElementById('esc-'+id).checked;
+  ['ems-','eme-','ees-','eee-','elm-'].forEach(p => {
+    const el = document.getElementById(p+id);
+    if(el) {
+      el.disabled = !isCustom;
+      if(isCustom) { el.classList.add('custom'); el.style.borderColor='var(--accent)'; el.style.background='rgba(0,150,199,.07)'; }
+      else { el.classList.remove('custom'); el.style.borderColor=''; el.style.background=''; }
+    }
+  });
+}
+
+function saveEmpShifts() {
+  allEmployees.forEach(emp => {
+    const id = String(emp.userId);
+    const isCustom = document.getElementById('esc-'+id)?.checked || false;
+    if(isCustom) {
+      empShifts[id] = {
+        custom: true,
+        mornStart: document.getElementById('ems-'+id)?.value || settings.mornStart,
+        mornEnd:   document.getElementById('eme-'+id)?.value || settings.mornEnd,
+        eveStart:  document.getElementById('ees-'+id)?.value || settings.eveStart,
+        eveEnd:    document.getElementById('eee-'+id)?.value || settings.eveEnd,
+        lateMin:   parseInt(document.getElementById('elm-'+id)?.value) || settings.lateMin,
+      };
+    } else {
+      delete empShifts[id];
+    }
+  });
+  localStorage.setItem('empShifts', JSON.stringify(empShifts));
+  toast('تم حفظ الإعدادات الفردية ✓', 'success');
+  buildReport();
 }
 
 function saveSettings() {
@@ -384,6 +496,7 @@ async function loadAll() {
       allEmployees = emp.data;
       document.getElementById('empCount').textContent = allEmployees.length + ' موظف';
       renderEmployees(allEmployees);
+      renderEmpShifts();
     }
     if(leaves.success) {
       allLeaves = leaves.data.filter(l => String(l.status).trim() === 'approved');
@@ -435,6 +548,13 @@ function getApprovedLeave(empId, dateStr) {
 
 // حساب حالة الموظف ليوم معين
 function calcStatus(empId, dateStr) {
+  // تحقق إذا الجمعة — عطلة
+  const dayOfWeek = new Date(dateStr).getDay(); // 5 = الجمعة
+  if(dayOfWeek === 5) return { status:'friday', label:'🏖 جمعة', class:'friday', mornIn:null, eveIn:null };
+
+  // إعدادات الموظف (فردية أو عامة)
+  const cfg = getEmpSettings(empId);
+
   // أول شي تحقق من إجازة أو زمنية موافق عليها
   const approvedLeave = getApprovedLeave(empId, dateStr);
 
@@ -458,8 +578,8 @@ function calcStatus(empId, dateStr) {
 
   // إذا عنده بصمة وإجازة — الإجازة تأخذ أولوية
   if(approvedLeave) {
-    const mornLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(settings.mornStart)-60)&&t<=(timeToMin(settings.mornEnd)+60); });
-    const eveLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(settings.eveStart)-60)&&t<=(timeToMin(settings.eveEnd)+60); });
+    const mornLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(cfg.mornStart)-60)&&t<=(timeToMin(cfg.mornEnd)+60); });
+    const eveLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(cfg.eveStart)-60)&&t<=(timeToMin(cfg.eveEnd)+60); });
     const mIn = mornLogs2.length ? mornLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
     const eIn = eveLogs2.length ? eveLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
     const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
@@ -467,11 +587,11 @@ function calcStatus(empId, dateStr) {
     return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mIn, eveIn:eIn };
   }
 
-  const mornStartMin = timeToMin(settings.mornStart);
-  const mornEndMin = timeToMin(settings.mornEnd);
-  const eveStartMin = timeToMin(settings.eveStart);
-  const eveEndMin = timeToMin(settings.eveEnd);
-  const lateMin = settings.lateMin;
+  const mornStartMin = timeToMin(cfg.mornStart);
+  const mornEndMin = timeToMin(cfg.mornEnd);
+  const eveStartMin = timeToMin(cfg.eveStart);
+  const eveEndMin = timeToMin(cfg.eveEnd);
+  const lateMin = cfg.lateMin;
 
   // سجلات الصباح والمساء
   const mornLogs = dayLogs.filter(r => {
@@ -494,37 +614,36 @@ function calcStatus(empId, dateStr) {
   if(hasMorn) {
     const mornInMin = getTimeMin(mornInTime);
     const diffMin = mornInMin - mornStartMin;
-    
-    if(diffMin <= lateMin) {
-      if(hasEve) return { status:'present', label:'✅ حاضر', class:'present', mornIn:mornInTime, eveIn:eveInTime };
-      return { status:'absent-evening', label:'🌅 حاضر صباحي', class:'absent-evening', mornIn:mornInTime, eveIn:null };
-    } else if(diffMin <= 30) {
-      // متأخر — تحقق إذا عنده زمنية
-      if(approvedLeave) {
-        const isLeave = approvedLeave.type === 'leave';
-        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : '';
-        const lbl = isLeave ? `🏖 مجاز ${periodLabel}` : `⏰ زمنية ${periodLabel}`;
-        if(hasEve) return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
-        return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mornInTime, eveIn:null };
-      }
-      if(hasEve) return { status:'late', label:'⚠️ متأخر', class:'late', mornIn:mornInTime, eveIn:eveInTime };
-      return { status:'late', label:'⚠️ متأخر / غائب مسائي', class:'late', mornIn:mornInTime, eveIn:null };
+    const mornOnTime = diffMin <= lateMin;
+    const mornLate   = diffMin > lateMin && diffMin <= 30;
+    const mornAbsent = diffMin > 30;
+
+    if(hasEve) {
+      const eveInMin2 = getTimeMin(eveInTime);
+      const eveDiff2  = eveInMin2 - eveStartMin;
+      const eveOnTime = eveDiff2 <= lateMin;
+      const eveLate2  = eveDiff2 > lateMin && eveDiff2 <= 30;
+
+      if(mornOnTime && eveOnTime)  return { status:'present', label:'✅ حاضر',        class:'present', mornIn:mornInTime, eveIn:eveInTime };
+      if(mornOnTime && eveLate2)   return { status:'late',    label:'⚠️ متأخر م',     class:'late',    mornIn:mornInTime, eveIn:eveInTime };
+      if(mornLate   && eveOnTime)  return { status:'late',    label:'⚠️ متأخر ص',     class:'late',    mornIn:mornInTime, eveIn:eveInTime };
+      if(mornLate   && eveLate2)   return { status:'late',    label:'⚠️ متأخر ص+م',   class:'late',    mornIn:mornInTime, eveIn:eveInTime };
+      if(mornOnTime)               return { status:'present', label:'✅ حاضر',         class:'present', mornIn:mornInTime, eveIn:eveInTime };
+      if(mornLate)                 return { status:'late',    label:'⚠️ متأخر ص',     class:'late',    mornIn:mornInTime, eveIn:eveInTime };
+      // morning absent (>30) but has evening
+      return { status:'absent', label:'❌ غائب صباحي', class:'absent', mornIn:mornInTime, eveIn:eveInTime };
     } else {
-      // بصم بعد 30 دقيقة — تحقق إذا عنده زمنية
-      if(approvedLeave && approvedLeave.type !== 'leave') {
-        const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : '';
-        if(hasEve) return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:eveInTime };
-        return { status:'on-leave', label:`⏰ زمنية ${periodLabel}`, class:'evening-only', mornIn:mornInTime, eveIn:null };
-      }
-      if(hasEve) return { status:'absent', label:'❌ غائب صباحي', class:'absent', mornIn:mornInTime, eveIn:eveInTime };
+      // no evening
+      if(mornOnTime) return { status:'absent-evening', label:'🌅 حاضر صباحي',          class:'absent-evening', mornIn:mornInTime, eveIn:null };
+      if(mornLate)   return { status:'late',           label:'⚠️ متأخر ص / غائب م',   class:'late',           mornIn:mornInTime, eveIn:null };
       return { status:'absent', label:'❌ غائب', class:'absent', mornIn:mornInTime, eveIn:null };
     }
   }
   if(!hasMorn && hasEve) {
     const eveInMin = getTimeMin(eveInTime);
     const eveDiff = eveInMin - eveStartMin;
-    if(eveDiff <= lateMin) return { status:'evening-only', label:'🌙 مسائي فقط', class:'evening-only', mornIn:null, eveIn:eveInTime };
-    if(eveDiff <= 30) return { status:'late', label:'⚠️ متأخر مسائي', class:'late', mornIn:null, eveIn:eveInTime };
+    if(eveDiff <= lateMin) return { status:'evening-only', label:'🌙 مسائي فقط',    class:'evening-only', mornIn:null, eveIn:eveInTime };
+    if(eveDiff <= 30)      return { status:'late',         label:'⚠️ متأخر م',      class:'late',         mornIn:null, eveIn:eveInTime };
     return { status:'absent', label:'❌ غائب مسائي (تأخر)', class:'absent', mornIn:null, eveIn:eveInTime };
   }
   return { status:'absent', label:'❌ غائب', class:'absent', mornIn:null, eveIn:null };
@@ -536,10 +655,21 @@ function formatTime(dateStr) {
   return d.toLocaleTimeString('ar-IQ', {hour:'2-digit', minute:'2-digit'});
 }
 
-// بناء التقرير
 function buildReport() {
   const date = document.getElementById('reportDate').value;
   if(!date || !allEmployees.length) return;
+
+  // إذا الجمعة — عطلة
+  if(new Date(date).getDay() === 5) {
+    document.getElementById('rTotal').textContent = '—';
+    document.getElementById('rPresent').textContent = '—';
+    document.getElementById('rAbsent').textContent = '—';
+    document.getElementById('rLate').textContent = '—';
+    document.getElementById('rEveOnly').textContent = '—';
+    document.getElementById('rAbsEve').textContent = '—';
+    document.getElementById('reportBody').innerHTML = '<div class="empty"><div class="empty-icon">🏖</div><div class="empty-text">يوم الجمعة — عطلة رسمية</div></div>';
+    return;
+  }
 
   reportData = allEmployees.map(emp => {
     const s = calcStatus(emp.userId, date);
@@ -703,6 +833,11 @@ function statusIcon(status) {
 }
 
 function statusCell(status, mornIn, eveIn, label) {
+  if(status === 'friday') {
+    return `<td style="text-align:center;background:var(--surface2);padding:5px 3px;min-width:62px">
+      <div style="color:var(--text2);font-size:11px;font-weight:700">جمعة</div>
+    </td>`;
+  }
   let text, color;
   if(status === 'on-leave') {
     const isLeave = label && label.includes('مجاز');
@@ -712,7 +847,7 @@ function statusCell(status, mornIn, eveIn, label) {
   } else {
     const map = {
       'present':        {text:'حاضر',   color:'var(--green)'},
-      'late':           {text:'متأخر',  color:'var(--yellow)'},
+      'late':           {text: label ? label.replace('⚠️ ','') : 'متأخر', color:'var(--yellow)'},
       'absent':         {text:'غائب',   color:'var(--red)'},
       'evening-only':   {text:'مسائي',  color:'var(--accent)'},
       'absent-evening': {text:'ص.فقط',  color:'var(--orange)'},
@@ -720,10 +855,10 @@ function statusCell(status, mornIn, eveIn, label) {
     const s = map[status] || {text:'—', color:'var(--text2)'};
     text = s.text; color = s.color;
   }
-  const mornTime = mornIn ? `<div style="font-size:9px;opacity:.75;color:var(--green)">ص ${formatTime(mornIn)}</div>` : '';
-  const eveTime  = eveIn  ? `<div style="font-size:9px;opacity:.75;color:var(--accent)">م ${formatTime(eveIn)}</div>`  : '';
-  return `<td style="text-align:center;background:${color}20;padding:5px 3px;min-width:62px">
-    <div style="color:${color};font-weight:700;font-size:11px">${text}</div>
+  const mornTime = mornIn ? `<div style="font-size:11px;opacity:.85;color:var(--green);font-weight:600">ص ${formatTime(mornIn)}</div>` : '';
+  const eveTime  = eveIn  ? `<div style="font-size:11px;opacity:.85;color:var(--accent);font-weight:600">م ${formatTime(eveIn)}</div>`  : '';
+  return `<td style="text-align:center;background:${color}20;padding:5px 3px;min-width:70px">
+    <div style="color:${color};font-weight:800;font-size:13px">${text}</div>
     ${mornTime}${eveTime}
   </td>`;
 }
@@ -753,7 +888,8 @@ async function buildRangeReport() {
   let thead = '<tr><th>الموظف</th>';
   dates.forEach(d => {
     const dd = new Date(d);
-    thead += `<th style="min-width:62px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
+    const isFri = dd.getDay() === 5;
+    thead += `<th style="min-width:62px;text-align:center;font-size:10px${isFri?';background:var(--surface2);color:var(--text2)':''}">${dd.getDate()}/${dd.getMonth()+1}${isFri?' 🏖':''}</th>`;
   });
   thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th><th>إجازات</th></tr>';
   rangeReportHeader = thead;
@@ -764,7 +900,8 @@ async function buildRangeReport() {
     let presentCount = 0, absentCount = 0, lateCount = 0, leaveCount = 0;
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
-      if(s.status === 'present') presentCount++;
+      if(s.status === 'friday') { /* skip */ }
+      else if(s.status === 'present') presentCount++;
       else if(s.status === 'late') { lateCount++; presentCount++; }
       else if(s.status === 'absent') absentCount++;
       else if(s.status === 'evening-only') presentCount++;
