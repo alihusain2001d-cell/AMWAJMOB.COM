@@ -576,14 +576,30 @@ function calcStatus(empId, dateStr) {
     return { status: 'absent', label: '❌ غائب', class: 'absent', mornIn: null, eveIn: null };
   }
 
-  // إذا عنده بصمة وإجازة — الإجازة تأخذ أولوية
+  // إذا عنده بصمة وإجازة — الإجازة تأخذ أولوية لكن نتحقق من توقيت المساء
   if(approvedLeave) {
+    const eveStartMin2 = timeToMin(cfg.eveStart);
+    const lateMin2     = cfg.lateMin;
     const mornLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(cfg.mornStart)-60)&&t<=(timeToMin(cfg.mornEnd)+60); });
-    const eveLogs2 = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(timeToMin(cfg.eveStart)-60)&&t<=(timeToMin(cfg.eveEnd)+60); });
+    const eveLogs2  = dayLogs.filter(r => { const t=getTimeMin(r.attTime); return t>=(eveStartMin2-60)&&t<=(timeToMin(cfg.eveEnd)+60); });
     const mIn = mornLogs2.length ? mornLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
-    const eIn = eveLogs2.length ? eveLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime : null;
+    const eIn = eveLogs2.length  ? eveLogs2.sort((a,b)=>getTimeMin(a.attTime)-getTimeMin(b.attTime))[0].attTime  : null;
+
+    const isLeave   = approvedLeave.type === 'leave';
+    const leaveWord = isLeave ? 'مجاز' : 'زمنية';
     const periodLabel = approvedLeave.period === 'morning' ? 'صباحي' : approvedLeave.period === 'evening' ? 'مسائي' : 'يوم كامل';
-    const lbl = approvedLeave.type === 'leave' ? `🏖 مجاز (${periodLabel})` : `⏰ زمنية (${periodLabel})`;
+
+    // إذا بصم مساءً — تحقق إذا متأخر أكثر من المسموح
+    if(eIn) {
+      const eveDiff2 = getTimeMin(eIn) - eveStartMin2;
+      if(eveDiff2 > lateMin2) {
+        // متأخر مسائياً — يُعدّ غائب م لكن الإجازة صالحة للصباح
+        const lbl = `${isLeave ? '🏖' : '⏰'} ${leaveWord} ص / غائب م`;
+        return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mIn, eveIn:eIn, eveAbsent:true };
+      }
+    }
+
+    const lbl = `${isLeave ? '🏖' : '⏰'} ${leaveWord} (${periodLabel})`;
     return { status:'on-leave', label:lbl, class:'evening-only', mornIn:mIn, eveIn:eIn };
   }
 
@@ -832,7 +848,7 @@ function statusIcon(status) {
   return map[status] || '—';
 }
 
-function statusCell(status, mornIn, eveIn, label) {
+function statusCell(status, mornIn, eveIn, label, eveAbsent) {
   if(status === 'friday') {
     return `<td style="text-align:center;background:var(--surface2);padding:5px 3px;min-width:62px">
       <div style="color:var(--text2);font-size:11px;font-weight:700">جمعة</div>
@@ -840,10 +856,9 @@ function statusCell(status, mornIn, eveIn, label) {
   }
   let text, color;
   if(status === 'on-leave') {
-    const isLeave = label && label.includes('مجاز');
-    const periodLabel = label && label.includes('صباحي') ? 'ص' : label && label.includes('مسائي') ? 'م' : '';
-    text = (isLeave ? 'مجاز' : 'زمنية') + (periodLabel ? ` ${periodLabel}` : '');
-    color = 'var(--accent2)';
+    // استخرج النص مباشرة من الـ label (بدون الإيموجي)
+    text = (label || '').replace(/^[🏖⏰]\s*/u, '');
+    color = eveAbsent ? 'var(--orange)' : 'var(--accent2)';
   } else {
     const map = {
       'present':        {text:'حاضر',   color:'var(--green)'},
@@ -856,7 +871,7 @@ function statusCell(status, mornIn, eveIn, label) {
     text = s.text; color = s.color;
   }
   const mornTime = mornIn ? `<div style="font-size:11px;opacity:.85;color:var(--green);font-weight:600">ص ${formatTime(mornIn)}</div>` : '';
-  const eveTime  = eveIn  ? `<div style="font-size:11px;opacity:.85;color:var(--accent);font-weight:600">م ${formatTime(eveIn)}</div>`  : '';
+  const eveTime  = eveIn  ? `<div style="font-size:11px;opacity:.85;color:${eveAbsent?'var(--red)':'var(--accent)'};font-weight:600">م ${formatTime(eveIn)}${eveAbsent?' ❌':''}</div>` : '';
   return `<td style="text-align:center;background:${color}20;padding:5px 3px;min-width:70px">
     <div style="color:${color};font-weight:800;font-size:13px">${text}</div>
     ${mornTime}${eveTime}
@@ -907,7 +922,7 @@ async function buildRangeReport() {
       else if(s.status === 'evening-only') presentCount++;
       else if(s.status === 'absent-evening') presentCount++;
       else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
-      cells += statusCell(s.status, s.mornIn, s.eveIn, s.label);
+      cells += statusCell(s.status, s.mornIn, s.eveIn, s.label, s.eveAbsent);
     });
     return { emp, cells, presentCount, absentCount, lateCount, leaveCount };
   });
