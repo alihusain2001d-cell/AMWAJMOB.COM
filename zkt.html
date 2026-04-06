@@ -206,8 +206,16 @@ tr:hover td{background:var(--surface2);}
         </div>
         <div id="reportBody"><div class="empty"><div class="empty-icon">📅</div><div class="empty-text">اختر تاريخ لعرض التقرير</div></div></div>
       </div>
+      <!-- فلتر جدول الفترة الكاملة -->
+      <div id="rangeFilterBar" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-top:14px;display:none;align-items:center;gap:10px;">
+        <div class="search-box" style="max-width:260px;">
+          <span>🔍</span>
+          <input type="text" placeholder="ابحث باسم الموظف..." id="rangeSearch" oninput="renderRangeReport()" style="background:none;border:none;outline:none;color:var(--text);font-family:'Cairo',sans-serif;font-size:13px;width:100%;text-align:right;">
+        </div>
+        <span id="rangeCountLabel" style="color:var(--text2);font-size:13px;"></span>
+      </div>
       <!-- جدول الفترة الكاملة -->
-      <div class="table-wrap" id="rangeReportWrap" style="display:none;overflow-x:auto;margin-top:16px;">
+      <div class="table-wrap" id="rangeReportWrap" style="display:none;overflow-x:auto;margin-top:8px;">
         <div id="rangeReportBody"></div>
       </div>
     </div>
@@ -666,6 +674,7 @@ function toggleReportMode() {
   document.getElementById('singleDateFilter').style.display = mode === 'single' ? 'flex' : 'none';
   document.getElementById('rangeDateFilter').style.display = mode === 'range' ? 'flex' : 'none';
   document.getElementById('rangeReportWrap').style.display = 'none';
+  document.getElementById('rangeFilterBar').style.display = 'none';
   document.getElementById('reportBody').style.display = mode === 'single' ? 'block' : 'none';
   document.querySelector('.stats').style.display = mode === 'single' ? 'grid' : 'none';
   document.querySelector('.table-wrap').style.display = mode === 'single' ? 'block' : 'none';
@@ -697,7 +706,8 @@ function statusCell(status, mornIn, eveIn, label) {
   let text, color;
   if(status === 'on-leave') {
     const isLeave = label && label.includes('مجاز');
-    text = isLeave ? 'مجاز' : 'زمنية';
+    const periodLabel = label && label.includes('صباحي') ? 'ص' : label && label.includes('مسائي') ? 'م' : '';
+    text = (isLeave ? 'مجاز' : 'زمنية') + (periodLabel ? ` ${periodLabel}` : '');
     color = 'var(--accent2)';
   } else {
     const map = {
@@ -710,13 +720,17 @@ function statusCell(status, mornIn, eveIn, label) {
     const s = map[status] || {text:'—', color:'var(--text2)'};
     text = s.text; color = s.color;
   }
-  const time = mornIn ? `<div style="font-size:10px;opacity:.7">${formatTime(mornIn)}</div>` :
-               eveIn  ? `<div style="font-size:10px;opacity:.7">${formatTime(eveIn)}</div>` : '';
-  return `<td style="text-align:center;background:${color}20;padding:6px 4px">
+  const mornTime = mornIn ? `<div style="font-size:9px;opacity:.75;color:var(--green)">ص ${formatTime(mornIn)}</div>` : '';
+  const eveTime  = eveIn  ? `<div style="font-size:9px;opacity:.75;color:var(--accent)">م ${formatTime(eveIn)}</div>`  : '';
+  return `<td style="text-align:center;background:${color}20;padding:5px 3px;min-width:62px">
     <div style="color:${color};font-weight:700;font-size:11px">${text}</div>
-    ${time}
+    ${mornTime}${eveTime}
   </td>`;
 }
+
+let rangeReportDates = [];
+let rangeReportEmployeeRows = []; // [{emp, cells, present, absent, late, leave}]
+let rangeReportHeader = '';
 
 async function buildRangeReport() {
   const from = document.getElementById('reportFrom').value;
@@ -733,20 +747,21 @@ async function buildRangeReport() {
     if(leavesRes.success) allLeaves = leavesRes.data.filter(l => String(l.status).trim() === 'approved');
   } catch(_) {}
 
+  rangeReportDates = dates;
+
   // بناء هيدر الجدول
   let thead = '<tr><th>الموظف</th>';
   dates.forEach(d => {
     const dd = new Date(d);
-    thead += `<th style="min-width:55px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
+    thead += `<th style="min-width:62px;text-align:center;font-size:10px">${dd.getDate()}/${dd.getMonth()+1}</th>`;
   });
   thead += '<th>حاضر</th><th>غائب</th><th>متأخر</th><th>إجازات</th></tr>';
+  rangeReportHeader = thead;
 
-  // بناء صفوف الموظفين
-  let tbody = '';
-  allEmployees.forEach(emp => {
-    let row = `<tr><td><strong>${emp.name||emp.userId}</strong></td>`;
+  // بناء بيانات الموظفين
+  rangeReportEmployeeRows = allEmployees.map(emp => {
+    let cells = '';
     let presentCount = 0, absentCount = 0, lateCount = 0, leaveCount = 0;
-
     dates.forEach(d => {
       const s = calcStatus(emp.userId, d);
       if(s.status === 'present') presentCount++;
@@ -755,24 +770,46 @@ async function buildRangeReport() {
       else if(s.status === 'evening-only') presentCount++;
       else if(s.status === 'absent-evening') presentCount++;
       else if(s.status === 'on-leave') { leaveCount++; presentCount++; }
-      row += statusCell(s.status, s.mornIn, s.eveIn, s.label);
+      cells += statusCell(s.status, s.mornIn, s.eveIn, s.label);
     });
-
-    row += `<td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>`;
-    row += `<td style="color:var(--red);font-weight:700;text-align:center">${absentCount}</td>`;
-    row += `<td style="color:var(--yellow);font-weight:700;text-align:center">${lateCount}</td>`;
-    row += `<td style="color:var(--accent);font-weight:700;text-align:center">${leaveCount}</td>`;
-    row += '</tr>';
-    tbody += row;
+    return { emp, cells, presentCount, absentCount, lateCount, leaveCount };
   });
 
+  document.getElementById('rangeFilterBar').style.display = 'flex';
+  document.getElementById('rangeSearch').value = '';
+  renderRangeReport();
+}
+
+function renderRangeReport() {
+  const search = (document.getElementById('rangeSearch').value || '').toLowerCase().trim();
+  const filtered = rangeReportEmployeeRows.filter(item => {
+    if (!search) return true;
+    return (item.emp.name || '').toLowerCase().includes(search) || (item.emp.userId + '').includes(search);
+  });
+
+  document.getElementById('rangeCountLabel').textContent = filtered.length + ' / ' + rangeReportEmployeeRows.length + ' موظف';
+
+  let tbody = '';
+  filtered.forEach(({emp, cells, presentCount, absentCount, lateCount, leaveCount}) => {
+    tbody += `<tr>
+      <td><strong>${emp.name||emp.userId}</strong></td>
+      ${cells}
+      <td style="color:var(--green);font-weight:700;text-align:center">${presentCount}</td>
+      <td style="color:var(--red);font-weight:700;text-align:center">${absentCount}</td>
+      <td style="color:var(--yellow);font-weight:700;text-align:center">${lateCount}</td>
+      <td style="color:var(--accent);font-weight:700;text-align:center">${leaveCount}</td>
+    </tr>`;
+  });
+
+  const from = document.getElementById('reportFrom').value;
+  const to   = document.getElementById('reportTo').value;
   document.getElementById('rangeReportBody').innerHTML = `
     <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700;color:var(--text2)">
-      تقرير من ${from} إلى ${to} — ${allEmployees.length} موظف × ${dates.length} يوم
+      تقرير من ${from} إلى ${to} — ${filtered.length} موظف × ${rangeReportDates.length} يوم
     </div>
     <div style="overflow-x:auto">
     <table>
-      <thead style="position:sticky;top:0">${thead}</thead>
+      <thead style="position:sticky;top:0">${rangeReportHeader}</thead>
       <tbody>${tbody}</tbody>
     </table>
     </div>`;
