@@ -1465,20 +1465,32 @@ function handleGlobalSearch(event) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
     const available = qty > 0 && price > 0;
-    const priceText = !available ? '<span style="color:#EF4444;">غير متوفر</span>'
-      : guestMode ? '<span style="color:#94A3B8;">🔒 سجل</span>'
-      : '<span style="color:#0284C7;font-weight:800;">' + formatPriceIQD(price) + ' د.ع</span>';
+    const priceText = !available ? '<span style="color:#EF4444;font-size:13px;">غير متوفر</span>'
+      : guestMode ? '<span style="color:#94A3B8;font-size:13px;">🔒 سجل</span>'
+      : '<span style="color:#0284C7;font-weight:800;font-size:13px;">' + formatPriceIQD(price) + ' د.ع</span>';
     const typeText = (item.source === 'شاشات' && item.type) ? item.type : '';
     const notesText = (item.notes && item.notes.trim()) ? item.notes : '';
     const border = idx < results.slice(0,30).length - 1 ? 'border-bottom:1px solid #F1F5F9;' : '';
 
-    html += '<div onmousedown="goToProductInSheet(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;' + border + '" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'\'">'+
-      '<span style="font-size:20px;flex-shrink:0;">' + item.icon + '</span>'+
+    // زر السلة
+    var pid = cacheProduct(Object.assign({}, item, {
+      itemType: {'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards','شريط شحن':'flatcharging','فلات باور/صوت':'flatpower','باك كفر':'backcover','شاصي':'housing','كاميرا':'camera','سماعة جرس':'flatpower','سماعة اتصال':'flatpower','باب سيم':'flatpower','بصمة':'flatpower','عدسة كاميرا':'lens','منوع':'flatpower'}[item.source] || 'screens'
+    }));
+    var cartBtnHtml = '';
+    if (available && !guestMode) {
+      cartBtnHtml = '<button onmousedown="event.stopPropagation();addToCart(getCachedProduct(\'' + pid + '\'));document.getElementById(\'globalSearch\').blur();" style="background:#16A34A;color:white;border:none;border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;" title="إضافة للسلة">🛒</button>';
+    } else if (available && guestMode) {
+      cartBtnHtml = '<button onmousedown="event.stopPropagation();showLoginPrompt();" style="background:#94A3B8;color:white;border:none;border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🔒</button>';
+    }
+
+    html += '<div onmousedown="goToProductInSheet(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')" style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;' + border + '" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-size:18px;flex-shrink:0;">' + item.icon + '</span>'+
       '<div style="flex:1;min-width:0;">'+
-        '<div style="font-size:15px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sanitize(item.name||'') + '</div>'+
-        '<div style="font-size:12px;color:#94A3B8;margin-top:1px;">' + item.source + (item.brand ? ' · ' + item.brand : '') + (typeText ? ' · <span style="color:#16A34A;">' + typeText + '</span>' : '') + (notesText ? ' · <span style="color:#F59E0B;">' + sanitize(notesText) + '</span>' : '') + '</div>'+
+        '<div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sanitize(item.name||'') + '</div>'+
+        '<div style="font-size:11px;color:#94A3B8;margin-top:1px;">' + item.source + (item.brand ? ' · ' + item.brand : '') + (typeText ? ' · <span style="color:#16A34A;">' + typeText + '</span>' : '') + (notesText ? ' · <span style="color:#F59E0B;">' + sanitize(notesText) + '</span>' : '') + '</div>'+
+        '<div style="margin-top:2px;">' + priceText + '</div>'+
       '</div>'+
-      '<div style="font-size:14px;flex-shrink:0;">' + priceText + '</div>'+
+      cartBtnHtml +
     '</div>';
   });
 
