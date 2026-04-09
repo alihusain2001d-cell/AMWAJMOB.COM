@@ -110,6 +110,7 @@ tr:hover td{background:#ffffff05}
     <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><span class="nav-icon">📦</span><span>الطلبات</span><span class="nav-badge" id="ordersBadge" style="display:none">0</span></div>
     <div class="nav-item" onclick="showPage('warranties')" id="nav-warranties"><span class="nav-icon">🛡️</span><span>الضمانات</span></div>
     <div class="nav-item" onclick="showPage('products')" id="nav-products"><span class="nav-icon">🖼️</span><span>صور المنتجات</span></div>
+    <div class="nav-item" onclick="showPage('notify')" id="nav-notify"><span class="nav-icon">📢</span><span>إشعارات الزبائن</span></div>
     <div class="sidebar-footer">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center" id="sidebarTime"></div>
       <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
@@ -233,8 +234,8 @@ let currentPage='dashboard',allCustomers=[],allOrders=[],allWarranties=[],allPro
 function doLogin(){const p=document.getElementById('loginPass').value;if(p===ADMIN_PASS){localStorage.setItem('amwaj_admin_auth',ADMIN_PASS);document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}else{document.getElementById('loginErr').textContent='❌ كلمة السر غير صحيحة';document.getElementById('loginPass').value='';}}
 function doLogout(){localStorage.removeItem('amwaj_admin_auth');document.getElementById('adminApp').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('loginPass').value='';}
 function startClock(){function tick(){const s=new Date().toLocaleString('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('topTime').textContent=s;document.getElementById('sidebarTime').textContent=s;}tick();setInterval(tick,1000);}
-const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات'};
-function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p];({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts}[p])();}
+const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات',notify:'📢 إشعارات الزبائن'};
+function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p]||p;({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts,notify:loadNotify}[p]||function(){})();}
 function refreshCurrentPage(){showPage(currentPage);}
 async function apiCall(action,extra={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,adminKey:ADMIN_PASS,action,...extra})});return r.json();}
 function setContent(h){document.getElementById('mainContent').innerHTML=h;}
@@ -560,6 +561,170 @@ async function saveBulkImg(){
   for(const p of matches){try{const r=await apiCall('updateImageUrl',{sheetName:p.sheet,rowName:p.name,imageUrl:url});if(r.success){p.image_url=url;done++;}else failed++;}catch(e){failed++;}status.innerHTML=`<span style="color:var(--muted)">⏳ ${done+failed}/${matches.length}...</span>`;}
   if(failed===0){status.innerHTML=`<span style="color:var(--green)">✅ تم تحديث ${done} منتج</span>`;setTimeout(()=>{closeModal('bulkImgModal');renderProducts();},1500);}
   else status.innerHTML=`<span style="color:var(--yellow)">✅ ${done} نجح | ❌ ${failed} فشل</span>`;
+}
+
+
+// ══════════════════════════════════════════════
+// 📢 صفحة الإشعارات الجماعية
+// ══════════════════════════════════════════════
+let notifyItemsList = [];
+
+async function loadNotify() {
+  setContent('<div class="loading-row"><div class="spinner"></div>جاري تحميل البيانات...</div>');
+  try {
+    const [itemsRes, custRes] = await Promise.all([
+      apiCall('getNewItems'),
+      apiCall('getCustomersList', {adminKey: ADMIN_PASS})
+    ]);
+    notifyItemsList = (itemsRes.data || []).filter(function(i) {
+      return (Number(i.qty)||0) > 0 && (Number(String(i.price||'').replace(/[^0-9]/g,''))||0) > 0;
+    });
+    const approvedCustomers = (custRes.data || []).filter(function(c){ return c.status === 'approved'; });
+    renderNotifyPage(approvedCustomers);
+  } catch(e) {
+    setContent('<div class="empty-state">\u274c فشل التحميل: ' + e.message + '</div>');
+  }
+}
+
+function formatNotifyPrice(price) {
+  const p = Number(String(price||'').replace(/[^0-9]/g,'')) || 0;
+  return p.toLocaleString('de-DE') + ' \u062f.\u0639';
+}
+
+function buildNotifyMessage(items) {
+  if (!items.length) return '';
+  let msg = '\ud83c\udf0a *\u0623\u0645\u0648\u0627\u062c \u0644\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0627\u062a*\n\n';
+  msg += '\u2728 *\u0648\u0635\u0644\u0646\u0627 \u062d\u062f\u064a\u062b\u0627\u064b \u2014 \u0645\u0648\u0627\u062f \u062c\u062f\u064a\u062f\u0629!*\n\n';
+  items.forEach(function(item, i) {
+    msg += (i+1) + '. *' + (item.name||'-') + '*\n';
+    if (item.type) msg += '   \u0627\u0644\u0646\u0648\u0639: ' + item.type + '\n';
+    msg += '   \u0627\u0644\u0633\u0639\u0631: ' + formatNotifyPrice(item.price) + '\n';
+    if (item.notes && item.notes.trim()) msg += '   \ud83d\udcdd ' + item.notes + '\n';
+    msg += '\n';
+  });
+  msg += '\ud83d\udcde \u0644\u0644\u0637\u0644\u0628: 7696\n';
+  msg += '\ud83c\udf10 www.amwajmob.com';
+  return msg;
+}
+
+function renderNotifyPage(customers) {
+  const totalApproved = customers.length;
+  const previewMsg = buildNotifyMessage(notifyItemsList.slice(0, 10));
+  const itemsHtml = notifyItemsList.length === 0
+    ? '<div style="color:var(--muted);text-align:center;padding:20px">\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0648\u0627\u062f \u062c\u062f\u064a\u062f\u0629</div>'
+    : notifyItemsList.map(function(item, i) {
+        return '<label style="display:flex;align-items:flex-start;gap:10px;padding:8px;border-bottom:1px solid var(--border);cursor:pointer;">'
+          + '<input type="checkbox" class="notify-item-check" data-idx="' + i + '" checked onchange="updateNotifyPreview()" style="width:18px;height:18px;margin-top:2px;accent-color:var(--primary);flex-shrink:0;">'
+          + '<div style="flex:1;">'
+          + '<div style="font-weight:700;font-size:14px;">' + sanitize(item.name||'-') + '</div>'
+          + '<div style="font-size:12px;color:var(--muted);">' + sanitize(item.source||'') + (item.type ? ' \u00b7 ' + sanitize(item.type) : '') + '</div>'
+          + '<div style="font-size:13px;color:var(--primary);font-weight:800;">' + formatNotifyPrice(item.price) + '</div>'
+          + (item.notes ? '<div style="font-size:12px;color:#F59E0B">\ud83d\udcdd ' + sanitize(item.notes) + '</div>' : '')
+          + '</div></label>';
+      }).join('');
+
+  setContent(
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">'
+    + '<div class="stat-card" style="background:linear-gradient(135deg,#0284C7,#0891B2);">'
+    + '<div class="stat-num" style="color:white">' + totalApproved + '</div>'
+    + '<div class="stat-label" style="color:rgba(255,255,255,.8)">\u0632\u0628\u0648\u0646 \u0645\u0648\u0627\u0641\u0642 \u0639\u0644\u064a\u0647</div></div>'
+    + '<div class="stat-card" style="background:linear-gradient(135deg,#16A34A,#15803D);">'
+    + '<div class="stat-num" style="color:white">' + notifyItemsList.length + '</div>'
+    + '<div class="stat-label" style="color:rgba(255,255,255,.8)">\u0645\u0627\u062f\u0629 \u062c\u062f\u064a\u062f\u0629</div></div>'
+    + '</div>'
+    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
+    + '<div style="font-weight:800;font-size:16px;margin-bottom:12px;">\ud83d\udccb \u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0648\u0627\u062f \u0644\u0644\u0625\u0631\u0633\u0627\u0644</div>'
+    + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<button onclick="selectAllNotifyItems(true)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\u2705 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0643\u0644</button>'
+    + '<button onclick="selectAllNotifyItems(false)" style="background:#64748B;color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\u274c \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0643\u0644</button>'
+    + '<button onclick="updateNotifyPreview()" style="background:#F59E0B;color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\ud83d\udd04 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u0639\u0627\u064a\u0646\u0629</button>'
+    + '</div>'
+    + '<div id="notifyItemsCheckboxes" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:10px;">' + itemsHtml + '</div>'
+    + '</div>'
+    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
+    + '<div style="font-weight:800;font-size:16px;margin-bottom:10px;">\ud83d\udc41\ufe0f \u0645\u0639\u0627\u064a\u0646\u0629 \u0627\u0644\u0631\u0633\u0627\u0644\u0629</div>'
+    + '<textarea id="notifyMsgPreview" rows="14" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-family:Tajawal,sans-serif;font-size:14px;resize:vertical;direction:rtl;line-height:1.8;">' + previewMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>'
+    + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">\u064a\u0645\u0643\u0646\u0643 \u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0642\u0628\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644</div>'
+    + '</div>'
+    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
+    + '<div style="font-weight:800;font-size:16px;margin-bottom:10px;">\ud83d\ude80 \u0627\u0644\u0625\u0631\u0633\u0627\u0644</div>'
+    + '<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;color:#92400E;">'
+    + '\u26a0\ufe0f \u0633\u064a\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0644\u0640 <b>' + totalApproved + '</b> \u0632\u0628\u0648\u0646 \u0628\u0641\u0627\u0631\u0642 \u062b\u0627\u0646\u064a\u062a\u064a\u0646 \u0628\u064a\u0646 \u0643\u0644 \u0631\u0633\u0627\u0644\u0629<br>'
+    + '\u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0645\u062a\u0648\u0642\u0639: <b>' + Math.ceil(totalApproved * 2 / 60) + '</b> \u062f\u0642\u064a\u0642\u0629'
+    + '</div>'
+    + '<button onclick="startNotifySend(' + totalApproved + ')" style="width:100%;background:linear-gradient(135deg,#16A34A,#15803D);color:white;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:Tajawal,sans-serif;">'
+    + '\ud83d\udce4 \u0625\u0631\u0633\u0627\u0644 \u0644\u0644\u0643\u0644 (' + totalApproved + ' \u0632\u0628\u0648\u0646)'
+    + '</button>'
+    + '<div id="notifySendProgress" style="margin-top:12px;display:none;">'
+    + '<div style="background:var(--border);border-radius:10px;height:12px;overflow:hidden;margin-bottom:8px;">'
+    + '<div id="notifyProgressBar" style="background:var(--green);height:100%;width:0%;transition:width .3s;border-radius:10px;"></div>'
+    + '</div>'
+    + '<div id="notifyProgressText" style="text-align:center;font-size:14px;color:var(--muted);"></div>'
+    + '</div>'
+    + '</div>'
+  );
+}
+
+function selectAllNotifyItems(checked) {
+  document.querySelectorAll('.notify-item-check').forEach(function(cb){ cb.checked = checked; });
+  updateNotifyPreview();
+}
+
+function updateNotifyPreview() {
+  const selected = [];
+  document.querySelectorAll('.notify-item-check:checked').forEach(function(cb) {
+    const idx = parseInt(cb.dataset.idx);
+    if (notifyItemsList[idx]) selected.push(notifyItemsList[idx]);
+  });
+  const textarea = document.getElementById('notifyMsgPreview');
+  if (textarea) textarea.value = buildNotifyMessage(selected);
+}
+
+async function startNotifySend(total) {
+  const msg = (document.getElementById('notifyMsgPreview').value || '').trim();
+  if (!msg) { showToast('\u26a0\ufe0f \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0641\u0627\u0631\u063a\u0629'); return; }
+  if (!confirm('\u0633\u064a\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0644\u0640 ' + total + ' \u0632\u0628\u0648\u0646\n\u0647\u0644 \u0623\u0646\u062a \u0645\u062a\u0623\u0643\u062f\u061f')) return;
+
+  let customers = [];
+  try {
+    const r = await apiCall('getCustomersList', {adminKey: ADMIN_PASS});
+    customers = (r.data || []).filter(function(c){ return c.status === 'approved'; });
+  } catch(e) { showToast('\u274c \u0641\u0634\u0644 \u062c\u0644\u0628 \u0627\u0644\u0632\u0628\u0627\u0626\u0646'); return; }
+
+  if (!customers.length) { showToast('\u26a0\ufe0f \u0644\u0627 \u064a\u0648\u062c\u062f \u0632\u0628\u0627\u0626\u0646'); return; }
+
+  const progressDiv = document.getElementById('notifySendProgress');
+  const progressBar = document.getElementById('notifyProgressBar');
+  const progressText = document.getElementById('notifyProgressText');
+  if (progressDiv) progressDiv.style.display = 'block';
+
+  let sent = 0, failed = 0;
+
+  for (let i = 0; i < customers.length; i++) {
+    const c = customers[i];
+    let phone = String(c.phone || '').replace(/[^0-9]/g, '');
+    if (!phone || phone.length < 10) { failed++; continue; }
+    if (phone.startsWith('0')) phone = '964' + phone.substring(1);
+    if (!phone.startsWith('964')) phone = '964' + phone;
+
+    try {
+      await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: phone + '@c.us', message: msg })
+      });
+      sent++;
+    } catch(e) { failed++; }
+
+    const pct = Math.round(((i+1) / customers.length) * 100);
+    if (progressBar) progressBar.style.width = pct + '%';
+    if (progressText) progressText.textContent = (i+1) + ' / ' + customers.length + ' \u2014 \u2705 ' + sent + ' | \u274c ' + failed;
+
+    await new Promise(function(resolve){ setTimeout(resolve, 2000); });
+  }
+
+  showToast('\u2705 \u0627\u0643\u062a\u0645\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u2014 ' + sent + ' \u0646\u062c\u062d | ' + failed + ' \u0641\u0634\u0644');
+  if (progressText) progressText.innerHTML = '<span style="color:var(--green);font-weight:800">\u2705 \u0627\u0643\u062a\u0645\u0644! ' + sent + ' \u0631\u0633\u0627\u0644\u0629 \u0623\u064f\u0631\u0633\u0644\u062a \u0628\u0646\u062c\u0627\u062d | ' + failed + ' \u0641\u0634\u0644</span>';
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
