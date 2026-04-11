@@ -191,6 +191,7 @@ tr:hover td{background:#ffffff05}
         <option value="LENS CAMERA">LENS CAMERA</option><option value="Camera">Camera</option>
         <option value="Buzzer">Buzzer</option><option value="EAR SPEAKER">EAR SPEAKER</option>
         <option value="DOOR SIM">DOOR SIM</option><option value="INVENTORY">INVENTORY</option>
+        <option value="أدوات">أدوات (Tools)</option>
       </select>
     </div>
     <div class="modal-row"><div class="modal-label">فلتر بالاسم — مثال: "Infinix"</div>
@@ -392,7 +393,15 @@ async function saveNewWarranty(){
 
 // PRODUCTS
 let prodSearch='',prodSheetFilter='all';
-async function loadProducts(){showLoading();try{const r=await apiCall('getAllProducts',{adminKey:ADMIN_PASS});allProducts=r.data||[];renderProducts();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل: '+e.message+'</div>');}}
+async function loadProducts(){showLoading();try{
+  const [r, toolsR] = await Promise.all([
+    apiCall('getAllProducts',{adminKey:ADMIN_PASS}),
+    apiCall('getTools')
+  ]);
+  const toolsData = (toolsR.data||[]).map(function(p){ return Object.assign({},p,{sheet:'أدوات',sheetName:'أدوات',brand:'',type:''}); });
+  allProducts = (r.data||[]).concat(toolsData);
+  renderProducts();
+}catch(e){setContent('<div class="empty-state">❌ فشل التحميل: '+e.message+'</div>');}}
 function renderProducts(){
   const sheets=['all',...new Set(allProducts.map(p=>p.sheet||p.sheetName||'').filter(Boolean))];
   let data=allProducts;
