@@ -2577,6 +2577,8 @@ function openNewItemsSheet() {
   body.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل المواد الجديدة...</div></div>';
 
   secureApiCall('getNewItems').then(function(items) {
+    console.log('🔍 getNewItems RAW:', JSON.stringify(items ? items.slice(0,3) : null));
+    body.innerHTML += '<div style="font-size:11px;color:#888;padding:4px 8px;word-break:break-all;">DEBUG: ' + (items ? items.length + ' items' : 'null') + '</div>';
     if (!items || !items.length) {
       body.innerHTML =
         '<div style="text-align:center;padding:40px 20px;">' +
@@ -2710,7 +2712,6 @@ function loadNewItems() {
   };
 
   secureApiCall('getNewItems').then(function(items) {
-    console.log('🔍 getNewItems:', items ? items.length + ' items' : 'null/empty', items);
     if (!items || !items.length) {
       label.style.display = 'none';
       grid.style.display = 'none';
