@@ -2710,6 +2710,7 @@ function loadNewItems() {
   };
 
   secureApiCall('getNewItems').then(function(items) {
+    console.log('🔍 getNewItems:', items ? items.length + ' items' : 'null/empty', items);
     if (!items || !items.length) {
       label.style.display = 'none';
       grid.style.display = 'none';
