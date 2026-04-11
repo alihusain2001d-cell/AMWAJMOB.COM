@@ -971,8 +971,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شاصي.jpg" alt="شاصي"><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
         
         </div>
-        <div class="prod-card" onclick="requireAuth(function(){openProductSheet('tools','🔧 أدوات');})">
-          <img class="prod-icon" src="https://i.ibb.co/aEUR0H20/aEUR0H20.jpg" onerror="this.src=''" alt="أدوات"><div class="prod-name">أدوات</div><div class="prod-name-en">Tools</div>
+        <div class="prod-card" onclick="requireAuth(function(){openToolsSheet();})">
+          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/ادوات.jpg" onerror="this.style.display='none'" alt="أدوات"><div class="prod-name">أدوات</div><div class="prod-name-en">Tools</div>
         </div>
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
@@ -1324,7 +1324,6 @@ function getDataForType(type) {
     case 'housing': return housingData;
     case 'lens': return lensData;
     case 'camera': return cameraData;
-    case 'tools': return toolsData;
     default: return pricesData;
   }
 }
@@ -1683,7 +1682,29 @@ async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpe
 async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باب سيم كارت',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بصمة',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'أداة',name:i.name||i.الاسم||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
+async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||''})); } catch(e){} }
+
+function openToolsSheet() {
+  sheetPriceType = 'tools';
+  sheetFlatSubType = null;
+  document.getElementById('productsSheetTitle').textContent = '🔧 أدوات';
+  document.getElementById('sheetSearch').value = '';
+  var brandsDiv = document.getElementById('sheetBrands');
+  brandsDiv.style.display = 'none';
+  var resultsDiv = document.getElementById('sheetResults');
+  resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;">جاري تحميل الأدوات...</div></div>';
+  openSheet('productsSheet');
+  var attempts = 0;
+  function tryShow() {
+    attempts++;
+    if (!toolsData.length && attempts < 20) { setTimeout(tryShow, 500); return; }
+    if (!toolsData.length) { resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#94A3B8;">لا توجد أدوات</div>'; return; }
+    var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
+    var all = avail.length ? avail : toolsData;
+    resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
+  }
+  setTimeout(tryShow, 200);
+}
 
 function formatPriceIQD(n) {
   let priceStr = String(n || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
@@ -2571,8 +2592,7 @@ var _newItemsTypeMap = {
   'سماعة اتصال': 'flatpower',
   'باب سيم':     'flatpower',
   'بصمة':        'flatpower',
-  'أدوات':        'tools',
-    'منوعة':       'flatpower',
+  'منوعة':       'flatpower',
 };
 
 function openNewItemsSheet() {
