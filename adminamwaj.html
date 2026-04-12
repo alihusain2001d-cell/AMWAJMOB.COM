@@ -479,7 +479,20 @@ function openProductImgModal(p){
   modal.classList.add('open');
 }
 function previewProdImg(){const url=document.getElementById('prodImgUrl').value.trim(),img=document.getElementById('prodImgPreview'),empty=document.getElementById('prodImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadProdImgFile(){const file=document.getElementById('prodImgFile').files[0];if(!file)return;const status=document.getElementById('prodImgUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('prodImgUrl').value=d.data.url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
+async function uploadProdImgFile(){
+  const file=document.getElementById('prodImgFile').files[0];
+  if(!file)return;
+  const status=document.getElementById('prodImgUploadStatus');
+  status.textContent='⏳ جاري الرفع...';
+  try{
+    const base64=await new Promise(function(res,rej){const r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+    const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',base64);
+    const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.success){document.getElementById('prodImgUrl').value=d.data.url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}
+    else status.innerHTML='<span style="color:var(--red)">❌ فشل: '+(d.error&&d.error.message||'خطأ')+'</span>';
+  }catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
 
 // ══════════════════════════════════════════════
 // saveProdImg — نفس الاسم + نفس الشيت فقط
@@ -558,7 +571,20 @@ function filterBulkPreview(){
   prev.innerHTML=html;
 }
 function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',file);const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});const d=await r.json();if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}else status.innerHTML='<span style="color:var(--red)">❌ فشل الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
+async function uploadBulkImgFile(){
+  const file=document.getElementById('bulkImgFile').files[0];
+  if(!file)return;
+  const status=document.getElementById('bulkUploadStatus');
+  status.textContent='⏳ جاري الرفع...';
+  try{
+    const base64=await new Promise(function(res,rej){const r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
+    const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',base64);
+    const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}
+    else status.innerHTML='<span style="color:var(--red)">❌ فشل: '+(d.error&&d.error.message||'خطأ')+'</span>';
+  }catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
+}
 async function saveBulkImg(){
   const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),selTypes=getSelectedTypes(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
   if(!prefix&&!sheet&&!selTypes.length){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
