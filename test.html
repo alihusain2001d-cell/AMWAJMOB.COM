@@ -1690,6 +1690,8 @@ function openToolsSheet() {
   sheetFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = '🔧 أدوات';
   document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetSearch').setAttribute('data-sheet-type', 'tools');
+  document.getElementById('sheetSearch').removeAttribute('data-sheet-sub');
   var brandsDiv = document.getElementById('sheetBrands');
   brandsDiv.style.display = 'none';
   var resultsDiv = document.getElementById('sheetResults');
@@ -2158,6 +2160,8 @@ function openProductSheet(type, title) {
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = title;
   document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetSearch').setAttribute('data-sheet-type', type);
+  document.getElementById('sheetSearch').removeAttribute('data-sheet-sub');
   document.getElementById('sheetResults').innerHTML = '';
   renderSheetBrands(type);
   openSheet('productsSheet');
@@ -2171,6 +2175,8 @@ function openFlatSubSheet(subType, labelAr, icon) {
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
   document.getElementById('sheetSearch').value = '';
+  document.getElementById('sheetSearch').setAttribute('data-sheet-type', 'flatpower');
+  document.getElementById('sheetSearch').setAttribute('data-sheet-sub', subType);
   document.getElementById('sheetResults').innerHTML = '';
   renderSheetBrands('flatpower');
   openSheet('productsSheet');
@@ -2269,9 +2275,10 @@ function handleSheetSearch() {
   // دائرة تحميل أولاً
   resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
 
-  // حفظ النوع الحالي وقت بدء البحث
-  var _searchType = sheetPriceType;
-  var _searchSub = sheetFlatSubType;
+  // قرأ النوع من data attribute للضمان
+  var _searchInput = document.getElementById('sheetSearch');
+  var _searchType = _searchInput.getAttribute('data-sheet-type') || sheetPriceType;
+  var _searchSub = _searchInput.getAttribute('data-sheet-sub') || null;
 
   var attempts = 0;
   function trySearch() {
