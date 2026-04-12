@@ -2733,14 +2733,17 @@ function doGlobalSheetSearch() {
     resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد نتائج لـ &quot;' + sanitize(q) + '&quot;</div>';
     return;
   }
-  var oldSheetType = sheetPriceType;
   var html = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + Math.min(results.length,80) + ' نتيجة</div>';
+  var _savedType = sheetPriceType;
+  var _savedSub  = sheetFlatSubType;
   results.slice(0,80).forEach(function(r) {
     sheetPriceType = r.type;
     sheetFlatSubType = r.sub || null;
     html += createSheetPriceItem(r.p);
   });
-  sheetPriceType = oldSheetType;
+  // أعد القيمة الأصلية بعد الحلقة
+  sheetPriceType = _savedType;
+  sheetFlatSubType = _savedSub;
   resultsDiv.innerHTML = html;
 }
 
