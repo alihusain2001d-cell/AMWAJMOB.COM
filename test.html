@@ -1688,6 +1688,8 @@ async function loadTools() { try { const r = await secureApiCall('getTools'); to
 
 function openToolsSheet() {
   sheetPriceType = 'tools';
+  _activeSheetType = 'tools';
+  _activeSheetSub = null;
   sheetFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = '🔧 أدوات';
   document.getElementById('sheetSearch').value = '';
@@ -2151,10 +2153,14 @@ const _origUpdateCart = window.updateCartBadge;
 // ═══ SHEET & PRODUCT FUNCTIONS ═══
 
 let sheetPriceType = 'screens';
+let _activeSheetType = 'screens';
+let _activeSheetSub = null;
 let sheetFlatSubType = null;
 
 function openProductSheet(type, title) {
   sheetPriceType = type;
+  _activeSheetType = type;
+  _activeSheetSub = null;
   sheetFlatSubType = null;
   if (typeof currentPriceType !== 'undefined') currentPriceType = type;
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
@@ -2168,6 +2174,8 @@ function openProductSheet(type, title) {
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
   sheetPriceType = 'flatpower';
+  _activeSheetType = 'flatpower';
+  _activeSheetSub = subType;
   sheetFlatSubType = subType;
   if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
@@ -2249,8 +2257,8 @@ function handleSheetSearch() {
   const q = document.getElementById('sheetSearch').value.trim().toLowerCase();
   const resultsDiv = document.getElementById('sheetResults');
   const brandsDiv = document.getElementById('sheetBrands');
-  var _type = sheetPriceType;
-  var _sub  = sheetFlatSubType;
+  var _type = _activeSheetType;
+  var _sub  = _activeSheetSub;
   var isNoFilter = (_type === 'tools' || !!_sub);
 
   if (q.length < 2) {
