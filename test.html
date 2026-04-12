@@ -1454,7 +1454,8 @@ function handleGlobalSearch(event) {
     ...doorSimData.map(i => ({...i, source: 'باب سيم', icon: '💳'})),
     ...fingerprintData.map(i => ({...i, source: 'بصمة', icon: '👆'})),
     ...lensData.map(i => ({...i, source: 'عدسة كاميرا', icon: '📷'})),
-    ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'}))
+    ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'})),
+    ...toolsData.map(i => ({...i, source: 'أدوات', icon: '🔧'}))
   ];
 
   const results = allData.filter(item =>
@@ -2709,7 +2710,7 @@ function doGlobalSheetSearch() {
     return;
   }
   // Search all data types
-  var allTypes = ['screens','batteries','chargeboards','flatcharging','backcover','housing','camera'];
+  var allTypes = ['screens','batteries','chargeboards','flatcharging','backcover','housing','camera','tools'];
   var flatSubs = ['FLAT POWER','FLAT VOLUME','BUZZER','EAR SPEAKER','DOOR SIM','FINGERPRINT','OTHER'];
   var results = [];
   allTypes.forEach(function(t) {
