@@ -2269,10 +2269,14 @@ function handleSheetSearch() {
   // دائرة تحميل أولاً
   resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
 
+  // حفظ النوع الحالي وقت بدء البحث
+  var _searchType = sheetPriceType;
+  var _searchSub = sheetFlatSubType;
+
   var attempts = 0;
   function trySearch() {
     attempts++;
-    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
+    var data = _searchSub ? getFlatSubData(_searchSub) : getDataForType(_searchType);
     if ((!data || data.length === 0) && attempts < 20) {
       setTimeout(trySearch, 500);
       return;
