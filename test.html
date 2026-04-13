@@ -1195,6 +1195,8 @@ function closeFlatpowerModal(event) {
 function openLensFromModal() {
   closeFlatpowerModal();
   sheetPriceType = 'flatpower';
+  _activeSheetType = 'flatpower';
+  _activeSheetSub = 'LENS';
   sheetFlatSubType = 'LENS';
   document.getElementById('productsSheetTitle').textContent = '📷 عدسة كاميرا';
   document.getElementById('sheetSearch').value = '';
