@@ -1690,7 +1690,7 @@ async function loadFingerprint() { try { const r = await secureApiCall('getFinge
 async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات باور',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
 async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات صوت',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
-async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||''})); } catch(e){} }
+async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||'',image_url:i.image_url||''})); } catch(e){} }
 
 function openToolsSheet() {
   sheetPriceType = 'tools';
