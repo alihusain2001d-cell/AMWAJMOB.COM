@@ -229,7 +229,37 @@ tr:hover td{background:#ffffff05}
 const ADMIN_PASS='1994';
 const API_URL='https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
 const API_KEY='AMWAJ_d5fb3e7a-6534-4afa-8c52-b3d14b2d6d22';
-const IMGBB_KEY='baec33703816b0356502051d078fc688';
+const GITHUB_TOKEN = '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';
+const GITHUB_REPO = 'alihusain2001d-cell/AMWAJMOB.COM';
+const GITHUB_BRANCH = 'main';
+
+async function uploadToGitHub(file) {
+  const base64 = await new Promise(function(res, rej) {
+    const r = new FileReader();
+    r.onload = function(e) { res(e.target.result.split(',')[1]); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+  const ext = file.name.split('.').pop() || 'jpg';
+  const fileName = 'products/' + Date.now() + '.' + ext;
+  const url = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + fileName;
+  const resp = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'token ' + GITHUB_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: 'Upload product image',
+      content: base64,
+      branch: GITHUB_BRANCH
+    })
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.message || 'فشل الرفع');
+  return 'https://raw.githubusercontent.com/' + GITHUB_REPO + '/' + GITHUB_BRANCH + '/' + fileName;
+}
+
 let currentPage='dashboard',allCustomers=[],allOrders=[],allWarranties=[],allProducts=[],editTarget=null;
 
 function doLogin(){const p=document.getElementById('loginPass').value;if(p===ADMIN_PASS){localStorage.setItem('amwaj_admin_auth',ADMIN_PASS);document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}else{document.getElementById('loginErr').textContent='❌ كلمة السر غير صحيحة';document.getElementById('loginPass').value='';}}
@@ -479,20 +509,7 @@ function openProductImgModal(p){
   modal.classList.add('open');
 }
 function previewProdImg(){const url=document.getElementById('prodImgUrl').value.trim(),img=document.getElementById('prodImgPreview'),empty=document.getElementById('prodImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadProdImgFile(){
-  const file=document.getElementById('prodImgFile').files[0];
-  if(!file)return;
-  const status=document.getElementById('prodImgUploadStatus');
-  status.textContent='⏳ جاري الرفع...';
-  try{
-    const base64=await new Promise(function(res,rej){const r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
-    const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',base64);
-    const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});
-    const d=await r.json();
-    if(d.success){document.getElementById('prodImgUrl').value=d.data.url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}
-    else status.innerHTML='<span style="color:var(--red)">❌ فشل: '+(d.error&&d.error.message||'خطأ')+'</span>';
-  }catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
-}
+async function uploadProdImgFile(){const file=document.getElementById('prodImgFile').files[0];if(!file)return;const status=document.getElementById('prodImgUploadStatus');status.textContent='⏳ جاري الرفع على GitHub...';try{const url=await uploadToGitHub(file);document.getElementById('prodImgUrl').value=url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 
 // ══════════════════════════════════════════════
 // saveProdImg — نفس الاسم + نفس الشيت فقط
@@ -571,20 +588,7 @@ function filterBulkPreview(){
   prev.innerHTML=html;
 }
 function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadBulkImgFile(){
-  const file=document.getElementById('bulkImgFile').files[0];
-  if(!file)return;
-  const status=document.getElementById('bulkUploadStatus');
-  status.textContent='⏳ جاري الرفع...';
-  try{
-    const base64=await new Promise(function(res,rej){const r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
-    const fd=new FormData();fd.append('key',IMGBB_KEY);fd.append('image',base64);
-    const r=await fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd});
-    const d=await r.json();
-    if(d.success){document.getElementById('bulkImgUrl').value=d.data.url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}
-    else status.innerHTML='<span style="color:var(--red)">❌ فشل: '+(d.error&&d.error.message||'خطأ')+'</span>';
-  }catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}
-}
+async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع على GitHub...';try{const url=await uploadToGitHub(file);document.getElementById('bulkImgUrl').value=url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 async function saveBulkImg(){
   const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),selTypes=getSelectedTypes(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
   if(!prefix&&!sheet&&!selTypes.length){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
