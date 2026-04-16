@@ -419,7 +419,7 @@ async function loadProducts(){showLoading();try{
     apiCall('getAllProducts',{adminKey:ADMIN_PASS}),
     apiCall('getTools')
   ]);
-  const toolsData = (toolsR.data||[]).map(function(p){ return Object.assign({},p,{sheet:'أدوات',sheetName:'أدوات',brand:'',type:''}); });
+  const toolsData = (toolsR.data||[]).map(function(p){ return Object.assign({},p,{sheet:'tools',sheetName:'tools',brand:'',type:''}); });
   allProducts = (r.data||[]).concat(toolsData);
   renderProducts();
 }catch(e){setContent('<div class="empty-state">❌ فشل التحميل: '+e.message+'</div>');}}
