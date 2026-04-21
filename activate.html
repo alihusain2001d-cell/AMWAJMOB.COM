@@ -379,14 +379,19 @@ body {
   z-index: 500;
   align-items: flex-end; justify-content: center;
   backdrop-filter: blur(4px);
+  overflow: hidden;
 }
 .bsheet-overlay.open { display: flex; }
 .bsheet {
   background: #fff;
   border-radius: 24px 24px 0 0;
   width: 100%; max-width: 480px;
+  height: 90dvh;
   max-height: 90dvh;
+  min-height: 0;
   display: flex; flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
   animation: sheetUp .28s cubic-bezier(.32,.72,0,1);
 }
 @keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
@@ -440,22 +445,104 @@ body {
 .brand-logos { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; margin-bottom:3px; }
 .brand-logos img { height:20px; object-fit:contain; max-width:58px; }
 
-/* Price items */
-.price-item {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:12px; padding:12px; margin-bottom:8px;
+/* Price items grid */
+.price-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  align-items: stretch;
 }
-.pi-name { font-weight:700; font-size:19px; }
-.pi-brand { font-size:16px; color:var(--muted); margin-top:2px; }
-.pi-type { display:inline-block; padding:3px 10px; border-radius:20px; font-size:14px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:5px; }
-.pi-price { font-size:19px; font-weight:800; margin-top:6px; }
+.price-item {
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:14px; padding:10px 8px 10px;
+  display:flex; flex-direction:column; align-items:center;
+  text-align:center;
+}
+.price-item .pi-cart-row {
+  margin-top: auto;
+  padding-top: 8px;
+}
+.pi-img-wrap {
+  width:100%; height:160px; display:flex; align-items:center;
+  justify-content:center; margin-bottom:8px; flex-shrink:0;
+  border-radius:10px; background:#F8FAFC;
+}
+.pi-img-wrap img {
+  width:100%; height:160px; object-fit:contain;
+  border-radius:10px;
+}
+.pi-info { width:100%; }
+.pi-name {
+  font-weight:700; font-size:15px; line-height:1.35; color:var(--text);
+  min-height:42px; display:flex; align-items:center; justify-content:center;
+}
+.pi-brand { font-size:13px; color:var(--muted); margin-top:2px; min-height:18px; }
+.pi-type { display:inline-block; padding:2px 8px; border-radius:20px; font-size:12px; font-weight:700; background:#F0FDF4; color:#166534; margin-top:4px; }
+.pi-price { font-size:17px; font-weight:800; margin-top:5px; min-height:26px; }
 .pi-price.avail { color:var(--primary); }
 .pi-price.unavail { color:var(--red); }
-.pi-notes { background:#FFF7ED; border-right:3px solid var(--orange); padding:7px 10px; border-radius:8px; font-size:17px; color:#92400E; font-weight:600; margin-top:6px; }
+.pi-notes { background:#FFF7ED; border-right:3px solid var(--orange); padding:5px 8px; border-radius:6px; font-size:13px; color:#92400E; font-weight:600; margin-top:5px; text-align:right; width:100%; }
+
+/* زر السلة */
+.pi-cart-row {
+  display:flex; align-items:center; width:100%;
+  margin-top:8px; border-radius:10px; overflow:hidden;
+  flex-shrink:0;
+}
+.pi-qty-btn {
+  width:44px; height:44px; border:none; flex-shrink:0;
+  font-size:24px; font-weight:900; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Tajawal',sans-serif; transition:opacity .15s;
+}
+.pi-qty-btn:active { opacity:0.75; }
+.pi-qty-minus { background:#64748B; color:white; border-radius:10px 0 0 10px; }
+.pi-qty-plus  { background:#0F172A; color:white; border-radius:0 10px 10px 0; }
 .add-to-cart-btn {
-  background:var(--green); color:white; padding:11px; border-radius:9px;
-  border:none; cursor:pointer; margin-top:8px; width:100%;
-  font-weight:700; font-size:18px; font-family:'Tajawal',sans-serif;
+  flex:1; background:#475569; color:white; padding:0 6px;
+  height:44px; border:none; cursor:pointer;
+  font-weight:700; font-size:15px; font-family:'Tajawal',sans-serif;
+  transition:background .2s; display:flex; align-items:center; justify-content:center; gap:4px;
+}
+.add-to-cart-btn:active { background:#334155; }
+.add-to-cart-btn.gray-btn { background:#64748B; border-radius:10px; }
+.add-to-cart-btn.disabled-btn { background:#CBD5E1; color:#94A3B8; cursor:not-allowed; }
+.pi-qty-btn.disabled-btn { background:#E2E8F0; color:#CBD5E1; cursor:not-allowed; }
+.pi-qty-display {
+  font-size:18px; font-weight:900; color:#fff; min-width:24px; text-align:center;
+}
+
+/* Admin panel */
+.admin-filter-btn {
+  padding:6px 14px; border-radius:20px; border:1.5px solid var(--border);
+  background:#fff; font-size:14px; font-weight:700; font-family:'Tajawal',sans-serif;
+  cursor:pointer; white-space:nowrap; color:var(--text); flex-shrink:0;
+}
+.admin-filter-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
+.admin-prod-row {
+  display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-bottom:1px solid var(--border); cursor:pointer;
+  overflow:hidden; min-height:74px; position:relative;
+  max-width:100%;
+}
+.admin-prod-row:last-child { border-bottom:none; }
+.admin-prod-img {
+  width:54px; height:54px; min-width:54px; border-radius:10px; object-fit:cover;
+  background:#F8FAFC; border:1px solid var(--border); flex-shrink:0; display:block;
+}
+.admin-prod-img-empty {
+  width:54px; height:54px; min-width:54px; border-radius:10px; background:#F1F5F9;
+  border:2px dashed #CBD5E1; flex-shrink:0; display:flex;
+  align-items:center; justify-content:center; font-size:22px; color:#CBD5E1;
+}
+.admin-prod-info { flex:1; min-width:0; overflow:hidden; }
+.admin-prod-name { font-size:15px; font-weight:700; color:var(--text); line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-prod-sheet { font-size:12px; color:var(--muted); margin-top:2px; }
+.admin-edit-btn {
+  padding:7px 14px; border-radius:8px; border:none;
+  background:var(--primary-light); color:var(--primary);
+  font-size:14px; font-weight:700; font-family:'Tajawal',sans-serif;
+  cursor:pointer; flex-shrink:0;
 }
 
 /* Form inside sheet */
@@ -743,6 +830,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <button class="header-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
     <div class="header-title">أمواج للإلكترونيات</div>
     <div style="display:flex;gap:6px;">
+      <button class="header-icon-btn" id="installBtn" onclick="showInstallPrompt()" title="تثبيت التطبيق" style="display:none;font-size:18px;">📲</button>
       <button class="header-icon-btn" onclick="focusHomeSearch()" title="بحث">🔍</button>
       <button class="header-icon-btn" onclick="openCartSheet()" title="السلة" style="position:relative;">
         🛒
@@ -831,11 +919,12 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
       <!-- Search -->
       <div class="sec-label">بحث سريع</div>
-      <div class="home-search" style="margin:0 12px 0;">
+      <div class="home-search" style="margin:0 12px 0;position:relative;">
         <span style="font-size:18px;color:var(--muted);">🔍</span>
-        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" onkeyup="handleGlobalSearch(event)">
+        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
+        <span id="globalSearchClear" onclick="clearGlobalSearch()" style="display:none;font-size:18px;color:#EF4444;cursor:pointer;padding:4px;flex-shrink:0;">✕</span>
       </div>
-      <div id="globalSearchResults" style="padding:0 12px;margin-top:8px;display:none;"></div>
+      <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
       <!-- Products -->
       <div class="sec-label">المنتجات</div>
@@ -882,6 +971,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('housing','🏠 شاصي');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شاصي.jpg" alt="شاصي"><div class="prod-name">شاصي</div><div class="prod-name-en">Housing</div>
         
+        </div>
+        <div class="prod-card" onclick="requireAuth(function(){openToolsSheet();})">
+          <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/ادوات.jpg" onerror="this.style.display='none'" alt="أدوات"><div class="prod-name">أدوات</div><div class="prod-name-en">Tools</div>
         </div>
         <div class="prod-card" onclick="requireAuth(function(){openFlatSub('OTHER','منوعة','📦');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/منوعات.jpg" alt="منوعة"><div class="prod-name">قطع غيار منوعة</div><div class="prod-name-en">Misc Parts</div>
@@ -1103,6 +1195,8 @@ function closeFlatpowerModal(event) {
 function openLensFromModal() {
   closeFlatpowerModal();
   sheetPriceType = 'flatpower';
+  _activeSheetType = 'flatpower';
+  _activeSheetSub = 'LENS';
   sheetFlatSubType = 'LENS';
   document.getElementById('productsSheetTitle').textContent = '📷 عدسة كاميرا';
   document.getElementById('sheetSearch').value = '';
@@ -1127,8 +1221,8 @@ function openLensFromModal() {
 
 function getFlatSubData(subType) {
   switch(subType) {
-    case 'FLAT POWER':   return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT POWER'));
-    case 'FLAT VOLUME':  return flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT VOLUME'));
+    case 'FLAT POWER':   return flatPowerSheetData.length ? flatPowerSheetData : flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT POWER'));
+    case 'FLAT VOLUME':  return flatVolumeSheetData.length ? flatVolumeSheetData : flatpowerData.filter(i => i.name.toUpperCase().includes('FLAT VOLUME'));
     case 'BUZZER':       return buzzerData;
     case 'EAR SPEAKER':  return earSpeakerData;
     case 'DOOR SIM':     return doorSimData;
@@ -1233,6 +1327,7 @@ function getDataForType(type) {
     case 'housing': return housingData;
     case 'lens': return lensData;
     case 'camera': return cameraData;
+    case 'tools': return toolsData;
     default: return pricesData;
   }
 }
@@ -1323,12 +1418,31 @@ function logout() {
 }
 async function fetchCustomers() { return await secureApiCall('getCustomers'); }
 
+function clearGlobalSearch() {
+  var input = document.getElementById('globalSearch');
+  var clearBtn = document.getElementById('globalSearchClear');
+  var resultsDiv = document.getElementById('globalSearchResults');
+  input.value = '';
+  clearBtn.style.display = 'none';
+  resultsDiv.style.display = 'none';
+  resultsDiv.innerHTML = '';
+  input.focus();
+}
+
+function closeSearchDropdown() {
+  var d = document.getElementById('globalSearchResults');
+  if (d) d.style.display = 'none';
+}
+
 function handleGlobalSearch(event) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   const query = event.target.value.trim().toLowerCase();
+  var clearBtn = document.getElementById('globalSearchClear');
+  if (clearBtn) clearBtn.style.display = event.target.value ? '' : 'none';
   const resultsDiv = document.getElementById('globalSearchResults');
   if (query.length < 2) { resultsDiv.style.display = 'none'; resultsDiv.innerHTML = ''; return; }
+
   const allData = [
     ...pricesData.map(i => ({...i, source: 'شاشات', icon: '🖥️'})),
     ...batteriesData.map(i => ({...i, source: 'بطاريات', icon: '🔋'})),
@@ -1343,33 +1457,104 @@ function handleGlobalSearch(event) {
     ...doorSimData.map(i => ({...i, source: 'باب سيم', icon: '💳'})),
     ...fingerprintData.map(i => ({...i, source: 'بصمة', icon: '👆'})),
     ...lensData.map(i => ({...i, source: 'عدسة كاميرا', icon: '📷'})),
-    ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'}))
+    ...miscData.map(i => ({...i, source: 'منوع', icon: '📦'})),
+    ...toolsData.map(i => ({...i, source: 'أدوات', icon: '🔧'}))
   ];
-  const results = allData.filter(item => (item.name && item.name.toLowerCase().includes(query)) || (item.brand && item.brand.toLowerCase().includes(query)));
+
+  const results = allData.filter(item =>
+    (item.name && item.name.toLowerCase().includes(query)) ||
+    (item.brand && item.brand.toLowerCase().includes(query))
+  );
+
   resultsDiv.style.display = 'block';
-  if (results.length === 0) { resultsDiv.innerHTML = '<div style="padding:12px;color:#666;text-align:center;">لا توجد نتائج</div>'; return; }
-  let html = `<div style="font-weight:bold;color:#1e88e5;margin-bottom:8px;">النتائج (${results.length}):</div>`;
-  results.slice(0, 20).forEach(item => {
+  if (results.length === 0) {
+    resultsDiv.innerHTML = '<div style="padding:14px;color:#94A3B8;text-align:center;font-size:15px;">لا توجد نتائج</div>';
+    return;
+  }
+
+  const guestMode = isGuest();
+  let html = '';
+  results.slice(0, 30).forEach(function(item, idx) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
     const available = qty > 0 && price > 0;
-    const guestMode = isGuest();
-    const priceText = available ? (guestMode ? '🔒 سجل لرؤية السعر' : formatPriceIQD(price) + ' د.ع') : 'غير متوفر';
-    const priceColor = available ? (guestMode ? '#94A3B8' : '#1e88e5') : '#c62828';
-    let screenTypeLabel = '';
-    if (item.source === 'شاشات' && item.type) {
-      const typeLabels = {'أصلي وكالة': '🟢', 'أصلي صيني': '🔵', 'TFT': '🟡'};
-      screenTypeLabel = `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:13px;font-weight:bold;margin-right:6px;display:inline-block;">${typeLabels[item.type] || ''} ${item.type}</span>`;
+    const priceText = !available ? '<span style="color:#EF4444;font-size:13px;">غير متوفر</span>'
+      : guestMode ? '<span style="color:#94A3B8;font-size:13px;">🔒 سجل</span>'
+      : '<span style="color:#0284C7;font-weight:800;font-size:13px;">' + formatPriceIQD(price) + ' د.ع</span>';
+    const typeText = (item.source === 'شاشات' && item.type) ? item.type : '';
+    const notesText = (item.notes && item.notes.trim()) ? item.notes : '';
+    const border = idx < results.slice(0,30).length - 1 ? 'border-bottom:1px solid #F1F5F9;' : '';
+
+    // زر السلة
+    var pid = cacheProduct(Object.assign({}, item, {
+      itemType: {'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards','شريط شحن':'flatcharging','فلات باور/صوت':'flatpower','باك كفر':'backcover','شاصي':'housing','كاميرا':'camera','سماعة جرس':'flatpower','سماعة اتصال':'flatpower','باب سيم':'flatpower','بصمة':'flatpower','عدسة كاميرا':'lens','منوع':'flatpower'}[item.source] || 'screens'
+    }));
+    var cartBtnHtml = '';
+    if (available && !guestMode) {
+      cartBtnHtml = '<button onmousedown="event.stopPropagation();addToCart(getCachedProduct(\'' + pid + '\'));document.getElementById(\'globalSearch\').blur();" style="background:#16A34A;color:white;border:none;border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;" title="إضافة للسلة">🛒</button>';
+    } else if (available && guestMode) {
+      cartBtnHtml = '<button onmousedown="event.stopPropagation();showLoginPrompt();" style="background:#94A3B8;color:white;border:none;border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🔒</button>';
     }
-    let notesHtml = '';
-    if (item.notes && item.notes.trim()) notesHtml = `<div style="background:#fff3e0;border-right:3px solid #ff9800;padding:6px 10px;margin-top:6px;border-radius:4px;font-size:14px;color:#e65100;">📝 ${item.notes}</div>`;
-    const cartBtn = available ? (isGuest()
-      ? `<button onclick='showLoginPrompt()' style="background:#94A3B8;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🔒 سجل لرؤية السعر</button>`
-      : `<button onclick='addToCartFromSearch(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:#25D366;color:white;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;margin-top:8px;width:100%;font-weight:bold;font-size:18px;">🛒 إضافة للسلة</button>`) : '';
-    html += `<div style="background:#f9fbff;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #e0e8f0;"><div style="font-weight:bold;font-size:18px;color:#1e3a5f;">${item.icon} ${item.name}</div><div style="font-size:14px;color:#666;margin-top:4px;">القسم: ${item.source} • الماركة: ${item.brand || '-'}</div>${screenTypeLabel ? `<div style="margin-top:6px;">${screenTypeLabel}</div>` : ''}${notesHtml}<div style="font-size:17px;color:${priceColor};font-weight:bold;margin-top:4px;">${priceText}</div>${cartBtn}</div>`;
+
+    html += '<div onmousedown="goToProductInSheet(' + JSON.stringify(item).replace(/'/g,"&#39;") + ')" style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;' + border + '" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'\'">'+
+      '<span style="font-size:18px;flex-shrink:0;">' + item.icon + '</span>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-size:14px;font-weight:700;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + sanitize(item.name||'') + '</div>'+
+        '<div style="font-size:11px;color:#94A3B8;margin-top:1px;">' + item.source + (item.brand ? ' · ' + item.brand : '') + (typeText ? ' · <span style="color:#16A34A;">' + typeText + '</span>' : '') + (notesText ? ' · <span style="color:#F59E0B;">' + sanitize(notesText) + '</span>' : '') + '</div>'+
+        '<div style="margin-top:2px;">' + priceText + '</div>'+
+      '</div>'+
+      cartBtnHtml +
+    '</div>';
   });
-  if (results.length > 20) html += `<div style="padding:8px;color:#666;text-align:center;font-size:17px;">... و ${results.length - 20} نتيجة أخرى</div>`;
+
+  if (results.length > 30) {
+    html += '<div style="padding:10px;text-align:center;color:#94A3B8;font-size:13px;">... و ' + (results.length - 30) + ' نتيجة أخرى — دقق البحث</div>';
+  }
+
   resultsDiv.innerHTML = html;
+}
+
+function goToProductInSheet(item) {
+  // أغلق شيت البحث
+  closeSheet('searchSheet');
+
+  // حدد نوع الشيت
+  var sourceToType = {
+    'شاشات':       { type: 'screens',      title: '🖥️ الشاشات' },
+    'بطاريات':     { type: 'batteries',    title: '🔋 البطاريات' },
+    'بورد شحن':    { type: 'chargeboards', title: '🔌 بورد شحن' },
+    'فلات':        { type: 'flatmain',     title: '⚡ فلات' },
+    'باك كفر':     { type: 'backcover',    title: '📱 باك كفر' },
+    'شاصي':        { type: 'housing',      title: '🏠 شاصي' },
+    'عدسة كاميرا': { type: 'lens',         title: '📷 عدسة كاميرا' },
+    'كاميرا':      { type: 'camera',       title: '📷 كاميرا' },
+  };
+
+  var info = sourceToType[item.source];
+  if (!info) return;
+
+  // افتح الشيت وانتقل للبراند
+  openProductSheet(info.type, info.title);
+
+  // بعد ما يفتح الشيت انتقل للبراند مباشرة
+  setTimeout(function() {
+    if (item.brand) {
+      openSheetBrand(item.brand);
+      // بعد تحميل البراند سكرول للمنتج
+      setTimeout(function() {
+        var items = document.querySelectorAll('#sheetResults .price-item');
+        for (var i = 0; i < items.length; i++) {
+          var nameEl = items[i].querySelector('.pi-name');
+          if (nameEl && nameEl.textContent.trim().toLowerCase() === (item.name||'').toLowerCase()) {
+            items[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            items[i].style.outline = '2px solid #0284C7';
+            setTimeout(function(el){ el.style.outline = ''; }, 2000);
+            break;
+          }
+        }
+      }, 800);
+    }
+  }, 300);
 }
 
 function addToCartFromSearch(product) {
@@ -1480,7 +1665,8 @@ async function checkWarranty() {
 let pricesData = [], batteriesData = [], chargeboardsData = [], flatchargingData = [];
 let flatpowerData = [], backcoverData = [], housingData = [], lensData = [];
 let cameraData = [], buzzerData = [], earSpeakerData = [], doorSimData = [];
-let fingerprintData = [], miscData = [];
+let fingerprintData = [], miscData = [], toolsData = [];
+let flatPowerSheetData = [], flatVolumeSheetData = [];
 
 async function loadPrices() { try { pricesData = await secureApiCall('getPrices'); } catch(e){} }
 async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بطارية',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
@@ -1502,6 +1688,45 @@ async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpe
 async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باب سيم كارت',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بصمة',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
+async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات باور',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
+async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات صوت',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
+async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||'',image_url:i.image_url||''})); } catch(e){} }
+
+function openToolsSheet() {
+  sheetPriceType = 'tools';
+  _activeSheetType = 'tools';
+  _activeSheetSub = null;
+  sheetFlatSubType = null;
+  document.getElementById('productsSheetTitle').textContent = '🔧 أدوات';
+  document.getElementById('sheetSearch').value = '';
+  var brandsDiv = document.getElementById('sheetBrands');
+  brandsDiv.style.display = 'none';
+  var resultsDiv = document.getElementById('sheetResults');
+  resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;">جاري تحميل الأدوات...</div></div>';
+  openSheet('productsSheet');
+  sheetPriceType = 'tools'; // تأكيد بعد openSheet
+  sheetFlatSubType = null;
+  var attempts = 0;
+  function tryShow() {
+    attempts++;
+    if (!toolsData.length && attempts < 30) { setTimeout(tryShow, 500); return; }
+    if (!toolsData.length) {
+      // جرب تحميل من جديد
+      loadTools().then(function() {
+        var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
+        var all = avail.length ? avail : toolsData;
+        resultsDiv.innerHTML = all.length
+          ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
+          : '<div style="padding:20px;text-align:center;color:#94A3B8;">لا توجد أدوات</div>';
+      });
+      return;
+    }
+    var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
+    var all = avail.length ? avail : toolsData;
+    resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
+  }
+  setTimeout(tryShow, 200);
+}
 
 function formatPriceIQD(n) {
   let priceStr = String(n || '').replace(/\s/g, '').replace(/,/g, '').replace(/\./g, '');
@@ -1872,32 +2097,6 @@ function showScreen(id) {
 
 // footerTab defined above
 
-function renderAccountSheet() {
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const div = document.getElementById('accountContent');
-  if (!div) return;
-  if (user) {
-    div.innerHTML =
-      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">' +
-      '<div style="font-size:40px;margin-bottom:8px;">&#128100;</div>' +
-      '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>' +
-      '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>' +
-      '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>' +
-      '</div>' +
-      '<button class="form-btn" onclick="openWarrantyFromAccount()">&#9989; تفعيل الضمان</button>' +
-      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">&#128269; التحقق من الضمان</button>' +
-      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">&#128682; تسجيل الخروج</button>';
-  } else {
-    div.innerHTML =
-      '<div style="text-align:center;padding:20px 0;">' +
-      '<div style="font-size:48px;margin-bottom:12px;">&#128100;</div>' +
-      '<div style="font-size:18px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>' +
-      '<div style="font-size:17px;color:#64748B;margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>' +
-      '</div>' +
-      '<button class="form-btn" onclick="toLoginScreen()">تسجيل الدخول</button>' +
-      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="toRegisterScreen()">تسجيل حساب جديد</button>';
-  }
-}
 function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
 function toRegisterScreen() { closeSheet('accountSheet'); showScreen('registerScreen'); }
 
@@ -1960,10 +2159,14 @@ const _origUpdateCart = window.updateCartBadge;
 // ═══ SHEET & PRODUCT FUNCTIONS ═══
 
 let sheetPriceType = 'screens';
+let _activeSheetType = 'screens';
+let _activeSheetSub = null;
 let sheetFlatSubType = null;
 
 function openProductSheet(type, title) {
   sheetPriceType = type;
+  _activeSheetType = type;
+  _activeSheetSub = null;
   sheetFlatSubType = null;
   if (typeof currentPriceType !== 'undefined') currentPriceType = type;
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
@@ -1977,6 +2180,8 @@ function openProductSheet(type, title) {
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
   sheetPriceType = 'flatpower';
+  _activeSheetType = 'flatpower';
+  _activeSheetSub = subType;
   sheetFlatSubType = subType;
   if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
@@ -2058,27 +2263,40 @@ function handleSheetSearch() {
   const q = document.getElementById('sheetSearch').value.trim().toLowerCase();
   const resultsDiv = document.getElementById('sheetResults');
   const brandsDiv = document.getElementById('sheetBrands');
-  if (q.length < 2) { resultsDiv.innerHTML = ''; brandsDiv.style.display = 'grid'; return; }
-  brandsDiv.style.display = 'none';
+  var _type = _activeSheetType;
+  var _sub  = _activeSheetSub;
+  var isNoFilter = (_type === 'tools' || !!_sub);
 
-  // دائرة تحميل أولاً
+  if (q.length < 2) {
+    if (isNoFilter) {
+      brandsDiv.style.display = 'none';
+      if (!q.length) {
+        var allData = _sub ? getFlatSubData(_sub) : getDataForType(_type);
+        resultsDiv.innerHTML = allData.length
+          ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + allData.length + ' نتيجة</div><div class="price-items-grid">' + allData.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
+          : '';
+      }
+    } else {
+      resultsDiv.innerHTML = '';
+      brandsDiv.style.display = 'grid';
+    }
+    return;
+  }
+  brandsDiv.style.display = 'none';
   resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;font-size:17px;">جاري البحث...</div></div>';
 
   var attempts = 0;
   function trySearch() {
     attempts++;
-    var data = sheetFlatSubType ? getFlatSubData(sheetFlatSubType) : getDataForType(sheetPriceType);
-    if ((!data || data.length === 0) && attempts < 20) {
-      setTimeout(trySearch, 500);
-      return;
-    }
+    var data = _sub ? getFlatSubData(_sub) : getDataForType(_type);
+    if ((!data || data.length === 0) && attempts < 20) { setTimeout(trySearch, 500); return; }
     var filtered = (data||[]).filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
     if (!filtered.length) {
       resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
       return;
     }
     resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
-      filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('');
+      '<div class="price-items-grid">' + filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
   }
   setTimeout(trySearch, 100);
 }
@@ -2113,7 +2331,7 @@ function openSheetBrand(brandsStr) {
         '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:17px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
         '<span style="font-size:14px;color:#64748B;">' + filtered.length + ' منتج</span>' +
         '</div>' +
-        filtered.map(function(p) { return createSheetPriceItem(p); }).join('');
+        '<div class="price-items-grid">' + filtered.map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
     }
   }
   setTimeout(tryRender, 100);
@@ -2125,28 +2343,135 @@ function backToSheetBrands() {
   document.getElementById('sheetSearch').value = '';
 }
 
+function getDriveImageUrl(url) {
+  if (!url || typeof url !== 'string' || !url.trim()) return '';
+  var u = url.trim();
+  // رابط Google Drive — حوّله لـ direct link
+  var m = u.match(/\/d\/([\w-]+)/);
+  if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w200';
+  // رابط مباشر
+  if (u.startsWith('http')) return u;
+  return '';
+}
+
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var priceHtml = avail
-    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
-    : '<div class="pi-price unavail">غير متوفر</div>';
-  var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
+  var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
-  var cartBtn = '';
-  if (avail) {
-    if (isGuest()) {
-      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
-    } else {
-      var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
-      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
-    }
+  var imgUrl = getDriveImageUrl(p.image_url);
+  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+
+  var priceHtml, cartRow;
+  if (!avail) {
+    priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
+    cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
+  } else if (isGuest()) {
+    priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
+  } else {
+    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
+    var uid = 'q_' + Math.random().toString(36).substr(2,7);
+    cartRow =
+      '<div class="pi-cart-row">' +
+        '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
+      '</div>';
   }
-  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
-    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+
+  return '<div class="price-item" style="' + (imgUrl ? '' : 'justify-content:space-between;') + '">' + imgHtml +
+    '<div class="pi-info">' +
+      '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
+      '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
+      typeHtml + priceHtml + notesHtml +
+    '</div>' +
+    cartRow + '</div>';
+}
+
+function piQtyChange(uid, delta) {
+  var el = document.getElementById(uid);
+  if (!el) return;
+  var n = (parseInt(el.textContent) || 0) + delta;
+  if (n < 0) n = 0;
+  if (n > 99) n = 99;
+  el.textContent = n;
+  // لون الرقم
+  el.style.color = n === 0 ? '#94A3B8' : 'var(--green)';
+}
+
+function piAddToCart(pid, uid) {
+  var p = getCachedProduct(pid);
+  if (!p) return;
+  var el = document.getElementById(uid);
+  var qty = el ? (parseInt(el.textContent) || 0) : 0;
+  if (qty <= 0) return;
+  // حط الكمية مباشرة بالسلة
+  var existingIndex = cart.findIndex(function(item) {
+    var ip = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
+    var pp = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+    return item.name === p.name && ip === pp;
+  });
+  if (existingIndex !== -1) {
+    cart[existingIndex].quantity = (cart[existingIndex].quantity||1) + qty;
+  } else {
+    var item = Object.assign({}, p);
+    item.quantity = qty;
+    cart.push(item);
+  }
+  saveCart();
+  showCartToast(p.name || 'المنتج');
+  if (el) { el.textContent = '0'; el.style.color = '#94A3B8'; }
+}
+
+// + مباشر يضيف للسلة
+function piDirectAdd(pid, uid) {
+  var p = getCachedProduct(pid);
+  if (!p) return;
+  var el = document.getElementById(uid);
+  // أضف للسلة
+  var existingIndex = cart.findIndex(function(item) {
+    var ip = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
+    var pp = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+    return item.name === p.name && ip === pp;
+  });
+  if (existingIndex !== -1) {
+    cart[existingIndex].quantity = (cart[existingIndex].quantity||1) + 1;
+  } else {
+    var item = Object.assign({}, p);
+    item.quantity = 1;
+    cart.push(item);
+  }
+  saveCart();
+  showCartToast(p.name || 'المنتج');
+  // حدّث الرقم
+  if (el) {
+    var n = (parseInt(el.textContent)||0) + 1;
+    el.textContent = n;
+  }
+}
+
+// − مباشر يخفض من السلة
+function piDirectRemove(pid, uid) {
+  var p = getCachedProduct(pid);
+  if (!p) return;
+  var existingIndex = cart.findIndex(function(item) {
+    var ip = Number(String(item.price||'').replace(/[^0-9]/g,''))||0;
+    var pp = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
+    return item.name === p.name && ip === pp;
+  });
+  if (existingIndex !== -1) {
+    cart[existingIndex].quantity = (cart[existingIndex].quantity||1) - 1;
+    if (cart[existingIndex].quantity <= 0) cart.splice(existingIndex, 1);
+    saveCart();
+  }
+  var el = document.getElementById(uid);
+  if (el) {
+    var n = Math.max(0, (parseInt(el.textContent)||0) - 1);
+    el.textContent = n;
+  }
 }
 
 function addToCartById(key) {
@@ -2329,46 +2654,53 @@ function openNewItemsSheet() {
       return;
     }
 
-    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة وصلت حديثاً</div>';
+    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة وصلت حديثاً</div><div class="price-items-grid">';
 
     items.forEach(function(item) {
       var price = Number(item.price) || 0;
       var typeKey = _newItemsTypeMap[item.source] || 'screens';
-      var priceHtml, cartBtnHtml;
+      var priceHtml, cartRow;
+
+      var itemImgUrl = getDriveImageUrl(item.image_url);
+      var itemImgHtml = itemImgUrl ? '<div class="pi-img-wrap"><img src="' + itemImgUrl + '" onerror="this.parentElement.innerHTML=\'\'"></div>' : '<div class="pi-img-wrap"></div>';
+      var dateHtml = item.date_added ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>' : '';
 
       if (isGuest()) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()" dir="ltr">99,999 IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
+        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
       } else {
         var pObj = {
           name: item.name, brand: item.brand||'', type: item.type||'',
           price: price, qty: item.qty||0, notes: item.notes||'',
-          itemType: typeKey
+          image_url: item.image_url||'', itemType: typeKey
         };
         var pid = cacheProduct(pObj);
-        priceHtml = '<div class="pi-price avail" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>';
-        cartBtnHtml = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">🛒 إضافة للسلة</button>';
+        var uid = 'q_' + Math.random().toString(36).substr(2,7);
+        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+        cartRow =
+          '<div class="pi-cart-row">' +
+            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+            '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
+          '</div>';
       }
-
-      // تاريخ الإضافة
-      var dateHtml = item.date_added
-        ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>'
-        : '';
 
       html +=
         '<div class="price-item">' +
-          '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
-          '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
-          (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
-          (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
-          priceHtml +
-          dateHtml +
-          (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
-          cartBtnHtml +
+          itemImgHtml +
+          '<div class="pi-info">' +
+            '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
+            '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
+            (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
+            (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
+            priceHtml + dateHtml +
+            (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
+          '</div>' +
+          cartRow +
         '</div>';
     });
 
-    body.innerHTML = html;
+    body.innerHTML = html + '</div>';
   }).catch(function(e) {
     body.innerHTML = '<div class="result error" style="margin:20px;">⚠️ فشل تحميل المواد الجديدة<br><small>' + (e.message||'') + '</small></div>';
   });
@@ -2392,7 +2724,7 @@ function doGlobalSheetSearch() {
     return;
   }
   // Search all data types
-  var allTypes = ['screens','batteries','chargeboards','flatcharging','backcover','housing','camera'];
+  var allTypes = ['screens','batteries','chargeboards','flatcharging','backcover','housing','camera','tools'];
   var flatSubs = ['FLAT POWER','FLAT VOLUME','BUZZER','EAR SPEAKER','DOOR SIM','FINGERPRINT','OTHER'];
   var results = [];
   allTypes.forEach(function(t) {
@@ -2415,14 +2747,17 @@ function doGlobalSheetSearch() {
     resultsDiv.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8;">لا توجد نتائج لـ &quot;' + sanitize(q) + '&quot;</div>';
     return;
   }
-  var oldSheetType = sheetPriceType;
   var html = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + Math.min(results.length,80) + ' نتيجة</div>';
+  var _savedType = sheetPriceType;
+  var _savedSub  = sheetFlatSubType;
   results.slice(0,80).forEach(function(r) {
     sheetPriceType = r.type;
     sheetFlatSubType = r.sub || null;
     html += createSheetPriceItem(r.p);
   });
-  sheetPriceType = oldSheetType;
+  // أعد القيمة الأصلية بعد الحلقة
+  sheetPriceType = _savedType;
+  sheetFlatSubType = _savedSub;
   resultsDiv.innerHTML = html;
 }
 
@@ -2436,65 +2771,51 @@ function loadNewItems() {
   grid.style.display = 'block';
   grid.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loading-spinner" style="margin:0 auto;width:28px;height:28px;"></div></div>';
 
-  // Poll until data is loaded (max 5 seconds)
-  var attempts = 0;
-  function tryRender() {
-    attempts++;
-    var allTypes = ['screens','batteries','chargeboards','backcover','housing','camera','flatcharging'];
-    var typeLabels = {
-      screens:'شاشة', batteries:'بطارية', chargeboards:'بورد شحن',
-      backcover:'باك كفر', housing:'شاصي', camera:'كاميرا', flatcharging:'شريط شحن'
-    };
-    var newItems = [];
+  var typeMap = {
+    'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards',
+    'فلات':'flatcharging','باك كفر':'backcover','شاصي':'housing',
+    'عدسة كاميرا':'lens','كاميرا':'camera',
+    'سماعة جرس':'flatpower','سماعة اتصال':'flatpower',
+    'باب سيم':'flatpower','بصمة':'flatpower','منوعة':'flatpower'
+  };
 
-    allTypes.forEach(function(t) {
-      var data = getDataForType(t) || [];
-      var avail = data.filter(function(p) {
-        var qty = Number(p.qty)||0;
-        var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-        return qty > 0 && price > 0;
-      });
-      // Last 2 from each type = newest added in sheet
-      avail.slice(-2).forEach(function(p) {
-        newItems.push({p:p, type:t, label: typeLabels[t]||t});
-      });
-    });
-
-    if (!newItems.length && attempts < 10) {
-      setTimeout(tryRender, 600);
+  secureApiCall('getNewItems').then(function(items) {
+    if (!items || !items.length) {
+      label.style.display = 'none';
+      grid.style.display = 'none';
       return;
     }
-
-    if (!newItems.length) {
-      grid.innerHTML = '<div style="text-align:center;padding:24px;color:#94A3B8;">لا توجد مواد متوفرة حالياً</div>';
-      return;
-    }
-
     var html = '';
-    newItems.forEach(function(r) {
-      var p = r.p;
-      var price = Number(String(p.price||'').replace(/[^0-9]/g,''))||0;
-      var lbl = r.label;
-      var t = r.type;
-      var pid = 'nw_' + Math.random().toString(36).substr(2,8);
-      window[pid] = p;
-      window[pid].itemType = t;
+    items.forEach(function(item) {
+      var price = Number(item.price)||0;
+      var typeKey = typeMap[item.source] || 'screens';
+      var pObj = {
+        name: item.name, brand: item.brand||'', type: item.type||'',
+        price: price, qty: item.qty||0, notes: item.notes||'',
+        image_url: item.image_url||'', itemType: typeKey
+      };
+      var pid = cacheProduct(pObj);
+      var uid = 'nw_' + Math.random().toString(36).substr(2,8);
       html +=
-        '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">' +
+        '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">' +
           '<div style="flex:1;min-width:0;">' +
-            '<span style="font-size:12px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;font-weight:700;">' + lbl + '</span>' +
-            '<div style="font-size:18px;font-weight:700;margin:5px 0 2px;color:#0F172A;">' + (p.name||'-') + '</div>' +
-            '<div style="font-size:14px;color:#64748B;">' + (p.brand||'-') + '</div>' +
-            '<div style="font-size:17px;font-weight:800;color:#0284C7;margin-top:4px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
+            '<span style="font-size:12px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;font-weight:700;">' + sanitize(item.source||'') + ' ' + (item.icon||'') + '</span>' +
+            '<div style="font-size:15px;font-weight:700;margin:4px 0 2px;color:#0F172A;">' + sanitize(item.name||'-') + '</div>' +
+            (item.type ? '<div style="font-size:13px;color:#16A34A;font-weight:700;">' + sanitize(item.type) + '</div>' : '') +
+            '<div style="font-size:16px;font-weight:800;color:#0284C7;margin-top:3px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
           '</div>' +
-          '<button onclick="addToCart(window[\'' + pid + '\'])" ' +
-            'style="background:#16A34A;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-size:18px;cursor:pointer;flex-shrink:0;width:auto;margin:0;line-height:1;">🛒</button>' +
+          '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">' +
+            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\''+pid+'\',\''+uid+'\')">+</button>' +
+            '<button style="background:#475569;color:white;border:none;border-radius:6px;padding:4px 8px;font-size:13px;min-width:32px;text-align:center;cursor:pointer;" onclick="piDirectAdd(\''+pid+'\',\''+uid+'\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\''+pid+'\',\''+uid+'\')">−</button>' +
+          '</div>' +
         '</div>';
     });
     grid.innerHTML = html;
-  }
-
-  tryRender();
+  }).catch(function() {
+    label.style.display = 'none';
+    grid.style.display = 'none';
+  });
 }
 
 function isGuest() {
@@ -2615,7 +2936,7 @@ const _origCheckLogin = window.checkLogin;
 
 loadPrices(); loadBatteries(); loadChargeboards(); loadFlatMain();
 loadBackCover(); loadHousing(); loadLens(); loadCamera();
-loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc();
+loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc(); loadTools(); loadFlatPowerSheet(); loadFlatVolumeSheet();
 loadCart();
 appBoot();
 // (snapshot system removed — now using date_added from sheet)
@@ -2686,6 +3007,7 @@ function renderAccountSheet() {
   const div = document.getElementById('accountContent');
   if (!div) return;
   if (user) {
+    const isAdmin = user.phone && user.phone.replace(/\D/g,'').endsWith('7717533595');
     div.innerHTML = [
       '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">',
         '<div style="font-size:40px;margin-bottom:8px;">👤</div>',
@@ -2693,6 +3015,7 @@ function renderAccountSheet() {
         '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>',
         '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>',
       '</div>',
+      isAdmin ? '<button class="form-btn" style="background:#0F172A;margin-bottom:8px;" onclick="closeSheet(\'accountSheet\');openAdminPanel()">🛠️ لوحة التحكم</button>' : '',
       '<button class="form-btn" onclick="openWarrantyFromAccount()">✅ تفعيل الضمان</button>',
       '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">🔍 التحقق من الضمان</button>',
       '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>',
@@ -2735,38 +3058,161 @@ function openCheckFromAccount() {
   </div>
 </div>
 
-</body>
+<!-- ═══ لوحة تحكم الأدمن ═══ -->
+<div id="adminSheet" class="bsheet-overlay" onclick="closeSheet('adminSheet')">
+  <div class="bsheet" onclick="event.stopPropagation()">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🛠️ لوحة التحكم</span>
+      <button class="bsheet-close" onclick="closeSheet('adminSheet')">✕</button>
+    </div>
+    <div class="bsheet-search-bar">
+      <span>🔍</span>
+      <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
+    </div>
+    <!-- فلتر الشيت -->
+    <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
+      <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('CHARGE BOARD',this)">بورد شحن</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('FLAT MAIN',this)">فلات</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('BACK COVER',this)">باك كفر</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('HOUSING',this)">شاصي</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
+      <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
+    </div>
+    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
+  </div>
+</div>
+
+<!-- modal رفع صورة -->
+<div id="adminImgModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;padding:22px;width:100%;max-width:360px;direction:rtl;">
+    <div style="font-size:17px;font-weight:800;color:#0F172A;margin-bottom:4px;" id="adminImgModalName">-</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:16px;" id="adminImgModalSheet">-</div>
+
+    <!-- معاينة الصورة الحالية -->
+    <div id="adminImgPreviewWrap" style="text-align:center;margin-bottom:14px;display:none;">
+      <img id="adminImgPreview" style="max-width:100%;max-height:160px;object-fit:contain;border-radius:10px;border:1px solid #E2E8F0;">
+      <button onclick="adminDeleteImage()" style="display:block;width:100%;margin-top:8px;padding:8px;border-radius:8px;border:none;background:#FEE2E2;color:#DC2626;font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">🗑️ حذف الصورة</button>
+    </div>
+
+    <!-- رفع صورة -->
+    <label style="display:block;background:#F1F5F9;border:2px dashed #CBD5E1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:12px;">
+      <div style="font-size:32px;margin-bottom:6px;">📷</div>
+      <div style="font-size:16px;font-weight:700;color:#0284C7;">اختر صورة</div>
+      <div style="font-size:13px;color:#94A3B8;margin-top:4px;">jpg, png, webp</div>
+      <input type="file" id="adminImgFile" accept="image/*" style="display:none;" onchange="adminPreviewImage(this)">
+    </label>
+
+    <div id="adminImgStatus" style="font-size:15px;text-align:center;min-height:24px;margin-bottom:12px;"></div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeAdminImgModal()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#F1F5F9;color:#64748B;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">إلغاء</button>
+      <button id="adminImgSaveBtn" onclick="adminSaveImage()" style="flex:2;padding:12px;border-radius:10px;border:none;background:#0284C7;color:white;font-size:16px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">&#128190; حفظ الصورة</button>
+    </div>
+  </div>
+</div>
 
 <div id="installPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:flex-end;justify-content:center;padding:16px;">
   <div style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:400px;text-align:center;direction:rtl;">
     <div style="font-size:52px;margin-bottom:8px;">📲</div>
     <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:6px;">أضف التطبيق للشاشة الرئيسية</div>
-    <div style="font-size:17px;color:#64748B;margin-bottom:20px;line-height:1.6;">للوصول السريع لأمواج للإلكترونيات</div>
-    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
-      <div style="font-size:17px;color:#0F172A;margin-bottom:8px;">📱 <b>على الآيفون:</b></div>
-      <div style="font-size:14px;color:#475569;margin-bottom:4px;">١. اضغط على زر المشاركة <span style="font-size:17px;">⬆️</span></div>
-      <div style="font-size:14px;color:#475569;">٢. اضغط على "إضافة إلى الشاشة الرئيسية" <span style="font-size:17px;">＋</span></div>
+    <div style="font-size:15px;color:#64748B;margin-bottom:20px;">وصول سريع بدون متصفح</div>
+    <div id="installAndroidBtn" style="display:none;margin-bottom:12px;">
+      <button onclick="triggerInstall()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">📲 تثبيت التطبيق</button>
     </div>
-    <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:20px;text-align:right;">
-      <div style="font-size:17px;color:#0F172A;margin-bottom:8px;">🤖 <b>على الأندرويد:</b></div>
-      <div style="font-size:14px;color:#475569;margin-bottom:4px;">١. اضغط على ⋮ (القائمة)</div>
-      <div style="font-size:14px;color:#475569;">٢. اضغط "إضافة إلى الشاشة الرئيسية"</div>
+    <div id="installIosInstructions" style="display:none;">
+      <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
+        <div style="font-size:16px;font-weight:800;color:#0F172A;margin-bottom:8px;">📱 على الآيفون:</div>
+        <div style="font-size:14px;color:#475569;margin-bottom:6px;">١. اضغط على زر المشاركة <b>⬆️</b> بالأسفل</div>
+        <div style="font-size:14px;color:#475569;">٢. اختار <b>"إضافة إلى الشاشة الرئيسية"</b></div>
+      </div>
     </div>
-    <button onclick="closeInstallPrompt()" style="width:100%;background:#0284C7;color:#fff;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً، شكراً!</button>
+    <div id="installManualInstructions" style="display:none;">
+      <div style="background:#F1F5F9;border-radius:12px;padding:14px;margin-bottom:16px;text-align:right;">
+        <div style="font-size:16px;font-weight:800;color:#0F172A;margin-bottom:8px;">🤖 على الأندرويد:</div>
+        <div style="font-size:14px;color:#475569;margin-bottom:6px;">١. اضغط على ⋮ (القائمة) بالأعلى</div>
+        <div style="font-size:14px;color:#475569;">٢. اختار <b>"إضافة إلى الشاشة الرئيسية"</b></div>
+      </div>
+    </div>
+    <button onclick="closeInstallPrompt()" style="width:100%;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;padding:12px;font-size:16px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:4px;">لاحقاً</button>
   </div>
 </div>
 
 <script>
+var _deferredInstallPrompt = null;
+var _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var _isInStandaloneMode = window.navigator.standalone === true;
+
+// أظهر الزر دائماً على الآيفون (ما في event تلقائي)
+if (_isIos && !_isInStandaloneMode) {
+  var installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.style.display = '';
+}
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  var btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = '';
+});
+
+window.addEventListener('appinstalled', function() {
+  _deferredInstallPrompt = null;
+  var btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+  localStorage.setItem('amwaj_installed', '1');
+});
+
+function showInstallPrompt() {
+  var prompt = document.getElementById('installPrompt');
+  var androidBtn = document.getElementById('installAndroidBtn');
+  var iosInst = document.getElementById('installIosInstructions');
+  var manualInst = document.getElementById('installManualInstructions');
+
+  // إخفاء الكل أول
+  androidBtn.style.display = 'none';
+  iosInst.style.display = 'none';
+  manualInst.style.display = 'none';
+
+  var isIos = _isIos;
+
+  if (_deferredInstallPrompt) {
+    // أندرويد — يقدر يثبت مباشرة
+    androidBtn.style.display = 'block';
+  } else if (isIos) {
+    iosInst.style.display = 'block';
+  } else {
+    manualInst.style.display = 'block';
+  }
+
+  prompt.style.display = 'flex';
+}
+
+async function triggerInstall() {
+  if (!_deferredInstallPrompt) return;
+  _deferredInstallPrompt.prompt();
+  var result = await _deferredInstallPrompt.userChoice;
+  if (result.outcome === 'accepted') {
+    _deferredInstallPrompt = null;
+    var btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  }
+  closeInstallPrompt();
+}
+
 function closeInstallPrompt() {
   document.getElementById('installPrompt').style.display = 'none';
   localStorage.setItem('amwaj_install_shown', '1');
 }
 
-// Show only once
-if (!localStorage.getItem('amwaj_install_shown')) {
+// أظهر تلقائي مرة وحدة بعد 3 ثواني (للزوار الجدد فقط)
+if (!localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
   setTimeout(function() {
-    document.getElementById('installPrompt').style.display = 'flex';
-  }, 2000);
+    showInstallPrompt();
+  }, 3000);
 }
 
 // ===== ALL PRODUCTS SHEET =====
@@ -2792,24 +3238,37 @@ function createAllProdItem(p, typeKey) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
   var avail = qty > 0 && price > 0;
-  var priceHtml = avail
-    ? '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>'
-    : '<div class="pi-price unavail">غير متوفر</div>';
-  var typeHtml = (typeKey === 'screens' && p.type) ? '<span class="pi-type">' + p.type + '</span>' : '';
+  var typeHtml = (typeKey === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
-  var cartBtn = '';
-  if (avail) {
-    if (isGuest()) {
-      priceHtml = '<div class="pi-price avail" style="filter:blur(5px);user-select:none;cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-      cartBtn = '<button class="add-to-cart-btn" style="background:#64748B;" onclick="showLoginPrompt()">🔒 سجل لرؤية السعر</button>';
-    } else {
-      var pid = cacheProduct(Object.assign({}, p, {itemType: typeKey}));
-      cartBtn = '<button class="add-to-cart-btn" onclick="addToCart(getCachedProduct(\'' + pid + '\'))">&#128722; إضافة للسلة</button>';
-    }
+  var imgUrl = getDriveImageUrl(p.image_url);
+  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+
+  var priceHtml, cartRow;
+  if (!avail) {
+    priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
+    cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
+  } else if (isGuest()) {
+    priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
+    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
+  } else {
+    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+    var pid = cacheProduct(Object.assign({}, p, {itemType: typeKey}));
+    var uid = 'q_' + Math.random().toString(36).substr(2,7);
+    cartRow =
+      '<div class="pi-cart-row">' +
+        '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
+      '</div>';
   }
-  return '<div class="price-item"><div class="pi-name">' + (p.name||'-') + '</div>' +
-    '<div class="pi-brand">' + (p.brand||'-') + '</div>' +
-    typeHtml + priceHtml + notesHtml + cartBtn + '</div>';
+
+  return '<div class="price-item">' + imgHtml +
+    '<div class="pi-info">' +
+      '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
+      '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
+      typeHtml + priceHtml + notesHtml +
+    '</div>' +
+    cartRow + '</div>';
 }
 
 function getAllDataOrdered() {
@@ -2845,7 +3304,7 @@ function renderAllProdList(data, query) {
     html += '<div style="margin-bottom:4px;">' +
       '<div style="padding:10px 4px 6px;font-size:15px;font-weight:800;color:#0F172A;border-bottom:2px solid #E2E8F0;margin-bottom:6px;">' +
       g.icon + ' ' + g.label + ' <span style="font-size:12px;font-weight:500;color:#94A3B8;">(' + g.items.length + ')</span></div>' +
-      g.items.map(function(p) { return createAllProdItem(p, p._type); }).join('') +
+      '<div class="price-items-grid">' + g.items.map(function(p) { return createAllProdItem(p, p._type); }).join('') + '</div>' +
       '</div>';
   });
 
@@ -2891,7 +3350,290 @@ function handleAllProdSearch() {
 }
 // ===== END ALL PRODUCTS SHEET =====
 
+// ═══════════════════════════════════════
+// 🛠️ لوحة تحكم الأدمن — رفع صور المنتجات
+// ═══════════════════════════════════════
+
+var _adminAllProducts = [];   // كل المنتجات
+var _adminCurrentSheet = 'all'; // الشيت المختار
+var _adminEditTarget = null;  // {name, sheetName, currentImg}
+var IMGBB_API_KEY = 'baec33703816b0356502051d078fc688';
+
+// خريطة: typeKey → sheetName
+var _adminSheetMap = {
+  'screens':      'SHEET',
+  'batteries':    'battery',
+  'chargeboards': 'CHARGE BOARD',
+  'flatcharging': 'FLAT MAIN',
+  'backcover':    'BACK COVER',
+  'housing':      'HOUSING',
+  'lens':         'LENS CAMERA',
+  'camera':       'Camera',
+  'buzzer':       'Buzzer',
+  'earspeaker':   'EAR SPEAKER',
+  'doorsim':      'DOOR SIM',
+  'flatpower':    'INVENTORY',
+};
+
+var _adminSheetLabels = {
+  'SHEET':        'شاشات',
+  'battery':      'بطاريات',
+  'CHARGE BOARD': 'بورد شحن',
+  'FLAT MAIN':    'شريط شحن',
+  'BACK COVER':   'باك كفر',
+  'HOUSING':      'شاصي',
+  'LENS CAMERA':  'عدسة كاميرا',
+  'Camera':       'كاميرا',
+  'Buzzer':       'سماعة جرس',
+  'EAR SPEAKER':  'سماعة اتصال',
+  'DOOR SIM':     'باب سيم',
+  'INVENTORY':    'منوعات',
+};
+
+async function openAdminPanel() {
+  openSheet('adminSheet');
+  var listDiv = document.getElementById('adminProductsList');
+  listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;font-size:16px;">جاري تحميل المنتجات...</div></div>';
+
+  try {
+    // جيب كل المنتجات من كل الشيتات
+    var allFetches = [
+      secureApiCall('getPrices').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'SHEET'}); }); }),
+      secureApiCall('getBatteries').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'battery'}); }); }),
+      secureApiCall('getChargeboards').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'CHARGE BOARD'}); }); }),
+      secureApiCall('getFlatMain').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'FLAT MAIN'}); }); }),
+      secureApiCall('getBackCover').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'BACK COVER'}); }); }),
+      secureApiCall('getHousing').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'HOUSING'}); }); }),
+      secureApiCall('getLens').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'LENS CAMERA'}); }); }),
+      secureApiCall('getCamera').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'Camera'}); }); }),
+    ];
+
+    var results = await Promise.all(allFetches);
+    _adminAllProducts = [].concat.apply([], results);
+    adminRenderList();
+  } catch(e) {
+    listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
+  }
+}
+
+function adminSelectSheet(sheet, btn) {
+  _adminCurrentSheet = sheet;
+  document.querySelectorAll('.admin-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  adminRenderList();
+}
+
+function adminFilterProducts() {
+  adminRenderList();
+}
+
+function adminRenderList() {
+  var q = (document.getElementById('adminSearch').value || '').trim().toLowerCase();
+  var listDiv = document.getElementById('adminProductsList');
+
+  var filtered = _adminAllProducts.filter(function(p) {
+    if (_adminCurrentSheet !== 'all' && p._sheet !== _adminCurrentSheet) return false;
+    if (q && !(p.name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#94A3B8;">لا توجد نتائج</div>';
+    return;
+  }
+
+  var html = '<div style="font-size:13px;color:#94A3B8;padding:6px 0 10px;">' + filtered.length + ' منتج</div>';
+  filtered.forEach(function(p) {
+    var imgUrl = p.image_url && p.image_url.trim() ? (p.image_url.startsWith('http') ? p.image_url : getDriveImageUrl(p.image_url)) : '';
+    var imgHtml = imgUrl
+      ? '<div style="width:54px;height:54px;min-width:54px;border-radius:10px;overflow:hidden;background:#F8FAFC;border:1px solid #E2E8F0;flex-shrink:0;"><img src="' + imgUrl + '" loading="lazy" style="width:54px;height:54px;object-fit:cover;display:block;" onerror="this.parentElement.innerHTML=\'📷\'"></div>'
+      : '<div class="admin-prod-img-empty">📷</div>';
+    var sheetLabel = _adminSheetLabels[p._sheet] || p._sheet;
+    var typeLabel = (p._sheet === 'SHEET' && p.type) ? ' · <span style="color:#16A34A;font-weight:700;">' + p.type + '</span>' : '';
+    var notesLabel = (p._sheet === 'SHEET' && p.notes) ? ' · <span style="color:#F59E0B;font-weight:600;">' + sanitize(p.notes) + '</span>' : '';
+    html +=
+      '<div class="admin-prod-row" onclick="openAdminImgModal(\'' + btoa(encodeURIComponent(JSON.stringify({name:p.name,sheet:p._sheet,img:p.image_url||'',type:p.type||''}))) + '\')">' +
+        imgHtml +
+        '<div class="admin-prod-info">' +
+          '<div class="admin-prod-name">' + sanitize(p.name||'-') + '</div>' +
+          '<div class="admin-prod-sheet">' + sheetLabel + (p.brand ? ' · ' + p.brand : '') + typeLabel + notesLabel + '</div>' +
+        '</div>' +
+        '<button class="admin-edit-btn">✏️ صورة</button>' +
+      '</div>';
+  });
+
+  listDiv.innerHTML = html;
+}
+
+function openAdminImgModal(encoded) {
+  var data = JSON.parse(decodeURIComponent(atob(encoded)));
+  _adminEditTarget = data;
+
+  var typeLabel = (data.sheet === 'SHEET' && data.type) ? ' — ' + data.type : '';
+  document.getElementById('adminImgModalName').textContent = data.name;
+  document.getElementById('adminImgModalSheet').textContent = (_adminSheetLabels[data.sheet] || data.sheet) + typeLabel;
+  document.getElementById('adminImgStatus').textContent = '';
+  document.getElementById('adminImgFile').value = '';
+
+  // عرض الصورة الحالية لو موجودة
+  var previewWrap = document.getElementById('adminImgPreviewWrap');
+  var preview = document.getElementById('adminImgPreview');
+  var currentImg = data.img && data.img.trim()
+    ? (data.img.startsWith('http') ? data.img : getDriveImageUrl(data.img))
+    : '';
+  if (currentImg) {
+    preview.src = currentImg;
+    previewWrap.style.display = 'block';
+  } else {
+    previewWrap.style.display = 'none';
+  }
+
+  document.getElementById('adminImgModal').style.display = 'flex';
+}
+
+function closeAdminImgModal() {
+  document.getElementById('adminImgModal').style.display = 'none';
+  _adminEditTarget = null;
+}
+
+function adminPreviewImage(input) {
+  if (!input.files || !input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var preview = document.getElementById('adminImgPreview');
+    var previewWrap = document.getElementById('adminImgPreviewWrap');
+    preview.src = e.target.result;
+    previewWrap.style.display = 'block';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function adminDeleteImage() {
+  if (!_adminEditTarget) return;
+  var statusDiv = document.getElementById('adminImgStatus');
+  statusDiv.innerHTML = '<span style="color:#64748B;">⏳ جاري الحذف...</span>';
+
+  try {
+    var apiResp = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        apiKey: CONFIG.API_KEY,
+        action: 'updateImageUrl',
+        identifier: CONFIG.DEVICE_ID,
+        sheetName: _adminEditTarget.sheet,
+        rowName: _adminEditTarget.name,
+        imageUrl: ''
+      })
+    });
+    var result = await apiResp.json();
+    if (!result.success) throw new Error(result.error || 'فشل الحذف');
+
+    statusDiv.innerHTML = '<span style="color:#16A34A;">✅ تم حذف الصورة</span>';
+
+    // حدّث القائمة
+    var prod = _adminAllProducts.find(function(p){ return p.name === _adminEditTarget.name && p._sheet === _adminEditTarget.sheet; });
+    if (prod) prod.image_url = '';
+
+    // أخفي الصورة بالـ modal
+    document.getElementById('adminImgPreviewWrap').style.display = 'none';
+    document.getElementById('adminImgPreview').src = '';
+
+    setTimeout(function() {
+      closeAdminImgModal();
+      adminRenderList();
+    }, 900);
+
+  } catch(e) {
+    statusDiv.innerHTML = '<span style="color:#DC2626;">❌ ' + e.message + '</span>';
+  }
+}
+
+
+async function adminSaveImage() {
+  if (!_adminEditTarget) return;
+  var fileInput = document.getElementById('adminImgFile');
+  var statusDiv = document.getElementById('adminImgStatus');
+  var saveBtn = document.getElementById('adminImgSaveBtn');
+
+  if (!fileInput.files || !fileInput.files[0]) {
+    statusDiv.innerHTML = '<span style="color:#DC2626;">⚠️ اختر صورة أول</span>';
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ جاري الرفع...';
+  statusDiv.innerHTML = '<span style="color:#64748B;">📤 يتم رفع الصورة...</span>';
+
+  try {
+    // رفع على ImgBB
+    var file = fileInput.files[0];
+    var base64 = await new Promise(function(res, rej) {
+      var r = new FileReader();
+      r.onload = function(e) { res(e.target.result.split(',')[1]); };
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    var formData = new FormData();
+    formData.append('image', base64);
+    formData.append('key', IMGBB_API_KEY);
+
+    var imgResp = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    var imgData = await imgResp.json();
+    if (!imgData.success) throw new Error('فشل رفع الصورة على ImgBB');
+
+    var imageUrl = imgData.data.url;
+    statusDiv.innerHTML = '<span style="color:#16A34A;">✅ تم الرفع، جاري الحفظ...</span>';
+
+    // حفظ الرابط بالشيت
+    var apiResp = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        apiKey: CONFIG.API_KEY,
+        action: 'updateImageUrl',
+        identifier: CONFIG.DEVICE_ID,
+        sheetName: _adminEditTarget.sheet,
+        rowName: _adminEditTarget.name,
+        imageUrl: imageUrl
+      })
+    });
+    var saved = await apiResp.json();
+    if (!saved || !saved.success) throw new Error(saved && saved.error ? saved.error : 'فشل الحفظ');
+
+    statusDiv.innerHTML = '<span style="color:#16A34A;">✅ تم الحفظ بنجاح!</span>';
+    saveBtn.textContent = '✅ تم';
+
+    // حدّث الصورة بالقائمة
+    var prod = _adminAllProducts.find(function(p){ return p.name === _adminEditTarget.name && p._sheet === _adminEditTarget.sheet; });
+    if (prod) prod.image_url = imageUrl;
+
+    setTimeout(function() {
+      closeAdminImgModal();
+      adminRenderList();
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 حفظ الصورة';
+    }, 1200);
+
+  } catch(e) {
+    statusDiv.innerHTML = '<span style="color:#DC2626;">❌ ' + e.message + '</span>';
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 حفظ الصورة';
+  }
+}
+
 </script>
 
+
+<!-- Image Lightbox -->
+<div id="imgLightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+  <img id="imgLightboxImg" style="max-width:95vw;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+  <button onclick="document.getElementById('imgLightbox').style.display='none'" style="position:absolute;top:16px;left:16px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;font-family:Tajawal,sans-serif;">✕</button>
+</div>
 </body>
 </html>
