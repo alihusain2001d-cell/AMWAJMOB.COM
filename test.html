@@ -1477,7 +1477,7 @@ function handleGlobalSearch(event) {
   results.slice(0, 30).forEach(function(item, idx) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
-    const available = qty > 0 && price > 0;
+    const available = qty > 0;
     const priceText = !available ? '<span style="color:#EF4444;font-size:13px;">غير متوفر</span>'
       : guestMode ? '<span style="color:#94A3B8;font-size:13px;">🔒 سجل</span>'
       : '<span style="color:#0284C7;font-weight:800;font-size:13px;">' + formatPriceIQD(price) + ' د.ع</span>';
@@ -1655,7 +1655,7 @@ async function checkWarranty() {
         else expiryDate = new Date(r.expiry);
       }
       let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000*60*60*24)) : null;
-      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود وساري' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
+      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
     }
@@ -1713,7 +1713,7 @@ function openToolsSheet() {
     if (!toolsData.length) {
       // جرب تحميل من جديد
       loadTools().then(function() {
-        var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
+        var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
         var all = avail.length ? avail : toolsData;
         resultsDiv.innerHTML = all.length
           ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
@@ -1721,7 +1721,7 @@ function openToolsSheet() {
       });
       return;
     }
-    var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
+    var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
     var all = avail.length ? avail : toolsData;
     resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
   }
@@ -1738,7 +1738,7 @@ function createPriceItem(p) {
   const price = Number(priceStr) || 0;
   const qty = Number(p.qty) || 0;
   const notes = p.notes || '';
-  const availableText = qty > 0 && price > 0 ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(price)} د.ع</span>` : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`;
+  const availableText = qty > 0 ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(price)} د.ع</span>` : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`;
   const notesText = notes ? `<div style="margin-top:6px;background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:17px;font-weight:600;color:#856404;border-left:4px solid #ffc107;">📝 ${notes}</div>` : '';
   const typeText = currentPriceType === 'screens' && p.type ? `<div style="margin-top:4px"><b>النوع:</b> ${p.type}</div>` : '';
   const cartBtn = qty > 0 && price > 0 ? `<button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&#39;")})'>🛒 إضافة للسلة</button>` : '';
@@ -2357,7 +2357,7 @@ function getDriveImageUrl(url) {
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
-  var avail = qty > 0 && price > 0;
+  var avail = qty > 0;
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
@@ -3237,7 +3237,7 @@ var ALL_PROD_ORDER = [
 function createAllProdItem(p, typeKey) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
-  var avail = qty > 0 && price > 0;
+  var avail = qty > 0;
   var typeHtml = (typeKey === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
