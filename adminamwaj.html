@@ -84,6 +84,7 @@ tr:hover td{background:#ffffff05}
 }
 .order-item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}.order-item-row:last-child{border-bottom:none}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -454,7 +455,9 @@ function renderProducts(){
         </div>
         <div style="padding:10px">
           <div style="font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px">${sanitize(p.name||'-')}</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${sanitize(p.sheet||p.sheetName||'-')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${sanitize(p.sheet||p.sheetName||'-')}</div>
+          ${(p.type||'').trim()?`<div style="font-size:11px;color:var(--yellow);margin-bottom:2px">🔲 ${sanitize(p.type)}</div>`:''}
+          ${(p.notes||'').trim()?`<div style="font-size:11px;color:#94A3B8;margin-bottom:6px">📝 ${sanitize(p.notes)}</div>`:'<div style="margin-bottom:6px"></div>'}
           <div style="display:flex;gap:6px">
             <button class="action-btn btn-edit" style="flex:1;font-size:12px;padding:5px 4px" onclick='openProductImgModal(${JSON.stringify(p)})'>📷 ${hasImg?'تغيير':'إضافة'}</button>
             ${hasImg?`<button class="action-btn btn-delete" style="font-size:12px;padding:5px 8px" onclick="deleteProductImg('${sanitize(p.name||'')}','${sanitize(p.sheet||p.sheetName||'')}')">🗑️</button>`:''}
@@ -595,7 +598,7 @@ async function saveBulkImg(){
 
 
 // ══════════════════════════════════════════════
-// 📢 صفحة الإشعارات الجماعية
+// 📢 صفحة الإشعارات الجماعية — PDF
 // ══════════════════════════════════════════════
 let notifyItemsList = [];
 
@@ -612,78 +615,180 @@ async function loadNotify() {
     const approvedCustomers = (custRes.data || []).filter(function(c){ return c.status === 'approved'; });
     renderNotifyPage(approvedCustomers);
   } catch(e) {
-    setContent('<div class="empty-state">\u274c فشل التحميل: ' + e.message + '</div>');
+    setContent('<div class="empty-state">❌ فشل التحميل: ' + e.message + '</div>');
   }
 }
 
 function formatNotifyPrice(price) {
   const p = Number(String(price||'').replace(/[^0-9]/g,'')) || 0;
-  return p.toLocaleString('de-DE') + ' \u062f.\u0639';
+  return p.toLocaleString('de-DE') + ' د.ع';
 }
 
-function buildNotifyMessage(items) {
-  if (!items.length) return '';
-  let msg = '\ud83c\udf0a *\u0623\u0645\u0648\u0627\u062c \u0644\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0627\u062a*\n\n';
-  msg += '\u2728 *\u0648\u0635\u0644\u0646\u0627 \u062d\u062f\u064a\u062b\u0627\u064b \u2014 \u0645\u0648\u0627\u062f \u062c\u062f\u064a\u062f\u0629!*\n\n';
-  items.forEach(function(item, i) {
-    msg += (i+1) + '. *' + (item.name||'-') + '*\n';
-    if (item.type) msg += '   \u0627\u0644\u0646\u0648\u0639: ' + item.type + '\n';
-    msg += '   \u0627\u0644\u0633\u0639\u0631: ' + formatNotifyPrice(item.price) + '\n';
-    if (item.notes && item.notes.trim()) msg += '   \ud83d\udcdd ' + item.notes + '\n';
-    msg += '\n';
+function getSelectedNotifyItems() {
+  const selected = [];
+  document.querySelectorAll('.notify-item-check:checked').forEach(function(cb) {
+    const idx = parseInt(cb.dataset.idx);
+    if (notifyItemsList[idx]) {
+      const notesEl = document.getElementById('notify-notes-' + idx);
+      selected.push(Object.assign({}, notifyItemsList[idx], {
+        userNotes: notesEl ? notesEl.value.trim() : ''
+      }));
+    }
   });
-  msg += '\ud83d\udcde \u0644\u0644\u0637\u0644\u0628: 7696\n';
-  msg += '\ud83c\udf10 www.amwajmob.com';
-  return msg;
+  return selected;
+}
+
+function buildPdfTableHTML(items) {
+  if (!items.length) return '<div style="color:#999;text-align:center;padding:30px">لا توجد مواد محددة</div>';
+  const today = new Date().toLocaleDateString('ar-IQ');
+  let html = '<div dir="rtl" style="font-family:Tajawal,sans-serif;padding:24px;background:#fff;color:#0F172A;">';
+  html += '<div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #0284C7;padding-bottom:14px;">';
+  html += '<div style="font-size:24px;font-weight:900;color:#0284C7;">🌊 أمواج للإلكترونيات</div>';
+  html += '<div style="font-size:13px;color:#64748B;margin-top:6px;">قائمة مواد جديدة — ' + today + '</div>';
+  html += '</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+  html += '<thead><tr style="background:#0284C7;color:#fff;">';
+  html += '<th style="padding:9px 10px;text-align:center;border:1px solid #0369A1;width:38px;">#</th>';
+  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;">اسم المادة</th>';
+  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:90px;">النوع</th>';
+  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:110px;">السعر</th>';
+  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:150px;">ملاحظة</th>';
+  html += '</tr></thead><tbody>';
+  items.forEach(function(item, i) {
+    const bg = i % 2 === 0 ? '#F8FAFC' : '#FFFFFF';
+    const isScreen = (item.source === 'شاشات');
+    // للشاشات: اعرض الماركة + الموديل في خانة الاسم
+    const displayName = isScreen && item.brand
+      ? sanitize(item.brand) + ' — ' + sanitize(item.name||'-')
+      : sanitize(item.name||'-');
+    // الملاحظة: من حقل المستخدم أو من بيانات المادة
+    const displayNotes = item.userNotes || item.notes || '';
+    html += '<tr style="background:' + bg + ';">';
+    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;text-align:center;font-weight:700;color:#0284C7;">' + (i+1) + '</td>';
+    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;font-weight:700;">' + displayName + '</td>';
+    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#64748B;">' + sanitize(item.type||'-') + '</td>';
+    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#0284C7;font-weight:800;">' + formatNotifyPrice(item.price) + '</td>';
+    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#F59E0B;">' + sanitize(displayNotes) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div style="text-align:center;margin-top:18px;font-size:12px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:12px;">';
+  html += '📞 للطلب: 7696 &nbsp;|&nbsp; 🌐 www.amwajmob.com';
+  html += '</div></div>';
+  return html;
+}
+
+function updateNotifyPreview() {
+  const selected = getSelectedNotifyItems();
+  const preview = document.getElementById('notifyPdfPreview');
+  if (preview) preview.innerHTML = buildPdfTableHTML(selected);
+  const countEl = document.getElementById('notifySelectedCount');
+  if (countEl) countEl.textContent = selected.length;
+}
+
+async function generateNotifyPDF(items) {
+  return new Promise(function(resolve, reject) {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:780px;background:#fff;';
+    container.innerHTML = buildPdfTableHTML(items);
+    document.body.appendChild(container);
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: 'amwaj_catalog.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(container).outputPdf('blob').then(function(blob) {
+      document.body.removeChild(container);
+      resolve(blob);
+    }).catch(function(err) {
+      document.body.removeChild(container);
+      reject(err);
+    });
+  });
+}
+
+async function downloadNotifyPDF() {
+  const selected = getSelectedNotifyItems();
+  if (!selected.length) { showToast('⚠️ اختر مادة واحدة على الأقل'); return; }
+  const btn = document.getElementById('downloadPdfBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الإنشاء...'; }
+  try {
+    const pdfBlob = await generateNotifyPDF(selected);
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'amwaj_catalog.pdf'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ تم تحميل الـ PDF');
+  } catch(e) { showToast('❌ فشل: ' + e.message); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '📥 تحميل PDF'; } }
 }
 
 function renderNotifyPage(customers) {
   const totalApproved = customers.length;
-  const previewMsg = buildNotifyMessage(notifyItemsList.slice(0, 10));
+
   const itemsHtml = notifyItemsList.length === 0
-    ? '<div style="color:var(--muted);text-align:center;padding:20px">\u0644\u0627 \u062a\u0648\u062c\u062f \u0645\u0648\u0627\u062f \u062c\u062f\u064a\u062f\u0629</div>'
+    ? '<div style="color:var(--muted);text-align:center;padding:20px">لا توجد مواد جديدة</div>'
     : notifyItemsList.map(function(item, i) {
-        return '<label style="display:flex;align-items:flex-start;gap:10px;padding:8px;border-bottom:1px solid var(--border);cursor:pointer;">'
-          + '<input type="checkbox" class="notify-item-check" data-idx="' + i + '" checked onchange="updateNotifyPreview()" style="width:18px;height:18px;margin-top:2px;accent-color:var(--primary);flex-shrink:0;">'
-          + '<div style="flex:1;">'
-          + '<div style="font-weight:700;font-size:14px;">' + sanitize(item.name||'-') + '</div>'
-          + '<div style="font-size:12px;color:var(--muted);">' + sanitize(item.source||'') + (item.type ? ' \u00b7 ' + sanitize(item.type) : '') + '</div>'
-          + '<div style="font-size:13px;color:var(--primary);font-weight:800;">' + formatNotifyPrice(item.price) + '</div>'
-          + (item.notes ? '<div style="font-size:12px;color:#F59E0B">\ud83d\udcdd ' + sanitize(item.notes) + '</div>' : '')
-          + '</div></label>';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);">'
+          + '<input type="checkbox" class="notify-item-check" data-idx="' + i + '" checked onchange="updateNotifyPreview()" style="width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;cursor:pointer;">'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+          + (item.source === 'شاشات' && item.brand ? '<span style="color:var(--primary);font-size:12px;">' + sanitize(item.brand) + '</span> ' : '')
+          + sanitize(item.name||'-') + '</div>'
+          + '<div style="font-size:12px;color:var(--muted);">' + sanitize(item.source||'') + (item.type ? ' · <span style="color:var(--yellow)">' + sanitize(item.type) + '</span>' : '') + ' · ' + formatNotifyPrice(item.price) + '</div>'
+          + '</div>'
+          + '<input type="text" id="notify-notes-' + i + '" placeholder="ملاحظة..." oninput="updateNotifyPreview()"'
+          + ' style="width:130px;padding:5px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:Tajawal,sans-serif;font-size:13px;background:var(--bg);color:var(--text);flex-shrink:0;outline:none;transition:border-color .2s;"'
+          + ' onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'var(--border)\'">'
+          + '</div>';
       }).join('');
 
   setContent(
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">'
-    + '<div class="stat-card" style="background:linear-gradient(135deg,#0284C7,#0891B2);">'
-    + '<div class="stat-num" style="color:white">' + totalApproved + '</div>'
-    + '<div class="stat-label" style="color:rgba(255,255,255,.8)">\u0632\u0628\u0648\u0646 \u0645\u0648\u0627\u0641\u0642 \u0639\u0644\u064a\u0647</div></div>'
-    + '<div class="stat-card" style="background:linear-gradient(135deg,#16A34A,#15803D);">'
-    + '<div class="stat-num" style="color:white">' + notifyItemsList.length + '</div>'
-    + '<div class="stat-label" style="color:rgba(255,255,255,.8)">\u0645\u0627\u062f\u0629 \u062c\u062f\u064a\u062f\u0629</div></div>'
+    // Stats
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">'
+    + '<div class="stat-card" style="background:linear-gradient(135deg,#0284C7,#0891B2);padding:16px;">'
+    + '<div style="font-size:26px;font-weight:900;color:white">' + totalApproved + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">زبون موافق</div></div>'
+    + '<div class="stat-card" style="background:linear-gradient(135deg,#16A34A,#15803D);padding:16px;">'
+    + '<div style="font-size:26px;font-weight:900;color:white">' + notifyItemsList.length + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">مادة جديدة</div></div>'
+    + '<div class="stat-card" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);padding:16px;">'
+    + '<div style="font-size:26px;font-weight:900;color:white" id="notifySelectedCount">' + notifyItemsList.length + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">مادة محددة</div></div>'
     + '</div>'
-    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
-    + '<div style="font-weight:800;font-size:16px;margin-bottom:12px;">\ud83d\udccb \u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0648\u0627\u062f \u0644\u0644\u0625\u0631\u0633\u0627\u0644</div>'
-    + '<div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">'
-    + '<button onclick="selectAllNotifyItems(true)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\u2705 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0643\u0644</button>'
-    + '<button onclick="selectAllNotifyItems(false)" style="background:#64748B;color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\u274c \u0625\u0644\u063a\u0627\u0621 \u0627\u0644\u0643\u0644</button>'
-    + '<button onclick="updateNotifyPreview()" style="background:#F59E0B;color:white;border:none;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;">\ud83d\udd04 \u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0645\u0639\u0627\u064a\u0646\u0629</button>'
+
+    // Items selection
+    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);margin-bottom:16px;overflow:hidden;">'
+    + '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">'
+    + '<div style="font-weight:800;font-size:15px;">📋 اختر المواد</div>'
+    + '<div style="display:flex;gap:8px;">'
+    + '<button onclick="selectAllNotifyItems(true)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;">✅ الكل</button>'
+    + '<button onclick="selectAllNotifyItems(false)" style="background:#475569;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;">❌ إلغاء</button>'
+    + '</div></div>'
+    + '<div style="padding:8px 12px;font-size:11px;color:var(--muted);background:var(--card);">يمكنك كتابة ملاحظة لكل مادة تظهر في عمود الملاحظة بالـ PDF</div>'
+    + '<div id="notifyItemsCheckboxes" style="max-height:320px;overflow-y:auto;">' + itemsHtml + '</div>'
     + '</div>'
-    + '<div id="notifyItemsCheckboxes" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:10px;">' + itemsHtml + '</div>'
+
+    // PDF Preview
+    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);margin-bottom:16px;overflow:hidden;">'
+    + '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">'
+    + '<div style="font-weight:800;font-size:15px;">👁️ معاينة الـ PDF</div>'
+    + '<button id="downloadPdfBtn" onclick="downloadNotifyPDF()" style="background:var(--purple);color:white;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;">📥 تحميل PDF</button>'
     + '</div>'
-    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
-    + '<div style="font-weight:800;font-size:16px;margin-bottom:10px;">\ud83d\udc41\ufe0f \u0645\u0639\u0627\u064a\u0646\u0629 \u0627\u0644\u0631\u0633\u0627\u0644\u0629</div>'
-    + '<textarea id="notifyMsgPreview" rows="14" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-family:Tajawal,sans-serif;font-size:14px;resize:vertical;direction:rtl;line-height:1.8;">' + previewMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>'
-    + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">\u064a\u0645\u0643\u0646\u0643 \u062a\u0639\u062f\u064a\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0642\u0628\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644</div>'
+    + '<div id="notifyPdfPreview" style="background:#fff;max-height:420px;overflow-y:auto;"></div>'
     + '</div>'
-    + '<div style="background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
-    + '<div style="font-weight:800;font-size:16px;margin-bottom:10px;">\ud83d\ude80 \u0627\u0644\u0625\u0631\u0633\u0627\u0644</div>'
+
+    // Send section
+    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
+    + '<div style="font-weight:800;font-size:15px;margin-bottom:12px;">🚀 الإرسال الجماعي</div>'
     + '<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;color:#92400E;">'
-    + '\u26a0\ufe0f \u0633\u064a\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0644\u0640 <b>' + totalApproved + '</b> \u0632\u0628\u0648\u0646 \u0628\u0641\u0627\u0631\u0642 \u062f\u0642\u064a\u0642\u0629 \u0628\u064a\u0646 \u0643\u0644 \u0631\u0633\u0627\u0644\u0629<br>'
-    + '\u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0645\u062a\u0648\u0642\u0639: <b>' + Math.ceil(totalApproved * 10 / 60) + '</b> \u062f\u0642\u064a\u0642\u0629'
+    + '⚠️ سيتم إرسال الـ PDF لـ <b>' + totalApproved + '</b> زبون بفارق دقيقة بين كل رسالة<br>'
+    + 'الوقت المتوقع: <b>' + Math.ceil(totalApproved * 1) + '</b> دقيقة'
     + '</div>'
     + '<button onclick="startNotifySend(' + totalApproved + ')" style="width:100%;background:linear-gradient(135deg,#16A34A,#15803D);color:white;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:Tajawal,sans-serif;">'
-    + '\ud83d\udce4 \u0625\u0631\u0633\u0627\u0644 \u0644\u0644\u0643\u0644 (' + totalApproved + ' \u0632\u0628\u0648\u0646)'
+    + '📤 إرسال PDF للكل (<span id="notifySelectedCount2">' + totalApproved + '</span> زبون)'
     + '</button>'
     + '<div id="notifySendProgress" style="margin-top:12px;display:none;">'
     + '<div style="background:var(--border);border-radius:10px;height:12px;overflow:hidden;margin-bottom:8px;">'
@@ -693,6 +798,8 @@ function renderNotifyPage(customers) {
     + '</div>'
     + '</div>'
   );
+
+  updateNotifyPreview();
 }
 
 function selectAllNotifyItems(checked) {
@@ -700,35 +807,35 @@ function selectAllNotifyItems(checked) {
   updateNotifyPreview();
 }
 
-function updateNotifyPreview() {
-  const selected = [];
-  document.querySelectorAll('.notify-item-check:checked').forEach(function(cb) {
-    const idx = parseInt(cb.dataset.idx);
-    if (notifyItemsList[idx]) selected.push(notifyItemsList[idx]);
-  });
-  const textarea = document.getElementById('notifyMsgPreview');
-  if (textarea) textarea.value = buildNotifyMessage(selected);
-}
-
 async function startNotifySend(total) {
-  const msg = (document.getElementById('notifyMsgPreview').value || '').trim();
-  if (!msg) { showToast('\u26a0\ufe0f \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0641\u0627\u0631\u063a\u0629'); return; }
-  if (!confirm('\u0633\u064a\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u0644\u0640 ' + total + ' \u0632\u0628\u0648\u0646\n\u0647\u0644 \u0623\u0646\u062a \u0645\u062a\u0623\u0643\u062f\u061f')) return;
-
-  let customers = [];
-  try {
-    const r = await apiCall('getCustomersList', {adminKey: ADMIN_PASS});
-    customers = (r.data || []).filter(function(c){ return c.status === 'approved'; });
-  } catch(e) { showToast('\u274c \u0641\u0634\u0644 \u062c\u0644\u0628 \u0627\u0644\u0632\u0628\u0627\u0626\u0646'); return; }
-
-  if (!customers.length) { showToast('\u26a0\ufe0f \u0644\u0627 \u064a\u0648\u062c\u062f \u0632\u0628\u0627\u0626\u0646'); return; }
+  const selected = getSelectedNotifyItems();
+  if (!selected.length) { showToast('⚠️ اختر مادة واحدة على الأقل'); return; }
+  if (!confirm('سيتم إرسال PDF لـ ' + total + ' زبون\nهل أنت متأكد؟')) return;
 
   const progressDiv = document.getElementById('notifySendProgress');
   const progressBar = document.getElementById('notifyProgressBar');
   const progressText = document.getElementById('notifyProgressText');
   if (progressDiv) progressDiv.style.display = 'block';
+  if (progressText) progressText.textContent = '⏳ جاري إنشاء الـ PDF...';
+
+  let pdfBlob;
+  try {
+    pdfBlob = await generateNotifyPDF(selected);
+  } catch(e) {
+    showToast('❌ فشل إنشاء PDF: ' + e.message);
+    if (progressDiv) progressDiv.style.display = 'none';
+    return;
+  }
+
+  let customers = [];
+  try {
+    const r = await apiCall('getCustomersList', {adminKey: ADMIN_PASS});
+    customers = (r.data || []).filter(function(c){ return c.status === 'approved'; });
+  } catch(e) { showToast('❌ فشل جلب الزبائن'); return; }
+  if (!customers.length) { showToast('⚠️ لا يوجد زبائن'); return; }
 
   let sent = 0, failed = 0;
+  const caption = '🌊 أمواج للإلكترونيات\n✨ وصلنا حديثاً — مواد جديدة!\n📞 للطلب: 7696\n🌐 www.amwajmob.com';
 
   for (let i = 0; i < customers.length; i++) {
     const c = customers[i];
@@ -738,23 +845,27 @@ async function startNotifySend(total) {
     if (!phone.startsWith('964')) phone = '964' + phone;
 
     try {
-      await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
+      const formData = new FormData();
+      formData.append('chatId', phone + '@c.us');
+      formData.append('file', pdfBlob, 'amwaj_catalog.pdf');
+      formData.append('fileName', 'amwaj_catalog.pdf');
+      formData.append('caption', caption);
+      const res = await fetch('https://api.greenapi.com/waInstance7103498677/sendFileByUpload/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: phone + '@c.us', message: msg })
+        body: formData
       });
-      sent++;
+      if (res.ok) sent++; else failed++;
     } catch(e) { failed++; }
 
     const pct = Math.round(((i+1) / customers.length) * 100);
     if (progressBar) progressBar.style.width = pct + '%';
-    if (progressText) progressText.textContent = (i+1) + ' / ' + customers.length + ' \u2014 \u2705 ' + sent + ' | \u274c ' + failed;
+    if (progressText) progressText.textContent = (i+1) + ' / ' + customers.length + ' — ✅ ' + sent + ' | ❌ ' + failed;
 
-    await new Promise(function(resolve){ setTimeout(resolve, 30000); });
+    if (i < customers.length - 1) await new Promise(function(resolve){ setTimeout(resolve, 60000); });
   }
 
-  showToast('\u2705 \u0627\u0643\u062a\u0645\u0644 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u2014 ' + sent + ' \u0646\u062c\u062d | ' + failed + ' \u0641\u0634\u0644');
-  if (progressText) progressText.innerHTML = '<span style="color:var(--green);font-weight:800">\u2705 \u0627\u0643\u062a\u0645\u0644! ' + sent + ' \u0631\u0633\u0627\u0644\u0629 \u0623\u064f\u0631\u0633\u0644\u062a \u0628\u0646\u062c\u0627\u062d | ' + failed + ' \u0641\u0634\u0644</span>';
+  showToast('✅ اكتمل الإرسال — ' + sent + ' نجح | ' + failed + ' فشل');
+  if (progressText) progressText.innerHTML = '<span style="color:var(--green);font-weight:800">✅ اكتمل! ' + sent + ' PDF أُرسل بنجاح | ' + failed + ' فشل</span>';
 }
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
