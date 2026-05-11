@@ -764,6 +764,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div style="text-align:center;font-size:17px;font-weight:800;color:var(--primary);margin:12px 0 10px;">معلومات التوصيل</div>
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
+        <div class="form-group" id="orderPhoneGroup" style="display:none;"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="orderPhone" placeholder="07xxxxxxxxx"></div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -1090,7 +1091,8 @@ function closeFlatpowerModal(e) {
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
-  if (isGuest() && (tab === 'cart' || tab === 'orders')) { showLoginPrompt(); return; }
+  if (isGuest() && (tab === 'orders')) { showLoginPrompt(); return; }
+  if (isGuest() && tab === 'cart' && cart.length === 0) { showLoginPrompt(); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
@@ -1803,7 +1805,8 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showScreen('loginScreen'); return; }
+  const guestToolsAllowed = (product.itemType === 'tools' || product.source === 'أدوات');
+  if (!user && !guestToolsAllowed) { showScreen('loginScreen'); return; }
   if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
@@ -1947,18 +1950,22 @@ function toggleWarranty(index) {
 
 async function submitOrder() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { alert('يرجى تسجيل الدخول'); return; }
+  const guest = !user && isGuest();
   const name = document.getElementById('orderName').value.trim();
   const shop = document.getElementById('orderShop').value.trim();
   const address = document.getElementById('orderAddress').value.trim();
+  const phoneInput = document.getElementById('orderPhone');
+  const guestPhone = phoneInput ? phoneInput.value.trim() : '';
+  const phone = user ? user.phone : guestPhone;
   const result = document.getElementById('orderResult');
   if (!name || !shop || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
+  if (guest && !guestPhone) { result.innerHTML = '<div class="result error">❌ يرجى إدخال رقم الهاتف</div>'; return; }
   if (cart.length === 0) { result.innerHTML = '<div class="result error">❌ السلة فارغة</div>'; return; }
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
   submitBtn.disabled = true; if (clearBtn) clearBtn.disabled = true;
   localStorage.setItem('amwaj_address', address);
-  let message = `🛒 *طلب شراء جديد*\n\n👤 *الاسم:* ${name}\n🏪 *المحل:* ${shop}\n📱 *الهاتف:* ${user.phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
+  let message = `🛒 *طلب شراء جديد*\n\n👤 *الاسم:* ${name}\n🏪 *المحل:* ${shop}\n📱 *الهاتف:* ${phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
   let total = 0;
   cart.forEach((item, i) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1981,7 +1988,7 @@ async function submitOrder() {
     });
     const data = await response.json();
     if (data.idMessage) {
-      try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
+      try { await secureApiCall('saveOrder', { name, shop, phone: phone, address, items: cart, total }); } catch(e) {}
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\nمرحباً *${name}*،\n\nشكراً لطلبك من أمواج للإلكترونيات 🌊\n\n📋 *تفاصيل طلبك:*\n\n`;
       cart.forEach((item, i) => {
@@ -1998,7 +2005,7 @@ async function submitOrder() {
       customerMessage += `💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع\n\n📍 *عنوان التوصيل:* ${address}\n\nللاستفسار:\n📞 7696\n📞 07709000160\n\nشكراً لثقتكم 🌊\n*أمواج للإلكترونيات*`;
       fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
+        body: JSON.stringify({ chatId: phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
       // تحويل زر الإرسال إلى حسناً
       cart = []; saveCart();
@@ -2107,18 +2114,21 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
-  if (isGuest()) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
+  if (isGuest() && cart.length === 0) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
-  // نظف رسالة النجاح القديمة فقط إذا السلة فيها شي
   if (cart.length > 0) {
     var r = document.getElementById('orderResult');
     if (r) r.innerHTML = '';
   }
-  document.getElementById('orderName').value = user.name || '';
-  document.getElementById('orderShop').value = user.shop || '';
+  // أظهر حقل الهاتف للضيف وأخفيه للمسجل
+  var phoneGroup = document.getElementById('orderPhoneGroup');
+  if (phoneGroup) phoneGroup.style.display = isGuest() ? 'block' : 'none';
+  if (user) {
+    document.getElementById('orderName').value = user.name || '';
+    document.getElementById('orderShop').value = user.shop || '';
+  }
   const saved = localStorage.getItem('amwaj_address');
   if (saved) document.getElementById('orderAddress').value = saved;
 }
@@ -2372,7 +2382,14 @@ function createSheetPriceItem(p) {
     cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
   } else if (isGuest() && sheetPriceType === 'tools') {
     priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
-    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل للطلب</button></div>';
+    var pid2 = cacheProduct(Object.assign({}, p, {itemType: 'tools'}));
+    var uid2 = 'q_' + Math.random().toString(36).substr(2,7);
+    cartRow =
+      '<div class="pi-cart-row">' +
+        '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid2 + '\',\'' + uid2 + '\')">+</button>' +
+        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid2 + '\',\'' + uid2 + '\')"><span id="' + uid2 + '" class="pi-qty-display">0</span></button>' +
+        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid2 + '\',\'' + uid2 + '\')">−</button>' +
+      '</div>';
   } else {
     priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
     var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
