@@ -2367,9 +2367,12 @@ function createSheetPriceItem(p) {
   if (!avail) {
     priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
     cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
-  } else if (isGuest()) {
+  } else if (isGuest() && sheetPriceType !== 'tools') {
     priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
     cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
+  } else if (isGuest() && sheetPriceType === 'tools') {
+    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
+    cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل للطلب</button></div>';
   } else {
     priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
     var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
