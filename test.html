@@ -2589,15 +2589,18 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
-  if (isGuest()) { showLoginPrompt(); return; }
+  if (isGuest() && cart.length === 0) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
-  const nameEl = document.getElementById('orderName');
-  const shopEl = document.getElementById('orderShop');
-  if (nameEl) nameEl.value = user.name || '';
-  if (shopEl) shopEl.value = user.shop || '';
+  var phoneGroup = document.getElementById('orderPhoneGroup');
+  if (phoneGroup) phoneGroup.style.display = isGuest() ? 'block' : 'none';
+  if (user) {
+    const nameEl = document.getElementById('orderName');
+    const shopEl = document.getElementById('orderShop');
+    if (nameEl) nameEl.value = user.name || '';
+    if (shopEl) shopEl.value = user.shop || '';
+  }
   const saved = localStorage.getItem('amwaj_address');
   if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
 }
