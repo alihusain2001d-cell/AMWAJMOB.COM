@@ -764,7 +764,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div style="text-align:center;font-size:17px;font-weight:800;color:var(--primary);margin:12px 0 10px;">معلومات التوصيل</div>
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
-        <div class="form-group" id="orderPhoneGroup" style="display:none;"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="orderPhone" placeholder="07xxxxxxxxx"></div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -1091,8 +1090,7 @@ function closeFlatpowerModal(e) {
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
-  if (isGuest() && (tab === 'orders')) { showLoginPrompt(); return; }
-  if (isGuest() && tab === 'cart' && cart.length === 0) { showLoginPrompt(); return; }
+  if (isGuest() && (tab === 'cart' || tab === 'orders')) { showLoginPrompt(); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
@@ -1479,7 +1477,7 @@ function handleGlobalSearch(event) {
   results.slice(0, 30).forEach(function(item, idx) {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const qty = Number(item.qty) || 0;
-    const available = qty > 0;
+    const available = qty > 0 && price > 0;
     const priceText = !available ? '<span style="color:#EF4444;font-size:13px;">غير متوفر</span>'
       : guestMode ? '<span style="color:#94A3B8;font-size:13px;">🔒 سجل</span>'
       : '<span style="color:#0284C7;font-weight:800;font-size:13px;">' + formatPriceIQD(price) + ' د.ع</span>';
@@ -1715,7 +1713,7 @@ function openToolsSheet() {
     if (!toolsData.length) {
       // جرب تحميل من جديد
       loadTools().then(function() {
-        var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
+        var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
         var all = avail.length ? avail : toolsData;
         resultsDiv.innerHTML = all.length
           ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
@@ -1723,7 +1721,7 @@ function openToolsSheet() {
       });
       return;
     }
-    var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
+    var avail = toolsData.filter(function(p){ return Number(p.qty)>0 && Number(String(p.price||0).replace(/[^0-9]/g,''))>0; });
     var all = avail.length ? avail : toolsData;
     resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
   }
@@ -1740,7 +1738,7 @@ function createPriceItem(p) {
   const price = Number(priceStr) || 0;
   const qty = Number(p.qty) || 0;
   const notes = p.notes || '';
-  const availableText = qty > 0 ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(price)} د.ع</span>` : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`;
+  const availableText = qty > 0 && price > 0 ? `<span style="color:#1e88e5;font-weight:bold">${formatPriceIQD(price)} د.ع</span>` : `<span style="color:#c62828;font-weight:bold">غير متوفر</span>`;
   const notesText = notes ? `<div style="margin-top:6px;background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:17px;font-weight:600;color:#856404;border-left:4px solid #ffc107;">📝 ${notes}</div>` : '';
   const typeText = currentPriceType === 'screens' && p.type ? `<div style="margin-top:4px"><b>النوع:</b> ${p.type}</div>` : '';
   const cartBtn = qty > 0 && price > 0 ? `<button class="add-to-cart-btn" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&#39;")})'>🛒 إضافة للسلة</button>` : '';
@@ -1805,8 +1803,7 @@ function saveCart() { localStorage.setItem('amwaj_cart', JSON.stringify(cart)); 
 
 function addToCart(product) {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const guestToolsAllowed = (product.itemType === 'tools' || product.source === 'أدوات');
-  if (!user && !guestToolsAllowed) { showScreen('loginScreen'); return; }
+  if (!user) { showScreen('loginScreen'); return; }
   if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
   const existingIndex = cart.findIndex(function(item) {
@@ -1950,22 +1947,18 @@ function toggleWarranty(index) {
 
 async function submitOrder() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const guest = !user && isGuest();
+  if (!user) { alert('يرجى تسجيل الدخول'); return; }
   const name = document.getElementById('orderName').value.trim();
   const shop = document.getElementById('orderShop').value.trim();
   const address = document.getElementById('orderAddress').value.trim();
-  const phoneInput = document.getElementById('orderPhone');
-  const guestPhone = phoneInput ? phoneInput.value.trim() : '';
-  const phone = user ? user.phone : guestPhone;
   const result = document.getElementById('orderResult');
   if (!name || !shop || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
-  if (guest && !guestPhone) { result.innerHTML = '<div class="result error">❌ يرجى إدخال رقم الهاتف</div>'; return; }
   if (cart.length === 0) { result.innerHTML = '<div class="result error">❌ السلة فارغة</div>'; return; }
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
   submitBtn.disabled = true; if (clearBtn) clearBtn.disabled = true;
   localStorage.setItem('amwaj_address', address);
-  let message = `🛒 *طلب شراء جديد*\n\n👤 *الاسم:* ${name}\n🏪 *المحل:* ${shop}\n📱 *الهاتف:* ${phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
+  let message = `🛒 *طلب شراء جديد*\n\n👤 *الاسم:* ${name}\n🏪 *المحل:* ${shop}\n📱 *الهاتف:* ${user.phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
   let total = 0;
   cart.forEach((item, i) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -1988,7 +1981,7 @@ async function submitOrder() {
     });
     const data = await response.json();
     if (data.idMessage) {
-      try { await secureApiCall('saveOrder', { name, shop, phone: phone, address, items: cart, total }); } catch(e) {}
+      try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\nمرحباً *${name}*،\n\nشكراً لطلبك من أمواج للإلكترونيات 🌊\n\n📋 *تفاصيل طلبك:*\n\n`;
       cart.forEach((item, i) => {
@@ -2005,7 +1998,7 @@ async function submitOrder() {
       customerMessage += `💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع\n\n📍 *عنوان التوصيل:* ${address}\n\nللاستفسار:\n📞 7696\n📞 07709000160\n\nشكراً لثقتكم 🌊\n*أمواج للإلكترونيات*`;
       fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
+        body: JSON.stringify({ chatId: user.phone.replace(/^0/, '964') + '@c.us', message: customerMessage })
       }).catch(err => console.error(err));
       // تحويل زر الإرسال إلى حسناً
       cart = []; saveCart();
@@ -2114,21 +2107,18 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
+  if (isGuest()) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (isGuest() && cart.length === 0) { showLoginPrompt(); return; }
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
+  // نظف رسالة النجاح القديمة فقط إذا السلة فيها شي
   if (cart.length > 0) {
     var r = document.getElementById('orderResult');
     if (r) r.innerHTML = '';
   }
-  // أظهر حقل الهاتف للضيف وأخفيه للمسجل
-  var phoneGroup = document.getElementById('orderPhoneGroup');
-  if (phoneGroup) phoneGroup.style.display = isGuest() ? 'block' : 'none';
-  if (user) {
-    document.getElementById('orderName').value = user.name || '';
-    document.getElementById('orderShop').value = user.shop || '';
-  }
+  document.getElementById('orderName').value = user.name || '';
+  document.getElementById('orderShop').value = user.shop || '';
   const saved = localStorage.getItem('amwaj_address');
   if (saved) document.getElementById('orderAddress').value = saved;
 }
@@ -2367,7 +2357,7 @@ function getDriveImageUrl(url) {
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
-  var avail = qty > 0;
+  var avail = qty > 0 && price > 0;
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
@@ -2377,19 +2367,9 @@ function createSheetPriceItem(p) {
   if (!avail) {
     priceHtml = '<div class="pi-price unavail">غير متوفر</div>';
     cartRow = '<div class="pi-cart-row"><button class="pi-qty-btn pi-qty-minus disabled-btn" disabled>−</button><button class="add-to-cart-btn disabled-btn" disabled>&#128722; غير متوفر</button><button class="pi-qty-btn pi-qty-plus disabled-btn" disabled>+</button></div>';
-  } else if (isGuest() && sheetPriceType !== 'tools') {
+  } else if (isGuest()) {
     priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
     cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
-  } else if (isGuest() && sheetPriceType === 'tools') {
-    priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
-    var pid2 = cacheProduct(Object.assign({}, p, {itemType: 'tools'}));
-    var uid2 = 'q_' + Math.random().toString(36).substr(2,7);
-    cartRow =
-      '<div class="pi-cart-row">' +
-        '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid2 + '\',\'' + uid2 + '\')">+</button>' +
-        '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid2 + '\',\'' + uid2 + '\')"><span id="' + uid2 + '" class="pi-qty-display">0</span></button>' +
-        '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid2 + '\',\'' + uid2 + '\')">−</button>' +
-      '</div>';
   } else {
     priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
     var pid = cacheProduct(Object.assign({}, p, {itemType: sheetPriceType}));
@@ -2589,18 +2569,15 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
-  if (isGuest() && cart.length === 0) { showLoginPrompt(); return; }
+  if (isGuest()) { showLoginPrompt(); return; }
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) { showLoginPrompt(); return; }
   openSheet('cartSheet');
   renderCart();
-  var phoneGroup = document.getElementById('orderPhoneGroup');
-  if (phoneGroup) phoneGroup.style.display = isGuest() ? 'block' : 'none';
-  if (user) {
-    const nameEl = document.getElementById('orderName');
-    const shopEl = document.getElementById('orderShop');
-    if (nameEl) nameEl.value = user.name || '';
-    if (shopEl) shopEl.value = user.shop || '';
-  }
+  const nameEl = document.getElementById('orderName');
+  const shopEl = document.getElementById('orderShop');
+  if (nameEl) nameEl.value = user.name || '';
+  if (shopEl) shopEl.value = user.shop || '';
   const saved = localStorage.getItem('amwaj_address');
   if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
 }
@@ -3260,7 +3237,7 @@ var ALL_PROD_ORDER = [
 function createAllProdItem(p, typeKey) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
-  var avail = qty > 0;
+  var avail = qty > 0 && price > 0;
   var typeHtml = (typeKey === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
@@ -3658,5 +3635,170 @@ async function adminSaveImage() {
   <img id="imgLightboxImg" style="max-width:95vw;max-height:90vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
   <button onclick="document.getElementById('imgLightbox').style.display='none'" style="position:absolute;top:16px;left:16px;background:rgba(255,255,255,0.2);color:white;border:none;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;font-family:Tajawal,sans-serif;">✕</button>
 </div>
+
+<!-- ==================== AI CHAT ==================== -->
+<div id="amwaj-chat-btn" onclick="toggleChat()" title="مساعد أمواج">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+  <span id="chat-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;">1</span>
+</div>
+
+<div id="amwaj-chat-box">
+  <div id="amwaj-chat-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:34px;height:34px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#fff;">مساعد أمواج 🌊</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.8)" id="chat-status">جاري تحميل البيانات...</div>
+      </div>
+    </div>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div id="amwaj-chat-msgs">
+    <div class="amwaj-msg bot">مرحباً! 👋 أنا مساعد أمواج للإلكترونيات.<br>اسألني عن أي سعر أو مشكلة بموبايلك وأجاوبك فوراً 😊</div>
+    <div id="amwaj-suggestions">
+      <button class="amwaj-sug" onclick="amwajSend(this.textContent)">شو سعر بطارية سامسونج A50؟</button>
+      <button class="amwaj-sug" onclick="amwajSend(this.textContent)">موبايلي ما يشحن، شو المشكلة؟</button>
+      <button class="amwaj-sug" onclick="amwajSend(this.textContent)">كيف أعرف الشاشة تالفة؟</button>
+    </div>
+  </div>
+
+  <div id="amwaj-chat-input-row">
+    <button id="amwaj-send" onclick="amwajSendInput()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+    <textarea id="amwaj-input" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();amwajSendInput();}"></textarea>
+  </div>
+</div>
+
+<style>
+#amwaj-chat-btn{position:fixed;bottom:80px;left:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#1D9E75,#0F6E56);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:9998;transition:transform 0.2s;}
+#amwaj-chat-btn:hover{transform:scale(1.08);}
+#amwaj-chat-box{position:fixed;bottom:145px;left:20px;width:320px;height:480px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);display:flex;flex-direction:column;overflow:hidden;z-index:9999;transform:scale(0);transform-origin:bottom left;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s;opacity:0;pointer-events:none;}
+#amwaj-chat-box.open{transform:scale(1);opacity:1;pointer-events:all;}
+#amwaj-chat-header{background:linear-gradient(135deg,#1D9E75,#0F6E56);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+#amwaj-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#F8F9FA;}
+.amwaj-msg{max-width:82%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.6;direction:rtl;word-break:break-word;}
+.amwaj-msg.bot{background:#fff;color:#1a1a1a;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.amwaj-msg.user{background:#1D9E75;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.amwaj-msg.typing{background:#fff;color:#888;align-self:flex-start;border-bottom-left-radius:4px;}
+#amwaj-suggestions{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.amwaj-sug{background:#fff;border:1px solid #1D9E7540;color:#0F6E56;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;text-align:right;direction:rtl;transition:background 0.15s;}
+.amwaj-sug:hover{background:#E1F5EE;}
+#amwaj-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #eee;background:#fff;flex-shrink:0;}
+#amwaj-input{flex:1;border:1px solid #e0e0e0;border-radius:20px;padding:8px 14px;font-size:13px;direction:rtl;resize:none;height:38px;outline:none;font-family:inherit;}
+#amwaj-input:focus{border-color:#1D9E75;}
+#amwaj-send{width:38px;height:38px;border-radius:50%;background:#1D9E75;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s;}
+#amwaj-send:hover{background:#0F6E56;}
+#amwaj-send:disabled{background:#ccc;cursor:not-allowed;}
+</style>
+
+<script>
+(function(){
+  let chatOpen = false;
+  let chatReady = false;
+  let chatHistory = [];
+  let chatContext = '';
+
+  window.toggleChat = function() {
+    chatOpen = !chatOpen;
+    document.getElementById('amwaj-chat-box').classList.toggle('open', chatOpen);
+    if (chatOpen && !chatReady) loadChatData();
+  };
+
+  async function loadChatData() {
+    document.getElementById('chat-status').textContent = 'جاري تحميل البيانات...';
+    try {
+      const actions = ['getPrices','getBatteries','getChargeboards','getFlatMain','getBackCover','getHousing','getLens','getCamera','getBuzzer','getEarSpeaker','getDoorSim','getFingerprint','getFlatPower','getFlatVolume','getMisc','getTools'];
+      const labels  = ['شاشات','بطاريات','بوردات شحن','فلات مين','باك كفر','شاصي','عدسة كاميرا','كاميرا','بزر','سماعة اتصال','باب سيم','بصمة','فلات باور','فلات صوت','منوعات','أدوات'];
+
+      const results = await Promise.allSettled(actions.map(a => secureApiCall(a)));
+      let lines = [];
+      results.forEach(function(r, i) {
+        if (r.status !== 'fulfilled') return;
+        const data = Array.isArray(r.value) ? r.value : (r.value?.data || []);
+        if (!data.length) return;
+        const items = data.filter(function(p){ return p && (p.name||p.الاسم); })
+          .slice(0, 120)
+          .map(function(p){
+            const name = p.name || p.الاسم || '';
+            const price = Number(p.price || p.السعر || 0);
+            const qty = Number(p.qty || p.العدد || 0);
+            if (!name) return null;
+            const priceStr = price > 0 ? price.toLocaleString() + ' IQD' : 'اسأل عن السعر';
+            const qtyStr = qty > 0 ? 'متوفر' : 'غير متوفر';
+            return name + ' | ' + priceStr + ' | ' + qtyStr;
+          }).filter(Boolean);
+        if (items.length) lines.push('=== ' + labels[i] + ' ===\n' + items.join('\n'));
+      });
+
+      chatContext = lines.join('\n\n');
+      chatReady = true;
+      document.getElementById('chat-status').textContent = 'متصل الآن ✓';
+    } catch(e) {
+      document.getElementById('chat-status').textContent = 'متصل الآن';
+      chatReady = true;
+    }
+  }
+
+  window.amwajSend = function(text) {
+    document.getElementById('amwaj-input').value = text;
+    amwajSendInput();
+    document.getElementById('amwaj-suggestions').style.display = 'none';
+  };
+
+  window.amwajSendInput = async function() {
+    const input = document.getElementById('amwaj-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    if (!chatReady) { await loadChatData(); }
+    document.getElementById('amwaj-suggestions').style.display = 'none';
+    addChatMsg(msg, 'user');
+    chatHistory.push({ role: 'user', content: msg });
+    document.getElementById('amwaj-send').disabled = true;
+    const loader = addChatMsg('...', 'typing');
+
+    try {
+      const systemPrompt = 'أنت مساعد ذكي لمحل أمواج للإلكترونيات في العراق. لديك قائمة أسعار المنتجات التالية:\n\n' + chatContext + '\n\nقواعد مهمة:\n- تكلم بالعربية دائماً\n- عند السؤال عن سعر منتج، ابحث بدقة في القائمة وأعطِ السعر الصحيح\n- إذا المنتج غير متوفر اذكر ذلك بوضوح\n- أجب على أسئلة صيانة الموبايل بخبرة تقنية\n- كن مختصراً وودوداً\n- للتواصل المباشر: 07717533595';
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: chatHistory.slice(-10)
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || 'عذراً، حصل خطأ. حاول مرة ثانية.';
+      loader.remove();
+      addChatMsg(reply, 'bot');
+      chatHistory.push({ role: 'assistant', content: reply });
+    } catch(e) {
+      loader.remove();
+      addChatMsg('عذراً، تعذر الاتصال. حاول مرة ثانية.', 'bot');
+    }
+    document.getElementById('amwaj-send').disabled = false;
+  };
+
+  function addChatMsg(text, cls) {
+    const div = document.createElement('div');
+    div.className = 'amwaj-msg ' + cls;
+    div.innerHTML = text.replace(/\n/g, '<br>');
+    const msgs = document.getElementById('amwaj-chat-msgs');
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+})();
+</script>
+
 </body>
 </html>
