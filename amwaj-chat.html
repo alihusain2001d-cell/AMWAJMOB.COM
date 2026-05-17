@@ -291,7 +291,8 @@ ${productContext}`;
 
   } catch(e) {
     hideTyping();
-    addBotMsg('عذراً، ما أقدر أتصل بالخادم الآن. تواصل معنا على 7696 📞');
+    console.error('Chat error:', e);
+    addBotMsg('❌ خطأ: ' + e.message);
   }
 
   isLoading = false;
