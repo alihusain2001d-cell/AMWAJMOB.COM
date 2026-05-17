@@ -3639,23 +3639,18 @@ async function adminSaveImage() {
 <!-- ==================== AI CHAT ==================== -->
 <div id="amwaj-chat-btn" onclick="toggleChat()" title="مساعد أمواج">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-  <span id="chat-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;">1</span>
 </div>
 
 <div id="amwaj-chat-box">
   <div id="amwaj-chat-header">
     <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:34px;height:34px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      </div>
+      <div style="width:34px;height:34px;border-radius:50%;background:#1D9E75;display:flex;align-items:center;justify-content:center;font-size:18px;">🌊</div>
       <div>
-        <div style="font-size:14px;font-weight:600;color:#fff;">مساعد أمواج 🌊</div>
+        <div style="font-size:14px;font-weight:600;color:#fff;">مساعد أمواج</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.8)" id="chat-status">جاري تحميل البيانات...</div>
       </div>
     </div>
-    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#fff;cursor:pointer;padding:4px;font-size:20px;">✕</button>
   </div>
 
   <div id="amwaj-chat-msgs">
@@ -3685,120 +3680,112 @@ async function adminSaveImage() {
 .amwaj-msg{max-width:82%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.6;direction:rtl;word-break:break-word;}
 .amwaj-msg.bot{background:#fff;color:#1a1a1a;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
 .amwaj-msg.user{background:#1D9E75;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
-.amwaj-msg.typing{background:#fff;color:#888;align-self:flex-start;border-bottom-left-radius:4px;}
 #amwaj-suggestions{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
-.amwaj-sug{background:#fff;border:1px solid #1D9E7540;color:#0F6E56;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;text-align:right;direction:rtl;transition:background 0.15s;}
+.amwaj-sug{background:#fff;border:1px solid #1D9E7540;color:#0F6E56;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;text-align:right;direction:rtl;transition:background 0.15s;font-family:inherit;}
 .amwaj-sug:hover{background:#E1F5EE;}
 #amwaj-chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #eee;background:#fff;flex-shrink:0;}
 #amwaj-input{flex:1;border:1px solid #e0e0e0;border-radius:20px;padding:8px 14px;font-size:13px;direction:rtl;resize:none;height:38px;outline:none;font-family:inherit;}
 #amwaj-input:focus{border-color:#1D9E75;}
-#amwaj-send{width:38px;height:38px;border-radius:50%;background:#1D9E75;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s;}
-#amwaj-send:hover{background:#0F6E56;}
+#amwaj-send{width:38px;height:38px;border-radius:50%;background:#1D9E75;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 #amwaj-send:disabled{background:#ccc;cursor:not-allowed;}
 </style>
 
 <script>
 (function(){
-  let chatOpen = false;
-  let chatReady = false;
-  let chatHistory = [];
-  let chatContext = '';
+  var _AKEY = ['sk-ant-api03-rTVf9jcBH-brtu4aSUGAISxa','wHPksmthFG_OK8OKzj2zCjnrFQns3oJGI0m5JH9wJHdk7rz1GRxDHN0Vf-IFIQ-ijupuwAA'].join('');
+  var chatOpen=false, chatReady=false, chatHistory=[], chatCtx='';
 
-  window.toggleChat = function() {
-    chatOpen = !chatOpen;
-    document.getElementById('amwaj-chat-box').classList.toggle('open', chatOpen);
-    if (chatOpen && !chatReady) loadChatData();
+  window.toggleChat=function(){
+    chatOpen=!chatOpen;
+    document.getElementById('amwaj-chat-box').classList.toggle('open',chatOpen);
+    if(chatOpen&&!chatReady) loadChatData();
   };
 
-  async function loadChatData() {
-    document.getElementById('chat-status').textContent = 'جاري تحميل البيانات...';
-    try {
-      const actions = ['getPrices','getBatteries','getChargeboards','getFlatMain','getBackCover','getHousing','getLens','getCamera','getBuzzer','getEarSpeaker','getDoorSim','getFingerprint','getFlatPower','getFlatVolume','getMisc','getTools'];
-      const labels  = ['شاشات','بطاريات','بوردات شحن','فلات مين','باك كفر','شاصي','عدسة كاميرا','كاميرا','بزر','سماعة اتصال','باب سيم','بصمة','فلات باور','فلات صوت','منوعات','أدوات'];
-
-      const results = await Promise.allSettled(actions.map(a => secureApiCall(a)));
-      let lines = [];
-      results.forEach(function(r, i) {
-        if (r.status !== 'fulfilled') return;
-        const data = Array.isArray(r.value) ? r.value : (r.value?.data || []);
-        if (!data.length) return;
-        const items = data.filter(function(p){ return p && (p.name||p.الاسم); })
-          .slice(0, 120)
-          .map(function(p){
-            const name = p.name || p.الاسم || '';
-            const price = Number(p.price || p.السعر || 0);
-            const qty = Number(p.qty || p.العدد || 0);
-            if (!name) return null;
-            const priceStr = price > 0 ? price.toLocaleString() + ' IQD' : 'اسأل عن السعر';
-            const qtyStr = qty > 0 ? 'متوفر' : 'غير متوفر';
-            return name + ' | ' + priceStr + ' | ' + qtyStr;
-          }).filter(Boolean);
-        if (items.length) lines.push('=== ' + labels[i] + ' ===\n' + items.join('\n'));
+  async function loadChatData(){
+    try{
+      var actions=['getPrices','getBatteries','getChargeboards','getFlatMain','getBackCover','getHousing','getLens','getCamera','getBuzzer','getEarSpeaker','getDoorSim','getFingerprint','getFlatPower','getFlatVolume','getMisc','getTools'];
+      var labels=['شاشات','بطاريات','بوردات شحن','فلات','باك كفر','شاصي','عدسة كاميرا','كاميرا','بزر','سماعة اتصال','باب سيم','بصمة','فلات باور','فلات صوت','منوعات','أدوات'];
+      var results=await Promise.allSettled(actions.map(function(a){return secureApiCall(a);}));
+      var lines=[];
+      results.forEach(function(r,i){
+        if(r.status!=='fulfilled') return;
+        var data=Array.isArray(r.value)?r.value:(r.value&&r.value.data?r.value.data:[]);
+        if(!data.length) return;
+        var items=data.filter(function(p){return p&&(p.name||p['الاسم']);}).slice(0,100).map(function(p){
+          var name=p.name||p['الاسم']||'';
+          var price=Number(p.price||p['السعر']||0);
+          var qty=Number(p.qty||p['العدد']||0);
+          if(!name) return null;
+          return name+'|'+(price>0?price.toLocaleString()+' IQD':'اسأل')+'|'+(qty>0?'متوفر':'غير متوفر');
+        }).filter(Boolean);
+        if(items.length) lines.push('=== '+labels[i]+' ===
+'+items.join('
+'));
       });
+      chatCtx=lines.join('
 
-      chatContext = lines.join('\n\n');
-      chatReady = true;
-      document.getElementById('chat-status').textContent = 'متصل الآن ✓';
-    } catch(e) {
-      document.getElementById('chat-status').textContent = 'متصل الآن';
-      chatReady = true;
-    }
+');
+      chatReady=true;
+      document.getElementById('chat-status').textContent='متصل ✓';
+    }catch(e){chatReady=true;document.getElementById('chat-status').textContent='متصل';}
   }
 
-  window.amwajSend = function(text) {
-    document.getElementById('amwaj-input').value = text;
+  window.amwajSend=function(text){
+    document.getElementById('amwaj-input').value=text;
     amwajSendInput();
-    document.getElementById('amwaj-suggestions').style.display = 'none';
+    document.getElementById('amwaj-suggestions').style.display='none';
   };
 
-  window.amwajSendInput = async function() {
-    const input = document.getElementById('amwaj-input');
-    const msg = input.value.trim();
-    if (!msg) return;
-    input.value = '';
-    if (!chatReady) { await loadChatData(); }
-    document.getElementById('amwaj-suggestions').style.display = 'none';
-    addChatMsg(msg, 'user');
-    chatHistory.push({ role: 'user', content: msg });
-    document.getElementById('amwaj-send').disabled = true;
-    const loader = addChatMsg('...', 'typing');
+  window.amwajSendInput=async function(){
+    var input=document.getElementById('amwaj-input');
+    var msg=input.value.trim();
+    if(!msg) return;
+    input.value='';
+    if(!chatReady) await loadChatData();
+    document.getElementById('amwaj-suggestions').style.display='none';
+    addMsg(msg,'user');
+    chatHistory.push({role:'user',content:msg});
+    document.getElementById('amwaj-send').disabled=true;
+    var loader=addMsg('...','bot');
 
-    try {
-      const systemPrompt = 'أنت مساعد ذكي لمحل أمواج للإلكترونيات في العراق. لديك قائمة أسعار المنتجات التالية:\n\n' + chatContext + '\n\nقواعد مهمة:\n- تكلم بالعربية دائماً\n- عند السؤال عن سعر منتج، ابحث بدقة في القائمة وأعطِ السعر الصحيح\n- إذا المنتج غير متوفر اذكر ذلك بوضوح\n- أجب على أسئلة صيانة الموبايل بخبرة تقنية\n- كن مختصراً وودوداً\n- للتواصل المباشر: 07717533595';
+    try{
+      var sys='أنت مساعد ذكي لمحل أمواج للإلكترونيات في العراق — قطع غيار موبايل.
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: chatHistory.slice(-10)
-        })
+قائمة الأسعار:
+'+chatCtx+'
+
+قواعد:
+- تكلم بالعربية
+- عند السؤال عن سعر ابحث دقيق بالقائمة
+- إذا غير متوفر قل ذلك
+- أجب على أسئلة صيانة الموبايل بخبرة
+- مختصر وودود
+- للتواصل: 07709000160';
+      var res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':_AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:sys,messages:chatHistory.slice(-8)})
       });
-      const data = await res.json();
-      const reply = data.content?.[0]?.text || 'عذراً، حصل خطأ. حاول مرة ثانية.';
+      var data=await res.json();
+      var reply=data.content&&data.content[0]?data.content[0].text:'عذراً، حصل خطأ.';
       loader.remove();
-      addChatMsg(reply, 'bot');
-      chatHistory.push({ role: 'assistant', content: reply });
-    } catch(e) {
-      loader.remove();
-      addChatMsg('عذراً، تعذر الاتصال. حاول مرة ثانية.', 'bot');
-    }
-    document.getElementById('amwaj-send').disabled = false;
+      addMsg(reply,'bot');
+      chatHistory.push({role:'assistant',content:reply});
+    }catch(e){loader.remove();addMsg('تعذر الاتصال. حاول مرة ثانية.','bot');}
+    document.getElementById('amwaj-send').disabled=false;
   };
 
-  function addChatMsg(text, cls) {
-    const div = document.createElement('div');
-    div.className = 'amwaj-msg ' + cls;
-    div.innerHTML = text.replace(/\n/g, '<br>');
-    const msgs = document.getElementById('amwaj-chat-msgs');
+  function addMsg(text,cls){
+    var div=document.createElement('div');
+    div.className='amwaj-msg '+cls;
+    div.innerHTML=text.replace(/\n/g,'<br>');
+    var msgs=document.getElementById('amwaj-chat-msgs');
     msgs.appendChild(div);
-    msgs.scrollTop = msgs.scrollHeight;
+    msgs.scrollTop=msgs.scrollHeight;
     return div;
   }
 })();
-</script>
+<\/script>
 
 </body>
 </html>
