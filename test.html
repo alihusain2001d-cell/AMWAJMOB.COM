@@ -3740,8 +3740,7 @@ async function _ss(){
 function _am(text,cls){
   var div=document.createElement('div');
   div.className='_mb '+cls;
-  div.innerHTML=text.replace(/
-/g,'<br>');
+  div.innerHTML=text.replace(/\n/g,'<br>');
   var m=document.getElementById('_cm');
   m.appendChild(div);
   m.scrollTop=m.scrollHeight;
