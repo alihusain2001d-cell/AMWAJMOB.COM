@@ -3702,13 +3702,9 @@ async function _ld(){
         var q=Number(p.qty)||0;
         return p.name+(pr>0?'|'+pr.toLocaleString()+' IQD':'')+'|'+(q>0?'متوفر':'غير متوفر');
       });
-      if(items.length) lines.push('=== '+labs[i]+' ===
-'+items.join('
-'));
+      if(items.length) lines.push('=== '+labs[i]+' ===\n'+items.join('\n'));
     });
-    _cx=lines.join('
-
-');
+    _cx=lines.join('\n\n');
     _cr=true;
     document.getElementById('_cs2').textContent='متصل ✓';
   }catch(e){_cr=true;document.getElementById('_cs2').textContent='متصل';}
