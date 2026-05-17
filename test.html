@@ -3697,10 +3697,10 @@ async function _ld(){
     res.forEach(function(r,i){
       if(r.status!=='fulfilled') return;
       var d=Array.isArray(r.value)?r.value:[];
-      var items=d.filter(function(p){return p&&p.name;}).slice(0,80).map(function(p){
+      var items=d.filter(function(p){return p&&p.name;}).slice(0,200).map(function(p){
         var pr=Number(p.price)||0;
         var q=Number(p.qty)||0;
-        return p.name+(pr>0?'|'+pr.toLocaleString()+' IQD':'')+'|'+(q>0?'متوفر':'غير متوفر');
+        if(!p.name) return null; var info=p.name; if(pr>0) info+=' — '+pr.toLocaleString()+' د.ع'; if(q>0) info+=' (متوفر: '+q+')'; else info+=' (غير متوفر)'; if(p.type) info+=' ['+p.type+']'; return info;
       });
       if(items.length) lines.push('=== '+labs[i]+' ===\n'+items.join('\n'));
     });
@@ -3722,7 +3722,7 @@ async function _ss(){
   document.getElementById('_cs').disabled=true;
   var ld=_am('...','b');
   try{
-    var sys='أنت مساعد أمواج للإلكترونيات في العراق — قطع غيار موبايل.\n\nأسعار المنتجات:\n'+_cx+'\n\nقواعد: تكلم بالعربية، ابحث دقيق بالأسعار، أجب على أسئلة الصيانة، مختصر وودود. للتواصل: 07709000160';
+    var sys='أنت مساعد ذكي لمحل أمواج للإلكترونيات في كربلاء — العراق. متخصص ببيع قطع غيار الموبايل جملة ومفرد.\n\n== قاعدة بيانات الأسعار ==\n'+_cx+'\n\n== تعليمات مهمة ==\n1. عند السؤال عن سعر منتج: ابحث بدقة في القاعدة بالاسم والماركة، إذا لقيت المنتج أعطِ السعر بالدينار العراقي، إذا ما لقيت قل سعره غير محدد بالقاعدة وانصح يتواصلوا معنا.\n2. عند السؤال عن صيانة أو مشكلة تقنية: أجب بخبرة تقنية عملية — اذكر الأسباب المحتملة والحل خطوة بخطوة بشكل مبسط.\n3. تكلم بالعربية دائماً، اللهجة العراقية مقبولة.\n4. كن مختصراً وواضحاً ومفيداً.\n5. رقم التواصل: 07709000160 أو 07717533595';
     var r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':_AK,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
