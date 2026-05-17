@@ -271,18 +271,15 @@ async function sendMessage() {
 - للصيانة قدم نصائح عملية مبسطة
 ${productContext}`;
 
-    // إرسال عبر form-data لتجنب CORS
-    const formData = new FormData();
-    formData.append('payload', JSON.stringify({
-      apiKey: API_KEY,
-      action: 'claudeProxy',
-      system: systemPrompt,
-      messages: chatHistory
-    }));
-
     const response = await fetch(API_URL, {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        apiKey: API_KEY,
+        action: 'claudeProxy',
+        system: systemPrompt,
+        messages: chatHistory
+      })
     });
 
     const data = await response.json();
