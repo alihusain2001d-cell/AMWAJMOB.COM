@@ -3691,14 +3691,13 @@ async function adminSaveImage() {
 </style>
 
 <script>
-(function(){
-  var _AKEY = ['sk-ant-api03-rTVf9jcBH-brtu4aSUGAISxa','wHPksmthFG_OK8OKzj2zCjnrFQns3oJGI0m5JH9wJHdk7rz1GRxDHN0Vf-IFIQ-ijupuwAA'].join('');
-  var chatOpen=false, chatReady=false, chatHistory=[], chatCtx='';
+var _AKEY = ['sk-ant-api03-rTVf9jcBH-brtu4aSUGAISxa','wHPksmthFG_OK8OKzj2zCjnrFQns3oJGI0m5JH9wJHdk7rz1GRxDHN0Vf-IFIQ-ijupuwAA'].join('');
+var _chatOpen=false, _chatReady=false, _chatHistory=[], _chatCtx='';
 
   window.toggleChat=function(){
-    chatOpen=!chatOpen;
-    document.getElementById('amwaj-chat-box').classList.toggle('open',chatOpen);
-    if(chatOpen&&!chatReady) loadChatData();
+    _chatOpen=!_chatOpen;
+    document.getElementById('amwaj-chat-box').classList.toggle('open',_chatOpen);
+    if(_chatOpen&&!_chatReady) loadChatData();
   };
 
   async function loadChatData(){
@@ -3722,12 +3721,12 @@ async function adminSaveImage() {
 '+items.join('
 '));
       });
-      chatCtx=lines.join('
+      _chatCtx=lines.join('
 
 ');
-      chatReady=true;
+      _chatReady=true;
       document.getElementById('chat-status').textContent='متصل ✓';
-    }catch(e){chatReady=true;document.getElementById('chat-status').textContent='متصل';}
+    }catch(e){_chatReady=true;document.getElementById('chat-status').textContent='متصل';}
   }
 
   window.amwajSend=function(text){
@@ -3741,10 +3740,10 @@ async function adminSaveImage() {
     var msg=input.value.trim();
     if(!msg) return;
     input.value='';
-    if(!chatReady) await loadChatData();
+    if(!_chatReady) await loadChatData();
     document.getElementById('amwaj-suggestions').style.display='none';
     addMsg(msg,'user');
-    chatHistory.push({role:'user',content:msg});
+    _chatHistory.push({role:'user',content:msg});
     document.getElementById('amwaj-send').disabled=true;
     var loader=addMsg('...','bot');
 
@@ -3764,13 +3763,13 @@ async function adminSaveImage() {
       var res=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{'Content-Type':'application/json','x-api-key':_AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:sys,messages:chatHistory.slice(-8)})
+        body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,system:sys,messages:_chatHistory.slice(-8)})
       });
       var data=await res.json();
       var reply=data.content&&data.content[0]?data.content[0].text:'عذراً، حصل خطأ.';
       loader.remove();
       addMsg(reply,'bot');
-      chatHistory.push({role:'assistant',content:reply});
+      _chatHistory.push({role:'assistant',content:reply});
     }catch(e){loader.remove();addMsg('تعذر الاتصال. حاول مرة ثانية.','bot');}
     document.getElementById('amwaj-send').disabled=false;
   };
@@ -3784,7 +3783,6 @@ async function adminSaveImage() {
     msgs.scrollTop=msgs.scrollHeight;
     return div;
   }
-})();
 </script>
 
 
