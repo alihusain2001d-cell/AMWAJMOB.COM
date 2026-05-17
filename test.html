@@ -3722,12 +3722,7 @@ async function _ss(){
   document.getElementById('_cs').disabled=true;
   var ld=_am('...','b');
   try{
-    var sys='أنت مساعد أمواج للإلكترونيات في العراق — قطع غيار موبايل.
-
-أسعار المنتجات:
-'+_cx+'
-
-قواعد: تكلم بالعربية، ابحث دقيق بالأسعار، أجب على أسئلة الصيانة، مختصر وودود. للتواصل: 07709000160';
+    var sys='أنت مساعد أمواج للإلكترونيات في العراق — قطع غيار موبايل.\n\nأسعار المنتجات:\n'+_cx+'\n\nقواعد: تكلم بالعربية، ابحث دقيق بالأسعار، أجب على أسئلة الصيانة، مختصر وودود. للتواصل: 07709000160';
     var r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':_AK,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
