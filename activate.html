@@ -166,19 +166,24 @@ body {
   scroll-behavior: smooth;
 }
 
-/* ── Footer Nav ── */
+/* ── Footer Nav (Floating - visible on all pages) ── */
 .app-footer {
   height: var(--footer-h);
-  background: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-top: 1px solid var(--border-light);
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
-  z-index: 100;
+  z-index: 600; /* Above page sheets (which are 500) */
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -2px 10px rgba(15,23,42,0.03);
+  box-shadow: 0 -2px 16px rgba(15,23,42,0.06);
+  /* Fixed at bottom of viewport */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .footer-tab {
@@ -269,7 +274,7 @@ body {
 }
 
 /* ═══ HOME PAGE ═══ */
-.home-page { padding: 0 0 16px; }
+.home-page { padding: 0 0 100px; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
 
 /* Store card */
 .store-card {
@@ -546,76 +551,132 @@ body {
 .bsheet-overlay {
   display: none;
   position: fixed; inset: 0;
-  background: rgba(15,23,42,0.45);
+  background: var(--surface);
   z-index: 500;
-  align-items: flex-end; justify-content: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  align-items: stretch; justify-content: center;
   overflow: hidden;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.18s ease-out;
 }
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 .bsheet-overlay.open { display: flex; }
 .bsheet {
-  background: #fff;
-  border-radius: 28px 28px 0 0;
-  width: 100%; max-width: 480px;
-  height: 90dvh;
-  max-height: 90dvh;
+  background: var(--surface);
+  border-radius: 0;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   min-height: 0;
   display: flex; flex-direction: column;
   overflow: hidden;
   flex-shrink: 0;
-  animation: sheetUp .35s var(--ease-out);
-  box-shadow: 0 -8px 32px rgba(15,23,42,0.12);
+  animation: pageSlideIn .28s var(--ease-out);
+  box-shadow: none;
+  position: relative;
 }
-@keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
-.bsheet-handle {
-  width: 40px;
-  height: 5px;
-  background: #CBD5E1;
-  border-radius: 3px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
+@keyframes pageSlideIn {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
+/* Hide drag handle - not needed for full pages */
+.bsheet-handle { display: none; }
+
+/* Sticky page header with back button */
 .bsheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 12px;
+  padding: 14px 14px 12px;
   flex-shrink: 0;
+  background: var(--card);
   border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(15,23,42,0.04);
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  min-height: 56px;
 }
 .bsheet-title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.3px;
+  flex: 1;
+  text-align: center;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+/* Back button on LEFT with "رجوع" label */
 .bsheet-close {
-  width: 34px;
-  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--card);
+  color: var(--primary-dark);
+  cursor: pointer;
+  font-family: 'Tajawal',sans-serif;
+  font-size: 0;
+  font-weight: 800;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  order: -1;
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+.bsheet-close::after {
+  content: 'رجوع';
+  font-size: 15px;
+  font-weight: 800;
+  font-family: 'Tajawal', sans-serif;
+}
+.bsheet-close::before {
+  content: '←';
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.bsheet-close:active {
+  background: var(--primary-light);
+  transform: scale(0.96);
+}
+
+/* WhatsApp button in header (right side) */
+.header-wa-btn {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #25D366, #128C7E);
   border: none;
-  background: var(--surface-2);
-  color: var(--muted);
+  color: white;
   font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Tajawal',sans-serif;
   padding: 0;
-  margin: 0;
-  transition: all 0.2s;
+  line-height: 1;
+  box-shadow: 0 3px 10px rgba(37,211,102,0.35);
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+  order: 99;
 }
-.bsheet-close:active {
-  background: #E2E8F0;
-  transform: scale(0.92);
+.header-wa-btn:active { transform: scale(0.92); }
+.bsheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  padding-bottom: calc(var(--footer-h) + 32px + env(safe-area-inset-bottom, 0px)) !important;
+  -webkit-overflow-scrolling: touch;
 }
-.bsheet-body { flex:1; overflow-y:auto; padding:16px 18px 32px; -webkit-overflow-scrolling:touch; }
 
-/* Sheet search */
+/* Sheet search bar */
 .bsheet-search-bar {
   display: flex;
   align-items: center;
@@ -1271,6 +1332,672 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 .social-instagram { background: linear-gradient(135deg, #F58529, #DD2A7B 50%, #8134AF 90%); }
 .social-facebook { background: linear-gradient(135deg, #4267B2, #1A4080); }
 
+/* ═══════════════════════════════════════════════════════
+   ✨ MODERN REDESIGN — Phase 1
+   Hero, categories, profile, bottom-nav
+═══════════════════════════════════════════════════════ */
+
+/* ── Notification + Search header (home) ── */
+.home-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+  gap: 10px;
+}
+.home-store-name {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.home-store-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-weight: 600;
+}
+.home-icon-btn {
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 19px;
+  position: relative;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+}
+.home-icon-btn:active {
+  transform: scale(0.93);
+  background: var(--surface-2);
+}
+.home-icon-btn .notif-dot {
+  position: absolute;
+  top: 9px; right: 10px;
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 2px solid var(--card);
+}
+
+/* ── Hero Banner ── */
+.hero-banner {
+  margin: 6px 14px 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--purple) 130%);
+  padding: 22px 20px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(14,165,233,0.35);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 130px;
+}
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -30%; right: -10%;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+  pointer-events: none;
+}
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -50%; left: -20%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+  pointer-events: none;
+}
+.hero-content {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.hero-eyebrow {
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+.hero-title {
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  color: var(--primary-dark);
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.2s var(--ease-out);
+  border: none;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+}
+.hero-cta:active { transform: scale(0.95); }
+.hero-illust {
+  font-size: 70px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+}
+
+/* ── Category Circles (horizontal scroll) ── */
+.cats-section {
+  margin-bottom: 18px;
+}
+.cats-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 14px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cats-scroll::-webkit-scrollbar { display: none; }
+.cat-circle {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: all 0.22s var(--ease-out);
+  min-width: 68px;
+}
+.cat-circle:active { transform: scale(0.93); }
+.cat-circle-icon {
+  width: 64px; height: 64px;
+  border-radius: 22px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.22s var(--ease-out);
+}
+.cat-circle:active .cat-circle-icon {
+  box-shadow: var(--shadow-primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.cat-circle-icon img {
+  width: 42px; height: 42px;
+  object-fit: contain;
+}
+.cat-circle-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+/* ── Section Title (modern) ── */
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  margin: 4px 0 10px;
+}
+.section-row-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.4px;
+}
+.section-row-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'Tajawal', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.section-row-link:active { opacity: 0.6; }
+
+/* ── Featured Products Horizontal Scroll ── */
+.featured-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 14px 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.featured-scroll::-webkit-scrollbar { display: none; }
+.featured-card {
+  flex: 0 0 auto;
+  width: 150px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: all 0.22s var(--ease-out);
+  position: relative;
+}
+.featured-card:active {
+  transform: scale(0.96);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
+}
+.featured-card-img {
+  width: 100%;
+  height: 110px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 56px;
+  overflow: hidden;
+}
+.featured-card-img img {
+  width: 92px; height: 92px;
+  object-fit: contain;
+}
+.featured-card-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+.featured-card-en {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════
+   👤 PROFILE PAGE — New Design
+═══════════════════════════════════════════════════════ */
+.profile-header {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, var(--primary-dark) 130%);
+  color: white;
+  padding: 24px 20px 32px;
+  border-radius: 0 0 32px 32px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(14,165,233,0.25), transparent 70%);
+  pointer-events: none;
+}
+.profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: -40px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);
+  pointer-events: none;
+}
+.profile-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+.profile-top-icon-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.profile-top-icon-btn:active {
+  background: rgba(255,255,255,0.25);
+  transform: scale(0.92);
+}
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.profile-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  border: 3px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  overflow: hidden;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+}
+.profile-avatar-edit {
+  position: absolute;
+  bottom: -2px; left: -2px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2.5px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.profile-avatar-edit:active { transform: scale(0.88); }
+.profile-meta { flex: 1; min-width: 0; }
+.profile-name {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 3px;
+  letter-spacing: -0.3px;
+}
+.profile-phone {
+  font-size: 13px;
+  opacity: 0.85;
+  direction: ltr;
+  text-align: right;
+  font-weight: 600;
+}
+.profile-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+/* ── Quick stats below profile ── */
+.profile-stats-row {
+  display: flex;
+  gap: 10px;
+  margin: -16px 14px 18px;
+  position: relative;
+  z-index: 5;
+}
+.profile-stat {
+  flex: 1;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+.profile-stat:active { transform: scale(0.96); }
+.profile-stat-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.profile-stat-num {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  letter-spacing: -0.3px;
+}
+.profile-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* ── Menu list ── */
+.profile-menu {
+  padding: 0 14px;
+}
+.profile-menu-group {
+  background: var(--card);
+  border-radius: 18px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-xs);
+}
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  font-family: 'Tajawal', sans-serif;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s;
+  text-align: right;
+  text-decoration: none;
+  color: var(--text);
+}
+.profile-menu-item:last-child { border-bottom: none; }
+.profile-menu-item:active { background: var(--surface-2); }
+.profile-menu-icon {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.pm-icon-orders { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); color: #1E40AF; }
+.pm-icon-warranty { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); color: #065F46; }
+.pm-icon-contact { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #92400E; }
+.pm-icon-about { background: linear-gradient(135deg, #E9D5FF, #DDD6FE); color: #6D28D9; }
+.pm-icon-admin { background: linear-gradient(135deg, #FECACA, #FCA5A5); color: #991B1B; }
+.pm-icon-logout { background: linear-gradient(135deg, #FEE2E2, #FECACA); color: #991B1B; }
+.profile-menu-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.profile-menu-arrow {
+  color: var(--muted-2);
+  font-size: 18px;
+}
+.profile-menu-badge {
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════
+   🛒 CART REDESIGN
+═══════════════════════════════════════════════════════ */
+.cart-item-modern {
+  display: flex;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 10px;
+  gap: 12px;
+  box-shadow: var(--shadow-xs);
+  position: relative;
+}
+.cart-item-img {
+  width: 76px; height: 76px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cart-item-img img {
+  width: 64px; height: 64px;
+  object-fit: contain;
+}
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 3px;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+.cart-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.cart-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cart-item-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  direction: ltr;
+}
+
+/* ── Order summary card ── */
+.cart-summary {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  margin: 16px 0 12px;
+  box-shadow: var(--shadow-xs);
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.summary-row.total {
+  border-top: 1px dashed var(--border);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  letter-spacing: -0.3px;
+}
+.summary-row .amt { direction: ltr; }
+
+/* ═══════════════════════════════════════════════════════
+   📱 BOTTOM NAV — Cleaner version
+═══════════════════════════════════════════════════════ */
+.bn-tab-icon-svg { width: 24px; height: 24px; }
+.bn-cart-fab {
+  width: 56px; height: 56px;
+  margin-top: -16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 6px 20px rgba(14,165,233,0.45);
+  border: 3px solid var(--card);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.25s var(--ease-out);
+}
+.bn-cart-fab:active { transform: scale(0.92); }
+.bn-cart-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--red);
+  color: white;
+  border-radius: 50%;
+  min-width: 20px; height: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  border: 2px solid var(--card);
+  padding: 0 4px;
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   📦 ORDERS — Tabs
+═══════════════════════════════════════════════════════ */
+.orders-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.orders-tabs::-webkit-scrollbar { display: none; }
+.orders-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.orders-tab:active { transform: scale(0.96); }
+.orders-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary);
+}
+.orders-tab-count {
+  background: rgba(255,255,255,0.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.orders-tab:not(.active) .orders-tab-count {
+  background: var(--card);
+  color: var(--muted);
+}
+
 </style>
 </head>
 <body>
@@ -1299,15 +2026,13 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 </div>
 
 <!-- BOTTOM SHEETS -->
-<div id="productsSheet" class="bsheet-overlay" onclick="closeSheet('productsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="productsSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="productsSheetBack()"></button>
       <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" style="background:#25D366;border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(37,211,102,0.4);">💬</button>
-        <button class="bsheet-close" onclick="closeSheet('productsSheet')">✕</button>
-      </div>
+      <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
     <div class="bsheet-body">
       <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()"></div>
@@ -1317,8 +2042,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="warrantySheet" class="bsheet-overlay" onclick="closeSheet('warrantySheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="warrantySheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">✅ تفعيل الضمان</span><button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button></div>
     <div class="bsheet-body">
@@ -1336,8 +2061,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="checkSheet" class="bsheet-overlay" onclick="closeSheet('checkSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="checkSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">🔍 التحقق من الضمان</span><button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button></div>
     <div class="bsheet-body">
@@ -1348,25 +2073,30 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="ordersSheet" class="bsheet-overlay" onclick="closeSheet('ordersSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="ordersSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('ordersSheet')"></button>
       <span class="bsheet-title">📦 طلباتي</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" style="background:#25D366;border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(37,211,102,0.4);">💬</button>
-        <button class="bsheet-close" onclick="closeSheet('ordersSheet')">✕</button>
-      </div>
+      <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
-    <div class="bsheet-body">
+    <div class="orders-tabs" id="ordersTabs">
+      <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
+      <button class="orders-tab" data-filter="pending" onclick="filterOrders('pending')">قيد المراجعة <span class="orders-tab-count" id="cnt-pending">0</span></button>
+      <button class="orders-tab" data-filter="picked" onclick="filterOrders('picked')">قيد التجهيز <span class="orders-tab-count" id="cnt-picked">0</span></button>
+      <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
+      <button class="orders-tab" data-filter="cancelled" onclick="filterOrders('cancelled')">ملغي <span class="orders-tab-count" id="cnt-cancelled">0</span></button>
+    </div>
+    <div class="bsheet-body" style="padding-top:0;">
       <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
       <div id="myOrdersList"></div>
     </div>
   </div>
 </div>
 
-<div id="cartSheet" class="bsheet-overlay" onclick="closeSheet('cartSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="cartSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">🛒 سلة المشتريات</span><button class="bsheet-close" onclick="closeSheet('cartSheet')">✕</button></div>
     <div class="bsheet-body">
@@ -1388,25 +2118,24 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="accountSheet" class="bsheet-overlay" onclick="closeSheet('accountSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="accountSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
-    <div class="bsheet-head"><span class="bsheet-title">👤 الحساب</span><button class="bsheet-close" onclick="closeSheet('accountSheet')">✕</button></div>
-    <div class="bsheet-body">
+    <div class="bsheet-body" style="padding-left:0;padding-right:0;padding-top:0;">
       <div id="accountContent"></div>
     </div>
   </div>
 </div>
 
 <!-- ═══ صفحة تواصل معنا ═══ -->
-<div id="contactSheet" class="bsheet-overlay" onclick="closeSheet('contactSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="contactSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">📞 تواصل معنا</span>
       <button class="bsheet-close" onclick="closeSheet('contactSheet')">✕</button>
     </div>
-    <div class="bsheet-body" style="padding:18px 16px 32px;">
+    <div class="bsheet-body" style="padding-left:16px;padding-right:16px;">
 
       <!-- ترحيب -->
       <div style="background:linear-gradient(135deg,#0EA5E9,#06B6D4,#8B5CF6);border-radius:20px;padding:18px;color:white;text-align:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(14,165,233,0.3);position:relative;overflow:hidden;">
@@ -1532,8 +2261,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 
 <!-- New Items Sheet -->
-<div id="newItemsSheet" class="bsheet-overlay" onclick="closeSheet('newItemsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="newItemsSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">✨ وصلنا حديثاً</span>
@@ -1550,8 +2279,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 
 <!-- Search Sheet -->
-<div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="searchSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🔍 بحث في كل المواد</span>
@@ -1635,20 +2364,32 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <!-- HOME -->
     <div id="homeScreen" style="display:none;" class="home-page">
 
-      <!-- Store card -->
-      <div class="store-card">
-        <div class="store-logo">
-          <img src="1646237145252.png" alt="" onerror="this.style.display='none'">
+      <!-- Top bar with store name + actions -->
+      <div class="home-top-bar">
+        <div>
+          <div class="home-store-name">أمواج للإلكترونيات</div>
+          <div class="home-store-sub" id="homeWelcome">قطع غيار موبايل · كربلاء</div>
         </div>
-        <div class="store-info">
-          <div class="store-name">أمواج للالكترونيات</div>
-          <div class="store-sub"> قطع غيار موبايل — كربلاء المقدسة</div>
-          <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="home-icon-btn" onclick="openContactSheet()" title="تواصل معنا">📞</button>
+          <button class="home-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
         </div>
       </div>
 
+      <!-- Hero Banner -->
+      <div class="hero-banner" onclick="openContactSheet();" style="cursor:pointer;">
+        <div class="hero-content">
+          <div class="hero-eyebrow">🌊 أمواج للإلكترونيات</div>
+          <div class="hero-title">قطع غيار أصلية<br>بضمان حقيقي</div>
+          <button class="hero-cta" onclick="event.stopPropagation();openContactSheet();">تواصل معنا ←</button>
+        </div>
+        <div class="hero-illust">📱</div>
+      </div>
+
       <!-- Quick actions -->
-      <div class="sec-label">إجراءات سريعة</div>
+      <div class="section-row">
+        <div class="section-row-title">إجراءات سريعة</div>
+      </div>
       <div class="quick-strip">
         <div class="quick-btn" onclick="requireAuth(function(){openSheet('warrantySheet');document.getElementById('start').value=formatDate(new Date());})">
           <span class="quick-btn-icon">✅</span>
@@ -1666,7 +2407,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 
       <!-- Search -->
-      <div class="sec-label">بحث سريع</div>
+      <div class="section-row" style="margin-top:14px;">
+        <div class="section-row-title">بحث سريع</div>
+      </div>
       <div class="home-search" style="margin:0 12px 0;position:relative;">
         <span style="font-size:18px;color:var(--muted);">🔍</span>
         <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
@@ -1674,8 +2417,69 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
       <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
+      <!-- Quick Categories (horizontal scroll) -->
+      <div class="section-row" style="margin-top:18px;">
+        <div class="section-row-title">التصنيفات</div>
+        <button class="section-row-link" onclick="document.querySelector('.products-grid').scrollIntoView({behavior:'smooth',block:'start'});">عرض الكل ←</button>
+      </div>
+      <div class="cats-scroll">
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
+          <div class="cat-circle-icon">🖥️</div>
+          <div class="cat-circle-name">الشاشات</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('batteries','🔋 البطاريات');})">
+          <div class="cat-circle-icon">🔋</div>
+          <div class="cat-circle-name">البطاريات</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('chargeboards','🔌 بورد شحن');})">
+          <div class="cat-circle-icon">🔌</div>
+          <div class="cat-circle-name">بورد شحن</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
+          <div class="cat-circle-icon">⚡</div>
+          <div class="cat-circle-name">شريط شحن</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
+          <div class="cat-circle-icon">📷</div>
+          <div class="cat-circle-name">كاميرا</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
+          <div class="cat-circle-icon">📱</div>
+          <div class="cat-circle-name">باك كفر</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openFlatSub('BUZZER','سماعة جرس','🔔');})">
+          <div class="cat-circle-icon">🔔</div>
+          <div class="cat-circle-name">سماعة جرس</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openFlatSub('FINGERPRINT','بصمة','👆');})">
+          <div class="cat-circle-icon">👆</div>
+          <div class="cat-circle-name">بصمة</div>
+        </div>
+        <div class="cat-circle" onclick="openToolsSheet();">
+          <div class="cat-circle-icon">🔧</div>
+          <div class="cat-circle-name">أدوات</div>
+        </div>
+      </div>
+
+      <!-- New Arrivals Banner -->
+      <div class="section-row" style="margin-top:14px;">
+        <div class="section-row-title">✨ وصلنا حديثاً</div>
+        <button class="section-row-link" onclick="openNewItemsSheet()">عرض الكل ←</button>
+      </div>
+      <div onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30%;right:-15%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,0.2),transparent 70%);pointer-events:none;"></div>
+        <div style="font-size:36px;position:relative;z-index:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">✨</div>
+        <div style="flex:1;position:relative;z-index:1;">
+          <div style="font-size:15px;font-weight:900;letter-spacing:-0.3px;margin-bottom:2px;">أحدث المنتجات</div>
+          <div style="font-size:12px;opacity:0.95;font-weight:600;">شوف آخر ما وصل للمتجر</div>
+        </div>
+        <div style="font-size:22px;position:relative;z-index:1;">←</div>
+      </div>
+
       <!-- Products -->
-      <div class="sec-label">المنتجات</div>
+      <div class="section-row" style="margin-top:6px;">
+        <div class="section-row-title">جميع المنتجات</div>
+      </div>
       <div class="products-grid">
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شاشه.jpg" alt="شاشه"><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div>
@@ -1736,32 +2540,31 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 </div>
       <div style="height:16px;"></div>
-      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;"><div>© 2026 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم و برمجة: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
+      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;margin-bottom:90px;"><div>© 2026 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم و برمجة: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
     </div>
 
   <!-- Footer nav -->
   <div class="app-footer">
     <button class="footer-tab active" id="tab-home" onclick="footerTab('home')">
-      <span class="footer-tab-icon">✨</span>
-      <span class="footer-tab-label">وصلنا حديثاً</span>
+      <span class="footer-tab-icon">🏠</span>
+      <span class="footer-tab-label">الرئيسية</span>
     </button>
     <button class="footer-tab" id="tab-search" onclick="openSearchSheet()">
       <span class="footer-tab-icon">🔍</span>
       <span class="footer-tab-label">بحث</span>
     </button>
-    <div class="footer-fab" onclick="openContactSheet()" style="background:linear-gradient(135deg,#0EA5E9,#06B6D4);flex-direction:column;gap:1px;width:62px;height:62px;border-radius:18px;margin-top:0;box-shadow:0 6px 20px rgba(14,165,233,0.45),0 2px 6px rgba(14,165,233,0.25);">
-      <span style="font-size:22px;line-height:1;">📞</span>
-      <span style="font-size:10px;font-weight:900;color:#fff;line-height:1.2;text-align:center;letter-spacing:-0.2px;">تواصل<br>معنا</span>
+    <div class="bn-cart-fab" onclick="openCartSheet()">
+      🛒
+      <span class="bn-cart-count" id="footerCartBadge">0</span>
     </div>
     <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
     </button>
-    <button class="footer-tab" id="tab-cart" onclick="openCartSheet()">
-      <span class="footer-tab-icon">🛒</span>
-      <span class="footer-tab-label">السلة</span>
-      <span class="footer-tab-badge" id="footerCartBadge" style="display:none;">0</span>
+    <button class="footer-tab" id="tab-account" onclick="openSheet('accountSheet');renderAccountSheet();">
+      <span class="footer-tab-icon">👤</span>
+      <span class="footer-tab-label">حسابي</span>
     </button>
   </div>
 </div>
@@ -1819,14 +2622,67 @@ function requireAuth(fn) {
   fn();
 }
 
+// Stack to track open pages for back button support
+var _sheetStack = [];
+
 function openSheet(id) {
   const el = document.getElementById(id);
-  if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  if (!el) return;
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Push to stack if not already there
+  if (_sheetStack[_sheetStack.length - 1] !== id) {
+    _sheetStack.push(id);
+  }
+  // Push history state for browser back button
+  try {
+    history.pushState({ sheet: id }, '');
+  } catch(e) {}
 }
+
 function closeSheet(id) {
   const el = document.getElementById(id);
-  if (el) { el.classList.remove('open'); document.body.style.overflow = ''; }
+  if (!el) return;
+  el.classList.remove('open');
+  // Remove from stack
+  var idx = _sheetStack.lastIndexOf(id);
+  if (idx !== -1) _sheetStack.splice(idx, 1);
+  // Restore body scroll only if no other sheets open
+  if (_sheetStack.length === 0) {
+    document.body.style.overflow = '';
+  }
 }
+
+// Close topmost open sheet (used by Android back button)
+function closeTopSheet() {
+  if (_sheetStack.length === 0) return false;
+  var topId = _sheetStack[_sheetStack.length - 1];
+  // Smart back for products sheet (brand sub-views)
+  if (topId === 'productsSheet') {
+    var brandsDiv = document.getElementById('sheetBrands');
+    var resultsDiv = document.getElementById('sheetResults');
+    if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+      backToSheetBrands();
+      return true;
+    }
+  }
+  closeSheet(topId);
+  return true;
+}
+
+// Browser/Android back button handler
+window.addEventListener('popstate', function(e) {
+  // If a sheet is open, close it and prevent default back behavior
+  if (_sheetStack.length > 0) {
+    closeTopSheet();
+    // Push state again so we don't exit on next back
+    try { history.pushState({}, ''); } catch(err) {}
+  }
+});
+
+// Initialize history state on load so first back press closes a sheet
+try { history.replaceState({ initial: true }, ''); } catch(e) {}
+
 function openFlatpowerModal() {
   const m = document.getElementById('flatpowerModal');
   if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
@@ -1847,7 +2703,12 @@ function footerTab(tab) {
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'home') {
-    openNewItemsSheet();
+    // Close any open sheets and scroll to top
+    document.querySelectorAll('.bsheet-overlay.open').forEach(function(o) { o.classList.remove('open'); });
+    document.body.style.overflow = '';
+    var home = document.getElementById('homeScreen');
+    if (home) home.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tab === 'search') {
     openSearchSheet();
   }
@@ -2154,7 +3015,7 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("storeWelcome"); if(_sw) _sw.textContent = "أهلاً " + user.name.split(" ")[0] + " 👋"; showScreen("homeScreen"); result.innerHTML = ""; }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -2657,27 +3518,105 @@ function renderCart() {
   const summaryDiv = document.getElementById('cartSummary');
   const orderForm = document.getElementById('orderForm');
   const clearBtn = document.getElementById('clearCartBtn');
+
   if (cart.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><div style="font-size:48px;margin-bottom:10px;">🛒</div><div>السلة فارغة</div></div>';
-    summaryDiv.style.display = 'none'; orderForm.style.display = 'none'; clearBtn.style.display = 'none'; return;
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="width:96px;height:96px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:48px;">🛒</div>
+        <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;">السلة فارغة</div>
+        <div style="font-size:14px;color:var(--muted);">أضف منتجات لتظهر هنا</div>
+      </div>
+    `;
+    summaryDiv.style.display = 'none';
+    orderForm.style.display = 'none';
+    clearBtn.style.display = 'none';
+    return;
   }
-  summaryDiv.style.display = 'block'; orderForm.style.display = 'block'; clearBtn.style.display = 'block';
-  let total = 0; container.innerHTML = '';
+
+  summaryDiv.style.display = 'block';
+  orderForm.style.display = 'block';
+  clearBtn.style.display = 'block';
+
+  let total = 0;
+  let html = '';
+
   cart.forEach((item, index) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
     const itemTotal = price * quantity;
     total += itemTotal;
-    const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:17px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
-    const warrantyChecked = item.hasWarranty ? 'checked' : '';
     const isScreen = item.itemType === 'screens';
-    const warrantyBox = isScreen ? `<div style="margin-top:8px;"><div style="display:flex;align-items:center;gap:8px;padding:8px;background:#e8f5e9;border-radius:8px;"><input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;"><label for="warranty_${index}" style="font-size:17px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label></div><div id="warrantyNote_${index}" style="display:${warrantyChecked ? 'block' : 'none'};background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:18px;color:#856404;margin-top:8px;border-left:4px solid #ffc107;">⚠️ علما ان سعر الشاشة يتغير عند طلب الضمان</div></div>` : '';
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.innerHTML = `<div class="cart-item-info"><div style="font-weight:bold;font-size:17px;">${item.name||'-'}</div><div style="font-size:17px;color:#000;margin-top:2px;font-weight:bold;">${item.brand||'-'}</div>${item.itemType==='screens'&&item.type?`<div style="font-size:14px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type}</div>`:''}<div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:18px;">السعر: ${formatPriceIQD(price)} د.ع</div>${notesHtml}${warrantyBox}<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:17px;font-weight:bold;color:#333;">العدد: ${quantity}</span><div style="display:flex;align-items:center;gap:6px;"><button onclick="changeQuantity(${index},-1)" style="background:#ff9800;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➖</button><button onclick="changeQuantity(${index},1)" style="background:#4caf50;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➕</button></div></div><div style="color:#1e88e5;font-weight:bold;font-size:17px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</div></div><button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button></div>`;
-    container.appendChild(div);
+    const warrantyChecked = item.hasWarranty;
+
+    // Determine icon based on item type
+    let itemIcon = '📦';
+    if (item.itemType === 'screens') itemIcon = '🖥️';
+    else if (item.itemType === 'batteries') itemIcon = '🔋';
+    else if (item.itemType === 'chargeboards') itemIcon = '🔌';
+    else if (item.itemType === 'flatcharging') itemIcon = '⚡';
+    else if (item.itemType === 'camera') itemIcon = '📷';
+    else if (item.itemType === 'backcover') itemIcon = '📱';
+    else if (item.itemType === 'housing') itemIcon = '🏠';
+    else if (item.itemType === 'tools') itemIcon = '🔧';
+
+    const notesHtml = item.notes ? `
+      <div style="background:#FFFBEB;border-right:3px solid var(--yellow);padding:6px 10px;border-radius:8px;font-size:12px;color:#92400E;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px;">
+        📝 <span>${sanitize(item.notes)}</span>
+      </div>` : '';
+
+    const warrantyBox = isScreen ? `
+      <div style="margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${warrantyChecked ? '#D1FAE5' : 'var(--surface-2)'};border-radius:10px;cursor:pointer;border:1px solid ${warrantyChecked ? '#10B981' : 'var(--border-light)'};transition:all 0.2s;">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked ? 'checked' : ''} onchange="toggleWarranty(${index})" style="width:18px;height:18px;cursor:pointer;accent-color:#10B981;">
+          <span style="font-size:13px;font-weight:800;color:${warrantyChecked ? '#065F46' : 'var(--text)'};">🛡️ مع ضمان</span>
+        </label>
+        ${warrantyChecked ? '<div style="background:#FFFBEB;padding:8px 10px;border-radius:8px;font-size:12px;color:#92400E;margin-top:6px;border-right:3px solid var(--yellow);font-weight:600;">⚠️ سعر الشاشة يتغير عند طلب الضمان</div>' : ''}
+      </div>` : '';
+
+    html += `
+      <div class="cart-item-modern">
+        <div class="cart-item-img">
+          <span>${itemIcon}</span>
+        </div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${sanitize(item.name || '-')}</div>
+          <div class="cart-item-meta">${sanitize(item.brand || '-')}${item.type ? ' · ' + sanitize(item.type) : ''}</div>
+          <div class="cart-item-bottom">
+            <div class="cart-item-price"><span dir="ltr">${formatPriceIQD(itemTotal)}</span> د.ع</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="changeQuantity(${index},-1)" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;font-weight:800;cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:all 0.2s;">−</button>
+              <span style="font-size:15px;font-weight:800;min-width:24px;text-align:center;">${quantity}</span>
+              <button onclick="changeQuantity(${index},1)" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--primary);color:white;font-size:16px;font-weight:800;cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(14,165,233,0.35);">+</button>
+            </div>
+          </div>
+          ${warrantyBox}
+          ${notesHtml}
+        </div>
+        <button onclick="removeFromCart(${index})" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;border:none;background:#FEE2E2;color:var(--red);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;" title="حذف">🗑️</button>
+      </div>
+    `;
   });
-  totalEl.textContent = formatPriceIQD(total) + ' د.ع';
+
+  // Add summary card at end of items
+  html += `
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>عدد المنتجات</span>
+        <span class="amt">${cart.length}</span>
+      </div>
+      <div class="summary-row">
+        <span>عدد القطع</span>
+        <span class="amt">${cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
+      </div>
+      <div class="summary-row total">
+        <span>المجموع الكلي</span>
+        <span class="amt">${formatPriceIQD(total)} د.ع</span>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+  if (totalEl) totalEl.textContent = formatPriceIQD(total) + ' د.ع';
 }
 
 function changeQuantity(index, change) {
@@ -3173,6 +4112,19 @@ function backToSheetBrands() {
   document.getElementById('sheetSearch').value = '';
 }
 
+// Smart back for products sheet: if a brand is open, go back to brands list
+// Otherwise close the whole sheet
+function productsSheetBack() {
+  var brandsDiv = document.getElementById('sheetBrands');
+  var resultsDiv = document.getElementById('sheetResults');
+  // If brands grid is hidden, we're viewing a brand's items - go back to brands
+  if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+    backToSheetBrands();
+  } else {
+    closeSheet('productsSheet');
+  }
+}
+
 function getDriveImageUrl(url) {
   if (!url || typeof url !== 'string' || !url.trim()) return '';
   var u = url.trim();
@@ -3315,7 +4267,179 @@ function addToCartById(key) {
 
 // addToCartInSheet replaced by addToCartById
 
+// Global cache for orders so the filter can re-render without re-fetching
+var _allOrdersCache = [];
+var _ordersFilter = 'all';
+
+function filterOrders(filter) {
+  _ordersFilter = filter;
+  // Update active tab UI
+  document.querySelectorAll('.orders-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+  });
+  renderOrdersList();
+}
+
+function renderOrdersList() {
+  var orders = _allOrdersCache;
+  var listDiv = document.getElementById('myOrdersList');
+  if (!listDiv) return;
+
+  // Update counts on tabs
+  var counts = { all: orders.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
+  orders.forEach(function(o) {
+    if (counts[o.status] !== undefined) counts[o.status]++;
+  });
+  Object.keys(counts).forEach(function(k) {
+    var el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = counts[k];
+  });
+
+  // Filter
+  var filtered = _ordersFilter === 'all' ? orders : orders.filter(function(o) { return o.status === _ordersFilter; });
+
+  if (!filtered.length) {
+    var labelMap = { all: 'لا توجد طلبات', pending: 'لا توجد طلبات قيد المراجعة', picked: 'لا توجد طلبات قيد التجهيز', delivered: 'لا توجد طلبات مسلمة', cancelled: 'لا توجد طلبات ملغية' };
+    listDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📦</div><div style="color:var(--muted);font-size:15px;font-weight:600;">' + (labelMap[_ordersFilter] || 'لا توجد طلبات') + '</div></div>';
+    return;
+  }
+
+  // Render
+  listDiv.innerHTML = filtered.map(_renderOrderCard).join('');
+}
+
+function _renderOrderCard(o) {
+  // ── Status pill ──
+  var statusText = 'قيد المراجعة';
+  var statusClass = 'pill-pending';
+  var statusIcon = '⏳';
+  if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
+  else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
+  else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
+
+  // ── Date ──
+  var dateStr = '';
+  if (o.date || o.createdAt) {
+    try {
+      var d = new Date(o.date || o.createdAt);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+    } catch(e) {}
+  }
+
+  // ── Items list ──
+  var itemsHtml = (o.items||[]).map(function(it) {
+    var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
+    var qty = it.quantity || 1;
+    var itemTotal = price * qty;
+    var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
+    var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
+    var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
+    var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
+    return '<div class="order-item-card">' +
+      '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
+      '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
+      warrantyBadge +
+      '<div class="order-item-meta">' +
+        '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
+        '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
+      '</div>' +
+      noteHtml +
+    '</div>';
+  }).join('');
+
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
+  var orderId = o.orderId || '-';
+  var itemCount = (o.items||[]).length;
+  var isCancellable = (o.status === 'pending' || o.status === 'picked');
+
+  var waMsgParts = [
+    'السلام عليكم',
+    'أريد الاستفسار عن طلبي:',
+    '🧾 رقم الطلب: ' + orderId,
+    '📦 عدد المواد: ' + itemCount,
+    '💰 المجموع: ' + formatPriceIQD(total) + ' IQD',
+    '🔖 الحالة: ' + statusText
+  ];
+  var waUrl = 'https://wa.me/' + AMWAJ_PRIMARY_WA + '?text=' + encodeURIComponent(waMsgParts.join('\n'));
+
+  var cancelBtn = isCancellable
+    ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')">إلغاء</button>'
+    : '';
+
+  return '<div class="order-card">' +
+    '<div class="order-card-header">' +
+      '<div>' +
+        '<div class="order-id-text">' + sanitize(orderId) + '</div>' +
+        (dateStr ? '<div class="order-date-text">📅 ' + dateStr + '</div>' : '') +
+      '</div>' +
+      '<span class="status-pill ' + statusClass + '">' + statusIcon + ' ' + statusText + '</span>' +
+    '</div>' +
+    '<div class="order-items-section">' +
+      '<div class="order-items-label">📋 المنتجات (' + itemCount + ')</div>' +
+      itemsHtml +
+    '</div>' +
+    '<div class="order-footer">' +
+      '<div class="order-total-row">' +
+        '<span class="order-total-label">💰 المجموع الكلي</span>' +
+        '<span class="order-total-value"><span dir="ltr">' + formatPriceIQD(total) + '</span> IQD</span>' +
+      '</div>' +
+      (o.address ? '<div class="order-address-row">📍 <span>' + sanitize(o.address) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="order-actions">' +
+      '<a href="' + waUrl + '" target="_blank" class="order-wa-btn">💬 استفسار عن هذا الطلب</a>' +
+      cancelBtn +
+    '</div>' +
+  '</div>';
+}
+
 function loadMyOrders() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  const listDiv = document.getElementById('myOrdersList');
+  const loadDiv = document.getElementById('myOrdersLoading');
+  if (!user) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">يرجى تسجيل الدخول أولاً</div>';
+    return;
+  }
+  if (loadDiv) loadDiv.style.display = 'block';
+  if (listDiv) listDiv.innerHTML = '';
+  secureApiCall('getMyOrders', { phone: user.phone }).then(function(orders) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (!orders || !orders.length) {
+      _allOrdersCache = [];
+      renderOrdersList();
+      updateOrdersBadge(0);
+      localStorage.setItem('amwaj_orders_seen', '[]');
+      return;
+    }
+
+    // ── كشف طلبات جديدة ──
+    var seenIds = [];
+    try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen') || '[]'); } catch(e) {}
+    var allIds = orders.map(function(o){ return o.orderId; });
+    var newOrders = orders.filter(function(o){ return o.orderId && !seenIds.includes(o.orderId); });
+    if (newOrders.length > 0 && seenIds.length > 0) {
+      showOrdersNotification(newOrders.length);
+    }
+    localStorage.setItem('amwaj_orders_seen', JSON.stringify(allIds));
+
+    // Cache and render
+    _allOrdersCache = orders;
+    renderOrdersList();
+
+    // Update badges (active orders only)
+    var active = orders.filter(function(o){ return o.status === 'pending' || o.status === 'picked'; });
+    updateOrdersBadge(active.length);
+  }).catch(function(err) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">⚠️ فشل تحميل الطلبات</div>';
+  });
+}
+
+// Legacy function - now unused, kept for safety
+function loadMyOrdersOld() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   const listDiv = document.getElementById('myOrdersList');
   const loadDiv = document.getElementById('myOrdersLoading');
@@ -3757,8 +4881,8 @@ async function appBoot() {
   // Cached approved user → show home IMMEDIATELY, no loading
   const cachedUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (cachedUser && cachedUser.status === 'approved') {
-    const welcome = document.getElementById('storeWelcome');
-    if (welcome) welcome.textContent = 'أهلاً ' + cachedUser.name.split(' ')[0] + ' 👋';
+    const welcome = document.getElementById('homeWelcome');
+    if (welcome) welcome.textContent = 'مرحباً ' + cachedUser.name.split(' ')[0];
     showScreen('homeScreen');
     // Background refresh
     setTimeout(async () => {
@@ -3801,8 +4925,8 @@ async function appBoot() {
 
       if (user && user.status === 'approved') {
         localStorage.setItem('amwaj_user', JSON.stringify(user));
-        const welcome = document.getElementById('storeWelcome');
-        if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
+        const welcome = document.getElementById('homeWelcome');
+        if (welcome) welcome.textContent = 'مرحباً ' + user.name.split(' ')[0];
         showScreen('homeScreen');
         try {
           const ords = await secureApiCall('getMyOrders', { phone: user.phone });
@@ -3936,49 +5060,241 @@ function renderAccountSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   const div = document.getElementById('accountContent');
   if (!div) return;
+
   if (user) {
     const isAdmin = user.phone && user.phone.replace(/\D/g,'').endsWith('7717533595');
-    div.innerHTML = [
-      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">',
-        '<div style="font-size:40px;margin-bottom:8px;">👤</div>',
-        '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>',
-        '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>',
-        '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>',
-      '</div>',
-      isAdmin ? '<button class="form-btn" style="background:#0F172A;margin-bottom:8px;" onclick="closeSheet(\'accountSheet\');openAdminPanel()">🛠️ لوحة التحكم</button>' : '',
-      '<button class="form-btn" onclick="openWarrantyFromAccount()">✅ تفعيل الضمان</button>',
-      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">🔍 التحقق من الضمان</button>',
-      '<button class="form-btn" style="background:#25D366;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="closeSheet(\'accountSheet\');openContacts(\'السلام عليكم، أريد الاستفسار\')">📞 تواصل معنا</button>',
-      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>',
-    ].join('');
+
+    // Get saved profile picture or first letter
+    const savedPic = localStorage.getItem('amwaj_profile_pic_' + user.phone);
+    const firstChar = (user.name || 'A').trim().charAt(0).toUpperCase();
+    const avatarStyle = savedPic ? `background-image:url('${savedPic}');background-size:cover;background-position:center;` : '';
+    const avatarContent = savedPic ? '' : firstChar;
+
+    // Get badge (verified status)
+    const verified = user.status === 'approved';
+
+    div.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-top-row">
+          <button class="profile-top-icon-btn" onclick="openEditProfile()" title="تعديل">✏️</button>
+          <button class="profile-top-icon-btn" onclick="closeSheet('accountSheet')" title="إغلاق">✕</button>
+        </div>
+        <div class="profile-info-row">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" style="${avatarStyle}" onclick="triggerAvatarPick()">${avatarContent}</div>
+            <div class="profile-avatar-edit" onclick="triggerAvatarPick()" title="تغيير الصورة">📷</div>
+            <input type="file" id="avatarPickInput" accept="image/*" style="display:none;" onchange="handleAvatarChange(event)">
+          </div>
+          <div class="profile-meta">
+            <div class="profile-name">${sanitize(user.name || '')}</div>
+            <div class="profile-phone">${sanitize(user.phone || '')}</div>
+            ${verified ? '<span class="profile-badge">✓ عضو موثق</span>' : '<span class="profile-badge">قيد التفعيل</span>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-stats-row">
+        <div class="profile-stat" onclick="openOrdersSheet();">
+          <div class="profile-stat-icon">📦</div>
+          <div class="profile-stat-num" id="statOrdersCount">--</div>
+          <div class="profile-stat-label">طلباتي</div>
+        </div>
+        <div class="profile-stat" onclick="openWarrantyFromAccount();">
+          <div class="profile-stat-icon">🛡️</div>
+          <div class="profile-stat-num">✓</div>
+          <div class="profile-stat-label">تفعيل ضمان</div>
+        </div>
+        <div class="profile-stat" onclick="openCheckFromAccount();">
+          <div class="profile-stat-icon">🔍</div>
+          <div class="profile-stat-num">?</div>
+          <div class="profile-stat-label">تحقق ضمان</div>
+        </div>
+      </div>
+
+      <div class="profile-menu">
+        ${isAdmin ? `
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="openAdminPanel()">
+            <div class="profile-menu-icon pm-icon-admin">🛠️</div>
+            <div class="profile-menu-label">لوحة التحكم</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>` : ''}
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="openOrdersSheet();">
+            <div class="profile-menu-icon pm-icon-orders">📦</div>
+            <div class="profile-menu-label">طلباتي</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openWarrantyFromAccount()">
+            <div class="profile-menu-icon pm-icon-warranty">🛡️</div>
+            <div class="profile-menu-label">تفعيل الضمان</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openCheckFromAccount()">
+            <div class="profile-menu-icon pm-icon-warranty">🔍</div>
+            <div class="profile-menu-label">التحقق من الضمان</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="openContactSheet();">
+            <div class="profile-menu-icon pm-icon-contact">📞</div>
+            <div class="profile-menu-label">تواصل معنا</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openAboutSheet()">
+            <div class="profile-menu-icon pm-icon-about">ℹ️</div>
+            <div class="profile-menu-label">عن المتجر</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="confirmLogout()">
+            <div class="profile-menu-icon pm-icon-logout">🚪</div>
+            <div class="profile-menu-label" style="color:var(--red);">تسجيل الخروج</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Load orders count for stat
+    loadStatOrdersCount();
+
   } else {
-    div.innerHTML = [
-      '<div style="text-align:center;padding:20px 0;">',
-        '<div style="font-size:48px;margin-bottom:12px;">👤</div>',
-        '<div style="font-size:18px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>',
-        '<div style="font-size:17px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>',
-      '</div>',
-      '<button class="form-btn" onclick="closeSheet(\'accountSheet\');showScreen(\'loginScreen\');">تسجيل الدخول</button>',
-      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet(\'accountSheet\');showScreen(\'registerScreen\');">تسجيل حساب جديد</button>',
-    ].join('');
+    div.innerHTML = `
+      <div style="text-align:center;padding:30px 20px;">
+        <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:42px;color:white;margin:0 auto 16px;box-shadow:0 6px 20px rgba(14,165,233,0.35);">
+          👤
+        </div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.3px;">مرحباً بك</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:24px;">سجل دخولك للوصول لكل الخدمات</div>
+        <button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>
+        <button class="form-btn success-btn" style="margin-top:10px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">إنشاء حساب جديد</button>
+        <button class="form-btn" style="background:transparent;color:var(--muted);box-shadow:none;border:1px dashed var(--border);margin-top:10px;" onclick="openContactSheet();">📞 تواصل معنا</button>
+      </div>
+    `;
   }
 }
-function openWarrantyFromAccount() {
+
+function triggerAvatarPick() {
+  var inp = document.getElementById('avatarPickInput');
+  if (inp) inp.click();
+}
+
+function handleAvatarChange(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('يرجى اختيار صورة'); return; }
+  if (file.size > 2 * 1024 * 1024) { alert('حجم الصورة كبير جداً (الحد الأقصى 2MB)'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      // Compress: resize to 256x256 max + JPEG quality 0.85
+      var canvas = document.createElement('canvas');
+      var size = 256;
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      // Crop to square (center)
+      var minSide = Math.min(img.width, img.height);
+      var sx = (img.width - minSide) / 2;
+      var sy = (img.height - minSide) / 2;
+      ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+      if (user && user.phone) {
+        localStorage.setItem('amwaj_profile_pic_' + user.phone, dataUrl);
+        renderAccountSheet();
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadStatOrdersCount() {
+  if (typeof secureApiCall !== 'function') return;
+  secureApiCall('getOrders', {}).then(function(res) {
+    var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
+    var el = document.getElementById('statOrdersCount');
+    if (el) el.textContent = ords.length;
+  }).catch(function(){});
+}
+
+function confirmLogout() {
+  if (confirm('هل تريد تسجيل الخروج؟')) {
+    logout();
+  }
+}
+
+function openEditProfile() {
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  var newName = prompt('اسم العرض:', user.name || '');
+  if (newName !== null && newName.trim() && newName !== user.name) {
+    user.name = newName.trim();
+    localStorage.setItem('amwaj_user', JSON.stringify(user));
+    renderAccountSheet();
+  }
+}
+
+function openAboutSheet() {
   closeSheet('accountSheet');
+  // Reuse contact sheet for now, can expand later
+  var html = `
+    <div style="text-align:center;padding:20px 16px;">
+      <div style="width:84px;height:84px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--accent),#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:48px;color:white;margin:0 auto 14px;box-shadow:0 8px 24px rgba(14,165,233,0.4);">🌊</div>
+      <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:6px;">أمواج للإلكترونيات</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">قطع غيار موبايل — كربلاء المقدسة</div>
+    </div>
+    <div style="padding:0 16px 24px;line-height:1.8;color:var(--text-2);font-size:14px;">
+      <p style="margin-bottom:14px;">منصة متخصصة في بيع قطع غيار الموبايل الأصلية بأسعار منافسة وضمان حقيقي.</p>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">🛡️ ضمان حقيقي</div>
+        <div style="font-size:13px;color:var(--muted);">شاشات: 30 يوم · بطاريات: 365 يوم</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">⚡ توصيل سريع</div>
+        <div style="font-size:13px;color:var(--muted);">داخل كربلاء وضواحيها</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">💬 دعم 24/7</div>
+        <div style="font-size:13px;color:var(--muted);">عبر واتساب أو الاتصال المباشر</div>
+      </div>
+    </div>
+  `;
+  // Open in account sheet temporarily
+  document.getElementById('accountContent').innerHTML = `
+    <div class="bsheet-head" style="padding-top:0;">
+      <button class="profile-top-icon-btn" style="background:var(--surface-2);border:1px solid var(--border-light);color:var(--text);" onclick="renderAccountSheet();openSheet('accountSheet');">→</button>
+      <span class="bsheet-title">عن المتجر</span>
+      <button class="bsheet-close" onclick="closeSheet('accountSheet')">✕</button>
+    </div>
+    ${html}
+  `;
+  openSheet('accountSheet');
+}
+function openWarrantyFromAccount() {
   openSheet('warrantySheet');
   const s = document.getElementById('start');
   if (s) s.value = formatDate(new Date());
 }
 function openCheckFromAccount() {
-  closeSheet('accountSheet');
   openSheet('checkSheet');
 }
 
 </script>
 
 <!-- ALL PRODUCTS SHEET -->
-<div id="allProductsSheet" class="bsheet-overlay" onclick="closeSheet('allProductsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:92vh;">
+<div id="allProductsSheet" class="bsheet-overlay">
+  <div class="bsheet" style="max-height:92vh;">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">📦 جميع المواد</span>
@@ -3990,8 +5306,8 @@ function openCheckFromAccount() {
 </div>
 
 <!-- ═══ لوحة تحكم الأدمن ═══ -->
-<div id="adminSheet" class="bsheet-overlay" onclick="closeSheet('adminSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="adminSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
