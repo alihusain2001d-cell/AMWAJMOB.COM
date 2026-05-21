@@ -2360,9 +2360,68 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
       <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
-      <!-- Products -->
+      <!-- Quick Categories (horizontal scroll) -->
+      <div class="section-row" style="margin-top:18px;">
+        <div class="section-row-title">التصنيفات</div>
+        <button class="section-row-link" onclick="document.querySelector('.products-grid').scrollIntoView({behavior:'smooth',block:'start'});">عرض الكل ←</button>
+      </div>
+      <div class="cats-scroll">
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
+          <div class="cat-circle-icon">🖥️</div>
+          <div class="cat-circle-name">الشاشات</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('batteries','🔋 البطاريات');})">
+          <div class="cat-circle-icon">🔋</div>
+          <div class="cat-circle-name">البطاريات</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('chargeboards','🔌 بورد شحن');})">
+          <div class="cat-circle-icon">🔌</div>
+          <div class="cat-circle-name">بورد شحن</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('flatcharging','⚡ شريط شحن');})">
+          <div class="cat-circle-icon">⚡</div>
+          <div class="cat-circle-name">شريط شحن</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('camera','📷 كاميرا');})">
+          <div class="cat-circle-icon">📷</div>
+          <div class="cat-circle-name">كاميرا</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openProductSheet('backcover','📱 باك كفر');})">
+          <div class="cat-circle-icon">📱</div>
+          <div class="cat-circle-name">باك كفر</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openFlatSub('BUZZER','سماعة جرس','🔔');})">
+          <div class="cat-circle-icon">🔔</div>
+          <div class="cat-circle-name">سماعة جرس</div>
+        </div>
+        <div class="cat-circle" onclick="requireAuth(function(){openFlatSub('FINGERPRINT','بصمة','👆');})">
+          <div class="cat-circle-icon">👆</div>
+          <div class="cat-circle-name">بصمة</div>
+        </div>
+        <div class="cat-circle" onclick="openToolsSheet();">
+          <div class="cat-circle-icon">🔧</div>
+          <div class="cat-circle-name">أدوات</div>
+        </div>
+      </div>
+
+      <!-- New Arrivals Banner -->
       <div class="section-row" style="margin-top:14px;">
-        <div class="section-row-title">المنتجات</div>
+        <div class="section-row-title">✨ وصلنا حديثاً</div>
+        <button class="section-row-link" onclick="openNewItemsSheet()">عرض الكل ←</button>
+      </div>
+      <div onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30%;right:-15%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,0.2),transparent 70%);pointer-events:none;"></div>
+        <div style="font-size:36px;position:relative;z-index:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">✨</div>
+        <div style="flex:1;position:relative;z-index:1;">
+          <div style="font-size:15px;font-weight:900;letter-spacing:-0.3px;margin-bottom:2px;">أحدث المنتجات</div>
+          <div style="font-size:12px;opacity:0.95;font-weight:600;">شوف آخر ما وصل للمتجر</div>
+        </div>
+        <div style="font-size:22px;position:relative;z-index:1;">←</div>
+      </div>
+
+      <!-- Products -->
+      <div class="section-row" style="margin-top:6px;">
+        <div class="section-row-title">جميع المنتجات</div>
       </div>
       <div class="products-grid">
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
@@ -2430,26 +2489,25 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   <!-- Footer nav -->
   <div class="app-footer">
     <button class="footer-tab active" id="tab-home" onclick="footerTab('home')">
-      <span class="footer-tab-icon">✨</span>
-      <span class="footer-tab-label">وصلنا حديثاً</span>
+      <span class="footer-tab-icon">🏠</span>
+      <span class="footer-tab-label">الرئيسية</span>
     </button>
     <button class="footer-tab" id="tab-search" onclick="openSearchSheet()">
       <span class="footer-tab-icon">🔍</span>
       <span class="footer-tab-label">بحث</span>
     </button>
-    <div class="footer-fab" onclick="openContactSheet()" style="background:linear-gradient(135deg,#0EA5E9,#06B6D4);flex-direction:column;gap:1px;width:62px;height:62px;border-radius:18px;margin-top:0;box-shadow:0 6px 20px rgba(14,165,233,0.45),0 2px 6px rgba(14,165,233,0.25);">
-      <span style="font-size:22px;line-height:1;">📞</span>
-      <span style="font-size:10px;font-weight:900;color:#fff;line-height:1.2;text-align:center;letter-spacing:-0.2px;">تواصل<br>معنا</span>
+    <div class="bn-cart-fab" onclick="openCartSheet()">
+      🛒
+      <span class="bn-cart-count" id="footerCartBadge">0</span>
     </div>
     <button class="footer-tab" id="tab-orders" onclick="requireAuth(function(){openOrdersSheet();})" style="position:relative;">
       <span class="footer-tab-icon">📦</span>
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
     </button>
-    <button class="footer-tab" id="tab-cart" onclick="openCartSheet()">
-      <span class="footer-tab-icon">🛒</span>
-      <span class="footer-tab-label">السلة</span>
-      <span class="footer-tab-badge" id="footerCartBadge" style="display:none;">0</span>
+    <button class="footer-tab" id="tab-account" onclick="openSheet('accountSheet');renderAccountSheet();">
+      <span class="footer-tab-icon">👤</span>
+      <span class="footer-tab-label">حسابي</span>
     </button>
   </div>
 </div>
@@ -2535,7 +2593,12 @@ function footerTab(tab) {
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (tab === 'home') {
-    openNewItemsSheet();
+    // Close any open sheets and scroll to top
+    document.querySelectorAll('.bsheet-overlay.open').forEach(function(o) { o.classList.remove('open'); });
+    document.body.style.overflow = '';
+    var home = document.getElementById('homeScreen');
+    if (home) home.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } else if (tab === 'search') {
     openSearchSheet();
   }
