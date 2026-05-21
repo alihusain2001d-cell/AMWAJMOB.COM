@@ -1271,6 +1271,625 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 .social-instagram { background: linear-gradient(135deg, #F58529, #DD2A7B 50%, #8134AF 90%); }
 .social-facebook { background: linear-gradient(135deg, #4267B2, #1A4080); }
 
+/* ═══════════════════════════════════════════════════════
+   ✨ MODERN REDESIGN — Phase 1
+   Hero, categories, profile, bottom-nav
+═══════════════════════════════════════════════════════ */
+
+/* ── Notification + Search header (home) ── */
+.home-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+  gap: 10px;
+}
+.home-store-name {
+  font-size: 21px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+.home-store-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-weight: 600;
+}
+.home-icon-btn {
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 19px;
+  position: relative;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.2s var(--ease-out);
+  flex-shrink: 0;
+}
+.home-icon-btn:active {
+  transform: scale(0.93);
+  background: var(--surface-2);
+}
+.home-icon-btn .notif-dot {
+  position: absolute;
+  top: 9px; right: 10px;
+  width: 8px; height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 2px solid var(--card);
+}
+
+/* ── Hero Banner ── */
+.hero-banner {
+  margin: 6px 14px 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--purple) 130%);
+  padding: 22px 20px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(14,165,233,0.35);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 130px;
+}
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -30%; right: -10%;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+  pointer-events: none;
+}
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -50%; left: -20%;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+  pointer-events: none;
+}
+.hero-content {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.hero-eyebrow {
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+.hero-title {
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.5px;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: white;
+  color: var(--primary-dark);
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.2s var(--ease-out);
+  border: none;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+}
+.hero-cta:active { transform: scale(0.95); }
+.hero-illust {
+  font-size: 70px;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+}
+
+/* ── Category Circles (horizontal scroll) ── */
+.cats-section {
+  margin-bottom: 18px;
+}
+.cats-scroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 14px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cats-scroll::-webkit-scrollbar { display: none; }
+.cat-circle {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: all 0.22s var(--ease-out);
+  min-width: 68px;
+}
+.cat-circle:active { transform: scale(0.93); }
+.cat-circle-icon {
+  width: 64px; height: 64px;
+  border-radius: 22px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: all 0.22s var(--ease-out);
+}
+.cat-circle:active .cat-circle-icon {
+  box-shadow: var(--shadow-primary);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.cat-circle-icon img {
+  width: 42px; height: 42px;
+  object-fit: contain;
+}
+.cat-circle-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+/* ── Section Title (modern) ── */
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  margin: 4px 0 10px;
+}
+.section-row-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.4px;
+}
+.section-row-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: 'Tajawal', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.section-row-link:active { opacity: 0.6; }
+
+/* ── Featured Products Horizontal Scroll ── */
+.featured-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 14px 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.featured-scroll::-webkit-scrollbar { display: none; }
+.featured-card {
+  flex: 0 0 auto;
+  width: 150px;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: all 0.22s var(--ease-out);
+  position: relative;
+}
+.featured-card:active {
+  transform: scale(0.96);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
+}
+.featured-card-img {
+  width: 100%;
+  height: 110px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-size: 56px;
+  overflow: hidden;
+}
+.featured-card-img img {
+  width: 92px; height: 92px;
+  object-fit: contain;
+}
+.featured-card-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+.featured-card-en {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════
+   👤 PROFILE PAGE — New Design
+═══════════════════════════════════════════════════════ */
+.profile-header {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, var(--primary-dark) 130%);
+  color: white;
+  padding: 24px 20px 32px;
+  border-radius: 0 0 32px 32px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.profile-header::before {
+  content: '';
+  position: absolute;
+  top: -50px; right: -50px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(14,165,233,0.25), transparent 70%);
+  pointer-events: none;
+}
+.profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: -40px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 70%);
+  pointer-events: none;
+}
+.profile-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+.profile-top-icon-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.profile-top-icon-btn:active {
+  background: rgba(255,255,255,0.25);
+  transform: scale(0.92);
+}
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+.profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.profile-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: white;
+  border: 3px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  overflow: hidden;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+}
+.profile-avatar-edit {
+  position: absolute;
+  bottom: -2px; left: -2px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2.5px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.profile-avatar-edit:active { transform: scale(0.88); }
+.profile-meta { flex: 1; min-width: 0; }
+.profile-name {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 3px;
+  letter-spacing: -0.3px;
+}
+.profile-phone {
+  font-size: 13px;
+  opacity: 0.85;
+  direction: ltr;
+  text-align: right;
+  font-weight: 600;
+}
+.profile-badge {
+  display: inline-block;
+  font-size: 11px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 6px;
+  font-weight: 700;
+}
+
+/* ── Quick stats below profile ── */
+.profile-stats-row {
+  display: flex;
+  gap: 10px;
+  margin: -16px 14px 18px;
+  position: relative;
+  z-index: 5;
+}
+.profile-stat {
+  flex: 1;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 14px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.2s var(--ease-out);
+}
+.profile-stat:active { transform: scale(0.96); }
+.profile-stat-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.profile-stat-num {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  letter-spacing: -0.3px;
+}
+.profile-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* ── Menu list ── */
+.profile-menu {
+  padding: 0 14px;
+}
+.profile-menu-group {
+  background: var(--card);
+  border-radius: 18px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-xs);
+}
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  font-family: 'Tajawal', sans-serif;
+  border-bottom: 1px solid var(--border-light);
+  transition: background 0.15s;
+  text-align: right;
+  text-decoration: none;
+  color: var(--text);
+}
+.profile-menu-item:last-child { border-bottom: none; }
+.profile-menu-item:active { background: var(--surface-2); }
+.profile-menu-icon {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.pm-icon-orders { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); color: #1E40AF; }
+.pm-icon-warranty { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); color: #065F46; }
+.pm-icon-contact { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #92400E; }
+.pm-icon-about { background: linear-gradient(135deg, #E9D5FF, #DDD6FE); color: #6D28D9; }
+.pm-icon-admin { background: linear-gradient(135deg, #FECACA, #FCA5A5); color: #991B1B; }
+.pm-icon-logout { background: linear-gradient(135deg, #FEE2E2, #FECACA); color: #991B1B; }
+.profile-menu-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+.profile-menu-arrow {
+  color: var(--muted-2);
+  font-size: 18px;
+}
+.profile-menu-badge {
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 22px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════
+   🛒 CART REDESIGN
+═══════════════════════════════════════════════════════ */
+.cart-item-modern {
+  display: flex;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 10px;
+  gap: 12px;
+  box-shadow: var(--shadow-xs);
+  position: relative;
+}
+.cart-item-img {
+  width: 76px; height: 76px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.cart-item-img img {
+  width: 64px; height: 64px;
+  object-fit: contain;
+}
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 3px;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+}
+.cart-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.cart-item-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cart-item-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+  direction: ltr;
+}
+
+/* ── Order summary card ── */
+.cart-summary {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  margin: 16px 0 12px;
+  box-shadow: var(--shadow-xs);
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.summary-row.total {
+  border-top: 1px dashed var(--border);
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--primary-dark);
+  letter-spacing: -0.3px;
+}
+.summary-row .amt { direction: ltr; }
+
+/* ═══════════════════════════════════════════════════════
+   📱 BOTTOM NAV — Cleaner version
+═══════════════════════════════════════════════════════ */
+.bn-tab-icon-svg { width: 24px; height: 24px; }
+.bn-cart-fab {
+  width: 56px; height: 56px;
+  margin-top: -16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 6px 20px rgba(14,165,233,0.45);
+  border: 3px solid var(--card);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.25s var(--ease-out);
+}
+.bn-cart-fab:active { transform: scale(0.92); }
+.bn-cart-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--red);
+  color: white;
+  border-radius: 50%;
+  min-width: 20px; height: 20px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  border: 2px solid var(--card);
+  padding: 0 4px;
+  display: none;
+}
+
 </style>
 </head>
 <body>
@@ -1391,8 +2010,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="accountSheet" class="bsheet-overlay" onclick="closeSheet('accountSheet')">
   <div class="bsheet" onclick="event.stopPropagation()">
     <div class="bsheet-handle"></div>
-    <div class="bsheet-head"><span class="bsheet-title">👤 الحساب</span><button class="bsheet-close" onclick="closeSheet('accountSheet')">✕</button></div>
-    <div class="bsheet-body">
+    <div class="bsheet-body" style="padding:0;">
       <div id="accountContent"></div>
     </div>
   </div>
@@ -1635,20 +2253,32 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <!-- HOME -->
     <div id="homeScreen" style="display:none;" class="home-page">
 
-      <!-- Store card -->
-      <div class="store-card">
-        <div class="store-logo">
-          <img src="1646237145252.png" alt="" onerror="this.style.display='none'">
+      <!-- Top bar with store name + actions -->
+      <div class="home-top-bar">
+        <div>
+          <div class="home-store-name">أمواج للإلكترونيات</div>
+          <div class="home-store-sub" id="homeWelcome">قطع غيار موبايل · كربلاء</div>
         </div>
-        <div class="store-info">
-          <div class="store-name">أمواج للالكترونيات</div>
-          <div class="store-sub"> قطع غيار موبايل — كربلاء المقدسة</div>
-          <div class="store-welcome" id="storeWelcome">أهلاً بك 👋</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="home-icon-btn" onclick="openContactSheet()" title="تواصل معنا">📞</button>
+          <button class="home-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
         </div>
       </div>
 
+      <!-- Hero Banner -->
+      <div class="hero-banner" onclick="openContactSheet();" style="cursor:pointer;">
+        <div class="hero-content">
+          <div class="hero-eyebrow">🌊 أمواج للإلكترونيات</div>
+          <div class="hero-title">قطع غيار أصلية<br>بضمان حقيقي</div>
+          <button class="hero-cta" onclick="event.stopPropagation();openContactSheet();">تواصل معنا ←</button>
+        </div>
+        <div class="hero-illust">📱</div>
+      </div>
+
       <!-- Quick actions -->
-      <div class="sec-label">إجراءات سريعة</div>
+      <div class="section-row">
+        <div class="section-row-title">إجراءات سريعة</div>
+      </div>
       <div class="quick-strip">
         <div class="quick-btn" onclick="requireAuth(function(){openSheet('warrantySheet');document.getElementById('start').value=formatDate(new Date());})">
           <span class="quick-btn-icon">✅</span>
@@ -1666,7 +2296,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 
       <!-- Search -->
-      <div class="sec-label">بحث سريع</div>
+      <div class="section-row" style="margin-top:14px;">
+        <div class="section-row-title">بحث سريع</div>
+      </div>
       <div class="home-search" style="margin:0 12px 0;position:relative;">
         <span style="font-size:18px;color:var(--muted);">🔍</span>
         <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
@@ -1675,7 +2307,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
       <!-- Products -->
-      <div class="sec-label">المنتجات</div>
+      <div class="section-row" style="margin-top:14px;">
+        <div class="section-row-title">المنتجات</div>
+      </div>
       <div class="products-grid">
         <div class="prod-card" onclick="requireAuth(function(){openProductSheet('screens','🖥️ الشاشات');})">
           <img class="prod-icon" src="https://raw.githubusercontent.com/alihusain2001d-cell/AMWAJMOB.COM/main/شاشه.jpg" alt="شاشه"><div class="prod-name">الشاشات</div><div class="prod-name-en">Screens</div>
@@ -2154,7 +2788,7 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("storeWelcome"); if(_sw) _sw.textContent = "أهلاً " + user.name.split(" ")[0] + " 👋"; showScreen("homeScreen"); result.innerHTML = ""; }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -3757,8 +4391,8 @@ async function appBoot() {
   // Cached approved user → show home IMMEDIATELY, no loading
   const cachedUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (cachedUser && cachedUser.status === 'approved') {
-    const welcome = document.getElementById('storeWelcome');
-    if (welcome) welcome.textContent = 'أهلاً ' + cachedUser.name.split(' ')[0] + ' 👋';
+    const welcome = document.getElementById('homeWelcome');
+    if (welcome) welcome.textContent = 'مرحباً ' + cachedUser.name.split(' ')[0];
     showScreen('homeScreen');
     // Background refresh
     setTimeout(async () => {
@@ -3801,8 +4435,8 @@ async function appBoot() {
 
       if (user && user.status === 'approved') {
         localStorage.setItem('amwaj_user', JSON.stringify(user));
-        const welcome = document.getElementById('storeWelcome');
-        if (welcome) welcome.textContent = 'أهلاً ' + user.name.split(' ')[0] + ' 👋';
+        const welcome = document.getElementById('homeWelcome');
+        if (welcome) welcome.textContent = 'مرحباً ' + user.name.split(' ')[0];
         showScreen('homeScreen');
         try {
           const ords = await secureApiCall('getMyOrders', { phone: user.phone });
@@ -3936,32 +4570,226 @@ function renderAccountSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   const div = document.getElementById('accountContent');
   if (!div) return;
+
   if (user) {
     const isAdmin = user.phone && user.phone.replace(/\D/g,'').endsWith('7717533595');
-    div.innerHTML = [
-      '<div style="background:linear-gradient(135deg,#0284C7,#0891B2);color:white;border-radius:16px;padding:20px;text-align:center;margin-bottom:16px;">',
-        '<div style="font-size:40px;margin-bottom:8px;">👤</div>',
-        '<div style="font-size:18px;font-weight:800;">' + user.name + '</div>',
-        '<div style="font-size:17px;opacity:.85;margin-top:4px;">' + user.shop + '</div>',
-        '<div style="font-size:14px;opacity:.7;margin-top:2px;">' + user.phone + '</div>',
-      '</div>',
-      isAdmin ? '<button class="form-btn" style="background:#0F172A;margin-bottom:8px;" onclick="closeSheet(\'accountSheet\');openAdminPanel()">🛠️ لوحة التحكم</button>' : '',
-      '<button class="form-btn" onclick="openWarrantyFromAccount()">✅ تفعيل الضمان</button>',
-      '<button class="form-btn" style="background:#64748B;margin-top:8px;" onclick="openCheckFromAccount()">🔍 التحقق من الضمان</button>',
-      '<button class="form-btn" style="background:#25D366;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="closeSheet(\'accountSheet\');openContacts(\'السلام عليكم، أريد الاستفسار\')">📞 تواصل معنا</button>',
-      '<button class="form-btn danger" style="margin-top:12px;" onclick="logout()">🚪 تسجيل الخروج</button>',
-    ].join('');
+
+    // Get saved profile picture or first letter
+    const savedPic = localStorage.getItem('amwaj_profile_pic_' + user.phone);
+    const firstChar = (user.name || 'A').trim().charAt(0).toUpperCase();
+    const avatarStyle = savedPic ? `background-image:url('${savedPic}');background-size:cover;background-position:center;` : '';
+    const avatarContent = savedPic ? '' : firstChar;
+
+    // Get badge (verified status)
+    const verified = user.status === 'approved';
+
+    div.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-top-row">
+          <button class="profile-top-icon-btn" onclick="openEditProfile()" title="تعديل">✏️</button>
+          <button class="profile-top-icon-btn" onclick="closeSheet('accountSheet')" title="إغلاق">✕</button>
+        </div>
+        <div class="profile-info-row">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" style="${avatarStyle}" onclick="triggerAvatarPick()">${avatarContent}</div>
+            <div class="profile-avatar-edit" onclick="triggerAvatarPick()" title="تغيير الصورة">📷</div>
+            <input type="file" id="avatarPickInput" accept="image/*" style="display:none;" onchange="handleAvatarChange(event)">
+          </div>
+          <div class="profile-meta">
+            <div class="profile-name">${sanitize(user.name || '')}</div>
+            <div class="profile-phone">${sanitize(user.phone || '')}</div>
+            ${verified ? '<span class="profile-badge">✓ عضو موثق</span>' : '<span class="profile-badge">قيد التفعيل</span>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-stats-row">
+        <div class="profile-stat" onclick="closeSheet('accountSheet');openOrdersSheet();">
+          <div class="profile-stat-icon">📦</div>
+          <div class="profile-stat-num" id="statOrdersCount">--</div>
+          <div class="profile-stat-label">طلباتي</div>
+        </div>
+        <div class="profile-stat" onclick="openWarrantyFromAccount();">
+          <div class="profile-stat-icon">🛡️</div>
+          <div class="profile-stat-num">✓</div>
+          <div class="profile-stat-label">تفعيل ضمان</div>
+        </div>
+        <div class="profile-stat" onclick="openCheckFromAccount();">
+          <div class="profile-stat-icon">🔍</div>
+          <div class="profile-stat-num">?</div>
+          <div class="profile-stat-label">تحقق ضمان</div>
+        </div>
+      </div>
+
+      <div class="profile-menu">
+        ${isAdmin ? `
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openAdminPanel()">
+            <div class="profile-menu-icon pm-icon-admin">🛠️</div>
+            <div class="profile-menu-label">لوحة التحكم</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>` : ''}
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openOrdersSheet();">
+            <div class="profile-menu-icon pm-icon-orders">📦</div>
+            <div class="profile-menu-label">طلباتي</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openWarrantyFromAccount()">
+            <div class="profile-menu-icon pm-icon-warranty">🛡️</div>
+            <div class="profile-menu-label">تفعيل الضمان</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openCheckFromAccount()">
+            <div class="profile-menu-icon pm-icon-warranty">🔍</div>
+            <div class="profile-menu-label">التحقق من الضمان</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openContactSheet();">
+            <div class="profile-menu-icon pm-icon-contact">📞</div>
+            <div class="profile-menu-label">تواصل معنا</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="openAboutSheet()">
+            <div class="profile-menu-icon pm-icon-about">ℹ️</div>
+            <div class="profile-menu-label">عن المتجر</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+
+        <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="confirmLogout()">
+            <div class="profile-menu-icon pm-icon-logout">🚪</div>
+            <div class="profile-menu-label" style="color:var(--red);">تسجيل الخروج</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Load orders count for stat
+    loadStatOrdersCount();
+
   } else {
-    div.innerHTML = [
-      '<div style="text-align:center;padding:20px 0;">',
-        '<div style="font-size:48px;margin-bottom:12px;">👤</div>',
-        '<div style="font-size:18px;font-weight:700;margin-bottom:6px;">غير مسجل الدخول</div>',
-        '<div style="font-size:17px;color:var(--muted);margin-bottom:20px;">سجل دخولك للوصول لكل الخدمات</div>',
-      '</div>',
-      '<button class="form-btn" onclick="closeSheet(\'accountSheet\');showScreen(\'loginScreen\');">تسجيل الدخول</button>',
-      '<button class="form-btn success-btn" style="margin-top:8px;" onclick="closeSheet(\'accountSheet\');showScreen(\'registerScreen\');">تسجيل حساب جديد</button>',
-    ].join('');
+    div.innerHTML = `
+      <div style="text-align:center;padding:30px 20px;">
+        <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:42px;color:white;margin:0 auto 16px;box-shadow:0 6px 20px rgba(14,165,233,0.35);">
+          👤
+        </div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.3px;">مرحباً بك</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:24px;">سجل دخولك للوصول لكل الخدمات</div>
+        <button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>
+        <button class="form-btn success-btn" style="margin-top:10px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">إنشاء حساب جديد</button>
+        <button class="form-btn" style="background:transparent;color:var(--muted);box-shadow:none;border:1px dashed var(--border);margin-top:10px;" onclick="closeSheet('accountSheet');openContactSheet();">📞 تواصل معنا</button>
+      </div>
+    `;
   }
+}
+
+function triggerAvatarPick() {
+  var inp = document.getElementById('avatarPickInput');
+  if (inp) inp.click();
+}
+
+function handleAvatarChange(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { alert('يرجى اختيار صورة'); return; }
+  if (file.size > 2 * 1024 * 1024) { alert('حجم الصورة كبير جداً (الحد الأقصى 2MB)'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      // Compress: resize to 256x256 max + JPEG quality 0.85
+      var canvas = document.createElement('canvas');
+      var size = 256;
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      // Crop to square (center)
+      var minSide = Math.min(img.width, img.height);
+      var sx = (img.width - minSide) / 2;
+      var sy = (img.height - minSide) / 2;
+      ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+      if (user && user.phone) {
+        localStorage.setItem('amwaj_profile_pic_' + user.phone, dataUrl);
+        renderAccountSheet();
+      }
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadStatOrdersCount() {
+  if (typeof secureApiCall !== 'function') return;
+  secureApiCall('getOrders', {}).then(function(res) {
+    var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
+    var el = document.getElementById('statOrdersCount');
+    if (el) el.textContent = ords.length;
+  }).catch(function(){});
+}
+
+function confirmLogout() {
+  if (confirm('هل تريد تسجيل الخروج؟')) {
+    logout();
+  }
+}
+
+function openEditProfile() {
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+  var newName = prompt('اسم العرض:', user.name || '');
+  if (newName !== null && newName.trim() && newName !== user.name) {
+    user.name = newName.trim();
+    localStorage.setItem('amwaj_user', JSON.stringify(user));
+    renderAccountSheet();
+  }
+}
+
+function openAboutSheet() {
+  closeSheet('accountSheet');
+  // Reuse contact sheet for now, can expand later
+  var html = `
+    <div style="text-align:center;padding:20px 16px;">
+      <div style="width:84px;height:84px;border-radius:24px;background:linear-gradient(135deg,var(--primary),var(--accent),#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:48px;color:white;margin:0 auto 14px;box-shadow:0 8px 24px rgba(14,165,233,0.4);">🌊</div>
+      <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:6px;">أمواج للإلكترونيات</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">قطع غيار موبايل — كربلاء المقدسة</div>
+    </div>
+    <div style="padding:0 16px 24px;line-height:1.8;color:var(--text-2);font-size:14px;">
+      <p style="margin-bottom:14px;">منصة متخصصة في بيع قطع غيار الموبايل الأصلية بأسعار منافسة وضمان حقيقي.</p>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">🛡️ ضمان حقيقي</div>
+        <div style="font-size:13px;color:var(--muted);">شاشات: 30 يوم · بطاريات: 365 يوم</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">⚡ توصيل سريع</div>
+        <div style="font-size:13px;color:var(--muted);">داخل كربلاء وضواحيها</div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:14px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">💬 دعم 24/7</div>
+        <div style="font-size:13px;color:var(--muted);">عبر واتساب أو الاتصال المباشر</div>
+      </div>
+    </div>
+  `;
+  // Open in account sheet temporarily
+  document.getElementById('accountContent').innerHTML = `
+    <div class="bsheet-head" style="padding-top:0;">
+      <button class="profile-top-icon-btn" style="background:var(--surface-2);border:1px solid var(--border-light);color:var(--text);" onclick="renderAccountSheet();openSheet('accountSheet');">→</button>
+      <span class="bsheet-title">عن المتجر</span>
+      <button class="bsheet-close" onclick="closeSheet('accountSheet')">✕</button>
+    </div>
+    ${html}
+  `;
+  openSheet('accountSheet');
 }
 function openWarrantyFromAccount() {
   closeSheet('accountSheet');
