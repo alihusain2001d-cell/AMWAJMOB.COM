@@ -1890,6 +1890,53 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   display: none;
 }
 
+/* ═══════════════════════════════════════════════════════
+   📦 ORDERS — Tabs
+═══════════════════════════════════════════════════════ */
+.orders-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 14px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.orders-tabs::-webkit-scrollbar { display: none; }
+.orders-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.orders-tab:active { transform: scale(0.96); }
+.orders-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary);
+}
+.orders-tab-count {
+  background: rgba(255,255,255,0.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.orders-tab:not(.active) .orders-tab-count {
+  background: var(--card);
+  color: var(--muted);
+}
+
 </style>
 </head>
 <body>
@@ -1977,7 +2024,14 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button class="bsheet-close" onclick="closeSheet('ordersSheet')">✕</button>
       </div>
     </div>
-    <div class="bsheet-body">
+    <div class="orders-tabs" id="ordersTabs">
+      <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
+      <button class="orders-tab" data-filter="pending" onclick="filterOrders('pending')">قيد المراجعة <span class="orders-tab-count" id="cnt-pending">0</span></button>
+      <button class="orders-tab" data-filter="picked" onclick="filterOrders('picked')">قيد التجهيز <span class="orders-tab-count" id="cnt-picked">0</span></button>
+      <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
+      <button class="orders-tab" data-filter="cancelled" onclick="filterOrders('cancelled')">ملغي <span class="orders-tab-count" id="cnt-cancelled">0</span></button>
+    </div>
+    <div class="bsheet-body" style="padding-top:0;">
       <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
       <div id="myOrdersList"></div>
     </div>
@@ -3291,27 +3345,105 @@ function renderCart() {
   const summaryDiv = document.getElementById('cartSummary');
   const orderForm = document.getElementById('orderForm');
   const clearBtn = document.getElementById('clearCartBtn');
+
   if (cart.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;"><div style="font-size:48px;margin-bottom:10px;">🛒</div><div>السلة فارغة</div></div>';
-    summaryDiv.style.display = 'none'; orderForm.style.display = 'none'; clearBtn.style.display = 'none'; return;
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;">
+        <div style="width:96px;height:96px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:48px;">🛒</div>
+        <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:6px;">السلة فارغة</div>
+        <div style="font-size:14px;color:var(--muted);">أضف منتجات لتظهر هنا</div>
+      </div>
+    `;
+    summaryDiv.style.display = 'none';
+    orderForm.style.display = 'none';
+    clearBtn.style.display = 'none';
+    return;
   }
-  summaryDiv.style.display = 'block'; orderForm.style.display = 'block'; clearBtn.style.display = 'block';
-  let total = 0; container.innerHTML = '';
+
+  summaryDiv.style.display = 'block';
+  orderForm.style.display = 'block';
+  clearBtn.style.display = 'block';
+
+  let total = 0;
+  let html = '';
+
   cart.forEach((item, index) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
     const itemTotal = price * quantity;
     total += itemTotal;
-    const notesHtml = item.notes ? `<div style="background:#fff3cd;padding:10px 15px;border-radius:10px;font-size:17px;color:#856404;margin-top:8px;font-weight:600;border-left:4px solid #ffc107;">📝 ${item.notes}</div>` : '';
-    const warrantyChecked = item.hasWarranty ? 'checked' : '';
     const isScreen = item.itemType === 'screens';
-    const warrantyBox = isScreen ? `<div style="margin-top:8px;"><div style="display:flex;align-items:center;gap:8px;padding:8px;background:#e8f5e9;border-radius:8px;"><input type="checkbox" id="warranty_${index}" ${warrantyChecked} onchange="toggleWarranty(${index})" style="width:20px;height:20px;cursor:pointer;"><label for="warranty_${index}" style="font-size:17px;font-weight:600;color:#2e7d32;cursor:pointer;margin:0;">مع ضمان 🛡️</label></div><div id="warrantyNote_${index}" style="display:${warrantyChecked ? 'block' : 'none'};background:#fff3cd;padding:10px 12px;border-radius:8px;font-size:18px;color:#856404;margin-top:8px;border-left:4px solid #ffc107;">⚠️ علما ان سعر الشاشة يتغير عند طلب الضمان</div></div>` : '';
-    const div = document.createElement('div');
-    div.className = 'cart-item';
-    div.innerHTML = `<div class="cart-item-info"><div style="font-weight:bold;font-size:17px;">${item.name||'-'}</div><div style="font-size:17px;color:#000;margin-top:2px;font-weight:bold;">${item.brand||'-'}</div>${item.itemType==='screens'&&item.type?`<div style="font-size:14px;color:#000;margin-top:2px;font-weight:bold;">النوع: ${item.type}</div>`:''}<div style="color:#1e88e5;font-weight:bold;margin-top:4px;font-size:18px;">السعر: ${formatPriceIQD(price)} د.ع</div>${notesHtml}${warrantyBox}<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:17px;font-weight:bold;color:#333;">العدد: ${quantity}</span><div style="display:flex;align-items:center;gap:6px;"><button onclick="changeQuantity(${index},-1)" style="background:#ff9800;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➖</button><button onclick="changeQuantity(${index},1)" style="background:#4caf50;color:white;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:18px;font-weight:bold;min-width:35px;">➕</button></div></div><div style="color:#1e88e5;font-weight:bold;font-size:17px;">المجموع: ${formatPriceIQD(itemTotal)} د.ع</div></div><button onclick="removeFromCart(${index})" style="background:#f44336;color:white;border:none;padding:8px 20px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:bold;margin-top:10px;width:auto;box-shadow:0 2px 8px rgba(244,67,54,0.4);">حذف</button></div>`;
-    container.appendChild(div);
+    const warrantyChecked = item.hasWarranty;
+
+    // Determine icon based on item type
+    let itemIcon = '📦';
+    if (item.itemType === 'screens') itemIcon = '🖥️';
+    else if (item.itemType === 'batteries') itemIcon = '🔋';
+    else if (item.itemType === 'chargeboards') itemIcon = '🔌';
+    else if (item.itemType === 'flatcharging') itemIcon = '⚡';
+    else if (item.itemType === 'camera') itemIcon = '📷';
+    else if (item.itemType === 'backcover') itemIcon = '📱';
+    else if (item.itemType === 'housing') itemIcon = '🏠';
+    else if (item.itemType === 'tools') itemIcon = '🔧';
+
+    const notesHtml = item.notes ? `
+      <div style="background:#FFFBEB;border-right:3px solid var(--yellow);padding:6px 10px;border-radius:8px;font-size:12px;color:#92400E;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px;">
+        📝 <span>${sanitize(item.notes)}</span>
+      </div>` : '';
+
+    const warrantyBox = isScreen ? `
+      <div style="margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${warrantyChecked ? '#D1FAE5' : 'var(--surface-2)'};border-radius:10px;cursor:pointer;border:1px solid ${warrantyChecked ? '#10B981' : 'var(--border-light)'};transition:all 0.2s;">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked ? 'checked' : ''} onchange="toggleWarranty(${index})" style="width:18px;height:18px;cursor:pointer;accent-color:#10B981;">
+          <span style="font-size:13px;font-weight:800;color:${warrantyChecked ? '#065F46' : 'var(--text)'};">🛡️ مع ضمان</span>
+        </label>
+        ${warrantyChecked ? '<div style="background:#FFFBEB;padding:8px 10px;border-radius:8px;font-size:12px;color:#92400E;margin-top:6px;border-right:3px solid var(--yellow);font-weight:600;">⚠️ سعر الشاشة يتغير عند طلب الضمان</div>' : ''}
+      </div>` : '';
+
+    html += `
+      <div class="cart-item-modern">
+        <div class="cart-item-img">
+          <span>${itemIcon}</span>
+        </div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${sanitize(item.name || '-')}</div>
+          <div class="cart-item-meta">${sanitize(item.brand || '-')}${item.type ? ' · ' + sanitize(item.type) : ''}</div>
+          <div class="cart-item-bottom">
+            <div class="cart-item-price"><span dir="ltr">${formatPriceIQD(itemTotal)}</span> د.ع</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="changeQuantity(${index},-1)" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;font-weight:800;cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:all 0.2s;">−</button>
+              <span style="font-size:15px;font-weight:800;min-width:24px;text-align:center;">${quantity}</span>
+              <button onclick="changeQuantity(${index},1)" style="width:30px;height:30px;border-radius:50%;border:none;background:var(--primary);color:white;font-size:16px;font-weight:800;cursor:pointer;font-family:'Tajawal',sans-serif;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(14,165,233,0.35);">+</button>
+            </div>
+          </div>
+          ${warrantyBox}
+          ${notesHtml}
+        </div>
+        <button onclick="removeFromCart(${index})" style="position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;border:none;background:#FEE2E2;color:var(--red);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;" title="حذف">🗑️</button>
+      </div>
+    `;
   });
-  totalEl.textContent = formatPriceIQD(total) + ' د.ع';
+
+  // Add summary card at end of items
+  html += `
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>عدد المنتجات</span>
+        <span class="amt">${cart.length}</span>
+      </div>
+      <div class="summary-row">
+        <span>عدد القطع</span>
+        <span class="amt">${cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
+      </div>
+      <div class="summary-row total">
+        <span>المجموع الكلي</span>
+        <span class="amt">${formatPriceIQD(total)} د.ع</span>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+  if (totalEl) totalEl.textContent = formatPriceIQD(total) + ' د.ع';
 }
 
 function changeQuantity(index, change) {
@@ -3949,7 +4081,179 @@ function addToCartById(key) {
 
 // addToCartInSheet replaced by addToCartById
 
+// Global cache for orders so the filter can re-render without re-fetching
+var _allOrdersCache = [];
+var _ordersFilter = 'all';
+
+function filterOrders(filter) {
+  _ordersFilter = filter;
+  // Update active tab UI
+  document.querySelectorAll('.orders-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+  });
+  renderOrdersList();
+}
+
+function renderOrdersList() {
+  var orders = _allOrdersCache;
+  var listDiv = document.getElementById('myOrdersList');
+  if (!listDiv) return;
+
+  // Update counts on tabs
+  var counts = { all: orders.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
+  orders.forEach(function(o) {
+    if (counts[o.status] !== undefined) counts[o.status]++;
+  });
+  Object.keys(counts).forEach(function(k) {
+    var el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = counts[k];
+  });
+
+  // Filter
+  var filtered = _ordersFilter === 'all' ? orders : orders.filter(function(o) { return o.status === _ordersFilter; });
+
+  if (!filtered.length) {
+    var labelMap = { all: 'لا توجد طلبات', pending: 'لا توجد طلبات قيد المراجعة', picked: 'لا توجد طلبات قيد التجهيز', delivered: 'لا توجد طلبات مسلمة', cancelled: 'لا توجد طلبات ملغية' };
+    listDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📦</div><div style="color:var(--muted);font-size:15px;font-weight:600;">' + (labelMap[_ordersFilter] || 'لا توجد طلبات') + '</div></div>';
+    return;
+  }
+
+  // Render
+  listDiv.innerHTML = filtered.map(_renderOrderCard).join('');
+}
+
+function _renderOrderCard(o) {
+  // ── Status pill ──
+  var statusText = 'قيد المراجعة';
+  var statusClass = 'pill-pending';
+  var statusIcon = '⏳';
+  if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
+  else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
+  else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
+
+  // ── Date ──
+  var dateStr = '';
+  if (o.date || o.createdAt) {
+    try {
+      var d = new Date(o.date || o.createdAt);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
+      }
+    } catch(e) {}
+  }
+
+  // ── Items list ──
+  var itemsHtml = (o.items||[]).map(function(it) {
+    var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
+    var qty = it.quantity || 1;
+    var itemTotal = price * qty;
+    var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
+    var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
+    var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
+    var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
+    return '<div class="order-item-card">' +
+      '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
+      '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
+      warrantyBadge +
+      '<div class="order-item-meta">' +
+        '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
+        '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
+      '</div>' +
+      noteHtml +
+    '</div>';
+  }).join('');
+
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
+  var orderId = o.orderId || '-';
+  var itemCount = (o.items||[]).length;
+  var isCancellable = (o.status === 'pending' || o.status === 'picked');
+
+  var waMsgParts = [
+    'السلام عليكم',
+    'أريد الاستفسار عن طلبي:',
+    '🧾 رقم الطلب: ' + orderId,
+    '📦 عدد المواد: ' + itemCount,
+    '💰 المجموع: ' + formatPriceIQD(total) + ' IQD',
+    '🔖 الحالة: ' + statusText
+  ];
+  var waUrl = 'https://wa.me/' + AMWAJ_PRIMARY_WA + '?text=' + encodeURIComponent(waMsgParts.join('\n'));
+
+  var cancelBtn = isCancellable
+    ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')">إلغاء</button>'
+    : '';
+
+  return '<div class="order-card">' +
+    '<div class="order-card-header">' +
+      '<div>' +
+        '<div class="order-id-text">' + sanitize(orderId) + '</div>' +
+        (dateStr ? '<div class="order-date-text">📅 ' + dateStr + '</div>' : '') +
+      '</div>' +
+      '<span class="status-pill ' + statusClass + '">' + statusIcon + ' ' + statusText + '</span>' +
+    '</div>' +
+    '<div class="order-items-section">' +
+      '<div class="order-items-label">📋 المنتجات (' + itemCount + ')</div>' +
+      itemsHtml +
+    '</div>' +
+    '<div class="order-footer">' +
+      '<div class="order-total-row">' +
+        '<span class="order-total-label">💰 المجموع الكلي</span>' +
+        '<span class="order-total-value"><span dir="ltr">' + formatPriceIQD(total) + '</span> IQD</span>' +
+      '</div>' +
+      (o.address ? '<div class="order-address-row">📍 <span>' + sanitize(o.address) + '</span></div>' : '') +
+    '</div>' +
+    '<div class="order-actions">' +
+      '<a href="' + waUrl + '" target="_blank" class="order-wa-btn">💬 استفسار عن هذا الطلب</a>' +
+      cancelBtn +
+    '</div>' +
+  '</div>';
+}
+
 function loadMyOrders() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  const listDiv = document.getElementById('myOrdersList');
+  const loadDiv = document.getElementById('myOrdersLoading');
+  if (!user) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">يرجى تسجيل الدخول أولاً</div>';
+    return;
+  }
+  if (loadDiv) loadDiv.style.display = 'block';
+  if (listDiv) listDiv.innerHTML = '';
+  secureApiCall('getMyOrders', { phone: user.phone }).then(function(orders) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (!orders || !orders.length) {
+      _allOrdersCache = [];
+      renderOrdersList();
+      updateOrdersBadge(0);
+      localStorage.setItem('amwaj_orders_seen', '[]');
+      return;
+    }
+
+    // ── كشف طلبات جديدة ──
+    var seenIds = [];
+    try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen') || '[]'); } catch(e) {}
+    var allIds = orders.map(function(o){ return o.orderId; });
+    var newOrders = orders.filter(function(o){ return o.orderId && !seenIds.includes(o.orderId); });
+    if (newOrders.length > 0 && seenIds.length > 0) {
+      showOrdersNotification(newOrders.length);
+    }
+    localStorage.setItem('amwaj_orders_seen', JSON.stringify(allIds));
+
+    // Cache and render
+    _allOrdersCache = orders;
+    renderOrdersList();
+
+    // Update badges (active orders only)
+    var active = orders.filter(function(o){ return o.status === 'pending' || o.status === 'picked'; });
+    updateOrdersBadge(active.length);
+  }).catch(function(err) {
+    if (loadDiv) loadDiv.style.display = 'none';
+    if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">⚠️ فشل تحميل الطلبات</div>';
+  });
+}
+
+// Legacy function - now unused, kept for safety
+function loadMyOrdersOld() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   const listDiv = document.getElementById('myOrdersList');
   const loadDiv = document.getElementById('myOrdersLoading');
