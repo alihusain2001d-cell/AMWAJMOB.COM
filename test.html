@@ -546,60 +546,71 @@ body {
 .bsheet-overlay {
   display: none;
   position: fixed; inset: 0;
-  background: rgba(15,23,42,0.45);
+  background: var(--surface);
   z-index: 500;
-  align-items: flex-end; justify-content: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  align-items: stretch; justify-content: center;
   overflow: hidden;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.18s ease-out;
 }
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 .bsheet-overlay.open { display: flex; }
 .bsheet {
-  background: #fff;
-  border-radius: 28px 28px 0 0;
-  width: 100%; max-width: 480px;
-  height: 90dvh;
-  max-height: 90dvh;
+  background: var(--surface);
+  border-radius: 0;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   min-height: 0;
   display: flex; flex-direction: column;
   overflow: hidden;
   flex-shrink: 0;
-  animation: sheetUp .35s var(--ease-out);
-  box-shadow: 0 -8px 32px rgba(15,23,42,0.12);
+  animation: pageSlideIn .28s var(--ease-out);
+  box-shadow: none;
 }
-@keyframes sheetUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
-.bsheet-handle {
-  width: 40px;
-  height: 5px;
-  background: #CBD5E1;
-  border-radius: 3px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
+@keyframes pageSlideIn {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
+/* Hide drag handle - not needed for full pages */
+.bsheet-handle { display: none; }
+
+/* Sticky page header with back button */
 .bsheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 12px;
+  padding: 14px 14px 12px;
   flex-shrink: 0;
+  background: var(--card);
   border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(15,23,42,0.04);
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  min-height: 56px;
 }
 .bsheet-title {
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.3px;
+  flex: 1;
+  text-align: center;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+/* Back button - replaces close button visually */
 .bsheet-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: var(--surface-2);
-  color: var(--muted);
-  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--card);
+  color: var(--text);
+  font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -608,14 +619,29 @@ body {
   padding: 0;
   margin: 0;
   transition: all 0.2s;
+  flex-shrink: 0;
+  order: -1; /* Place at start (right in RTL) */
+  font-weight: 700;
+  line-height: 1;
 }
+.bsheet-close::before {
+  content: '→';
+  font-size: 22px;
+}
+.bsheet-close > * { display: none; }
 .bsheet-close:active {
-  background: #E2E8F0;
-  transform: scale(0.92);
+  background: var(--surface-2);
+  transform: scale(0.94);
 }
-.bsheet-body { flex:1; overflow-y:auto; padding:16px 18px 32px; -webkit-overflow-scrolling:touch; }
+.bsheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px 28px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
 
-/* Sheet search */
+/* Sheet search bar */
 .bsheet-search-bar {
   display: flex;
   align-items: center;
@@ -1965,8 +1991,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 </div>
 
 <!-- BOTTOM SHEETS -->
-<div id="productsSheet" class="bsheet-overlay" onclick="closeSheet('productsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="productsSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
@@ -1983,8 +2009,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="warrantySheet" class="bsheet-overlay" onclick="closeSheet('warrantySheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="warrantySheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">✅ تفعيل الضمان</span><button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button></div>
     <div class="bsheet-body">
@@ -2002,8 +2028,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="checkSheet" class="bsheet-overlay" onclick="closeSheet('checkSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="checkSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">🔍 التحقق من الضمان</span><button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button></div>
     <div class="bsheet-body">
@@ -2014,8 +2040,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="ordersSheet" class="bsheet-overlay" onclick="closeSheet('ordersSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="ordersSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">📦 طلباتي</span>
@@ -2038,8 +2064,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="cartSheet" class="bsheet-overlay" onclick="closeSheet('cartSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="cartSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">🛒 سلة المشتريات</span><button class="bsheet-close" onclick="closeSheet('cartSheet')">✕</button></div>
     <div class="bsheet-body">
@@ -2061,8 +2087,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   </div>
 </div>
 
-<div id="accountSheet" class="bsheet-overlay" onclick="closeSheet('accountSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="accountSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-body" style="padding:0;">
       <div id="accountContent"></div>
@@ -2071,8 +2097,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 </div>
 
 <!-- ═══ صفحة تواصل معنا ═══ -->
-<div id="contactSheet" class="bsheet-overlay" onclick="closeSheet('contactSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="contactSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">📞 تواصل معنا</span>
@@ -2204,8 +2230,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 
 <!-- New Items Sheet -->
-<div id="newItemsSheet" class="bsheet-overlay" onclick="closeSheet('newItemsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="newItemsSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">✨ وصلنا حديثاً</span>
@@ -2222,8 +2248,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 
 <!-- Search Sheet -->
-<div id="searchSheet" class="bsheet-overlay" onclick="closeSheet('searchSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="searchSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🔍 بحث في كل المواد</span>
@@ -2565,14 +2591,58 @@ function requireAuth(fn) {
   fn();
 }
 
+// Stack to track open pages for back button support
+var _sheetStack = [];
+
 function openSheet(id) {
   const el = document.getElementById(id);
-  if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  if (!el) return;
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Push to stack if not already there
+  if (_sheetStack[_sheetStack.length - 1] !== id) {
+    _sheetStack.push(id);
+  }
+  // Push history state for browser back button
+  try {
+    history.pushState({ sheet: id }, '');
+  } catch(e) {}
 }
+
 function closeSheet(id) {
   const el = document.getElementById(id);
-  if (el) { el.classList.remove('open'); document.body.style.overflow = ''; }
+  if (!el) return;
+  el.classList.remove('open');
+  // Remove from stack
+  var idx = _sheetStack.lastIndexOf(id);
+  if (idx !== -1) _sheetStack.splice(idx, 1);
+  // Restore body scroll only if no other sheets open
+  if (_sheetStack.length === 0) {
+    document.body.style.overflow = '';
+  }
 }
+
+// Close topmost open sheet (used by Android back button)
+function closeTopSheet() {
+  if (_sheetStack.length === 0) return false;
+  var topId = _sheetStack[_sheetStack.length - 1];
+  closeSheet(topId);
+  return true;
+}
+
+// Browser/Android back button handler
+window.addEventListener('popstate', function(e) {
+  // If a sheet is open, close it and prevent default back behavior
+  if (_sheetStack.length > 0) {
+    closeTopSheet();
+    // Push state again so we don't exit on next back
+    try { history.pushState({}, ''); } catch(err) {}
+  }
+});
+
+// Initialize history state on load so first back press closes a sheet
+try { history.replaceState({ initial: true }, ''); } catch(e) {}
+
 function openFlatpowerModal() {
   const m = document.getElementById('flatpowerModal');
   if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
@@ -5172,8 +5242,8 @@ function openCheckFromAccount() {
 </script>
 
 <!-- ALL PRODUCTS SHEET -->
-<div id="allProductsSheet" class="bsheet-overlay" onclick="closeSheet('allProductsSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()" style="max-height:92vh;">
+<div id="allProductsSheet" class="bsheet-overlay">
+  <div class="bsheet" style="max-height:92vh;">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">📦 جميع المواد</span>
@@ -5185,8 +5255,8 @@ function openCheckFromAccount() {
 </div>
 
 <!-- ═══ لوحة تحكم الأدمن ═══ -->
-<div id="adminSheet" class="bsheet-overlay" onclick="closeSheet('adminSheet')">
-  <div class="bsheet" onclick="event.stopPropagation()">
+<div id="adminSheet" class="bsheet-overlay">
+  <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
