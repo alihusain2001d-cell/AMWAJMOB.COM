@@ -612,27 +612,30 @@ body {
 .bsheet-close {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
   height: 40px;
-  padding: 0 14px 0 10px;
+  padding: 0 12px;
   border-radius: 14px;
   border: 1px solid var(--border-light);
   background: var(--card);
   color: var(--primary-dark);
   cursor: pointer;
   font-family: 'Tajawal',sans-serif;
-  font-size: 15px;
+  font-size: 0;
   font-weight: 800;
   transition: all 0.2s;
   flex-shrink: 0;
-  order: -1; /* Place at START (left in RTL) */
+  order: -1;
   line-height: 1;
   letter-spacing: -0.2px;
 }
 .bsheet-close::after {
   content: 'رجوع';
+  font-size: 15px;
+  font-weight: 800;
+  font-family: 'Tajawal', sans-serif;
 }
-.bsheet-close > * { display: none; }
 .bsheet-close::before {
   content: '←';
   font-size: 20px;
@@ -643,14 +646,28 @@ body {
   background: var(--primary-light);
   transform: scale(0.96);
 }
-/* Reserve space on right to keep title centered */
-.bsheet-head::after {
-  content: '';
-  width: 100px;
+
+/* WhatsApp button in header (right side) */
+.header-wa-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  box-shadow: 0 3px 10px rgba(37,211,102,0.35);
+  transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
   order: 99;
 }
-.bsheet-head::before { content: none; }
+.header-wa-btn:active { transform: scale(0.92); }
 .bsheet-body {
   flex: 1;
   overflow-y: auto;
@@ -2013,11 +2030,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="productsSheetBack()"></button>
       <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" style="background:#25D366;border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(37,211,102,0.4);">💬</button>
-        <button class="bsheet-close" onclick="closeSheet('productsSheet')">✕</button>
-      </div>
+      <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
     <div class="bsheet-body">
       <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()"></div>
@@ -2062,11 +2077,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('ordersSheet')"></button>
       <span class="bsheet-title">📦 طلباتي</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" style="background:#25D366;border:none;color:white;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;box-shadow:0 2px 6px rgba(37,211,102,0.4);">💬</button>
-        <button class="bsheet-close" onclick="closeSheet('ordersSheet')">✕</button>
-      </div>
+      <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
     <div class="orders-tabs" id="ordersTabs">
       <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
@@ -2644,6 +2657,15 @@ function closeSheet(id) {
 function closeTopSheet() {
   if (_sheetStack.length === 0) return false;
   var topId = _sheetStack[_sheetStack.length - 1];
+  // Smart back for products sheet (brand sub-views)
+  if (topId === 'productsSheet') {
+    var brandsDiv = document.getElementById('sheetBrands');
+    var resultsDiv = document.getElementById('sheetResults');
+    if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+      backToSheetBrands();
+      return true;
+    }
+  }
   closeSheet(topId);
   return true;
 }
@@ -4090,6 +4112,19 @@ function backToSheetBrands() {
   document.getElementById('sheetSearch').value = '';
 }
 
+// Smart back for products sheet: if a brand is open, go back to brands list
+// Otherwise close the whole sheet
+function productsSheetBack() {
+  var brandsDiv = document.getElementById('sheetBrands');
+  var resultsDiv = document.getElementById('sheetResults');
+  // If brands grid is hidden, we're viewing a brand's items - go back to brands
+  if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+    backToSheetBrands();
+  } else {
+    closeSheet('productsSheet');
+  }
+}
+
 function getDriveImageUrl(url) {
   if (!url || typeof url !== 'string' || !url.trim()) return '';
   var u = url.trim();
@@ -5059,7 +5094,7 @@ function renderAccountSheet() {
       </div>
 
       <div class="profile-stats-row">
-        <div class="profile-stat" onclick="closeSheet('accountSheet');openOrdersSheet();">
+        <div class="profile-stat" onclick="openOrdersSheet();">
           <div class="profile-stat-icon">📦</div>
           <div class="profile-stat-num" id="statOrdersCount">--</div>
           <div class="profile-stat-label">طلباتي</div>
@@ -5079,7 +5114,7 @@ function renderAccountSheet() {
       <div class="profile-menu">
         ${isAdmin ? `
         <div class="profile-menu-group">
-          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openAdminPanel()">
+          <button class="profile-menu-item" onclick="openAdminPanel()">
             <div class="profile-menu-icon pm-icon-admin">🛠️</div>
             <div class="profile-menu-label">لوحة التحكم</div>
             <span class="profile-menu-arrow">‹</span>
@@ -5087,7 +5122,7 @@ function renderAccountSheet() {
         </div>` : ''}
 
         <div class="profile-menu-group">
-          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openOrdersSheet();">
+          <button class="profile-menu-item" onclick="openOrdersSheet();">
             <div class="profile-menu-icon pm-icon-orders">📦</div>
             <div class="profile-menu-label">طلباتي</div>
             <span class="profile-menu-arrow">‹</span>
@@ -5105,7 +5140,7 @@ function renderAccountSheet() {
         </div>
 
         <div class="profile-menu-group">
-          <button class="profile-menu-item" onclick="closeSheet('accountSheet');openContactSheet();">
+          <button class="profile-menu-item" onclick="openContactSheet();">
             <div class="profile-menu-icon pm-icon-contact">📞</div>
             <div class="profile-menu-label">تواصل معنا</div>
             <span class="profile-menu-arrow">‹</span>
@@ -5140,7 +5175,7 @@ function renderAccountSheet() {
         <div style="font-size:14px;color:var(--muted);margin-bottom:24px;">سجل دخولك للوصول لكل الخدمات</div>
         <button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>
         <button class="form-btn success-btn" style="margin-top:10px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">إنشاء حساب جديد</button>
-        <button class="form-btn" style="background:transparent;color:var(--muted);box-shadow:none;border:1px dashed var(--border);margin-top:10px;" onclick="closeSheet('accountSheet');openContactSheet();">📞 تواصل معنا</button>
+        <button class="form-btn" style="background:transparent;color:var(--muted);box-shadow:none;border:1px dashed var(--border);margin-top:10px;" onclick="openContactSheet();">📞 تواصل معنا</button>
       </div>
     `;
   }
@@ -5247,13 +5282,11 @@ function openAboutSheet() {
   openSheet('accountSheet');
 }
 function openWarrantyFromAccount() {
-  closeSheet('accountSheet');
   openSheet('warrantySheet');
   const s = document.getElementById('start');
   if (s) s.value = formatDate(new Date());
 }
 function openCheckFromAccount() {
-  closeSheet('accountSheet');
   openSheet('checkSheet');
 }
 
