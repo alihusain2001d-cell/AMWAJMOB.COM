@@ -1841,7 +1841,8 @@ function closeFlatpowerModal(e) {
 function footerTab(tab) {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
-  if (isGuest() && (tab === 'cart' || tab === 'orders')) { showLoginPrompt(); return; }
+  // Guests can access cart (for tools-only orders), but not orders history
+  if (isGuest() && tab === 'orders') { showLoginPrompt(); return; }
   document.querySelectorAll('.footer-tab').forEach(function(t){ t.classList.remove('active'); });
   var tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
@@ -3469,21 +3470,6 @@ function openOrdersSheet() {
   openSheet('ordersSheet');
   loadMyOrders();
 }
-
-function openCartSheet() {
-  if (isGuest()) { showLoginPrompt(); return; }
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) { showLoginPrompt(); return; }
-  openSheet('cartSheet');
-  renderCart();
-  const nameEl = document.getElementById('orderName');
-  const shopEl = document.getElementById('orderShop');
-  if (nameEl) nameEl.value = user.name || '';
-  if (shopEl) shopEl.value = user.shop || '';
-  const saved = localStorage.getItem('amwaj_address');
-  if (saved) { const addrEl = document.getElementById('orderAddress'); if (addrEl) addrEl.value = saved; }
-}
-
 
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
