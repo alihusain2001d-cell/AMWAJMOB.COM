@@ -671,8 +671,8 @@ body {
 .bsheet-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 14px 100px; /* Extra bottom padding for floating nav */
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  padding: 16px 14px;
+  padding-bottom: calc(var(--footer-h) + 32px + env(safe-area-inset-bottom, 0px)) !important;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -2121,7 +2121,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="accountSheet" class="bsheet-overlay">
   <div class="bsheet">
     <div class="bsheet-handle"></div>
-    <div class="bsheet-body" style="padding:0;">
+    <div class="bsheet-body" style="padding-left:0;padding-right:0;padding-top:0;">
       <div id="accountContent"></div>
     </div>
   </div>
@@ -2135,7 +2135,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="bsheet-title">📞 تواصل معنا</span>
       <button class="bsheet-close" onclick="closeSheet('contactSheet')">✕</button>
     </div>
-    <div class="bsheet-body" style="padding:18px 16px 32px;">
+    <div class="bsheet-body" style="padding-left:16px;padding-right:16px;">
 
       <!-- ترحيب -->
       <div style="background:linear-gradient(135deg,#0EA5E9,#06B6D4,#8B5CF6);border-radius:20px;padding:18px;color:white;text-align:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(14,165,233,0.3);position:relative;overflow:hidden;">
@@ -2540,7 +2540,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 </div>
       <div style="height:16px;"></div>
-      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;"><div>© 2026 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم و برمجة: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
+      <div style="text-align:center;padding:6px 16px 20px;color:#94A3B8;font-size:12px;line-height:1.9;margin-bottom:90px;"><div>© 2026 أمواج للإلكترونيات — جميع الحقوق محفوظة</div><div>تصميم و برمجة: علي الدجيلي · <a href="tel:07717533595" style="color:#94A3B8;text-decoration:none;">07717533595</a></div></div>
     </div>
 
   <!-- Footer nav -->
