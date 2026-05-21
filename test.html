@@ -2683,6 +2683,20 @@ window.addEventListener('popstate', function(e) {
 // Initialize history state on load so first back press closes a sheet
 try { history.replaceState({ initial: true }, ''); } catch(e) {}
 
+// ── Dismiss keyboard on tap outside input ──
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  var active = document.activeElement;
+  if (!active) return;
+  var tag = (active.tagName || '').toUpperCase();
+  // Only act on text-input-like elements
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !active.isContentEditable) return;
+  // Don't blur if user tapped inside any input/textarea or a label/button that may submit
+  var clickedInput = target.closest && target.closest('input, textarea, [contenteditable], button, label, select, a');
+  if (clickedInput) return;
+  active.blur();
+}, true);
+
 function openFlatpowerModal() {
   const m = document.getElementById('flatpowerModal');
   if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
