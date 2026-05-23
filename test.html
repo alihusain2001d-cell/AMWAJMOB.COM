@@ -2689,6 +2689,11 @@ function closeTopSheet() {
   var topId = _sheetStack[_sheetStack.length - 1];
   // Smart back for products sheet (brand sub-views)
   if (topId === 'productsSheet') {
+    // Tools sheet has no brands - close directly
+    if (sheetPriceType === 'tools') {
+      closeSheet(topId);
+      return true;
+    }
     var brandsDiv = document.getElementById('sheetBrands');
     var resultsDiv = document.getElementById('sheetResults');
     if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
@@ -4279,6 +4284,11 @@ function backToSheetBrands() {
 // Smart back for products sheet: if a brand is open, go back to brands list
 // Otherwise close the whole sheet
 function productsSheetBack() {
+  // Tools sheet has no brands list - close directly
+  if (sheetPriceType === 'tools') {
+    closeSheet('productsSheet');
+    return;
+  }
   var brandsDiv = document.getElementById('sheetBrands');
   var resultsDiv = document.getElementById('sheetResults');
   // If brands grid is hidden, we're viewing a brand's items - go back to brands
