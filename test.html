@@ -3326,27 +3326,46 @@ let fingerprintData = [], miscData = [], toolsData = [];
 let flatPowerSheetData = [], flatVolumeSheetData = [];
 
 async function loadPrices() { try { pricesData = await secureApiCall('getPrices'); } catch(e){} }
-async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بطارية',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بورد شحن',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
+// Safely extract numeric value - respects 0 as a real value
+// Tries primary key first; falls back ONLY if primary is truly missing (undefined/null/'')
+function _safeNum(item, primaryKey, fallbackKey) {
+  var v = item[primaryKey];
+  if (v === undefined || v === null || v === '') {
+    if (fallbackKey) v = item[fallbackKey];
+  }
+  if (v === undefined || v === null || v === '') return 0;
+  var n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+function _safeStr(item, primaryKey, fallbackKey, defaultVal) {
+  var v = item[primaryKey];
+  if (v === undefined || v === null || v === '') {
+    if (fallbackKey) v = item[fallbackKey];
+  }
+  return (v === undefined || v === null || v === '') ? (defaultVal || '') : String(v);
+}
+
+async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بطارية',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بورد شحن',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
 async function loadFlatMain() {
   try {
     const r = await secureApiCall('getFlatMain');
-    const all = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''}));
+    const all = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')}));
     flatchargingData = all.filter(i=>{const n=i.name.toUpperCase();return n.includes('FLAT LCD')||n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط شحن/شاشة'}));
     flatpowerData = all.filter(i=>{const n=i.name.toUpperCase();return !n.includes('FLAT LCD')&&!n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط باور/صوت/منوعة'}));
   } catch(e){}
 }
-async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باك كفر',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadHousing() { try { const r = await secureApiCall('getHousing'); housingData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'شاصي',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadLens() { try { const r = await secureApiCall('getLens'); lensData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'عدسة كاميرا',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadCamera() { try { const r = await secureApiCall('getCamera'); cameraData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'كاميرا',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadBuzzer() { try { const r = await secureApiCall('getBuzzer'); buzzerData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'سماعة جرس',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpeaker'); earSpeakerData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'سماعة اتصال',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باب سيم كارت',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بصمة',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات باور',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
-async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات صوت',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
+async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باك كفر',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadHousing() { try { const r = await secureApiCall('getHousing'); housingData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'شاصي',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadLens() { try { const r = await secureApiCall('getLens'); lensData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'عدسة كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadCamera() { try { const r = await secureApiCall('getCamera'); cameraData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadBuzzer() { try { const r = await secureApiCall('getBuzzer'); buzzerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة جرس',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpeaker'); earSpeakerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة اتصال',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باب سيم كارت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بصمة',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'منوع',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات باور',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
+async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات صوت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
 async function loadTools() {
   try {
     const r = await secureApiCall('getTools');
@@ -3354,10 +3373,10 @@ async function loadTools() {
       ...i,
       brand: '',
       type: 'أداة',
-      name: i.name || '-',
-      price: Number(String(i.price || 0).replace(/[^0-9.]/g, '')) || 0,
-      qty: Number(i.qty) || 0,
-      notes: i.notes || '',
+      name: _safeStr(i, 'name', 'الاسم', '-'),
+      price: _safeNum(i, 'price', 'السعر'),
+      qty: _safeNum(i, 'qty', 'العدد'),
+      notes: _safeStr(i, 'notes', 'ملاحظات'),
       image_url: i.image_url || ''
     }));
     return toolsData;
