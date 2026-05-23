@@ -2791,9 +2791,7 @@ function generateDeviceId() {
 
 async function secureApiCall(action, data = {}) {
   try {
-    // Append cache-busting timestamp to prevent stale data
-    const url = CONFIG.API_URL + (CONFIG.API_URL.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
-    const response = await fetch(url, {
+    const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
@@ -2801,7 +2799,7 @@ async function secureApiCall(action, data = {}) {
         'Pragma': 'no-cache'
       },
       cache: 'no-store',
-      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, ...data })
+      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, _ts: Date.now(), ...data })
     });
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'حدث خطأ');
@@ -3354,7 +3352,25 @@ async function loadFingerprint() { try { const r = await secureApiCall('getFinge
 async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
 async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات باور',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
 async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات صوت',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
-async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||'',image_url:i.image_url||''})); } catch(e){} }
+async function loadTools() {
+  try {
+    const r = await secureApiCall('getTools');
+    toolsData = (r || []).map(i => ({
+      ...i,
+      brand: '',
+      type: 'أداة',
+      name: i.name || '-',
+      price: Number(String(i.price || 0).replace(/[^0-9.]/g, '')) || 0,
+      qty: Number(i.qty) || 0,
+      notes: i.notes || '',
+      image_url: i.image_url || ''
+    }));
+    return toolsData;
+  } catch(e) {
+    console.error('loadTools error:', e);
+    throw e;
+  }
+}
 
 async function openToolsSheet() {
   sheetPriceType = 'tools';
@@ -3374,11 +3390,18 @@ async function openToolsSheet() {
   // Always fetch fresh data when opening tools
   try {
     await loadTools();
+    renderToolsList();
   } catch(e) {
-    console.error('loadTools failed:', e);
+    console.error('Tools load failed:', e);
+    if (sheetPriceType === 'tools') {
+      // If we already have cached data, show it
+      if (toolsData && toolsData.length) {
+        renderToolsList();
+      } else {
+        resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">⚠️</div><div style="color:var(--red);font-size:15px;font-weight:700;margin-bottom:14px;">فشل تحميل الأدوات</div><div style="color:var(--muted);font-size:13px;margin-bottom:14px;">تأكد من الاتصال بالإنترنت</div><button onclick="openToolsSheet()" style="padding:10px 22px;border-radius:12px;border:none;background:var(--primary);color:white;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">↻ إعادة المحاولة</button></div>';
+      }
+    }
   }
-
-  renderToolsList();
 }
 
 function renderToolsList() {
