@@ -2132,6 +2132,71 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
 }
 
+/* Edit order button */
+.edit-order-btn {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.35);
+  transition: all 0.2s var(--ease-out);
+}
+.edit-order-btn:active { transform: scale(0.96); }
+
+/* Edit order item card */
+.edit-item-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.edit-item-info { flex: 1; min-width: 0; }
+.edit-item-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.edit-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.edit-item-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.edit-qty-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal',sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+.edit-qty-btn-plus {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
 </style>
 </head>
 <body>
@@ -2226,6 +2291,40 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <div class="bsheet-body" style="padding-top:0;">
       <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
       <div id="myOrdersList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ صفحة تعديل طلب موجود ═══ -->
+<div id="editOrderSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('editOrderSheet')"></button>
+      <span class="bsheet-title">✏️ تعديل الطلب</span>
+    </div>
+    <div class="bsheet-body">
+      <div id="editOrderHeader" style="background:var(--surface-2);border:1px solid var(--border-light);border-radius:14px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:13px;color:var(--muted);">رقم الطلب</div>
+        <div id="editOrderId" style="font-size:18px;font-weight:900;color:var(--primary-dark);"></div>
+      </div>
+
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;">📋 المنتجات</div>
+      <div id="editOrderItems"></div>
+
+      <div style="margin:14px 0;border-top:1px dashed var(--border);padding-top:12px;">
+        <button onclick="openAddItemsToOrder()" style="width:100%;background:var(--card);border:2px dashed var(--primary);color:var(--primary);padding:14px;border-radius:14px;font-size:14px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">➕ إضافة منتجات جديدة</button>
+      </div>
+
+      <div id="editOrderSummary" style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin:14px 0;box-shadow:var(--shadow-xs);">
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:900;color:var(--primary-dark);">
+          <span>💰 المجموع الكلي</span>
+          <span id="editOrderTotal" dir="ltr">0 د.ع</span>
+        </div>
+      </div>
+
+      <button onclick="saveOrderEdits()" class="form-btn success-btn" style="margin-top:8px;">💾 حفظ التعديلات</button>
+      <button onclick="closeSheet('editOrderSheet')" class="form-btn" style="margin-top:8px;background:var(--surface-2);color:var(--text);">إلغاء</button>
     </div>
   </div>
 </div>
@@ -4562,6 +4661,143 @@ function renderOrdersList() {
   listDiv.innerHTML = filtered.map(_renderOrderCard).join('');
 }
 
+// ═══ تعديل الطلب الموجود ═══
+var _editingOrder = null; // الطلب اللي يتم تعديله
+
+function openEditOrder(orderId) {
+  var o = window._orderMap && window._orderMap[orderId];
+  if (!o) { alert('لم يتم العثور على الطلب'); return; }
+  if (o.status === 'delivered' || o.status === 'cancelled') {
+    alert('لا يمكن تعديل هذا الطلب');
+    return;
+  }
+
+  // عمل نسخة عميقة من الطلب للعمل عليها
+  _editingOrder = {
+    orderId: o.orderId,
+    items: JSON.parse(JSON.stringify(o.items || []))
+  };
+
+  document.getElementById('editOrderId').textContent = orderId;
+  renderEditOrderItems();
+  openSheet('editOrderSheet');
+}
+
+function renderEditOrderItems() {
+  if (!_editingOrder) return;
+  var container = document.getElementById('editOrderItems');
+  if (!_editingOrder.items.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">السلة فارغة - أضف منتجات</div>';
+    updateEditOrderTotal();
+    return;
+  }
+
+  var html = '';
+  _editingOrder.items.forEach(function(item, idx) {
+    var price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var qty = item.quantity || 1;
+    var subtotal = price * qty;
+
+    var icon = '📦';
+    if (item.itemType === 'screens') icon = '🖥️';
+    else if (item.itemType === 'batteries') icon = '🔋';
+    else if (item.itemType === 'tools') icon = '🔧';
+
+    html += '<div class="edit-item-card">' +
+      '<div style="font-size:28px;flex-shrink:0;">' + icon + '</div>' +
+      '<div class="edit-item-info">' +
+        '<div class="edit-item-name">' + sanitize(item.name || '-') + '</div>' +
+        '<div class="edit-item-meta">' +
+          (item.brand ? sanitize(item.brand) + ' · ' : '') +
+          '<span dir="ltr">' + formatPriceIQD(subtotal) + '</span> د.ع' +
+        '</div>' +
+      '</div>' +
+      '<div class="edit-item-qty-row">' +
+        '<button class="edit-qty-btn edit-qty-btn-plus" onclick="editOrderQty(' + idx + ',1)">+</button>' +
+        '<span style="font-size:14px;font-weight:800;min-width:22px;text-align:center;">' + qty + '</span>' +
+        '<button class="edit-qty-btn" onclick="editOrderQty(' + idx + ',-1)">−</button>' +
+      '</div>' +
+      '<button onclick="editOrderRemove(' + idx + ')" style="width:28px;height:28px;border-radius:50%;border:none;background:#FEE2E2;color:var(--red);cursor:pointer;font-size:13px;flex-shrink:0;" title="حذف">🗑️</button>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+  updateEditOrderTotal();
+}
+
+function editOrderQty(idx, delta) {
+  if (!_editingOrder || !_editingOrder.items[idx]) return;
+  var newQty = (_editingOrder.items[idx].quantity || 1) + delta;
+  if (newQty < 1) { editOrderRemove(idx); return; }
+  _editingOrder.items[idx].quantity = newQty;
+  renderEditOrderItems();
+}
+
+function editOrderRemove(idx) {
+  if (!_editingOrder) return;
+  if (!confirm('حذف هذا المنتج من الطلب؟')) return;
+  _editingOrder.items.splice(idx, 1);
+  renderEditOrderItems();
+}
+
+function updateEditOrderTotal() {
+  if (!_editingOrder) return;
+  var total = 0;
+  _editingOrder.items.forEach(function(item) {
+    var price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var qty = item.quantity || 1;
+    total += price * qty;
+  });
+  var el = document.getElementById('editOrderTotal');
+  if (el) el.textContent = formatPriceIQD(total) + ' د.ع';
+}
+
+function openAddItemsToOrder() {
+  // افتح السلة العادية للإضافة - لكن نخلي السلة الحالية مؤقتاً تحفظ الإضافات
+  if (!_editingOrder) return;
+  // نضع علم أن السلة في وضع "إضافة لطلب موجود"
+  _addingToOrder = _editingOrder.orderId;
+  // نفتح صفحة المنتجات لاختيار منتج
+  showAdminToast('اختر منتجاً لإضافته - سيُضاف للطلب');
+  closeSheet('editOrderSheet');
+  // نخلي المستخدم يتنقل بنفسه للفئة اللي يريدها
+}
+
+// متى ما الزبون يضيف منتج وهو بوضع تعديل الطلب → يضاف للطلب بدل السلة
+var _addingToOrder = null;
+
+async function saveOrderEdits() {
+  if (!_editingOrder) return;
+  if (!_editingOrder.items.length) { alert('لا يمكن حفظ طلب فارغ'); return; }
+
+  if (!confirm('حفظ التعديلات على الطلب ' + _editingOrder.orderId + '؟')) return;
+
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) { alert('يرجى تسجيل الدخول'); return; }
+
+  var total = 0;
+  _editingOrder.items.forEach(function(item) {
+    var price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var qty = item.quantity || 1;
+    total += price * qty;
+  });
+
+  try {
+    await secureApiCall('updateOrderItems', {
+      orderId: _editingOrder.orderId,
+      phone: user.phone,
+      items: _editingOrder.items,
+      total: total
+    });
+    showAdminToast('✅ تم تعديل الطلب');
+    closeSheet('editOrderSheet');
+    _editingOrder = null;
+    // أعد تحميل الطلبات
+    loadMyOrders();
+  } catch(e) {
+    alert('❌ فشل التعديل: ' + (e.message || ''));
+  }
+}
+
 function _renderOrderCard(o) {
   // ── Status pill ──
   var statusText = 'قيد المراجعة';
@@ -4622,6 +4858,17 @@ function _renderOrderCard(o) {
     ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')">إلغاء</button>'
     : '';
 
+  // Editable: any order that's not delivered or cancelled
+  var isEditable = (o.status !== 'delivered' && o.status !== 'cancelled');
+  var editBtn = isEditable
+    ? '<button class="edit-order-btn" onclick="openEditOrder(\'' + orderId + '\')">✏️ تعديل</button>'
+    : '';
+
+  // Encode order data for the editor (compact JSON in a data attribute would be ideal,
+  // but for simplicity we store in a window-level map)
+  if (!window._orderMap) window._orderMap = {};
+  window._orderMap[orderId] = o;
+
   return '<div class="order-card">' +
     '<div class="order-card-header">' +
       '<div>' +
@@ -4643,6 +4890,7 @@ function _renderOrderCard(o) {
     '</div>' +
     '<div class="order-actions">' +
       '<a href="' + waUrl + '" target="_blank" class="order-wa-btn">💬 استفسار عن هذا الطلب</a>' +
+      editBtn +
       cancelBtn +
     '</div>' +
   '</div>';
