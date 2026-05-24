@@ -2027,6 +2027,104 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   color: var(--muted);
 }
 
+/* Admin panel main tabs */
+.admin-main-tab {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  letter-spacing: -0.2px;
+}
+.admin-main-tab:active { transform: scale(0.96); }
+.admin-main-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary);
+}
+
+/* Admin order filter buttons */
+.admin-order-filter {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-order-filter:active { transform: scale(0.96); }
+.admin-order-filter.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.admin-order-filter .badge {
+  background: rgba(255,255,255,0.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+.admin-order-filter:not(.active) .badge {
+  background: var(--card);
+  color: var(--muted);
+}
+
+/* Admin order card */
+.admin-order-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-xs);
+}
+.admin-order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-light);
+}
+.admin-order-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.admin-action-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s;
+}
+.admin-action-btn:active { transform: scale(0.96); }
+.admin-action-btn.btn-prepare { background: #FEF3C7; color: #92400E; }
+.admin-action-btn.btn-deliver { background: #D1FAE5; color: #065F46; }
+.admin-action-btn.btn-cancel { background: #FEE2E2; color: #991B1B; }
+.admin-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 </style>
 </head>
 <body>
@@ -2435,17 +2533,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <span class="quick-badge" id="ordersBadge"></span>
         </div>
       </div>
-
-      <!-- Search -->
-      <div class="section-row" style="margin-top:14px;">
-        <div class="section-row-title">بحث سريع</div>
-      </div>
-      <div class="home-search" style="margin:0 12px 0;position:relative;">
-        <span style="font-size:18px;color:var(--muted);">🔍</span>
-        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
-        <span id="globalSearchClear" onclick="clearGlobalSearch()" style="display:none;font-size:18px;color:#EF4444;cursor:pointer;padding:4px;flex-shrink:0;">✕</span>
-      </div>
-      <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
       <!-- Quick Categories (horizontal scroll) -->
       <div class="section-row" style="margin-top:18px;">
@@ -5484,26 +5571,47 @@ function openCheckFromAccount() {
   <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('adminSheet')"></button>
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
-      <button class="bsheet-close" onclick="closeSheet('adminSheet')">✕</button>
     </div>
-    <div class="bsheet-search-bar">
-      <span>🔍</span>
-      <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
+
+    <!-- Main tabs: Products / Orders -->
+    <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);">
+      <button class="admin-main-tab active" id="adminMainTab-products" onclick="adminSwitchTab('products')">📦 المنتجات</button>
+      <button class="admin-main-tab" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
     </div>
-    <!-- فلتر الشيت -->
-    <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
-      <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('CHARGE BOARD',this)">بورد شحن</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('FLAT MAIN',this)">فلات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('BACK COVER',this)">باك كفر</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('HOUSING',this)">شاصي</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
+
+    <!-- Products view -->
+    <div id="adminProductsView">
+      <div class="bsheet-search-bar">
+        <span>🔍</span>
+        <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
+      </div>
+      <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
+        <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('CHARGE BOARD',this)">بورد شحن</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('FLAT MAIN',this)">فلات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('BACK COVER',this)">باك كفر</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('HOUSING',this)">شاصي</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
+      </div>
+      <div id="adminProductsList" style="padding:0 14px 100px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
     </div>
-    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
+
+    <!-- Orders view -->
+    <div id="adminOrdersView" style="display:none;">
+      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);">
+        <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
+        <button class="admin-order-filter" data-status="pending" onclick="adminFilterOrders('pending',this)">قيد المراجعة <span class="badge" id="adm-cnt-pending">0</span></button>
+        <button class="admin-order-filter" data-status="picked" onclick="adminFilterOrders('picked',this)">قيد التجهيز <span class="badge" id="adm-cnt-picked">0</span></button>
+        <button class="admin-order-filter" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
+        <button class="admin-order-filter" data-status="cancelled" onclick="adminFilterOrders('cancelled',this)">ملغي <span class="badge" id="adm-cnt-cancelled">0</span></button>
+      </div>
+      <div id="adminOrdersList" style="padding:14px;overflow-y:auto;overflow-x:hidden;flex:1;padding-bottom:100px;"></div>
+    </div>
   </div>
 </div>
 
@@ -5813,6 +5921,8 @@ var _adminSheetLabels = {
 
 async function openAdminPanel() {
   openSheet('adminSheet');
+  // Default to products tab
+  adminSwitchTab('products');
   var listDiv = document.getElementById('adminProductsList');
   listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;font-size:16px;">جاري تحميل المنتجات...</div></div>';
 
@@ -5834,6 +5944,164 @@ async function openAdminPanel() {
     adminRenderList();
   } catch(e) {
     listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
+  }
+}
+
+function adminSwitchTab(tab) {
+  var pView = document.getElementById('adminProductsView');
+  var oView = document.getElementById('adminOrdersView');
+  var pTab  = document.getElementById('adminMainTab-products');
+  var oTab  = document.getElementById('adminMainTab-orders');
+
+  if (tab === 'orders') {
+    pView.style.display = 'none';
+    oView.style.display = 'flex';
+    oView.style.flexDirection = 'column';
+    pTab.classList.remove('active');
+    oTab.classList.add('active');
+    loadAdminOrders();
+  } else {
+    pView.style.display = 'block';
+    oView.style.display = 'none';
+    pTab.classList.add('active');
+    oTab.classList.remove('active');
+  }
+}
+
+var _adminAllOrders = [];
+var _adminOrderFilter = 'all';
+
+async function loadAdminOrders() {
+  var listDiv = document.getElementById('adminOrdersList');
+  listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;">جاري تحميل الطلبات...</div></div>';
+
+  try {
+    var orders = await secureApiCall('getAllOrders', { adminKey: '1994' });
+    _adminAllOrders = orders || [];
+    renderAdminOrders();
+  } catch(e) {
+    listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">⚠️ فشل تحميل الطلبات: ' + (e.message || '') + '</div>';
+  }
+}
+
+function adminFilterOrders(filter, btn) {
+  _adminOrderFilter = filter;
+  document.querySelectorAll('.admin-order-filter').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderAdminOrders();
+}
+
+function renderAdminOrders() {
+  var listDiv = document.getElementById('adminOrdersList');
+  if (!listDiv) return;
+
+  // Update counts
+  var counts = { all: _adminAllOrders.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
+  _adminAllOrders.forEach(function(o){ if (counts[o.status] !== undefined) counts[o.status]++; });
+  Object.keys(counts).forEach(function(k){
+    var el = document.getElementById('adm-cnt-' + k);
+    if (el) el.textContent = counts[k];
+  });
+
+  var filtered = _adminOrderFilter === 'all' ? _adminAllOrders : _adminAllOrders.filter(function(o){ return o.status === _adminOrderFilter; });
+  if (!filtered.length) {
+    listDiv.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">لا توجد طلبات</div>';
+    return;
+  }
+
+  listDiv.innerHTML = filtered.map(renderAdminOrderCard).join('');
+}
+
+function renderAdminOrderCard(o) {
+  var statusText = 'قيد المراجعة', statusColor = '#F59E0B', statusIcon = '⏳';
+  if (o.status === 'picked')    { statusText = 'قيد التجهيز'; statusColor = '#3B82F6'; statusIcon = '📦'; }
+  if (o.status === 'delivered') { statusText = 'تم التسليم';  statusColor = '#10B981'; statusIcon = '✅'; }
+  if (o.status === 'cancelled') { statusText = 'ملغي';         statusColor = '#EF4444'; statusIcon = '❌'; }
+
+  var dateStr = '';
+  if (o.timestamp) {
+    try {
+      var d = new Date(o.timestamp);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch(e) {}
+  }
+
+  var itemsHtml = (o.items || []).map(function(it) {
+    var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
+    var qty = it.quantity || 1;
+    var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' 🛡️' : '';
+    return '<div style="font-size:13px;color:var(--text-2);padding:4px 0;">• ' + sanitize(it.name||'-') + ' (× ' + qty + ')' + warranty + '</div>';
+  }).join('');
+
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
+
+  // Action buttons based on current status
+  var actions = '';
+  if (o.status === 'pending') {
+    actions =
+      '<button class="admin-action-btn btn-prepare" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'picked\')">📦 ابدأ التجهيز</button>' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
+      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+  } else if (o.status === 'picked') {
+    actions =
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
+      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+  } else {
+    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">لا يمكن تعديل هذا الطلب</div>';
+  }
+
+  return '<div class="admin-order-card">' +
+    '<div class="admin-order-card-header">' +
+      '<div>' +
+        '<div style="font-size:14px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' +
+      '</div>' +
+      '<div style="padding:4px 10px;border-radius:12px;background:' + statusColor + '20;color:' + statusColor + ';font-size:11px;font-weight:800;">' +
+        statusIcon + ' ' + statusText +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:13px;color:var(--text);margin-bottom:6px;">' +
+      '<strong>👤 ' + sanitize(o.name||'') + '</strong>' +
+      (o.shop ? ' · ' + sanitize(o.shop) : '') +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">📱 <a href="tel:' + o.phone + '" style="color:var(--primary);">' + o.phone + '</a></div>' +
+    (o.address ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📍 ' + sanitize(o.address) + '</div>' : '') +
+    '<div style="background:var(--surface-2);border-radius:10px;padding:8px 10px;margin:8px 0;">' +
+      '<div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:4px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
+      itemsHtml +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--primary-dark);padding:6px 0;">' +
+      '<span>💰 المجموع</span><span dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
+    '</div>' +
+    '<div class="admin-order-actions">' + actions + '</div>' +
+  '</div>';
+}
+
+async function adminChangeOrderStatus(orderId, newStatus) {
+  var statusNames = { picked: 'قيد التجهيز', delivered: 'تم التسليم', cancelled: 'ملغي' };
+  if (!confirm('هل تريد تغيير حالة الطلب ' + orderId + ' إلى "' + statusNames[newStatus] + '"؟')) return;
+
+  try {
+    var res = await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: newStatus });
+    alert('✅ تم تحديث حالة الطلب');
+    loadAdminOrders();
+  } catch(e) {
+    alert('❌ فشل التحديث: ' + (e.message || ''));
+  }
+}
+
+async function adminCancelOrder(orderId) {
+  var reason = prompt('سبب الإلغاء:');
+  if (reason === null) return;
+
+  try {
+    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    alert('✅ تم إلغاء الطلب');
+    loadAdminOrders();
+  } catch(e) {
+    alert('❌ فشل الإلغاء: ' + (e.message || ''));
   }
 }
 
