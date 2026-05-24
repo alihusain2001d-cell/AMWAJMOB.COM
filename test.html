@@ -2125,6 +2125,13 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 .admin-action-btn.btn-cancel { background: #FEE2E2; color: #991B1B; }
 .admin-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
 </style>
 </head>
 <body>
@@ -2429,20 +2436,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 <!-- APP SHELL -->
 <div class="app-shell">
-
-  <!-- Header -->
-  <div class="app-header">
-    <button class="header-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
-    <div class="header-title">أمواج للإلكترونيات</div>
-    <div style="display:flex;gap:6px;">
-      <button class="header-icon-btn" id="installBtn" onclick="showInstallPrompt()" title="تثبيت التطبيق" style="display:none;font-size:18px;">📲</button>
-      <button class="header-icon-btn" onclick="focusHomeSearch()" title="بحث">🔍</button>
-      <button class="header-icon-btn" onclick="openCartSheet()" title="السلة" style="position:relative;">
-        🛒
-        <span id="headerCartBadge" style="display:none;position:absolute;top:-3px;left:-3px;background:#EF4444;color:white;border-radius:50%;min-width:17px;height:17px;font-size:12px;font-weight:800;line-height:17px;text-align:center;padding:0 3px;"></span>
-      </button>
-    </div>
-  </div>
 
   <!-- Body -->
   <div class="app-body" id="appBody">
@@ -6084,9 +6077,17 @@ async function adminChangeOrderStatus(orderId, newStatus) {
   if (!confirm('هل تريد تغيير حالة الطلب ' + orderId + ' إلى "' + statusNames[newStatus] + '"؟')) return;
 
   try {
-    var res = await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: newStatus });
-    alert('✅ تم تحديث حالة الطلب');
-    loadAdminOrders();
+    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: newStatus });
+    // Update local cache immediately
+    for (var i = 0; i < _adminAllOrders.length; i++) {
+      if (_adminAllOrders[i].orderId === orderId) {
+        _adminAllOrders[i].status = newStatus;
+        break;
+      }
+    }
+    renderAdminOrders();
+    // Light success indicator (no alert blocking)
+    showAdminToast('✅ تم تحديث حالة الطلب');
   } catch(e) {
     alert('❌ فشل التحديث: ' + (e.message || ''));
   }
@@ -6098,11 +6099,27 @@ async function adminCancelOrder(orderId) {
 
   try {
     await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
-    alert('✅ تم إلغاء الطلب');
-    loadAdminOrders();
+    // Update local cache
+    for (var i = 0; i < _adminAllOrders.length; i++) {
+      if (_adminAllOrders[i].orderId === orderId) {
+        _adminAllOrders[i].status = 'cancelled';
+        _adminAllOrders[i].cancelReason = reason || 'إلغاء من الإدارة';
+        break;
+      }
+    }
+    renderAdminOrders();
+    showAdminToast('✅ تم إلغاء الطلب');
   } catch(e) {
     alert('❌ فشل الإلغاء: ' + (e.message || ''));
   }
+}
+
+function showAdminToast(msg) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#10B981;color:white;padding:10px 20px;border-radius:24px;font-weight:800;font-family:Tajawal,sans-serif;font-size:14px;box-shadow:0 6px 20px rgba(16,185,129,0.4);z-index:9999;animation:fadeInOut 2.2s forwards;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2200);
 }
 
 function adminSelectSheet(sheet, btn) {
