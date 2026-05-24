@@ -647,6 +647,35 @@ body {
   transform: scale(0.96);
 }
 
+/* Refresh button in header */
+.header-refresh-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border: none;
+  color: white;
+  font-size: 22px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  box-shadow: 0 3px 10px rgba(14,165,233,0.35);
+  transition: background 0.3s, transform 0.2s;
+  flex-shrink: 0;
+  order: 98;
+  font-family: 'Tajawal', sans-serif;
+}
+.header-refresh-btn:active { transform: scale(0.92); }
+.header-refresh-btn:disabled { opacity: 0.7; }
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
 /* WhatsApp button in header (right side) */
 .header-wa-btn {
   width: 40px;
@@ -1998,6 +2027,176 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   color: var(--muted);
 }
 
+/* Admin panel main tabs */
+.admin-main-tab {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  letter-spacing: -0.2px;
+}
+.admin-main-tab:active { transform: scale(0.96); }
+.admin-main-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-primary);
+}
+
+/* Admin order filter buttons */
+.admin-order-filter {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-order-filter:active { transform: scale(0.96); }
+.admin-order-filter.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.admin-order-filter .badge {
+  background: rgba(255,255,255,0.25);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+.admin-order-filter:not(.active) .badge {
+  background: var(--card);
+  color: var(--muted);
+}
+
+/* Admin order card */
+.admin-order-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-xs);
+}
+.admin-order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--border-light);
+}
+.admin-order-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.admin-action-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s;
+}
+.admin-action-btn:active { transform: scale(0.96); }
+.admin-action-btn.btn-prepare { background: #FEF3C7; color: #92400E; }
+.admin-action-btn.btn-deliver { background: #D1FAE5; color: #065F46; }
+.admin-action-btn.btn-cancel { background: #FEE2E2; color: #991B1B; }
+.admin-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* Edit order button */
+.edit-order-btn {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.35);
+  transition: all 0.2s var(--ease-out);
+}
+.edit-order-btn:active { transform: scale(0.96); }
+
+/* Edit order item card */
+.edit-item-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.edit-item-info { flex: 1; min-width: 0; }
+.edit-item-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.edit-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.edit-item-qty-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.edit-qty-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Tajawal',sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+.edit-qty-btn-plus {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
 </style>
 </head>
 <body>
@@ -2032,6 +2231,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     <div class="bsheet-head">
       <button class="bsheet-close" onclick="productsSheetBack()"></button>
       <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
+      <button onclick="refreshCurrentSheet()" id="refreshSheetBtn" title="تحديث" class="header-refresh-btn">⟳</button>
       <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
     <div class="bsheet-body">
@@ -2302,20 +2502,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <!-- APP SHELL -->
 <div class="app-shell">
 
-  <!-- Header -->
-  <div class="app-header">
-    <button class="header-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
-    <div class="header-title">أمواج للإلكترونيات</div>
-    <div style="display:flex;gap:6px;">
-      <button class="header-icon-btn" id="installBtn" onclick="showInstallPrompt()" title="تثبيت التطبيق" style="display:none;font-size:18px;">📲</button>
-      <button class="header-icon-btn" onclick="focusHomeSearch()" title="بحث">🔍</button>
-      <button class="header-icon-btn" onclick="openCartSheet()" title="السلة" style="position:relative;">
-        🛒
-        <span id="headerCartBadge" style="display:none;position:absolute;top:-3px;left:-3px;background:#EF4444;color:white;border-radius:50%;min-width:17px;height:17px;font-size:12px;font-weight:800;line-height:17px;text-align:center;padding:0 3px;"></span>
-      </button>
-    </div>
-  </div>
-
   <!-- Body -->
   <div class="app-body" id="appBody">
 
@@ -2405,17 +2591,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <span class="quick-badge" id="ordersBadge"></span>
         </div>
       </div>
-
-      <!-- Search -->
-      <div class="section-row" style="margin-top:14px;">
-        <div class="section-row-title">بحث سريع</div>
-      </div>
-      <div class="home-search" style="margin:0 12px 0;position:relative;">
-        <span style="font-size:18px;color:var(--muted);">🔍</span>
-        <input type="text" id="globalSearch" placeholder="ابحث عن منتج... (مثال: A10)" oninput="handleGlobalSearch(event)" onblur="setTimeout(function(){closeSearchDropdown()},200)" autocomplete="off">
-        <span id="globalSearchClear" onclick="clearGlobalSearch()" style="display:none;font-size:18px;color:#EF4444;cursor:pointer;padding:4px;flex-shrink:0;">✕</span>
-      </div>
-      <div id="globalSearchResults" style="margin:4px 12px 0;display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.12);max-height:320px;overflow-y:auto;z-index:999;position:relative;"></div>
 
       <!-- Quick Categories (horizontal scroll) -->
       <div class="section-row" style="margin-top:18px;">
@@ -2659,6 +2834,11 @@ function closeTopSheet() {
   var topId = _sheetStack[_sheetStack.length - 1];
   // Smart back for products sheet (brand sub-views)
   if (topId === 'productsSheet') {
+    // Tools sheet has no brands - close directly
+    if (sheetPriceType === 'tools') {
+      closeSheet(topId);
+      return true;
+    }
     var brandsDiv = document.getElementById('sheetBrands');
     var resultsDiv = document.getElementById('sheetResults');
     if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
@@ -2682,6 +2862,20 @@ window.addEventListener('popstate', function(e) {
 
 // Initialize history state on load so first back press closes a sheet
 try { history.replaceState({ initial: true }, ''); } catch(e) {}
+
+// ── Dismiss keyboard on tap outside input ──
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  var active = document.activeElement;
+  if (!active) return;
+  var tag = (active.tagName || '').toUpperCase();
+  // Only act on text-input-like elements
+  if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !active.isContentEditable) return;
+  // Don't blur if user tapped inside any input/textarea or a label/button that may submit
+  var clickedInput = target.closest && target.closest('input, textarea, [contenteditable], button, label, select, a');
+  if (clickedInput) return;
+  active.blur();
+}, true);
 
 function openFlatpowerModal() {
   const m = document.getElementById('flatpowerModal');
@@ -2750,7 +2944,7 @@ async function secureApiCall(action, data = {}) {
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, ...data })
+      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, _ts: Date.now(), ...data })
     });
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'حدث خطأ');
@@ -3282,30 +3476,67 @@ let fingerprintData = [], miscData = [], toolsData = [];
 let flatPowerSheetData = [], flatVolumeSheetData = [];
 
 async function loadPrices() { try { pricesData = await secureApiCall('getPrices'); } catch(e){} }
-async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بطارية',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بورد شحن',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
+// Safely extract numeric value - respects 0 as a real value
+// Tries primary key first; falls back ONLY if primary is truly missing (undefined/null/'')
+function _safeNum(item, primaryKey, fallbackKey) {
+  var v = item[primaryKey];
+  if (v === undefined || v === null || v === '') {
+    if (fallbackKey) v = item[fallbackKey];
+  }
+  if (v === undefined || v === null || v === '') return 0;
+  var n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+function _safeStr(item, primaryKey, fallbackKey, defaultVal) {
+  var v = item[primaryKey];
+  if (v === undefined || v === null || v === '') {
+    if (fallbackKey) v = item[fallbackKey];
+  }
+  return (v === undefined || v === null || v === '') ? (defaultVal || '') : String(v);
+}
+
+async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بطارية',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بورد شحن',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
 async function loadFlatMain() {
   try {
     const r = await secureApiCall('getFlatMain');
-    const all = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''}));
+    const all = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')}));
     flatchargingData = all.filter(i=>{const n=i.name.toUpperCase();return n.includes('FLAT LCD')||n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط شحن/شاشة'}));
     flatpowerData = all.filter(i=>{const n=i.name.toUpperCase();return !n.includes('FLAT LCD')&&!n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط باور/صوت/منوعة'}));
   } catch(e){}
 }
-async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باك كفر',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadHousing() { try { const r = await secureApiCall('getHousing'); housingData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'شاصي',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadLens() { try { const r = await secureApiCall('getLens'); lensData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'عدسة كاميرا',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadCamera() { try { const r = await secureApiCall('getCamera'); cameraData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'كاميرا',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadBuzzer() { try { const r = await secureApiCall('getBuzzer'); buzzerData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'سماعة جرس',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpeaker'); earSpeakerData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'سماعة اتصال',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'باب سيم كارت',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'بصمة',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(i.name||i.الاسم),type:'منوع',name:i.name||i.الاسم||'-',price:i.price||i.السعر||0,qty:i.qty||i.العدد||0,notes:i.notes||i.ملاحظات||''})); } catch(e){} }
-async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات باور',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
-async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(i.name||''),type:'فلات صوت',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0})); } catch(e){} }
-async function loadTools() { try { const r = await secureApiCall('getTools'); toolsData = r.map(i=>({...i,brand:'',type:'أداة',name:i.name||'-',price:Number(String(i.price||0).replace(/[^0-9.]/g,''))||0,qty:Number(i.qty)||0,notes:i.notes||'',image_url:i.image_url||''})); } catch(e){} }
+async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باك كفر',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadHousing() { try { const r = await secureApiCall('getHousing'); housingData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'شاصي',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadLens() { try { const r = await secureApiCall('getLens'); lensData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'عدسة كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadCamera() { try { const r = await secureApiCall('getCamera'); cameraData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadBuzzer() { try { const r = await secureApiCall('getBuzzer'); buzzerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة جرس',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpeaker'); earSpeakerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة اتصال',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باب سيم كارت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بصمة',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'منوع',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
+async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات باور',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
+async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات صوت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
+async function loadTools() {
+  try {
+    const r = await secureApiCall('getTools');
+    toolsData = (r || []).map(i => ({
+      ...i,
+      brand: '',
+      type: 'أداة',
+      name: _safeStr(i, 'name', 'الاسم', '-'),
+      price: _safeNum(i, 'price', 'السعر'),
+      qty: _safeNum(i, 'qty', 'العدد'),
+      notes: _safeStr(i, 'notes', 'ملاحظات'),
+      image_url: i.image_url || ''
+    }));
+    return toolsData;
+  } catch(e) {
+    console.error('loadTools error:', e);
+    throw e;
+  }
+}
 
-function openToolsSheet() {
+async function openToolsSheet() {
   sheetPriceType = 'tools';
   _activeSheetType = 'tools';
   _activeSheetSub = null;
@@ -3317,28 +3548,44 @@ function openToolsSheet() {
   var resultsDiv = document.getElementById('sheetResults');
   resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div><div style="color:#64748B;">جاري تحميل الأدوات...</div></div>';
   openSheet('productsSheet');
-  sheetPriceType = 'tools'; // تأكيد بعد openSheet
+  sheetPriceType = 'tools';
   sheetFlatSubType = null;
-  var attempts = 0;
-  function tryShow() {
-    attempts++;
-    if (!toolsData.length && attempts < 30) { setTimeout(tryShow, 500); return; }
-    if (!toolsData.length) {
-      // جرب تحميل من جديد
-      loadTools().then(function() {
-        var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
-        var all = avail.length ? avail : toolsData;
-        resultsDiv.innerHTML = all.length
-          ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
-          : '<div style="padding:20px;text-align:center;color:#94A3B8;">لا توجد أدوات</div>';
-      });
-      return;
+
+  // Always fetch fresh data when opening tools
+  try {
+    await loadTools();
+    renderToolsList();
+  } catch(e) {
+    console.error('Tools load failed:', e);
+    if (sheetPriceType === 'tools') {
+      // If we already have cached data, show it
+      if (toolsData && toolsData.length) {
+        renderToolsList();
+      } else {
+        resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">⚠️</div><div style="color:var(--red);font-size:15px;font-weight:700;margin-bottom:14px;">فشل تحميل الأدوات</div><div style="color:var(--muted);font-size:13px;margin-bottom:14px;">تأكد من الاتصال بالإنترنت</div><button onclick="openToolsSheet()" style="padding:10px 22px;border-radius:12px;border:none;background:var(--primary);color:white;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">↻ إعادة المحاولة</button></div>';
+      }
     }
-    var avail = toolsData.filter(function(p){ return Number(p.qty)>0; });
-    var all = avail.length ? avail : toolsData;
-    resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + all.length + ' أداة</div><div class="price-items-grid">' + all.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
   }
-  setTimeout(tryShow, 200);
+}
+
+function renderToolsList() {
+  var resultsDiv = document.getElementById('sheetResults');
+  if (!resultsDiv) return;
+  if (sheetPriceType !== 'tools') return; // User navigated away
+
+  if (!toolsData || !toolsData.length) {
+    resultsDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#94A3B8;">لا توجد أدوات</div>';
+    return;
+  }
+
+  // Show ALL tools (createSheetPriceItem handles availability display)
+  var availCount = toolsData.filter(function(p){ return Number(p.qty) > 0; }).length;
+  resultsDiv.innerHTML =
+    '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">' +
+    toolsData.length + ' أداة · ' + availCount + ' متوفرة' +
+    '</div><div class="price-items-grid">' +
+    toolsData.map(function(p){ return createSheetPriceItem(p); }).join('') +
+    '</div>';
 }
 
 function formatPriceIQD(n) {
@@ -3419,6 +3666,8 @@ function addToCart(product) {
   if (!user) { showScreen('loginScreen'); return; }
   if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
+
+  // الوضع العادي: السلة
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     return item.name === product.name && itemPrice === price;
@@ -3932,7 +4181,7 @@ let _activeSheetType = 'screens';
 let _activeSheetSub = null;
 let sheetFlatSubType = null;
 
-function openProductSheet(type, title) {
+async function openProductSheet(type, title) {
   sheetPriceType = type;
   _activeSheetType = type;
   _activeSheetSub = null;
@@ -3944,7 +4193,72 @@ function openProductSheet(type, title) {
   document.getElementById('sheetResults').innerHTML = '';
   renderSheetBrands(type);
   openSheet('productsSheet');
+  // Refresh data in background so latest stock/prices are reflected
+  await refreshDataInBackground(type);
 }
+
+async function refreshDataInBackground(type) {
+  try {
+    if (type === 'screens') {
+      pricesData = await secureApiCall('getPrices');
+    } else if (type === 'batteries' && typeof loadBatteries === 'function') {
+      await loadBatteries();
+    } else if (type === 'chargeboards' && typeof loadChargeboards === 'function') {
+      await loadChargeboards();
+    } else if ((type === 'flatcharging' || type === 'flatpower') && typeof loadFlatMain === 'function') {
+      await loadFlatMain();
+      if (typeof loadFlatPowerSheet === 'function') await loadFlatPowerSheet();
+      if (typeof loadFlatVolumeSheet === 'function') await loadFlatVolumeSheet();
+    } else if (type === 'camera' && typeof loadCamera === 'function') {
+      await loadCamera();
+      if (typeof loadLens === 'function') await loadLens();
+    } else if (type === 'backcover' && typeof loadBackCover === 'function') {
+      await loadBackCover();
+    } else if (type === 'housing' && typeof loadHousing === 'function') {
+      await loadHousing();
+    } else if (type === 'tools' && typeof loadTools === 'function') {
+      await loadTools();
+    }
+    // Re-render brands so latest qty/prices reflect immediately
+    // Check user is still viewing the same sheet (didn't navigate away)
+    if (sheetPriceType === type) {
+      renderSheetBrands(type);
+      // If user already selected a brand, re-render that brand's items too
+      var brandsDiv = document.getElementById('sheetBrands');
+      var resultsDiv = document.getElementById('sheetResults');
+      if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '' && typeof _lastBrandStr === 'string' && _lastBrandStr) {
+        openSheetBrand(_lastBrandStr);
+      }
+    }
+  } catch(e) {
+    console.error('Background refresh failed:', e);
+  }
+}
+
+// Manual refresh — called by refresh button in product sheet header
+async function refreshCurrentSheet() {
+  var btn = document.getElementById('refreshSheetBtn');
+  if (btn) { btn.style.animation = 'spin 0.8s linear infinite'; btn.disabled = true; }
+  try {
+    if (sheetPriceType === 'tools') {
+      await loadTools();
+      renderToolsList();
+    } else if (sheetPriceType) {
+      await refreshDataInBackground(sheetPriceType);
+    }
+    // Brief success feedback
+    if (btn) {
+      btn.style.animation = '';
+      btn.style.background = '#10B981';
+      setTimeout(function() { btn.style.background = ''; btn.disabled = false; }, 800);
+    }
+  } catch(e) {
+    if (btn) { btn.style.animation = ''; btn.disabled = false; }
+  }
+}
+
+// Track last selected brand to re-render after refresh
+var _lastBrandStr = null;
 
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
@@ -4071,6 +4385,7 @@ function handleSheetSearch() {
 }
 
 function openSheetBrand(brandsStr) {
+  _lastBrandStr = brandsStr; // Save for background refresh re-render
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
@@ -4107,6 +4422,7 @@ function openSheetBrand(brandsStr) {
 }
 
 function backToSheetBrands() {
+  _lastBrandStr = null;
   document.getElementById('sheetBrands').style.display = 'grid';
   document.getElementById('sheetResults').innerHTML = '';
   document.getElementById('sheetSearch').value = '';
@@ -4115,6 +4431,11 @@ function backToSheetBrands() {
 // Smart back for products sheet: if a brand is open, go back to brands list
 // Otherwise close the whole sheet
 function productsSheetBack() {
+  // Tools sheet has no brands list - close directly
+  if (sheetPriceType === 'tools') {
+    closeSheet('productsSheet');
+    return;
+  }
   var brandsDiv = document.getElementById('sheetBrands');
   var resultsDiv = document.getElementById('sheetResults');
   // If brands grid is hidden, we're viewing a brand's items - go back to brands
@@ -4598,16 +4919,20 @@ function openOrdersSheet() {
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
     .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+    .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
 
 function cancelOrder(orderId) {
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
     .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+    .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
 
 // Override old functions
@@ -5310,26 +5635,47 @@ function openCheckFromAccount() {
   <div class="bsheet">
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('adminSheet')"></button>
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
-      <button class="bsheet-close" onclick="closeSheet('adminSheet')">✕</button>
     </div>
-    <div class="bsheet-search-bar">
-      <span>🔍</span>
-      <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
+
+    <!-- Main tabs: Products / Orders -->
+    <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);">
+      <button class="admin-main-tab active" id="adminMainTab-products" onclick="adminSwitchTab('products')">📦 المنتجات</button>
+      <button class="admin-main-tab" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
     </div>
-    <!-- فلتر الشيت -->
-    <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
-      <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('CHARGE BOARD',this)">بورد شحن</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('FLAT MAIN',this)">فلات</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('BACK COVER',this)">باك كفر</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('HOUSING',this)">شاصي</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
-      <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
+
+    <!-- Products view -->
+    <div id="adminProductsView">
+      <div class="bsheet-search-bar">
+        <span>🔍</span>
+        <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
+      </div>
+      <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
+        <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('CHARGE BOARD',this)">بورد شحن</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('FLAT MAIN',this)">فلات</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('BACK COVER',this)">باك كفر</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('HOUSING',this)">شاصي</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
+        <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
+      </div>
+      <div id="adminProductsList" style="padding:0 14px 100px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
     </div>
-    <div id="adminProductsList" style="padding:0 14px 80px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
+
+    <!-- Orders view -->
+    <div id="adminOrdersView" style="display:none;">
+      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);">
+        <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
+        <button class="admin-order-filter" data-status="pending" onclick="adminFilterOrders('pending',this)">قيد المراجعة <span class="badge" id="adm-cnt-pending">0</span></button>
+        <button class="admin-order-filter" data-status="picked" onclick="adminFilterOrders('picked',this)">قيد التجهيز <span class="badge" id="adm-cnt-picked">0</span></button>
+        <button class="admin-order-filter" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
+        <button class="admin-order-filter" data-status="cancelled" onclick="adminFilterOrders('cancelled',this)">ملغي <span class="badge" id="adm-cnt-cancelled">0</span></button>
+      </div>
+      <div id="adminOrdersList" style="padding:14px;overflow-y:auto;overflow-x:hidden;flex:1;padding-bottom:100px;"></div>
+    </div>
   </div>
 </div>
 
@@ -5639,6 +5985,8 @@ var _adminSheetLabels = {
 
 async function openAdminPanel() {
   openSheet('adminSheet');
+  // Default to products tab
+  adminSwitchTab('products');
   var listDiv = document.getElementById('adminProductsList');
   listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;font-size:16px;">جاري تحميل المنتجات...</div></div>';
 
@@ -5661,6 +6009,188 @@ async function openAdminPanel() {
   } catch(e) {
     listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
   }
+}
+
+function adminSwitchTab(tab) {
+  var pView = document.getElementById('adminProductsView');
+  var oView = document.getElementById('adminOrdersView');
+  var pTab  = document.getElementById('adminMainTab-products');
+  var oTab  = document.getElementById('adminMainTab-orders');
+
+  if (tab === 'orders') {
+    pView.style.display = 'none';
+    oView.style.display = 'flex';
+    oView.style.flexDirection = 'column';
+    pTab.classList.remove('active');
+    oTab.classList.add('active');
+    loadAdminOrders();
+  } else {
+    pView.style.display = 'block';
+    oView.style.display = 'none';
+    pTab.classList.add('active');
+    oTab.classList.remove('active');
+  }
+}
+
+var _adminAllOrders = [];
+var _adminOrderFilter = 'all';
+
+async function loadAdminOrders() {
+  var listDiv = document.getElementById('adminOrdersList');
+  listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;">جاري تحميل الطلبات...</div></div>';
+
+  try {
+    var orders = await secureApiCall('getAllOrders', { adminKey: '1994' });
+    _adminAllOrders = orders || [];
+    renderAdminOrders();
+  } catch(e) {
+    listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">⚠️ فشل تحميل الطلبات: ' + (e.message || '') + '</div>';
+  }
+}
+
+function adminFilterOrders(filter, btn) {
+  _adminOrderFilter = filter;
+  document.querySelectorAll('.admin-order-filter').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderAdminOrders();
+}
+
+function renderAdminOrders() {
+  var listDiv = document.getElementById('adminOrdersList');
+  if (!listDiv) return;
+
+  // Update counts
+  var counts = { all: _adminAllOrders.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
+  _adminAllOrders.forEach(function(o){ if (counts[o.status] !== undefined) counts[o.status]++; });
+  Object.keys(counts).forEach(function(k){
+    var el = document.getElementById('adm-cnt-' + k);
+    if (el) el.textContent = counts[k];
+  });
+
+  var filtered = _adminOrderFilter === 'all' ? _adminAllOrders : _adminAllOrders.filter(function(o){ return o.status === _adminOrderFilter; });
+  if (!filtered.length) {
+    listDiv.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">لا توجد طلبات</div>';
+    return;
+  }
+
+  listDiv.innerHTML = filtered.map(renderAdminOrderCard).join('');
+}
+
+function renderAdminOrderCard(o) {
+  var statusText = 'قيد المراجعة', statusColor = '#F59E0B', statusIcon = '⏳';
+  if (o.status === 'picked')    { statusText = 'قيد التجهيز'; statusColor = '#3B82F6'; statusIcon = '📦'; }
+  if (o.status === 'delivered') { statusText = 'تم التسليم';  statusColor = '#10B981'; statusIcon = '✅'; }
+  if (o.status === 'cancelled') { statusText = 'ملغي';         statusColor = '#EF4444'; statusIcon = '❌'; }
+
+  var dateStr = '';
+  if (o.timestamp) {
+    try {
+      var d = new Date(o.timestamp);
+      if (!isNaN(d.getTime())) {
+        dateStr = d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch(e) {}
+  }
+
+  var itemsHtml = (o.items || []).map(function(it) {
+    var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
+    var qty = it.quantity || 1;
+    var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' 🛡️' : '';
+    return '<div style="font-size:13px;color:var(--text-2);padding:4px 0;">• ' + sanitize(it.name||'-') + ' (× ' + qty + ')' + warranty + '</div>';
+  }).join('');
+
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
+
+  // Action buttons based on current status
+  var actions = '';
+  if (o.status === 'pending') {
+    actions =
+      '<button class="admin-action-btn btn-prepare" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'picked\')">📦 ابدأ التجهيز</button>' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
+      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+  } else if (o.status === 'picked') {
+    actions =
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
+      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+  } else {
+    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">لا يمكن تعديل هذا الطلب</div>';
+  }
+
+  return '<div class="admin-order-card">' +
+    '<div class="admin-order-card-header">' +
+      '<div>' +
+        '<div style="font-size:14px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' +
+      '</div>' +
+      '<div style="padding:4px 10px;border-radius:12px;background:' + statusColor + '20;color:' + statusColor + ';font-size:11px;font-weight:800;">' +
+        statusIcon + ' ' + statusText +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:13px;color:var(--text);margin-bottom:6px;">' +
+      '<strong>👤 ' + sanitize(o.name||'') + '</strong>' +
+      (o.shop ? ' · ' + sanitize(o.shop) : '') +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">📱 <a href="tel:' + o.phone + '" style="color:var(--primary);">' + o.phone + '</a></div>' +
+    (o.address ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📍 ' + sanitize(o.address) + '</div>' : '') +
+    '<div style="background:var(--surface-2);border-radius:10px;padding:8px 10px;margin:8px 0;">' +
+      '<div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:4px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
+      itemsHtml +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--primary-dark);padding:6px 0;">' +
+      '<span>💰 المجموع</span><span dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
+    '</div>' +
+    '<div class="admin-order-actions">' + actions + '</div>' +
+  '</div>';
+}
+
+async function adminChangeOrderStatus(orderId, newStatus) {
+  var statusNames = { picked: 'قيد التجهيز', delivered: 'تم التسليم', cancelled: 'ملغي' };
+  if (!confirm('هل تريد تغيير حالة الطلب ' + orderId + ' إلى "' + statusNames[newStatus] + '"؟')) return;
+
+  try {
+    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: newStatus });
+    // Update local cache immediately
+    for (var i = 0; i < _adminAllOrders.length; i++) {
+      if (_adminAllOrders[i].orderId === orderId) {
+        _adminAllOrders[i].status = newStatus;
+        break;
+      }
+    }
+    renderAdminOrders();
+    // Light success indicator (no alert blocking)
+    showAdminToast('✅ تم تحديث حالة الطلب');
+  } catch(e) {
+    alert('❌ فشل التحديث: ' + (e.message || ''));
+  }
+}
+
+async function adminCancelOrder(orderId) {
+  var reason = prompt('سبب الإلغاء:');
+  if (reason === null) return;
+
+  try {
+    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    // Update local cache
+    for (var i = 0; i < _adminAllOrders.length; i++) {
+      if (_adminAllOrders[i].orderId === orderId) {
+        _adminAllOrders[i].status = 'cancelled';
+        _adminAllOrders[i].cancelReason = reason || 'إلغاء من الإدارة';
+        break;
+      }
+    }
+    renderAdminOrders();
+    showAdminToast('✅ تم إلغاء الطلب');
+  } catch(e) {
+    alert('❌ فشل الإلغاء: ' + (e.message || ''));
+  }
+}
+
+function showAdminToast(msg) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#10B981;color:white;padding:10px 20px;border-radius:24px;font-weight:800;font-family:Tajawal,sans-serif;font-size:14px;box-shadow:0 6px 20px rgba(16,185,129,0.4);z-index:9999;animation:fadeInOut 2.2s forwards;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2200);
 }
 
 function adminSelectSheet(sheet, btn) {
