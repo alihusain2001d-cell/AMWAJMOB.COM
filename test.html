@@ -4919,16 +4919,20 @@ function openOrdersSheet() {
 function cancelOrderById(btn) {
   var orderId = btn.getAttribute('data-id');
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
     .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+    .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
 
 function cancelOrder(orderId) {
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
-  secureApiCall('cancelOrder', { orderId: orderId })
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
     .then(function() { loadMyOrders(); })
-    .catch(function() { alert('فشل إلغاء الطلب'); });
+    .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
 
 // Override old functions
