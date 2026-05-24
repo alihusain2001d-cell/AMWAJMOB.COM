@@ -3700,6 +3700,24 @@ function addToCart(product) {
   if (!user) { showScreen('loginScreen'); return; }
   if (!product.itemType) product.itemType = (typeof currentPriceType !== 'undefined') ? currentPriceType : 'screens';
   const price = Number(String(product.price || '').replace(/[^0-9]/g, '')) || 0;
+
+  // 🎯 وضع تعديل الطلب: أضف المنتج للطلب اللي يتم تعديله
+  if (_addingToOrder && _editingOrder) {
+    const existingIndex = _editingOrder.items.findIndex(function(item) {
+      const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+      return item.name === product.name && itemPrice === price;
+    });
+    if (existingIndex !== -1) {
+      _editingOrder.items[existingIndex].quantity = (_editingOrder.items[existingIndex].quantity || 1) + 1;
+    } else {
+      var newItem = Object.assign({}, product, { quantity: 1 });
+      _editingOrder.items.push(newItem);
+    }
+    showCartToast((product.name || 'المنتج') + ' ← للطلب ' + _editingOrder.orderId);
+    return;
+  }
+
+  // الوضع العادي: السلة
   const existingIndex = cart.findIndex(function(item) {
     const itemPrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     return item.name === product.name && itemPrice === price;
@@ -4732,11 +4750,78 @@ function editOrderQty(idx, delta) {
   renderEditOrderItems();
 }
 
-function editOrderRemove(idx) {
+async function editOrderRemove(idx) {
   if (!_editingOrder) return;
-  if (!confirm('حذف هذا المنتج من الطلب؟')) return;
+  var item = _editingOrder.items[idx];
+  if (!item) return;
+
+  if (!confirm('حذف "' + (item.name || 'هذا المنتج') + '" من الطلب؟')) return;
+
+  // احفظ نسخة احتياطية للرجوع
+  var backup = _editingOrder.items.slice();
+
+  // احذف محلياً
   _editingOrder.items.splice(idx, 1);
   renderEditOrderItems();
+
+  // لو السلة فضت بعد الحذف، اسأل الزبون يلغي الطلب
+  if (_editingOrder.items.length === 0) {
+    if (confirm('السلة فارغة - هل تريد إلغاء الطلب بالكامل؟')) {
+      try {
+        var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+        await secureApiCall('cancelOrder', {
+          orderId: _editingOrder.orderId,
+          phone: user.phone,
+          reason: 'إلغاء من الزبون - حذف كل المنتجات'
+        });
+        showAdminToast('✅ تم إلغاء الطلب');
+        closeSheet('editOrderSheet');
+        _editingOrder = null;
+        _addingToOrder = null;
+        hideFloatingEditBar();
+        loadMyOrders();
+        return;
+      } catch(e) {
+        alert('❌ فشل الإلغاء: ' + (e.message || ''));
+        _editingOrder.items = backup;
+        renderEditOrderItems();
+        return;
+      }
+    } else {
+      // الزبون رفض الإلغاء، رجع المنتج
+      _editingOrder.items = backup;
+      renderEditOrderItems();
+      return;
+    }
+  }
+
+  // احفظ التعديل بالسيرفر فوراً (الحذف الجزئي)
+  await saveOrderEditsSilently();
+}
+
+async function saveOrderEditsSilently() {
+  if (!_editingOrder) return;
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user) return;
+
+  var total = 0;
+  _editingOrder.items.forEach(function(item) {
+    var price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var qty = item.quantity || 1;
+    total += price * qty;
+  });
+
+  try {
+    await secureApiCall('updateOrderItems', {
+      orderId: _editingOrder.orderId,
+      phone: user.phone,
+      items: _editingOrder.items,
+      total: total
+    });
+    showAdminToast('💾 تم حفظ التعديل');
+  } catch(e) {
+    console.error('Auto-save failed:', e);
+  }
 }
 
 function updateEditOrderTotal() {
@@ -4752,14 +4837,52 @@ function updateEditOrderTotal() {
 }
 
 function openAddItemsToOrder() {
-  // افتح السلة العادية للإضافة - لكن نخلي السلة الحالية مؤقتاً تحفظ الإضافات
   if (!_editingOrder) return;
-  // نضع علم أن السلة في وضع "إضافة لطلب موجود"
   _addingToOrder = _editingOrder.orderId;
-  // نفتح صفحة المنتجات لاختيار منتج
-  showAdminToast('اختر منتجاً لإضافته - سيُضاف للطلب');
+  // اعرض إشعار للزبون يفهم
+  showCartToast('✏️ وضع إضافة للطلب ' + _editingOrder.orderId);
+  // ارجع للصفحة الرئيسية ليختار الزبون منتج
   closeSheet('editOrderSheet');
-  // نخلي المستخدم يتنقل بنفسه للفئة اللي يريدها
+  // الزر "💾 حفظ التعديلات" يظهر بشريط ثابت أسفل الشاشة
+  showFloatingEditBar();
+}
+
+// شريط عائم يبين للزبون إنه بوضع تعديل
+function showFloatingEditBar() {
+  if (document.getElementById('floatingEditBar')) return;
+  if (!_editingOrder) return;
+  var bar = document.createElement('div');
+  bar.id = 'floatingEditBar';
+  bar.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:linear-gradient(135deg,#F59E0B,#D97706);color:white;padding:12px 16px;border-radius:14px;z-index:9998;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(245,158,11,0.4);font-family:Tajawal,sans-serif;animation:slideUp 0.3s;';
+  bar.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
+      '<div style="font-size:24px;">✏️</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:900;">تعديل: ' + _editingOrder.orderId + '</div>' +
+        '<div style="font-size:11px;opacity:0.9;">المنتجات: ' + _editingOrder.items.length + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<button onclick="returnToEditOrder()" style="background:white;color:#D97706;border:none;padding:8px 14px;border-radius:10px;font-weight:900;font-family:Tajawal,sans-serif;cursor:pointer;font-size:13px;flex-shrink:0;">📝 العودة للطلب</button>' +
+    '<button onclick="cancelEditMode()" style="background:transparent;color:white;border:1.5px solid white;padding:8px 12px;border-radius:10px;font-weight:900;font-family:Tajawal,sans-serif;cursor:pointer;font-size:13px;margin-right:6px;flex-shrink:0;">✕</button>';
+  document.body.appendChild(bar);
+}
+
+function hideFloatingEditBar() {
+  var bar = document.getElementById('floatingEditBar');
+  if (bar) bar.remove();
+}
+
+function returnToEditOrder() {
+  hideFloatingEditBar();
+  openSheet('editOrderSheet');
+  renderEditOrderItems();
+}
+
+function cancelEditMode() {
+  if (!confirm('إلغاء التعديل؟ ستفقد التغييرات اللي ضفتها')) return;
+  _editingOrder = null;
+  _addingToOrder = null;
+  hideFloatingEditBar();
 }
 
 // متى ما الزبون يضيف منتج وهو بوضع تعديل الطلب → يضاف للطلب بدل السلة
@@ -4791,6 +4914,8 @@ async function saveOrderEdits() {
     showAdminToast('✅ تم تعديل الطلب');
     closeSheet('editOrderSheet');
     _editingOrder = null;
+    _addingToOrder = null;
+    hideFloatingEditBar();
     // أعد تحميل الطلبات
     loadMyOrders();
   } catch(e) {
