@@ -2803,6 +2803,8 @@ var _sheetStack = [];
 function openSheet(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  // Dynamic z-index: each new sheet on top of previous
+  el.style.zIndex = String(500 + (_sheetStack.length * 5));
   el.classList.add('open');
   document.body.style.overflow = 'hidden';
   // Push to stack if not already there
