@@ -5648,12 +5648,12 @@ function openCheckFromAccount() {
     </div>
 
     <!-- Products view -->
-    <div id="adminProductsView">
-      <div class="bsheet-search-bar">
+    <div id="adminProductsView" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="bsheet-search-bar" style="flex-shrink:0;">
         <span>🔍</span>
         <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
       </div>
-      <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;">
+      <div style="padding:0 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;flex-shrink:0;">
         <button class="admin-filter-btn active" onclick="adminSelectSheet('all',this)">الكل</button>
         <button class="admin-filter-btn" onclick="adminSelectSheet('SHEET',this)">شاشات</button>
         <button class="admin-filter-btn" onclick="adminSelectSheet('battery',this)">بطاريات</button>
@@ -5664,19 +5664,19 @@ function openCheckFromAccount() {
         <button class="admin-filter-btn" onclick="adminSelectSheet('LENS CAMERA',this)">عدسة</button>
         <button class="admin-filter-btn" onclick="adminSelectSheet('Camera',this)">كاميرا</button>
       </div>
-      <div id="adminProductsList" style="padding:0 14px 100px;overflow-y:auto;overflow-x:hidden;flex:1;"></div>
+      <div id="adminProductsList" style="padding:0 14px 120px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
     </div>
 
     <!-- Orders view -->
-    <div id="adminOrdersView" style="display:none;">
-      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);">
+    <div id="adminOrdersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
         <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
         <button class="admin-order-filter" data-status="pending" onclick="adminFilterOrders('pending',this)">قيد المراجعة <span class="badge" id="adm-cnt-pending">0</span></button>
         <button class="admin-order-filter" data-status="picked" onclick="adminFilterOrders('picked',this)">قيد التجهيز <span class="badge" id="adm-cnt-picked">0</span></button>
         <button class="admin-order-filter" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
         <button class="admin-order-filter" data-status="cancelled" onclick="adminFilterOrders('cancelled',this)">ملغي <span class="badge" id="adm-cnt-cancelled">0</span></button>
       </div>
-      <div id="adminOrdersList" style="padding:14px;overflow-y:auto;overflow-x:hidden;flex:1;padding-bottom:100px;"></div>
+      <div id="adminOrdersList" style="padding:14px;padding-bottom:120px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
     </div>
   </div>
 </div>
@@ -6022,12 +6022,11 @@ function adminSwitchTab(tab) {
   if (tab === 'orders') {
     pView.style.display = 'none';
     oView.style.display = 'flex';
-    oView.style.flexDirection = 'column';
     pTab.classList.remove('active');
     oTab.classList.add('active');
     loadAdminOrders();
   } else {
-    pView.style.display = 'block';
+    pView.style.display = 'flex';
     oView.style.display = 'none';
     pTab.classList.add('active');
     oTab.classList.remove('active');
