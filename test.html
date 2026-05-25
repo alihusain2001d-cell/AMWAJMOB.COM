@@ -2197,6 +2197,29 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   border: none;
 }
 
+/* Admin date filter buttons */
+.admin-date-filter {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.2s var(--ease-out);
+  white-space: nowrap;
+}
+.admin-date-filter:active { transform: scale(0.96); }
+.admin-date-filter.active {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+}
+
 </style>
 </head>
 <body>
@@ -5669,7 +5692,17 @@ function openCheckFromAccount() {
 
     <!-- Orders view -->
     <div id="adminOrdersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
-      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
+      <!-- Date filter row -->
+      <div style="padding:10px 14px 6px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;align-items:center;">
+        <button class="admin-date-filter active" data-date="today" onclick="adminFilterDate('today',this)">📅 اليوم</button>
+        <button class="admin-date-filter" data-date="yesterday" onclick="adminFilterDate('yesterday',this)">أمس</button>
+        <button class="admin-date-filter" data-date="week" onclick="adminFilterDate('week',this)">آخر 7 أيام</button>
+        <button class="admin-date-filter" data-date="month" onclick="adminFilterDate('month',this)">آخر 30 يوم</button>
+        <button class="admin-date-filter" data-date="all" onclick="adminFilterDate('all',this)">الكل</button>
+        <input type="date" id="adminCustomDate" onchange="adminFilterCustomDate(this.value)" style="padding:6px 10px;border-radius:18px;border:1px solid var(--border);background:var(--surface-2);font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer;flex-shrink:0;">
+      </div>
+      <!-- Status filter row -->
+      <div style="padding:6px 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
         <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
         <button class="admin-order-filter" data-status="pending" onclick="adminFilterOrders('pending',this)">قيد المراجعة <span class="badge" id="adm-cnt-pending">0</span></button>
         <button class="admin-order-filter" data-status="picked" onclick="adminFilterOrders('picked',this)">قيد التجهيز <span class="badge" id="adm-cnt-picked">0</span></button>
@@ -6035,6 +6068,8 @@ function adminSwitchTab(tab) {
 
 var _adminAllOrders = [];
 var _adminOrderFilter = 'all';
+var _adminDateFilter = 'today'; // default to today
+var _adminCustomDate = null;
 
 async function loadAdminOrders() {
   var listDiv = document.getElementById('adminOrdersList');
@@ -6056,25 +6091,93 @@ function adminFilterOrders(filter, btn) {
   renderAdminOrders();
 }
 
+function adminFilterDate(period, btn) {
+  _adminDateFilter = period;
+  _adminCustomDate = null;
+  // Clear custom date input
+  var dateInput = document.getElementById('adminCustomDate');
+  if (dateInput) dateInput.value = '';
+  document.querySelectorAll('.admin-date-filter').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderAdminOrders();
+}
+
+function adminFilterCustomDate(dateStr) {
+  if (!dateStr) return;
+  _adminDateFilter = 'custom';
+  _adminCustomDate = dateStr;
+  document.querySelectorAll('.admin-date-filter').forEach(function(b){ b.classList.remove('active'); });
+  renderAdminOrders();
+}
+
+// Helper: check if order matches date filter
+function _orderMatchesDate(order) {
+  if (_adminDateFilter === 'all') return true;
+  if (!order.timestamp) return false;
+
+  var orderDate;
+  try {
+    orderDate = new Date(order.timestamp);
+    if (isNaN(orderDate.getTime())) return false;
+  } catch(e) { return false; }
+
+  var now = new Date();
+  var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+  var dayDiff = (startOfToday - orderDay) / 86400000;
+
+  if (_adminDateFilter === 'today') return dayDiff === 0;
+  if (_adminDateFilter === 'yesterday') return dayDiff === 1;
+  if (_adminDateFilter === 'week') return dayDiff >= 0 && dayDiff < 7;
+  if (_adminDateFilter === 'month') return dayDiff >= 0 && dayDiff < 30;
+  if (_adminDateFilter === 'custom' && _adminCustomDate) {
+    var custom = new Date(_adminCustomDate);
+    return orderDay.getTime() === new Date(custom.getFullYear(), custom.getMonth(), custom.getDate()).getTime();
+  }
+  return true;
+}
+
 function renderAdminOrders() {
   var listDiv = document.getElementById('adminOrdersList');
   if (!listDiv) return;
 
-  // Update counts
-  var counts = { all: _adminAllOrders.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
-  _adminAllOrders.forEach(function(o){ if (counts[o.status] !== undefined) counts[o.status]++; });
+  // Filter by date first
+  var dateFiltered = _adminAllOrders.filter(_orderMatchesDate);
+
+  // Update counts (based on date-filtered orders)
+  var counts = { all: dateFiltered.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
+  dateFiltered.forEach(function(o){ if (counts[o.status] !== undefined) counts[o.status]++; });
   Object.keys(counts).forEach(function(k){
     var el = document.getElementById('adm-cnt-' + k);
     if (el) el.textContent = counts[k];
   });
 
-  var filtered = _adminOrderFilter === 'all' ? _adminAllOrders : _adminAllOrders.filter(function(o){ return o.status === _adminOrderFilter; });
+  // Apply status filter
+  var filtered = _adminOrderFilter === 'all' ? dateFiltered : dateFiltered.filter(function(o){ return o.status === _adminOrderFilter; });
+
   if (!filtered.length) {
-    listDiv.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);">لا توجد طلبات</div>';
+    var emptyMsg = 'لا توجد طلبات';
+    if (_adminDateFilter === 'today') emptyMsg = 'لا توجد طلبات اليوم';
+    else if (_adminDateFilter === 'yesterday') emptyMsg = 'لا توجد طلبات أمس';
+    listDiv.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:15px;">📭 ' + emptyMsg + '</div>';
     return;
   }
 
-  listDiv.innerHTML = filtered.map(renderAdminOrderCard).join('');
+  // Date summary header
+  var dateLabel = '';
+  if (_adminDateFilter === 'today') dateLabel = 'اليوم';
+  else if (_adminDateFilter === 'yesterday') dateLabel = 'أمس';
+  else if (_adminDateFilter === 'week') dateLabel = 'آخر 7 أيام';
+  else if (_adminDateFilter === 'month') dateLabel = 'آخر 30 يوم';
+  else if (_adminDateFilter === 'custom' && _adminCustomDate) dateLabel = _adminCustomDate;
+  else dateLabel = 'الكل';
+
+  var header = '<div style="background:var(--surface-2);padding:10px 14px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
+    '<span style="color:var(--muted);">📅 ' + dateLabel + '</span>' +
+    '<span style="font-weight:900;color:var(--primary-dark);">' + filtered.length + ' طلب</span>' +
+  '</div>';
+
+  listDiv.innerHTML = header + filtered.map(renderAdminOrderCard).join('');
 }
 
 function renderAdminOrderCard(o) {
