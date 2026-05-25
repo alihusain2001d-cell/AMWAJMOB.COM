@@ -4193,7 +4193,7 @@ async function openProductSheet(type, title) {
   document.getElementById('sheetResults').innerHTML = '';
   // ✅ Always show brands grid when opening a category
   var brandsDiv = document.getElementById('sheetBrands');
-  if (brandsDiv) brandsDiv.style.display = 'grid';
+  if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
   renderSheetBrands(type);
   openSheet('productsSheet');
   // Refresh data in background so latest stock/prices are reflected
@@ -4276,7 +4276,7 @@ function openFlatSubSheet(subType, labelAr, icon) {
   document.getElementById('sheetResults').innerHTML = '';
   // ✅ Always show brands grid when opening
   var brandsDiv = document.getElementById('sheetBrands');
-  if (brandsDiv) brandsDiv.style.display = 'grid';
+  if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
   renderSheetBrands('flatpower');
   openSheet('productsSheet');
 }
@@ -4395,7 +4395,7 @@ function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
-  brandsDiv.style.display = 'none';
+  brandsDiv.style.setProperty('display', 'none', 'important');
 
   // دائرة تحميل أولاً
   resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل الأسعار...</div></div>';
@@ -4429,7 +4429,7 @@ function openSheetBrand(brandsStr) {
 
 function backToSheetBrands() {
   _lastBrandStr = null;
-  document.getElementById('sheetBrands').style.display = 'grid';
+  document.getElementById('sheetBrands').style.setProperty('display', 'grid', 'important');
   document.getElementById('sheetResults').innerHTML = '';
   document.getElementById('sheetSearch').value = '';
 }
