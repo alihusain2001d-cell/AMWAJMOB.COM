@@ -2839,9 +2839,8 @@ function closeTopSheet() {
       closeSheet(topId);
       return true;
     }
-    var brandsDiv = document.getElementById('sheetBrands');
-    var resultsDiv = document.getElementById('sheetResults');
-    if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+    // If we're inside a brand's products → go back to brands list
+    if (_lastBrandStr) {
       backToSheetBrands();
       return true;
     }
@@ -4439,10 +4438,8 @@ function productsSheetBack() {
     closeSheet('productsSheet');
     return;
   }
-  var brandsDiv = document.getElementById('sheetBrands');
-  var resultsDiv = document.getElementById('sheetResults');
-  // If brands grid is hidden, we're viewing a brand's items - go back to brands
-  if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+  // If we're inside a brand's products → go back to brands list
+  if (_lastBrandStr) {
     backToSheetBrands();
   } else {
     closeSheet('productsSheet');
