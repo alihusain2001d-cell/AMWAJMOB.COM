@@ -3838,12 +3838,19 @@ function renderCart() {
       </div>` : '';
 
     const warrantyBox = isScreen ? `
-      <div style="margin-top:8px;">
-        <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${warrantyChecked ? '#D1FAE5' : 'var(--surface-2)'};border-radius:10px;cursor:pointer;border:1px solid ${warrantyChecked ? '#10B981' : 'var(--border-light)'};transition:all 0.2s;">
-          <input type="checkbox" id="warranty_${index}" ${warrantyChecked ? 'checked' : ''} onchange="toggleWarranty(${index})" style="width:18px;height:18px;cursor:pointer;accent-color:#10B981;">
-          <span style="font-size:13px;font-weight:800;color:${warrantyChecked ? '#065F46' : 'var(--text)'};">🛡️ مع ضمان</span>
+      <div style="margin-top:10px;">
+        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${warrantyChecked ? 'linear-gradient(135deg,#D1FAE5,#A7F3D0)' : 'var(--surface-2)'};border-radius:12px;cursor:pointer;border:2px solid ${warrantyChecked ? '#10B981' : 'var(--border-light)'};transition:all 0.2s;box-shadow:${warrantyChecked ? '0 2px 8px rgba(16,185,129,0.2)' : 'none'};">
+          <input type="checkbox" id="warranty_${index}" ${warrantyChecked ? 'checked' : ''} onchange="toggleWarranty(${index})" style="width:22px;height:22px;cursor:pointer;accent-color:#10B981;flex-shrink:0;">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:900;color:${warrantyChecked ? '#065F46' : 'var(--text)'};display:flex;align-items:center;gap:6px;">
+              🛡️ <span>${warrantyChecked ? 'مع ضمان ✓' : 'إضافة ضمان'}</span>
+            </div>
+            <div style="font-size:11px;color:${warrantyChecked ? '#047857' : 'var(--muted)'};margin-top:2px;font-weight:700;">
+              ${warrantyChecked ? 'تم اختيار الضمان لهذا المنتج' : 'اضغط لإضافة ضمان للشاشة'}
+            </div>
+          </div>
         </label>
-        ${warrantyChecked ? '<div style="background:#FFFBEB;padding:8px 10px;border-radius:8px;font-size:12px;color:#92400E;margin-top:6px;border-right:3px solid var(--yellow);font-weight:600;">⚠️ سعر الشاشة يتغير عند طلب الضمان</div>' : ''}
+        ${warrantyChecked ? '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:10px 14px;border-radius:10px;font-size:13px;color:#92400E;margin-top:8px;border-right:4px solid #F59E0B;font-weight:800;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">⚠️</span><span>علماً أن السعر يتغير مع الضمان</span></div>' : ''}
       </div>` : '';
 
     html += `
@@ -3903,10 +3910,9 @@ function changeQuantity(index, change) {
 function toggleWarranty(index) {
   if (!cart[index]) return;
   const checkbox = document.getElementById(`warranty_${index}`);
-  const note = document.getElementById(`warrantyNote_${index}`);
   cart[index].hasWarranty = checkbox.checked;
-  if (note) note.style.display = checkbox.checked ? 'block' : 'none';
   saveCart();
+  renderCart(); // إعادة رسم لإظهار/إخفاء رسالة الضمان
 }
 
 async function submitOrder() {
