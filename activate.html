@@ -2803,6 +2803,8 @@ var _sheetStack = [];
 function openSheet(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  // Dynamic z-index: each new sheet on top of previous
+  el.style.zIndex = String(500 + (_sheetStack.length * 5));
   el.classList.add('open');
   document.body.style.overflow = 'hidden';
   // Push to stack if not already there
@@ -2839,9 +2841,8 @@ function closeTopSheet() {
       closeSheet(topId);
       return true;
     }
-    var brandsDiv = document.getElementById('sheetBrands');
-    var resultsDiv = document.getElementById('sheetResults');
-    if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+    // If we're inside a brand's products → go back to brands list
+    if (_lastBrandStr) {
       backToSheetBrands();
       return true;
     }
@@ -4191,6 +4192,9 @@ async function openProductSheet(type, title) {
   document.getElementById('productsSheetTitle').textContent = title;
   document.getElementById('sheetSearch').value = '';
   document.getElementById('sheetResults').innerHTML = '';
+  // ✅ Always show brands grid when opening a category
+  var brandsDiv = document.getElementById('sheetBrands');
+  if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
   renderSheetBrands(type);
   openSheet('productsSheet');
   // Refresh data in background so latest stock/prices are reflected
@@ -4271,6 +4275,9 @@ function openFlatSubSheet(subType, labelAr, icon) {
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
   document.getElementById('sheetSearch').value = '';
   document.getElementById('sheetResults').innerHTML = '';
+  // ✅ Always show brands grid when opening
+  var brandsDiv = document.getElementById('sheetBrands');
+  if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
   renderSheetBrands('flatpower');
   openSheet('productsSheet');
 }
@@ -4389,7 +4396,7 @@ function openSheetBrand(brandsStr) {
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
-  brandsDiv.style.display = 'none';
+  brandsDiv.style.setProperty('display', 'none', 'important');
 
   // دائرة تحميل أولاً
   resultsDiv.innerHTML = '<div style="padding:40px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل الأسعار...</div></div>';
@@ -4411,10 +4418,7 @@ function openSheetBrand(brandsStr) {
       resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
     } else {
       resultsDiv.innerHTML =
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-        '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:17px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
-        '<span style="font-size:14px;color:#64748B;">' + filtered.length + ' منتج</span>' +
-        '</div>' +
+        '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + filtered.length + ' منتج</div>' +
         '<div class="price-items-grid">' + filtered.map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
     }
   }
@@ -4423,7 +4427,7 @@ function openSheetBrand(brandsStr) {
 
 function backToSheetBrands() {
   _lastBrandStr = null;
-  document.getElementById('sheetBrands').style.display = 'grid';
+  document.getElementById('sheetBrands').style.setProperty('display', 'grid', 'important');
   document.getElementById('sheetResults').innerHTML = '';
   document.getElementById('sheetSearch').value = '';
 }
@@ -4436,10 +4440,8 @@ function productsSheetBack() {
     closeSheet('productsSheet');
     return;
   }
-  var brandsDiv = document.getElementById('sheetBrands');
-  var resultsDiv = document.getElementById('sheetResults');
-  // If brands grid is hidden, we're viewing a brand's items - go back to brands
-  if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '') {
+  // If we're inside a brand's products → go back to brands list
+  if (_lastBrandStr) {
     backToSheetBrands();
   } else {
     closeSheet('productsSheet');
