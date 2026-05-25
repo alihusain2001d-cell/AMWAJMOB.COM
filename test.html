@@ -3850,7 +3850,7 @@ function renderCart() {
             </div>
           </div>
         </label>
-        ${!warrantyChecked ? '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:10px 14px;border-radius:10px;font-size:13px;color:#92400E;margin-top:8px;border-right:4px solid #F59E0B;font-weight:800;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">⚠️</span><span>السعر سيختلف عند الاستلام بسبب الضمان</span></div>' : ''}
+        ${warrantyChecked ? '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:10px 14px;border-radius:10px;font-size:13px;color:#92400E;margin-top:8px;border-right:4px solid #F59E0B;font-weight:800;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">⚠️</span><span>علماً أن السعر يتغير مع الضمان</span></div>' : ''}
       </div>` : '';
 
     html += `
