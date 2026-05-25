@@ -4191,6 +4191,9 @@ async function openProductSheet(type, title) {
   document.getElementById('productsSheetTitle').textContent = title;
   document.getElementById('sheetSearch').value = '';
   document.getElementById('sheetResults').innerHTML = '';
+  // ✅ Always show brands grid when opening a category
+  var brandsDiv = document.getElementById('sheetBrands');
+  if (brandsDiv) brandsDiv.style.display = 'grid';
   renderSheetBrands(type);
   openSheet('productsSheet');
   // Refresh data in background so latest stock/prices are reflected
@@ -4271,6 +4274,9 @@ function openFlatSubSheet(subType, labelAr, icon) {
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
   document.getElementById('sheetSearch').value = '';
   document.getElementById('sheetResults').innerHTML = '';
+  // ✅ Always show brands grid when opening
+  var brandsDiv = document.getElementById('sheetBrands');
+  if (brandsDiv) brandsDiv.style.display = 'grid';
   renderSheetBrands('flatpower');
   openSheet('productsSheet');
 }
