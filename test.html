@@ -3910,10 +3910,9 @@ function changeQuantity(index, change) {
 function toggleWarranty(index) {
   if (!cart[index]) return;
   const checkbox = document.getElementById(`warranty_${index}`);
-  const note = document.getElementById(`warrantyNote_${index}`);
   cart[index].hasWarranty = checkbox.checked;
-  if (note) note.style.display = checkbox.checked ? 'block' : 'none';
   saveCart();
+  renderCart(); // إعادة رسم لإظهار/إخفاء رسالة الضمان
 }
 
 async function submitOrder() {
