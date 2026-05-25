@@ -4417,10 +4417,7 @@ function openSheetBrand(brandsStr) {
       resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
     } else {
       resultsDiv.innerHTML =
-        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-        '<button onclick="backToSheetBrands()" style="background:#F1F5F9;color:#0F172A;border:none;border-radius:8px;padding:7px 12px;font-family:Tajawal,sans-serif;font-size:17px;font-weight:700;cursor:pointer;width:auto;margin:0;">&#8594; رجوع</button>' +
-        '<span style="font-size:14px;color:#64748B;">' + filtered.length + ' منتج</span>' +
-        '</div>' +
+        '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + filtered.length + ' منتج</div>' +
         '<div class="price-items-grid">' + filtered.map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
     }
   }
