@@ -6213,17 +6213,14 @@ function renderAdminOrderCard(o) {
 
   // Action buttons based on current status
   var actions = '';
-  if (o.status === 'pending') {
+  if (o.status === 'pending' || o.status === 'picked') {
     actions =
-      '<button class="admin-action-btn btn-prepare" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'picked\')">📦 ابدأ التجهيز</button>' +
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
-      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
-  } else if (o.status === 'picked') {
-    actions =
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
-      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>';
   } else {
-    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">لا يمكن تعديل هذا الطلب</div>';
+    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">' +
+      (o.status === 'delivered' ? '✅ هذا الطلب تم تسليمه' :
+       o.status === 'cancelled' ? '❌ هذا الطلب ملغي' : 'لا يمكن تعديل هذا الطلب') +
+      '</div>';
   }
 
   return '<div class="admin-order-card">' +
