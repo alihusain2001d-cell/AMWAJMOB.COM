@@ -1414,6 +1414,261 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   border: 2px solid var(--card);
 }
 
+/* ── شارة عدد الإشعارات على الجرس ── */
+.bell-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: #EF4444;
+  color: white;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  font-family: Tajawal, sans-serif;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(239,68,68,0.5);
+  z-index: 2;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.bell-badge.show { display: flex; }
+.bell-badge.pulse { animation: bellPulse 0.6s ease-out; }
+@keyframes bellPulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+.home-icon-btn.has-notif .bell-icon {
+  animation: bellShake 0.6s ease-out;
+}
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-15deg); }
+  40% { transform: rotate(12deg); }
+  60% { transform: rotate(-8deg); }
+  80% { transform: rotate(5deg); }
+}
+
+/* ── قائمة الإشعارات ── */
+.notif-list { padding: 0; }
+.notif-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.notif-empty-icon {
+  font-size: 64px;
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+.notif-empty-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+.notif-empty-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+.notif-item:active { background: var(--surface-2); }
+.notif-item.unread { background: linear-gradient(90deg, rgba(14,165,233,0.06), transparent); }
+.notif-item.unread::before {
+  content: '';
+  position: absolute;
+  top: 20px; right: 8px;
+  width: 8px; height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.2);
+}
+.notif-item-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.notif-item-icon.new-order { background: #DCFCE7; }
+.notif-item-icon.delivered { background: #D1FAE5; }
+.notif-item-icon.cancelled { background: #FEE2E2; }
+.notif-item-icon.approved  { background: #FEF3C7; }
+.notif-item-icon.broadcast { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+.notif-item-body { flex: 1; min-width: 0; }
+.notif-item-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.notif-item-text {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+.notif-item-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.notif-clear-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  color: var(--text-light);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: Tajawal, sans-serif;
+  cursor: pointer;
+}
+.notif-clear-btn:active { transform: scale(0.96); background: #FEE2E2; color: #DC2626; }
+
+/* ── شاشة الإعلانات في الأدمن ── */
+.broadcast-form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.broadcast-form label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  display: block;
+  margin-bottom: 6px;
+}
+.broadcast-form input,
+.broadcast-form textarea,
+.broadcast-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  font-size: 15px;
+  font-family: Tajawal, sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.broadcast-form input:focus,
+.broadcast-form textarea:focus,
+.broadcast-form select:focus {
+  border-color: var(--primary);
+}
+.broadcast-form textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.broadcast-char-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: left;
+  margin-top: 4px;
+}
+.broadcast-char-count.warn { color: #F59E0B; }
+.broadcast-preview {
+  background: linear-gradient(135deg, var(--surface-2), var(--card));
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.broadcast-preview-icon {
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 24px;
+  box-shadow: 0 4px 10px rgba(14,165,233,0.25);
+}
+.broadcast-preview-body { flex: 1; min-width: 0; }
+.broadcast-preview-title {
+  font-size: 14px; font-weight: 800; color: var(--text);
+  margin-bottom: 3px;
+  word-wrap: break-word;
+}
+.broadcast-preview-text {
+  font-size: 13px; color: var(--text-light);
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+.broadcast-preview-app {
+  font-size: 10px; color: var(--text-muted);
+  margin-top: 6px;
+  font-weight: 700;
+}
+.broadcast-send-btn {
+  background: linear-gradient(135deg, #16A34A, #15803D);
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 900;
+  font-family: Tajawal, sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(22,163,74,0.3);
+  transition: all 0.2s;
+}
+.broadcast-send-btn:active { transform: scale(0.97); }
+.broadcast-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #94A3B8;
+  box-shadow: none;
+}
+.broadcast-result {
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.broadcast-result.success { background: #DCFCE7; color: #166534; }
+.broadcast-result.error { background: #FEE2E2; color: #991B1B; }
+.broadcast-info {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
 /* ── Hero Banner ── */
 .hero-banner {
   margin: 6px 14px 16px;
@@ -2125,6 +2380,11 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 .admin-action-btn.btn-cancel { background: #FEE2E2; color: #991B1B; }
 .admin-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
   15% { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -2306,10 +2566,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
     </div>
     <div class="orders-tabs" id="ordersTabs">
       <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
-      <button class="orders-tab" data-filter="pending" onclick="filterOrders('pending')">قيد المراجعة <span class="orders-tab-count" id="cnt-pending">0</span></button>
-      <button class="orders-tab" data-filter="picked" onclick="filterOrders('picked')">قيد التجهيز <span class="orders-tab-count" id="cnt-picked">0</span></button>
       <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
-      <button class="orders-tab" data-filter="cancelled" onclick="filterOrders('cancelled')">ملغي <span class="orders-tab-count" id="cnt-cancelled">0</span></button>
     </div>
     <div class="bsheet-body" style="padding-top:0;">
       <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
@@ -2337,6 +2594,23 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ صفحة الإشعارات ═══ -->
+<div id="notificationsSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔔 الإشعارات</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="notif-clear-btn" onclick="clearAllNotifications()" id="notifClearBtn" style="display:none;">🗑️ مسح الكل</button>
+        <button class="bsheet-close" onclick="closeSheet('notificationsSheet')">✕</button>
+      </div>
+    </div>
+    <div class="bsheet-body" style="padding:0;">
+      <div class="notif-list" id="notifList"></div>
     </div>
   </div>
 </div>
@@ -2580,6 +2854,10 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <div class="home-store-sub" id="homeWelcome">قطع غيار موبايل · كربلاء</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
+          <button class="home-icon-btn" onclick="openNotificationsSheet()" title="الإشعارات" id="bellBtn" style="position:relative;">
+            <span class="bell-icon" style="font-size:20px;">🔔</span>
+            <span class="bell-badge" id="bellBadge">0</span>
+          </button>
           <button class="home-icon-btn" onclick="openContactSheet()" title="تواصل معنا">📞</button>
           <button class="home-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
         </div>
@@ -4662,9 +4940,9 @@ function renderOrdersList() {
 
 function _renderOrderCard(o) {
   // ── Status pill ──
-  var statusText = 'قيد المراجعة';
+  var statusText = 'تم استلام طلبك';
   var statusClass = 'pill-pending';
-  var statusIcon = '⏳';
+  var statusIcon = '✅';
   if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
   else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
   else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
@@ -4704,7 +4982,18 @@ function _renderOrderCard(o) {
   var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
   var orderId = o.orderId || '-';
   var itemCount = (o.items||[]).length;
-  var isCancellable = (o.status === 'pending' || o.status === 'picked');
+  
+  // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
+  var isCancellable = false;
+  if (o.status === 'pending') {
+    try {
+      var orderTime = new Date(o.timestamp || o.date || o.createdAt).getTime();
+      if (!isNaN(orderTime)) {
+        var ageMin = (Date.now() - orderTime) / 60000;
+        isCancellable = ageMin < 20;
+      }
+    } catch(e) {}
+  }
 
   var waMsgParts = [
     'السلام عليكم',
@@ -4823,9 +5112,9 @@ function loadMyOrdersOld() {
 
     var html = orders.map(function(o) {
       // ── Status pill ──
-      var statusText = 'قيد المراجعة';
+      var statusText = 'تم استلام طلبك';
       var statusClass = 'pill-pending';
-      var statusIcon = '⏳';
+      var statusIcon = '✅';
       if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
       else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
       else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
@@ -4866,7 +5155,18 @@ function loadMyOrdersOld() {
       var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
       var orderId = o.orderId || '-';
       var itemCount = (o.items||[]).length;
-      var isCancellable = (o.status === 'pending' || o.status === 'picked');
+      
+      // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
+      var isCancellable = false;
+      if (o.status === 'pending') {
+        try {
+          var orderTime = new Date(o.timestamp || o.date || o.createdAt).getTime();
+          if (!isNaN(orderTime)) {
+            var ageMin = (Date.now() - orderTime) / 60000;
+            isCancellable = ageMin < 20;
+          }
+        } catch(e) {}
+      }
 
       // WhatsApp message for this specific order
       var waMsgParts = [
@@ -4958,12 +5258,22 @@ function cancelOrderById(btn) {
 }
 
 function cancelOrder(orderId) {
-  if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
-  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
-    .then(function() { loadMyOrders(); })
-    .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
+  // اطلب سبب الإلغاء
+  var reason = prompt('سبب إلغاء الطلب ' + orderId + '\n\n(اكتب سبب الإلغاء):');
+  if (reason === null) return; // ضغط Cancel
+  reason = String(reason).trim();
+  if (reason.length < 3) {
+    alert('⚠️ يجب كتابة سبب الإلغاء (3 أحرف على الأقل)');
+    return;
+  }
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: reason })
+    .then(function() {
+      alert('✅ تم إلغاء الطلب بنجاح');
+      loadMyOrders();
+    })
+    .catch(function(e) { alert('❌ فشل إلغاء الطلب: ' + (e.message || '')); });
 }
 
 // Override old functions
@@ -5411,6 +5721,423 @@ if (!window.Capacitor && 'serviceWorker' in navigator) {
   });
 }
 
+// ════════════════════════════════════════════
+// 🔔 In-App Notifications Center
+// ════════════════════════════════════════════
+// يحفظ آخر 50 إشعار في localStorage حسب رقم المستخدم
+// keys: amwaj_notifs_{phone} → [{id,title,body,type,orderId,timestamp,read}]
+
+function _notifKey() {
+  var u = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  var phone = (u && u.phone) ? String(u.phone).replace(/\D/g,'') : 'guest';
+  return 'amwaj_notifs_' + phone;
+}
+
+function _getNotifs() {
+  try {
+    var raw = localStorage.getItem(_notifKey());
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function _saveNotifs(arr) {
+  try {
+    // احتفظ بآخر 50 فقط
+    if (arr.length > 50) arr = arr.slice(0, 50);
+    localStorage.setItem(_notifKey(), JSON.stringify(arr));
+  } catch(e) { console.error('Failed to save notifs:', e); }
+}
+
+function addNotification(notif) {
+  var arr = _getNotifs();
+  var item = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    title: notif.title || 'إشعار',
+    body: notif.body || '',
+    type: notif.type || 'general',
+    orderId: notif.orderId || '',
+    target: notif.target || '',
+    timestamp: Date.now(),
+    read: false
+  };
+  arr.unshift(item); // الأحدث في الأعلى
+  _saveNotifs(arr);
+  updateBellBadge(true);
+}
+
+function updateBellBadge(animate) {
+  var badge = document.getElementById('bellBadge');
+  var btn   = document.getElementById('bellBtn');
+  if (!badge || !btn) return;
+  var arr = _getNotifs();
+  var unread = arr.filter(function(n){ return !n.read; }).length;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? '99+' : String(unread);
+    badge.classList.add('show');
+    if (animate) {
+      badge.classList.remove('pulse');
+      btn.classList.remove('has-notif');
+      // force reflow
+      void badge.offsetWidth;
+      badge.classList.add('pulse');
+      btn.classList.add('has-notif');
+      setTimeout(function(){
+        badge.classList.remove('pulse');
+        btn.classList.remove('has-notif');
+      }, 700);
+    }
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function _timeAgo(ts) {
+  var sec = Math.floor((Date.now() - ts) / 1000);
+  if (sec < 60)    return 'الآن';
+  if (sec < 3600)  return 'قبل ' + Math.floor(sec/60) + ' دقيقة';
+  if (sec < 86400) return 'قبل ' + Math.floor(sec/3600) + ' ساعة';
+  if (sec < 604800) return 'قبل ' + Math.floor(sec/86400) + ' يوم';
+  var d = new Date(ts);
+  return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+}
+
+function _notifIconClass(type) {
+  if (type === 'admin_new_order') return 'new-order';
+  if (type === 'admin_order_cancelled') return 'cancelled';
+  if (type === 'order_received') return 'new-order';
+  if (type === 'order_delivered') return 'delivered';
+  if (type === 'order_cancelled') return 'cancelled';
+  if (type === 'account_approved') return 'approved';
+  if (type === 'broadcast') return 'broadcast';
+  return '';
+}
+
+function _notifIcon(type) {
+  if (type === 'admin_new_order')       return '🛒';
+  if (type === 'admin_order_cancelled') return '🚨';
+  if (type === 'order_received')        return '✅';
+  if (type === 'order_delivered')       return '✅';
+  if (type === 'order_cancelled')       return '❌';
+  if (type === 'account_approved')      return '🎉';
+  if (type === 'broadcast')             return '📢';
+  return '🔔';
+}
+
+function renderNotifications() {
+  var list = document.getElementById('notifList');
+  if (!list) return;
+  var arr = _getNotifs();
+  var clearBtn = document.getElementById('notifClearBtn');
+  if (clearBtn) clearBtn.style.display = arr.length ? 'block' : 'none';
+  
+  if (arr.length === 0) {
+    list.innerHTML =
+      '<div class="notif-empty">' +
+        '<div class="notif-empty-icon">🔕</div>' +
+        '<div class="notif-empty-text">لا توجد إشعارات</div>' +
+        '<div class="notif-empty-sub">سنخبرك هنا بكل المستجدات</div>' +
+      '</div>';
+    return;
+  }
+  
+  var html = '';
+  arr.forEach(function(n) {
+    html +=
+      '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="handleNotifClick(\'' + n.id + '\')">' +
+        '<div class="notif-item-icon ' + _notifIconClass(n.type) + '">' + _notifIcon(n.type) + '</div>' +
+        '<div class="notif-item-body">' +
+          '<div class="notif-item-title">' + n.title + '</div>' +
+          '<div class="notif-item-text">' + n.body + '</div>' +
+          '<div class="notif-item-time">' + _timeAgo(n.timestamp) + '</div>' +
+        '</div>' +
+      '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function openNotificationsSheet() {
+  renderNotifications();
+  openSheet('notificationsSheet');
+  // علّم كل الإشعارات كمقروءة بعد ثانية (يحس المستخدم انه شاف الإشعارات)
+  setTimeout(function() {
+    var arr = _getNotifs();
+    var changed = false;
+    arr.forEach(function(n) { if (!n.read) { n.read = true; changed = true; } });
+    if (changed) {
+      _saveNotifs(arr);
+      updateBellBadge(false);
+    }
+  }, 1000);
+}
+
+function handleNotifClick(id) {
+  var arr = _getNotifs();
+  var n = null;
+  for (var i = 0; i < arr.length; i++) { if (arr[i].id === id) { n = arr[i]; break; } }
+  if (!n) return;
+  n.read = true;
+  _saveNotifs(arr);
+  updateBellBadge(false);
+  // افتح المكان المناسب
+  closeSheet('notificationsSheet');
+  setTimeout(function() {
+    if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
+      if (typeof openAdminPanel === 'function') {
+        openAdminPanel();
+        setTimeout(function(){ if (typeof adminSwitchTab === 'function') adminSwitchTab('orders'); }, 400);
+      }
+    } else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
+      if (typeof openOrdersSheet === 'function') openOrdersSheet();
+    } else if (n.type === 'broadcast' && n.target) {
+      navigateToTarget(n.target);
+    }
+  }, 250);
+}
+
+// توجيه للأقسام بناءً على الـ target من الإعلان
+function navigateToTarget(target) {
+  try {
+    var t = String(target||'').toLowerCase();
+    var actions = {
+      'home':         function(){ showScreen('homeScreen'); },
+      'newitems':     function(){ if (typeof openNewItemsSheet === 'function') openNewItemsSheet(); },
+      'prices':       function(){ openSheet('pricesSheet'); },
+      'batteries':    function(){ openSheet('batteriesSheet'); },
+      'chargeboards': function(){ openSheet('chargeboardsSheet'); },
+      'flatmain':     function(){ openSheet('flatMainSheet'); },
+      'flatpower':    function(){ openSheet('flatPowerSheet'); },
+      'flatvolume':   function(){ openSheet('flatVolumeSheet'); },
+      'backcover':    function(){ openSheet('backCoverSheet'); },
+      'housing':      function(){ openSheet('housingSheet'); },
+      'lens':         function(){ openSheet('lensSheet'); },
+      'camera':       function(){ openSheet('cameraSheet'); },
+      'buzzer':       function(){ openSheet('buzzerSheet'); },
+      'earspeaker':   function(){ openSheet('earSpeakerSheet'); },
+      'doorsim':      function(){ openSheet('doorSimSheet'); },
+      'fingerprint':  function(){ openSheet('fingerprintSheet'); },
+      'tools':        function(){ if (typeof openToolsSheet === 'function') openToolsSheet(); },
+      'misc':         function(){ openSheet('miscSheet'); },
+      'orders':       function(){ if (typeof openOrdersSheet === 'function') openOrdersSheet(); }
+    };
+    if (actions[t]) actions[t]();
+  } catch(e) { console.error('navigateToTarget error:', e); }
+}
+
+function clearAllNotifications() {
+  if (!confirm('حذف كل الإشعارات؟')) return;
+  _saveNotifs([]);
+  renderNotifications();
+  updateBellBadge(false);
+}
+
+
+// ════════════════════════════════════════════
+// 🔔 Push Notifications (FCM via Capacitor)
+// ════════════════════════════════════════════
+async function setupPushNotifications() {
+  // فقط بالتطبيق المُجمَّع (Capacitor)
+  if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.PushNotifications) {
+    console.log('ℹ️ Push notifications: not running in Capacitor app');
+    return;
+  }
+
+  const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+
+  try {
+    // 1. اطلب الصلاحية
+    let permStatus = await PushNotifications.checkPermissions();
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions();
+    }
+    if (permStatus.receive !== 'granted') {
+      console.log('⚠️ Push notifications: permission denied');
+      return;
+    }
+
+    // 2. سجل التطبيق بـ FCM
+    await PushNotifications.register();
+    
+    // 2.1 أنشئ قنوات الإشعارات (Android)
+    try {
+      // قناة عادية للإشعارات
+      await PushNotifications.createChannel({
+        id: 'amwaj_notifications',
+        name: 'إشعارات أمواج',
+        description: 'إشعارات عامة من أمواج للإلكترونيات',
+        importance: 4, // HIGH
+        visibility: 1,
+        sound: 'default',
+        vibration: true
+      });
+      // قناة عاجلة (للأدمن - إلغاء الطلبات)
+      await PushNotifications.createChannel({
+        id: 'amwaj_urgent',
+        name: '🚨 إشعارات عاجلة',
+        description: 'إشعارات عاجلة جداً مثل إلغاء الطلبات',
+        importance: 5, // MAX
+        visibility: 1,
+        sound: 'default',
+        vibration: true,
+        lights: true,
+        lightColor: '#FF0000'
+      });
+      console.log('✅ Notification channels created');
+    } catch(channelErr) {
+      console.error('Channel creation failed:', channelErr);
+    }
+
+    // 3. لما يجي الـ Token، احفظه واطلع للسيرفر
+    PushNotifications.addListener('registration', async (token) => {
+      console.log('✅ FCM Token:', token.value);
+      localStorage.setItem('amwaj_fcm_token', token.value);
+      // ارسل الـ Token للسيرفر
+      try {
+        const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+        await secureApiCall('registerFcmToken', {
+          token: token.value,
+          phone: user ? user.phone : '',
+          isAdmin: user && user.phone === '07717533595' ? true : false // غيّر هذا الرقم برقمك
+        });
+        console.log('✅ FCM Token sent to server');
+      } catch(e) {
+        console.error('❌ Failed to send FCM token:', e);
+      }
+    });
+
+    // 4. خطأ بالتسجيل
+    PushNotifications.addListener('registrationError', (err) => {
+      console.error('❌ FCM Registration error:', err.error);
+    });
+
+    // 5. لما يجي إشعار والتطبيق مفتوح
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('📩 Notification received:', notification);
+      // 💾 احفظ في مركز الإشعارات داخل التطبيق
+      try {
+        addNotification({
+          title: notification.title || 'إشعار جديد',
+          body:  notification.body  || '',
+          type:  (notification.data && notification.data.type)    || 'general',
+          orderId: (notification.data && notification.data.orderId) || '',
+          target:  (notification.data && notification.data.target)  || ''
+        });
+      } catch(e) { console.error('addNotification failed:', e); }
+      // اعرض toast داخل التطبيق
+      showPushToast(notification.title || 'إشعار جديد', notification.body || '');
+    });
+
+    // 6. لما المستخدم يضغط على الإشعار
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      console.log('🖱️ Notification clicked:', action);
+      const data = action.notification.data || {};
+      // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
+      try {
+        addNotification({
+          title: action.notification.title || 'إشعار',
+          body:  action.notification.body  || '',
+          type:  data.type    || 'general',
+          orderId: data.orderId || '',
+          target:  data.target  || ''
+        });
+      } catch(e) {}
+      // لو الإشعار عن طلب → افتح صفحة الطلبات
+      if (data.type === 'new_order' || data.type === 'order_status' || data.type === 'order_delivered' || data.type === 'order_cancelled' || data.type === 'order_received') {
+        if (typeof openOrdersSheet === 'function') openOrdersSheet();
+      } else if (data.type === 'admin_new_order' || data.type === 'admin_order_cancelled') {
+        if (typeof openAdminPanel === 'function') {
+          openAdminPanel();
+          setTimeout(() => { if (typeof adminSwitchTab === 'function') adminSwitchTab('orders'); }, 500);
+        }
+      } else if (data.type === 'broadcast' && data.target) {
+        setTimeout(function(){ navigateToTarget(data.target); }, 400);
+      }
+    });
+
+    console.log('✅ Push notifications setup complete');
+  } catch(err) {
+    console.error('❌ Push notifications setup failed:', err);
+  }
+}
+
+// Toast لإشعار داخل التطبيق
+function showPushToast(title, body) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:12px;right:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:14px 18px;border-radius:14px;font-family:Tajawal,sans-serif;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:slideDown 0.3s;cursor:pointer;';
+  t.innerHTML =
+    '<div style="display:flex;align-items:start;gap:10px;">' +
+      '<div style="font-size:24px;">🔔</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:15px;font-weight:900;margin-bottom:4px;">' + (title || 'إشعار') + '</div>' +
+        '<div style="font-size:13px;opacity:0.95;">' + (body || '') + '</div>' +
+      '</div>' +
+      '<div style="font-size:18px;opacity:0.8;cursor:pointer;" onclick="event.stopPropagation();this.parentElement.parentElement.remove();">✕</div>' +
+    '</div>';
+  t.onclick = function() { t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(() => { if (t.parentElement) t.remove(); }, 6000);
+}
+
+// شغّل الإشعارات لما الـ DOM يجهز
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(setupPushNotifications, 1000); // تأخير بسيط ليضمن جاهزية Capacitor
+  setTimeout(function(){ try { updateBellBadge(false); } catch(e){} }, 500);
+});
+
+// 🧪 اختبار الإشعارات - يعرض حالة الـ FCM
+async function showFcmTokenInfo() {
+  var msg = '';
+  msg += '📱 معلومات الإشعارات\n\n';
+
+  // 1. تحقق من Capacitor
+  if (!window.Capacitor) {
+    msg += '❌ Capacitor: غير متاح\n';
+    msg += '(أنت تستخدم المتصفح مو التطبيق)';
+    alert(msg);
+    return;
+  }
+  msg += '✅ Capacitor: متاح\n';
+
+  // 2. تحقق من Plugin
+  if (!window.Capacitor.Plugins.PushNotifications) {
+    msg += '❌ Push Plugin: غير مثبت\n';
+    alert(msg);
+    return;
+  }
+  msg += '✅ Push Plugin: مثبت\n';
+
+  // 3. تحقق من الصلاحية
+  try {
+    var perm = await window.Capacitor.Plugins.PushNotifications.checkPermissions();
+    msg += '🔐 الصلاحية: ' + perm.receive + '\n';
+  } catch(e) {
+    msg += '❌ فشل فحص الصلاحية\n';
+  }
+
+  // 4. الـ Token
+  var token = localStorage.getItem('amwaj_fcm_token');
+  if (token) {
+    msg += '\n✅ FCM Token موجود:\n';
+    msg += token.substring(0, 40) + '...\n';
+    msg += '(تم نسخه للحافظة)';
+    // نسخ للحافظة
+    try {
+      navigator.clipboard.writeText(token);
+    } catch(e) {}
+  } else {
+    msg += '\n❌ FCM Token: غير موجود\n';
+    msg += 'جرب إعادة تشغيل التطبيق';
+  }
+
+  alert(msg);
+
+  // إعادة محاولة التسجيل
+  if (!token) {
+    if (confirm('هل تريد إعادة محاولة التسجيل بـ FCM؟')) {
+      setupPushNotifications();
+    }
+  }
+}
+
 // renderAccountSheet — clean version
 function renderAccountSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -5473,6 +6200,11 @@ function renderAccountSheet() {
           <button class="profile-menu-item" onclick="openAdminPanel()">
             <div class="profile-menu-icon pm-icon-admin">🛠️</div>
             <div class="profile-menu-label">لوحة التحكم</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
+          <button class="profile-menu-item" onclick="showFcmTokenInfo()">
+            <div class="profile-menu-icon" style="background:#FEF3C7;color:#92400E;">🔔</div>
+            <div class="profile-menu-label">اختبار الإشعارات</div>
             <span class="profile-menu-arrow">‹</span>
           </button>
         </div>` : ''}
@@ -5670,10 +6402,11 @@ function openCheckFromAccount() {
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
     </div>
 
-    <!-- Main tabs: Products / Orders -->
-    <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);">
+    <!-- Main tabs: Products / Orders / Broadcast -->
+    <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);overflow-x:auto;flex-wrap:nowrap;">
       <button class="admin-main-tab active" id="adminMainTab-products" onclick="adminSwitchTab('products')">📦 المنتجات</button>
       <button class="admin-main-tab" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
+      <button class="admin-main-tab" id="adminMainTab-broadcast" onclick="adminSwitchTab('broadcast')">📢 إعلانات</button>
     </div>
 
     <!-- Products view -->
@@ -5710,12 +6443,79 @@ function openCheckFromAccount() {
       <!-- Status filter row -->
       <div style="padding:6px 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
         <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
-        <button class="admin-order-filter" data-status="pending" onclick="adminFilterOrders('pending',this)">قيد المراجعة <span class="badge" id="adm-cnt-pending">0</span></button>
-        <button class="admin-order-filter" data-status="picked" onclick="adminFilterOrders('picked',this)">قيد التجهيز <span class="badge" id="adm-cnt-picked">0</span></button>
         <button class="admin-order-filter" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
-        <button class="admin-order-filter" data-status="cancelled" onclick="adminFilterOrders('cancelled',this)">ملغي <span class="badge" id="adm-cnt-cancelled">0</span></button>
       </div>
       <div id="adminOrdersList" style="padding:14px;padding-bottom:120px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
+    </div>
+
+    <!-- Broadcast view -->
+    <div id="adminBroadcastView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding-bottom:120px;">
+        <div class="broadcast-form">
+
+          <div class="broadcast-info">
+            <span style="font-size:16px;">💡</span>
+            <span>الإعلان راح يوصل لكل الزبائن الموافق عليهم كإشعار push (صوت + اهتزاز).</span>
+          </div>
+
+          <div>
+            <label>📌 العنوان (مختصر)</label>
+            <input type="text" id="broadcastTitle" placeholder="مثلاً: عرض اليوم 🔥" maxlength="60" oninput="updateBroadcastPreview()">
+            <div class="broadcast-char-count" id="broadcastTitleCount">0 / 60</div>
+          </div>
+
+          <div>
+            <label>📝 نص الإعلان</label>
+            <textarea id="broadcastBody" placeholder="مثلاً: خصم 20% على كل البطاريات لمدة 24 ساعة فقط!" maxlength="200" oninput="updateBroadcastPreview()"></textarea>
+            <div class="broadcast-char-count" id="broadcastBodyCount">0 / 200</div>
+          </div>
+
+          <div>
+            <label>🎯 عند الضغط على الإشعار يفتح</label>
+            <select id="broadcastTarget" onchange="updateBroadcastPreview()">
+              <option value="">— لا شيء (بدون توجيه) —</option>
+              <option value="home">🏠 الصفحة الرئيسية</option>
+              <option value="newItems">✨ المواد الجديدة</option>
+              <option value="prices">📱 شاشات</option>
+              <option value="batteries">🔋 بطاريات</option>
+              <option value="chargeboards">🔌 بورد شحن</option>
+              <option value="flatmain">⚡ فلات رئيسي</option>
+              <option value="flatpower">🔘 فلات باور</option>
+              <option value="flatvolume">🔉 فلات صوت</option>
+              <option value="backcover">📱 باك كفر</option>
+              <option value="housing">🏠 شاصي</option>
+              <option value="lens">📷 عدسة كاميرا</option>
+              <option value="camera">📸 كاميرا</option>
+              <option value="buzzer">🔔 سماعة جرس</option>
+              <option value="earspeaker">📞 سماعة اتصال</option>
+              <option value="doorsim">💳 باب سيم</option>
+              <option value="fingerprint">👆 بصمة</option>
+              <option value="tools">🛠️ الأدوات</option>
+              <option value="misc">📦 منوعات</option>
+              <option value="orders">🛒 طلباتي</option>
+            </select>
+          </div>
+
+          <div>
+            <label>👁️ معاينة (شكل الإشعار للزبون)</label>
+            <div class="broadcast-preview" id="broadcastPreview">
+              <div class="broadcast-preview-icon">📢</div>
+              <div class="broadcast-preview-body">
+                <div class="broadcast-preview-title" id="bcPrevTitle">عنوان الإعلان</div>
+                <div class="broadcast-preview-text" id="bcPrevBody">سيظهر النص هنا...</div>
+                <div class="broadcast-preview-app">🌊 أمواج للإلكترونيات • الآن</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="broadcast-send-btn" id="broadcastSendBtn" onclick="sendBroadcast()">
+            🚀 إرسال للجميع
+          </button>
+
+          <div id="broadcastResult" style="display:none;"></div>
+
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -6055,20 +6855,32 @@ async function openAdminPanel() {
 function adminSwitchTab(tab) {
   var pView = document.getElementById('adminProductsView');
   var oView = document.getElementById('adminOrdersView');
+  var bView = document.getElementById('adminBroadcastView');
   var pTab  = document.getElementById('adminMainTab-products');
   var oTab  = document.getElementById('adminMainTab-orders');
+  var bTab  = document.getElementById('adminMainTab-broadcast');
+
+  // Hide all
+  pView.style.display = 'none';
+  oView.style.display = 'none';
+  if (bView) bView.style.display = 'none';
+  pTab.classList.remove('active');
+  oTab.classList.remove('active');
+  if (bTab) bTab.classList.remove('active');
 
   if (tab === 'orders') {
-    pView.style.display = 'none';
     oView.style.display = 'flex';
-    pTab.classList.remove('active');
     oTab.classList.add('active');
     loadAdminOrders();
+  } else if (tab === 'broadcast') {
+    if (bView) bView.style.display = 'flex';
+    if (bTab) bTab.classList.add('active');
+    // Reset form
+    var t = document.getElementById('broadcastTitle');
+    if (t && !t.value) updateBroadcastPreview();
   } else {
     pView.style.display = 'flex';
-    oView.style.display = 'none';
     pTab.classList.add('active');
-    oTab.classList.remove('active');
   }
 }
 
@@ -6095,6 +6907,99 @@ function adminFilterOrders(filter, btn) {
   document.querySelectorAll('.admin-order-filter').forEach(function(b){ b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
   renderAdminOrders();
+}
+
+// ════════════════════════════════════════════
+// 📢 Admin Broadcast - إرسال إشعار لكل الزبائن
+// ════════════════════════════════════════════
+function updateBroadcastPreview() {
+  var titleEl = document.getElementById('broadcastTitle');
+  var bodyEl  = document.getElementById('broadcastBody');
+  if (!titleEl || !bodyEl) return;
+
+  var title = (titleEl.value || '').trim();
+  var body  = (bodyEl.value  || '').trim();
+
+  var prevTitle = document.getElementById('bcPrevTitle');
+  var prevBody  = document.getElementById('bcPrevBody');
+  var tCount    = document.getElementById('broadcastTitleCount');
+  var bCount    = document.getElementById('broadcastBodyCount');
+
+  if (prevTitle) prevTitle.textContent = title || 'عنوان الإعلان';
+  if (prevBody)  prevBody.textContent  = body  || 'سيظهر النص هنا...';
+
+  if (tCount) {
+    tCount.textContent = title.length + ' / 60';
+    tCount.classList.toggle('warn', title.length > 50);
+  }
+  if (bCount) {
+    bCount.textContent = body.length + ' / 200';
+    bCount.classList.toggle('warn', body.length > 180);
+  }
+}
+
+async function sendBroadcast() {
+  var titleEl = document.getElementById('broadcastTitle');
+  var bodyEl  = document.getElementById('broadcastBody');
+  var targetEl = document.getElementById('broadcastTarget');
+  var btn     = document.getElementById('broadcastSendBtn');
+  var result  = document.getElementById('broadcastResult');
+
+  var title  = (titleEl ? titleEl.value : '').trim();
+  var body   = (bodyEl  ? bodyEl.value  : '').trim();
+  var target = (targetEl ? targetEl.value : '') || '';
+
+  // ✅ التحقق وقت الضغط
+  if (title.length < 3) {
+    alert('⚠️ العنوان يجب أن يكون 3 أحرف على الأقل');
+    if (titleEl) titleEl.focus();
+    return;
+  }
+  if (body.length < 5) {
+    alert('⚠️ النص يجب أن يكون 5 أحرف على الأقل');
+    if (bodyEl) bodyEl.focus();
+    return;
+  }
+
+  if (!confirm('إرسال هذا الإعلان لكل الزبائن الموافق عليهم؟\n\n📌 ' + title + '\n📝 ' + body)) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-spinner" style="width:18px;height:18px;margin:0;border-width:2px;border-top-color:white;"></div> جاري الإرسال...';
+  if (result) result.style.display = 'none';
+
+  try {
+    var response = await secureApiCall('sendBroadcast', {
+      adminKey: '1994',
+      title:    title,
+      body:     body,
+      target:   target
+    });
+
+    if (result) {
+      result.className = 'broadcast-result success';
+      var sentCount = (response && response.sent) || 0;
+      var failedCount = (response && response.failed) || 0;
+      result.innerHTML = '✅ تم الإرسال بنجاح!<br>📤 وصل لـ ' + sentCount + ' جهاز' + (failedCount ? ' (' + failedCount + ' فشل)' : '');
+      result.style.display = 'block';
+    }
+
+    // Clear form
+    if (titleEl) titleEl.value = '';
+    if (bodyEl)  bodyEl.value  = '';
+    if (targetEl) targetEl.value = '';
+    updateBroadcastPreview();
+  } catch(e) {
+    if (result) {
+      result.className = 'broadcast-result error';
+      result.innerHTML = '❌ فشل الإرسال: ' + (e.message || 'خطأ غير معروف');
+      result.style.display = 'block';
+    } else {
+      alert('❌ فشل الإرسال: ' + (e.message || ''));
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🚀 إرسال للجميع';
+  }
 }
 
 function adminFilterDate(period, btn) {
@@ -6213,17 +7118,14 @@ function renderAdminOrderCard(o) {
 
   // Action buttons based on current status
   var actions = '';
-  if (o.status === 'pending') {
+  if (o.status === 'pending' || o.status === 'picked') {
     actions =
-      '<button class="admin-action-btn btn-prepare" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'picked\')">📦 ابدأ التجهيز</button>' +
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
-      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
-  } else if (o.status === 'picked') {
-    actions =
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')">✅ تم التسليم</button>' +
-      '<button class="admin-action-btn btn-cancel" onclick="adminCancelOrder(\'' + o.orderId + '\')">❌ إلغاء</button>';
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>';
   } else {
-    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">لا يمكن تعديل هذا الطلب</div>';
+    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">' +
+      (o.status === 'delivered' ? '✅ هذا الطلب تم تسليمه' :
+       o.status === 'cancelled' ? '❌ هذا الطلب ملغي' : 'لا يمكن تعديل هذا الطلب') +
+      '</div>';
   }
 
   return '<div class="admin-order-card">' +
