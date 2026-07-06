@@ -6137,10 +6137,12 @@ async function setupWebPushNotifications() {
     // 3. هيّئ Firebase (لـ Cloud Messaging فقط يكفي messagingSenderId)
     if (!firebase.apps.length) {
       firebase.initializeApp({
-        apiKey: 'AIzaSyAdSbo06nkTZFYFtnk3Om4Q0spiAxzy9nU',
-        projectId: 'amwaj-electronics',
-        messagingSenderId: '680328798771',
-        appId: '1:680328798771:web:web-app'
+        apiKey: "AIzaSyBcH823LBDN9CcBk47eUlaQEyQKe4qgOfs",
+        authDomain: "amwaj-electronics.firebaseapp.com",
+        projectId: "amwaj-electronics",
+        storageBucket: "amwaj-electronics.firebasestorage.app",
+        messagingSenderId: "680328798771",
+        appId: "1:680328798771:web:79b848045402abe3b2b946"
       });
     }
     
