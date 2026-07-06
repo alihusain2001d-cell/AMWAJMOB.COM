@@ -7162,20 +7162,34 @@ async function sendBroadcast() {
         result.className = 'broadcast-result error';
         var emptyPhone = (response && response.emptyPhoneTokens) || 0;
         var unmatched = (response && response.unmatchedTokens) || 0;
+        var totalRows = (response && response.totalRows);
+        var headersStr = (response && response.headers) || '';
+        var sample = (response && response.sample) || '';
         var diagHtml = '⚠️ لم يصل لأي زبون<br><br>';
         diagHtml += '📊 التشخيص:<br>';
         diagHtml += '• عدد الزبائن الموافق عليهم: <b>' + totalCustomers + '</b><br>';
+        if (totalRows !== undefined) {
+          diagHtml += '• عدد الصفوف في جدول الزبائن: <b>' + totalRows + '</b><br>';
+        }
+        if (headersStr) {
+          diagHtml += '• أعمدة الجدول: <code style="font-size:11px;">' + headersStr + '</code><br>';
+        }
+        if (sample) {
+          diagHtml += '• عينة من أول صف: <code style="font-size:11px;">' + sample + '</code><br>';
+        }
         if (tokensInSystem !== undefined) {
           diagHtml += '• أجهزة مسجلة بالنظام: <b>' + tokensInSystem + '</b><br>';
           diagHtml += '• منها للأدمن: <b>' + adminTokens + '</b><br>';
           if (emptyPhone > 0) {
-            diagHtml += '• 🚨 أجهزة بدون رقم هاتف: <b>' + emptyPhone + '</b> (فتحوا التطبيق بدون تسجيل دخول)<br>';
+            diagHtml += '• 🚨 أجهزة بدون رقم هاتف: <b>' + emptyPhone + '</b><br>';
           }
           if (unmatched > 0) {
             diagHtml += '• أجهزة برقم غير موافق عليه: <b>' + unmatched + '</b><br>';
           }
         }
-        if (emptyPhone > 0) {
+        if (totalCustomers === 0 && totalRows > 0) {
+          diagHtml += '<br>🚨 المشكلة: في زبائن بالجدول لكن ما لكينا اي "approved". <br>💡 راجع عمود الحالة في Google Sheets - القيمة يجب تكون كلمة "approved" بالضبط.';
+        } else if (emptyPhone > 0) {
           diagHtml += '<br>💡 الحل: قل للزبائن يسجلوا دخول في التطبيق مرة واحدة عشان يتربط رقم هاتفهم بالجهاز.';
         } else {
           diagHtml += '<br>💡 السبب: الزبائن يستخدمون الموقع بدون تثبيت التطبيق أو السماح للإشعارات.';
