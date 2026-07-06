@@ -1,17 +1,17 @@
 // ==============================================
 // Firebase Messaging Service Worker - Amwaj Electronics
-// يعمل هذا الملف بالخلفية لاستقبال الإشعارات
-// حتى لو الموقع مغلق
 // ==============================================
 
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyAdSbo06nkTZFYFtnk3Om4Q0spiAxzy9nU',
-  projectId: 'amwaj-electronics',
-  messagingSenderId: '680328798771',
-  appId: '1:680328798771:web:web-app'
+  apiKey: "AIzaSyBcH823LBDN9CcBk47eUlaQEyQKe4qgOfs",
+  authDomain: "amwaj-electronics.firebaseapp.com",
+  projectId: "amwaj-electronics",
+  storageBucket: "amwaj-electronics.firebasestorage.app",
+  messagingSenderId: "680328798771",
+  appId: "1:680328798771:web:79b848045402abe3b2b946"
 });
 
 const messaging = firebase.messaging();
@@ -47,9 +47,17 @@ self.addEventListener('notificationclick', function(event) {
   
   const data = event.notification.data || {};
   const type = data.type || 'general';
+  const orderId = data.orderId || '';
   const target = data.target || '';
   
-  // افتح الموقع
+  // ابنِ URL مع بارامترات الإشعار (يستخدمها الموقع للتنقّل)
+  let targetUrl = '/';
+  const params = [];
+  if (type) params.push('notif_type=' + encodeURIComponent(type));
+  if (orderId) params.push('notif_orderId=' + encodeURIComponent(orderId));
+  if (target) params.push('notif_target=' + encodeURIComponent(target));
+  if (params.length) targetUrl = '/?' + params.join('&');
+  
   event.waitUntil(
     clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(clientList) {
       // لو الموقع مفتوح، ركز عليه وأرسل الحدث
@@ -63,9 +71,9 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus();
         }
       }
-      // لو ما مفتوح، افتح تاب جديد
+      // لو ما مفتوح، افتح تاب جديد مع البارامترات
       if (clients.openWindow) {
-        return clients.openWindow('/');
+        return clients.openWindow(targetUrl);
       }
     })
   );
