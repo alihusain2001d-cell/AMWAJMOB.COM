@@ -5729,11 +5729,18 @@ function whatsappFromOrders() {
 }
 
 // Service Worker disabled when running inside Capacitor native app
+// نلغي التسجيل القديم للـ sw.js (ما موجود ويسبب أخطاء)
 if (!window.Capacitor && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => console.log('✅ PWA: Service Worker registered'))
-      .catch(err => console.log('❌ PWA: Service Worker registration failed', err));
+    // احذف التسجيلات القديمة لـ sw.js (اللي ما موجود)
+    navigator.serviceWorker.getRegistrations().then(function(regs){
+      regs.forEach(function(reg){
+        const scriptUrl = reg.active && reg.active.scriptURL || '';
+        if (scriptUrl.indexOf('/sw.js') > -1) {
+          reg.unregister().then(function(){ console.log('🧹 Old sw.js unregistered'); });
+        }
+      });
+    });
   });
 }
 
