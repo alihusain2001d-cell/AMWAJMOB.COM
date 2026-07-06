@@ -3511,7 +3511,7 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { setupWebPushNotifications(); } catch(e){} }, 1500); }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500); }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -6212,6 +6212,44 @@ document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function(){ try { updateBellBadge(false); } catch(e){} }, 500);
 });
 
+// 🔄 تحديث FCM Token بعد تسجيل الدخول (يشتغل لـ Capacitor + Web Push)
+async function updateFcmTokenAfterLogin() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) return;
+  
+  const existingToken = localStorage.getItem('amwaj_fcm_token');
+  const isAdmin = user.phone === '07717533595';
+  
+  // 1. لو عندنا token محفوظ، حدثه بالسيرفر مع رقم الهاتف الجديد
+  if (existingToken) {
+    try {
+      await secureApiCall('registerFcmToken', {
+        token: existingToken,
+        phone: user.phone,
+        isAdmin: isAdmin
+      });
+      console.log('✅ FCM Token updated with phone:', user.phone);
+    } catch(e) {
+      console.error('❌ FCM token update failed:', e);
+    }
+  }
+  
+  // 2. لو ما عندنا token، سجل جديد (Capacitor أو Web)
+  if (!existingToken) {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) {
+      // Capacitor: أعد التسجيل
+      try {
+        await window.Capacitor.Plugins.PushNotifications.register();
+      } catch(e) {
+        console.error('❌ Re-register failed:', e);
+      }
+    } else {
+      // Web Push
+      try { setupWebPushNotifications(); } catch(e) {}
+    }
+  }
+}
+
 // 🧪 اختبار الإشعارات - يعرض حالة الـ FCM
 async function showFcmTokenInfo() {
   var msg = '';
@@ -7122,15 +7160,26 @@ async function sendBroadcast() {
         result.innerHTML = '✅ تم الإرسال بنجاح!<br>📤 وصل لـ ' + sentCount + ' جهاز' + (failedCount ? ' (' + failedCount + ' فشل)' : '');
       } else {
         result.className = 'broadcast-result error';
+        var emptyPhone = (response && response.emptyPhoneTokens) || 0;
+        var unmatched = (response && response.unmatchedTokens) || 0;
         var diagHtml = '⚠️ لم يصل لأي زبون<br><br>';
         diagHtml += '📊 التشخيص:<br>';
         diagHtml += '• عدد الزبائن الموافق عليهم: <b>' + totalCustomers + '</b><br>';
         if (tokensInSystem !== undefined) {
           diagHtml += '• أجهزة مسجلة بالنظام: <b>' + tokensInSystem + '</b><br>';
           diagHtml += '• منها للأدمن: <b>' + adminTokens + '</b><br>';
-          diagHtml += '• منها للزبائن الموافق عليهم: <b>0</b><br>';
+          if (emptyPhone > 0) {
+            diagHtml += '• 🚨 أجهزة بدون رقم هاتف: <b>' + emptyPhone + '</b> (فتحوا التطبيق بدون تسجيل دخول)<br>';
+          }
+          if (unmatched > 0) {
+            diagHtml += '• أجهزة برقم غير موافق عليه: <b>' + unmatched + '</b><br>';
+          }
         }
-        diagHtml += '<br>💡 السبب: الزبائن يستخدمون الموقع بدون تثبيت التطبيق. الإشعارات تشتغل فقط للزبائن الي حملوا التطبيق من Play Store.';
+        if (emptyPhone > 0) {
+          diagHtml += '<br>💡 الحل: قل للزبائن يسجلوا دخول في التطبيق مرة واحدة عشان يتربط رقم هاتفهم بالجهاز.';
+        } else {
+          diagHtml += '<br>💡 السبب: الزبائن يستخدمون الموقع بدون تثبيت التطبيق أو السماح للإشعارات.';
+        }
         result.innerHTML = diagHtml;
       }
       result.style.display = 'block';
