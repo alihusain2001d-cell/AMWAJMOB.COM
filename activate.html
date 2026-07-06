@@ -6208,6 +6208,91 @@ async function setupWebPushNotifications() {
   }
 }
 
+// 🔗 معالج ضغطة الإشعار من Service Worker (Web Push على iPhone / المتصفح)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    if (!event.data || event.data.type !== 'notification-click') return;
+    const data = event.data.data || {};
+    console.log('📩 SW notification-click received:', data);
+    handleNotificationClickData(data);
+  });
+}
+
+// دالة موحّدة للتنقّل حسب نوع الإشعار
+function handleNotificationClickData(data) {
+  try {
+    const type = data.type || 'general';
+    const orderId = data.orderId || '';
+    
+    if (type === 'admin_new_order' || type === 'admin_order_cancelled') {
+      // للأدمن: افتح لوحة التحكم → تبويب الطلبات → مرر للطلب
+      if (typeof openAdminPanel === 'function') {
+        openAdminPanel();
+        setTimeout(function(){
+          if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
+          if (orderId) setTimeout(function(){ scrollToOrderCard(orderId); }, 800);
+        }, 500);
+      }
+    } else if (type === 'new_order' || type === 'order_status' || type === 'order_delivered' || type === 'order_cancelled' || type === 'order_received') {
+      // للزبون: افتح طلباتي
+      if (typeof openOrdersSheet === 'function') {
+        openOrdersSheet();
+        if (orderId) setTimeout(function(){ scrollToOrderCard(orderId); }, 800);
+      }
+    } else if (type === 'broadcast' && data.target) {
+      setTimeout(function(){
+        if (typeof navigateToTarget === 'function') navigateToTarget(data.target);
+      }, 400);
+    }
+  } catch(e) { console.error('handleNotificationClickData error:', e); }
+}
+
+// مرر لكرت الطلب وحدد بضوء أخضر
+function scrollToOrderCard(orderId) {
+  if (!orderId) return;
+  // ابحث عن كرت فيه رقم الطلب
+  const cards = document.querySelectorAll('[data-order-id="'+orderId+'"], .order-card, .order-item');
+  let found = null;
+  cards.forEach(function(c){
+    if (found) return;
+    const idData = c.getAttribute('data-order-id');
+    if (idData === orderId) { found = c; return; }
+    if (c.textContent && c.textContent.indexOf(orderId) > -1) found = c;
+  });
+  if (found) {
+    found.scrollIntoView({behavior:'smooth', block:'center'});
+    const oldBg = found.style.background;
+    const oldBoxShadow = found.style.boxShadow;
+    found.style.transition = 'all 0.4s ease';
+    found.style.background = '#DCFCE7';
+    found.style.boxShadow = '0 0 0 3px #10B981';
+    setTimeout(function(){
+      found.style.background = oldBg;
+      found.style.boxShadow = oldBoxShadow;
+    }, 3000);
+  }
+}
+
+// افحص URL parameters عند تحميل الصفحة (للحالة اللي الموقع كان مغلق)
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function(){
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const notifType = params.get('notif_type');
+      const notifOrderId = params.get('notif_orderId');
+      const notifTarget = params.get('notif_target');
+      if (notifType) {
+        console.log('📩 Notification click from URL:', {notifType, notifOrderId, notifTarget});
+        handleNotificationClickData({type: notifType, orderId: notifOrderId||'', target: notifTarget||''});
+        // نظف الـ URL
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    } catch(e){}
+  }, 2000);
+});
+
 // شغّل الإشعارات لما الـ DOM يجهز
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(setupPushNotifications, 1000); // تأخير بسيط ليضمن جاهزية Capacitor
