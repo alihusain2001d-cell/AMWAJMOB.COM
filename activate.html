@@ -3511,7 +3511,7 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { setupWebPushNotifications(); } catch(e){} }, 1500); }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -5937,7 +5937,8 @@ function clearAllNotifications() {
 async function setupPushNotifications() {
   // فقط بالتطبيق المُجمَّع (Capacitor)
   if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.PushNotifications) {
-    console.log('ℹ️ Push notifications: not running in Capacitor app');
+    console.log('ℹ️ Push notifications: not running in Capacitor app - trying Web Push');
+    setupWebPushNotifications();
     return;
   }
 
@@ -5969,11 +5970,11 @@ async function setupPushNotifications() {
         sound: 'default',
         vibration: true
       });
-      // قناة عاجلة (للأدمن - إلغاء الطلبات)
+      // قناة عاجلة (للأدمن - طلبات جديدة + إلغاء الطلبات)
       await PushNotifications.createChannel({
-        id: 'amwaj_urgent',
+        id: 'amwaj_urgent_v2',
         name: '🚨 إشعارات عاجلة',
-        description: 'إشعارات عاجلة جداً مثل إلغاء الطلبات',
+        description: 'إشعارات عاجلة جداً للطلبات الجديدة والإلغاءات',
         importance: 5, // MAX
         visibility: 1,
         sound: 'default',
@@ -5981,6 +5982,8 @@ async function setupPushNotifications() {
         lights: true,
         lightColor: '#FF0000'
       });
+      // حذف القناة القديمة (لو موجودة)
+      try { await PushNotifications.deleteChannel({ id: 'amwaj_urgent' }); } catch(e) {}
       console.log('✅ Notification channels created');
     } catch(channelErr) {
       console.error('Channel creation failed:', channelErr);
@@ -6014,16 +6017,19 @@ async function setupPushNotifications() {
       console.log('📩 Notification received:', notification);
       // 💾 احفظ في مركز الإشعارات داخل التطبيق
       try {
+        const d = notification.data || {};
+        const title = notification.title || d._title || 'إشعار جديد';
+        const body  = notification.body  || d._body  || '';
         addNotification({
-          title: notification.title || 'إشعار جديد',
-          body:  notification.body  || '',
-          type:  (notification.data && notification.data.type)    || 'general',
-          orderId: (notification.data && notification.data.orderId) || '',
-          target:  (notification.data && notification.data.target)  || ''
+          title: title,
+          body:  body,
+          type:  d.type    || 'general',
+          orderId: d.orderId || '',
+          target:  d.target  || ''
         });
+        // اعرض toast داخل التطبيق
+        showPushToast(title, body);
       } catch(e) { console.error('addNotification failed:', e); }
-      // اعرض toast داخل التطبيق
-      showPushToast(notification.title || 'إشعار جديد', notification.body || '');
     });
 
     // 6. لما المستخدم يضغط على الإشعار
@@ -6033,8 +6039,8 @@ async function setupPushNotifications() {
       // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
       try {
         addNotification({
-          title: action.notification.title || 'إشعار',
-          body:  action.notification.body  || '',
+          title: action.notification.title || data._title || 'إشعار',
+          body:  action.notification.body  || data._body  || '',
           type:  data.type    || 'general',
           orderId: data.orderId || '',
           target:  data.target  || ''
@@ -6075,6 +6081,129 @@ function showPushToast(title, body) {
   t.onclick = function() { t.remove(); };
   document.body.appendChild(t);
   setTimeout(() => { if (t.parentElement) t.remove(); }, 6000);
+}
+
+// ════════════════════════════════════════════
+// 🌐 Web Push Notifications (للموقع في المتصفح)
+// ════════════════════════════════════════════
+const VAPID_PUBLIC_KEY = 'BP493zoJGSCPd4e_CejfUd55nD2zLl2-0vmbWAWwol1v4fP_hwhAv6REM4yE1CnC_oSf0dVGKT8eqQVoIhvmzBE';
+
+function _loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    if (document.querySelector('script[src="' + src + '"]')) return resolve();
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function setupWebPushNotifications() {
+  // ما نشغلها في التطبيق الأصلي
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
+  
+  // فحص دعم المتصفح
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    console.log('ℹ️ Web Push: browser does not support push notifications');
+    return;
+  }
+  
+  // فقط للمستخدمين المسجلين (نطلب صلاحية بعد تسجيل الدخول)
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) {
+    console.log('ℹ️ Web Push: user not logged in, skipping');
+    return;
+  }
+  
+  try {
+    // 1. سجل Service Worker خاص بـ Firebase
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {scope: '/'});
+      await navigator.serviceWorker.ready;
+      console.log('✅ Web Push: firebase-messaging-sw.js registered');
+    } catch(e) {
+      console.error('❌ Web Push: SW registration failed', e);
+      return;
+    }
+    
+    // 2. حمّل Firebase SDK v8
+    if (!window.firebase) {
+      await _loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+      await _loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+    }
+    
+    // 3. هيّئ Firebase (لـ Cloud Messaging فقط يكفي messagingSenderId)
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: 'AIzaSyAdSbo06nkTZFYFtnk3Om4Q0spiAxzy9nU',
+        projectId: 'amwaj-electronics',
+        messagingSenderId: '680328798771',
+        appId: '1:680328798771:web:web-app'
+      });
+    }
+    
+    // 4. اطلب إذن الإشعارات
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log('⚠️ Web Push: permission denied');
+      return;
+    }
+    
+    // 5. احصل على FCM Token
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({
+      vapidKey: VAPID_PUBLIC_KEY,
+      serviceWorkerRegistration: registration
+    });
+    
+    if (!token) {
+      console.log('⚠️ Web Push: no token received');
+      return;
+    }
+    
+    console.log('✅ Web Push Token:', token.substring(0, 20) + '...');
+    localStorage.setItem('amwaj_fcm_token', token);
+    
+    // 6. أرسل للسيرفر (نفس الـ endpoint)
+    try {
+      await secureApiCall('registerFcmToken', {
+        token: token,
+        phone: user.phone,
+        isAdmin: user.phone === '07717533595'
+      });
+      console.log('✅ Web Push: token sent to server');
+    } catch(e) {
+      console.error('❌ Web Push: failed to send token', e);
+    }
+    
+    // 7. استقبل الإشعارات لما الموقع مفتوح
+    messaging.onMessage(function(payload) {
+      console.log('📩 Web Push received (foreground):', payload);
+      const d = (payload && payload.data) || {};
+      const notif = (payload && payload.notification) || {};
+      const title = notif.title || d._title || 'إشعار جديد';
+      const body  = notif.body  || d._body  || '';
+      
+      // احفظ في مركز الإشعارات
+      try {
+        addNotification({
+          title: title,
+          body:  body,
+          type:  d.type    || 'general',
+          orderId: d.orderId || '',
+          target:  d.target  || ''
+        });
+      } catch(e) {}
+      
+      // اعرض toast
+      try { showPushToast(title, body); } catch(e) {}
+    });
+    
+  } catch(e) {
+    console.error('❌ Web Push setup error:', e);
+  }
 }
 
 // شغّل الإشعارات لما الـ DOM يجهز
@@ -6579,14 +6708,19 @@ function openCheckFromAccount() {
 var _deferredInstallPrompt = null;
 var _isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
 var _isInStandaloneMode = window.navigator.standalone === true;
+// كشف التطبيق الأصلي (Capacitor / Play Store)
+var _isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())
+                || !!window.cordova
+                || navigator.userAgent.indexOf('AmwajApp') > -1;
 
-// أظهر الزر دائماً على الآيفون (ما في event تلقائي)
-if (_isIos && !_isInStandaloneMode) {
+// أظهر الزر دائماً على الآيفون (ما في event تلقائي) - إلا في التطبيق الأصلي
+if (_isIos && !_isInStandaloneMode && !_isNativeApp) {
   var installBtn = document.getElementById('installBtn');
   if (installBtn) installBtn.style.display = '';
 }
 
 window.addEventListener('beforeinstallprompt', function(e) {
+  if (_isNativeApp) return; // تجاهل في التطبيق الأصلي
   e.preventDefault();
   _deferredInstallPrompt = e;
   var btn = document.getElementById('installBtn');
@@ -6642,8 +6776,8 @@ function closeInstallPrompt() {
   localStorage.setItem('amwaj_install_shown', '1');
 }
 
-// أظهر تلقائي مرة وحدة بعد 3 ثواني (للزوار الجدد فقط)
-if (!localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
+// أظهر تلقائي مرة وحدة بعد 3 ثواني (للزوار الجدد فقط - إلا في التطبيق الأصلي)
+if (!_isNativeApp && !localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
   setTimeout(function() {
     showInstallPrompt();
   }, 3000);
@@ -6976,10 +7110,29 @@ async function sendBroadcast() {
     });
 
     if (result) {
-      result.className = 'broadcast-result success';
       var sentCount = (response && response.sent) || 0;
       var failedCount = (response && response.failed) || 0;
-      result.innerHTML = '✅ تم الإرسال بنجاح!<br>📤 وصل لـ ' + sentCount + ' جهاز' + (failedCount ? ' (' + failedCount + ' فشل)' : '');
+      var totalCustomers = (response && response.totalCustomers) || 0;
+      var tokensInSystem = (response && response.tokensInSystem);
+      var adminTokens = (response && response.adminTokens) || 0;
+      var serverMsg = (response && response.message) || '';
+      
+      if (sentCount > 0) {
+        result.className = 'broadcast-result success';
+        result.innerHTML = '✅ تم الإرسال بنجاح!<br>📤 وصل لـ ' + sentCount + ' جهاز' + (failedCount ? ' (' + failedCount + ' فشل)' : '');
+      } else {
+        result.className = 'broadcast-result error';
+        var diagHtml = '⚠️ لم يصل لأي زبون<br><br>';
+        diagHtml += '📊 التشخيص:<br>';
+        diagHtml += '• عدد الزبائن الموافق عليهم: <b>' + totalCustomers + '</b><br>';
+        if (tokensInSystem !== undefined) {
+          diagHtml += '• أجهزة مسجلة بالنظام: <b>' + tokensInSystem + '</b><br>';
+          diagHtml += '• منها للأدمن: <b>' + adminTokens + '</b><br>';
+          diagHtml += '• منها للزبائن الموافق عليهم: <b>0</b><br>';
+        }
+        diagHtml += '<br>💡 السبب: الزبائن يستخدمون الموقع بدون تثبيت التطبيق. الإشعارات تشتغل فقط للزبائن الي حملوا التطبيق من Play Store.';
+        result.innerHTML = diagHtml;
+      }
       result.style.display = 'block';
     }
 
