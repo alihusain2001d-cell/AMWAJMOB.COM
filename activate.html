@@ -3232,6 +3232,22 @@ const CONFIG = {
   DEVICE_ID: generateDeviceId()
 };
 
+// 👑 قائمة أرقام الأدمن (لإضافة أدمن جديد، أضف رقمه هنا)
+const ADMIN_PHONES = ['07717533595', '07725938474'];
+
+// دالة فحص هل الرقم أدمن (تدعم صيغ متعددة: +964, 964, بدون صفر...)
+function isAdminPhone(phone){
+  if (!phone) return false;
+  const clean = String(phone).replace(/\D/g,'');
+  return ADMIN_PHONES.some(function(p){
+    const adminClean = p.replace(/\D/g,'');
+    // طابق الرقم كامل، أو الأرقام العشرة الأخيرة، أو التطابق مع رقم بدون صفر البداية
+    return clean === adminClean 
+        || clean.endsWith(adminClean.slice(-9))
+        || adminClean.endsWith(clean.slice(-9));
+  });
+}
+
 function generateDeviceId() {
   let deviceId = localStorage.getItem('amwaj_device_id');
   if (!deviceId) {
@@ -5999,7 +6015,7 @@ async function setupPushNotifications() {
         await secureApiCall('registerFcmToken', {
           token: token.value,
           phone: user ? user.phone : '',
-          isAdmin: user && user.phone === '07717533595' ? true : false // غيّر هذا الرقم برقمك
+          isAdmin: user && isAdminPhone(user.phone) ? true : false
         });
         console.log('✅ FCM Token sent to server');
       } catch(e) {
@@ -6173,7 +6189,7 @@ async function setupWebPushNotifications() {
       await secureApiCall('registerFcmToken', {
         token: token,
         phone: user.phone,
-        isAdmin: user.phone === '07717533595'
+        isAdmin: isAdminPhone(user.phone)
       });
       console.log('✅ Web Push: token sent to server');
     } catch(e) {
@@ -6305,7 +6321,7 @@ async function updateFcmTokenAfterLogin() {
   if (!user || !user.phone) return;
   
   const existingToken = localStorage.getItem('amwaj_fcm_token');
-  const isAdmin = user.phone === '07717533595';
+  const isAdmin = isAdminPhone(user.phone);
   
   // 1. لو عندنا token محفوظ، حدثه بالسيرفر مع رقم الهاتف الجديد
   if (existingToken) {
@@ -6399,7 +6415,7 @@ function renderAccountSheet() {
   if (!div) return;
 
   if (user) {
-    const isAdmin = user.phone && user.phone.replace(/\D/g,'').endsWith('7717533595');
+    const isAdmin = isAdminPhone(user.phone);
 
     // Get saved profile picture or first letter
     const savedPic = localStorage.getItem('amwaj_profile_pic_' + user.phone);
