@@ -3527,7 +3527,7 @@ async function checkLogin() {
     const rows = await fetchCustomers(); clearTimeout(timeoutId);
     const user = rows.find(r => normalizePhone(r.phone) === phone);
     if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500); }
+    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500); setTimeout(function(){ try { checkAndShowBroadcast(); } catch(e){} }, 2500); }
     else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
     else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
   } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
@@ -6316,10 +6316,118 @@ window.addEventListener('DOMContentLoaded', function() {
   }, 2000);
 });
 
+// ═══════════════════════════════════════════
+// 📢 In-App Broadcast Modal (يظهر لكل زبون يفتح التطبيق)
+// ═══════════════════════════════════════════
+async function checkAndShowBroadcast() {
+  try {
+    const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+    if (!user || !user.phone) return;
+    
+    const res = await secureApiCall('getLatestBroadcast', {});
+    const bc = res && res.broadcast;
+    if (!bc || !bc.id) return;
+    
+    // تحقق: شفت هذا الإعلان قبل؟
+    const seenKey = 'amwaj_bc_seen_' + user.phone;
+    const seenList = JSON.parse(localStorage.getItem(seenKey) || '[]');
+    if (seenList.indexOf(bc.id) > -1) {
+      console.log('📢 Broadcast already seen:', bc.id);
+      return;
+    }
+    
+    // اعرض الـ modal
+    showBroadcastModal(bc);
+    
+    // احفظه في مركز الإشعارات
+    try {
+      addNotification({
+        title: bc.title,
+        body:  bc.body,
+        type:  'broadcast',
+        target: bc.target || ''
+      });
+    } catch(e) {}
+    
+    // علم إن الزبون شافه
+    seenList.push(bc.id);
+    // احفظ آخر 20 فقط
+    while (seenList.length > 20) seenList.shift();
+    localStorage.setItem(seenKey, JSON.stringify(seenList));
+  } catch(e) { console.error('checkAndShowBroadcast error:', e); }
+}
+
+function showBroadcastModal(bc) {
+  // احذف modal قديم إذا موجود
+  const existing = document.getElementById('broadcastModal');
+  if (existing) existing.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'broadcastModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);animation:bcFadeIn 0.3s;';
+  
+  const styleTag = document.createElement('style');
+  styleTag.textContent = '@keyframes bcFadeIn{from{opacity:0}to{opacity:1}}@keyframes bcSlideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}';
+  document.head.appendChild(styleTag);
+  
+  const box = document.createElement('div');
+  box.style.cssText = 'background:white;border-radius:20px;max-width:420px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:bcSlideUp 0.4s;text-align:center;position:relative;';
+  
+  const gradientTop = document.createElement('div');
+  gradientTop.style.cssText = 'background:linear-gradient(135deg,#0EA5E9,#0369A1);margin:-24px -24px 20px -24px;padding:24px 20px;border-radius:20px 20px 0 0;color:white;';
+  gradientTop.innerHTML = '<div style="font-size:48px;margin-bottom:8px;">📢</div><div style="font-size:14px;opacity:0.9;">إعلان من أمواج للإلكترونيات</div>';
+  
+  const titleEl = document.createElement('div');
+  titleEl.textContent = bc.title || 'إعلان جديد';
+  titleEl.style.cssText = 'font-size:22px;font-weight:800;color:#0F172A;margin-bottom:12px;line-height:1.4;';
+  
+  const bodyEl = document.createElement('div');
+  bodyEl.textContent = bc.body || '';
+  bodyEl.style.cssText = 'font-size:16px;color:#475569;line-height:1.7;margin-bottom:24px;white-space:pre-wrap;';
+  
+  const btnGroup = document.createElement('div');
+  btnGroup.style.cssText = 'display:flex;gap:10px;';
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'إغلاق';
+  closeBtn.style.cssText = 'flex:1;background:#F1F5F9;color:#475569;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;';
+  closeBtn.onclick = function() { overlay.remove(); };
+  
+  btnGroup.appendChild(closeBtn);
+  
+  // زر التنقل (اذا في target)
+  if (bc.target) {
+    const goBtn = document.createElement('button');
+    goBtn.textContent = 'شوف الآن ←';
+    goBtn.style.cssText = 'flex:1;background:linear-gradient(135deg,#0EA5E9,#0369A1);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,0.3);';
+    goBtn.onclick = function() {
+      overlay.remove();
+      if (typeof navigateToTarget === 'function') {
+        setTimeout(function(){ navigateToTarget(bc.target); }, 300);
+      }
+    };
+    btnGroup.appendChild(goBtn);
+  }
+  
+  box.appendChild(gradientTop);
+  box.appendChild(titleEl);
+  box.appendChild(bodyEl);
+  box.appendChild(btnGroup);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
 // شغّل الإشعارات لما الـ DOM يجهز
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(setupPushNotifications, 1000); // تأخير بسيط ليضمن جاهزية Capacitor
   setTimeout(function(){ try { updateBellBadge(false); } catch(e){} }, 500);
+  // افحص وجود إعلانات جديدة لما التطبيق يفتح (للزبائن اللي مسجلين مسبقاً)
+  setTimeout(function(){
+    try {
+      const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+      if (user && user.status === 'approved') checkAndShowBroadcast();
+    } catch(e){}
+  }, 3000);
 });
 
 // 🔄 تحديث FCM Token بعد تسجيل الدخول (يشتغل لـ Capacitor + Web Push)
