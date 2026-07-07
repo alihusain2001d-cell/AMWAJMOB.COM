@@ -5937,15 +5937,19 @@ function handleNotifClick(id) {
   setTimeout(function() {
     // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
     if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
-      if (typeof openSheet === 'function') openSheet('adminSheet');
-      // روح مباشرة لتبويب الطلبات (يستدعي loadAdminOrders تلقائياً)
+      if (typeof openAdminPanel === 'function') {
+        openAdminPanel();
+      } else if (typeof openSheet === 'function') {
+        openSheet('adminSheet');
+      }
+      // روح لتبويب الطلبات بعد ما تفتح اللوحة
       setTimeout(function(){ 
         if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
         // scrollToOrderCard راح يعيد المحاولة لغاية 3 ثوانٍ حتى يلقى الطلب
         if (n.orderId && typeof scrollToOrderCard === 'function') {
           setTimeout(function(){ scrollToOrderCard(n.orderId); }, 500);
         }
-      }, 300);
+      }, 500);
     }
     // 📦 إشعارات الزبون عن حالة طلبه → افتح طلباتي + مرر للطلب
     else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
