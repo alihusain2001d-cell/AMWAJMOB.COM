@@ -18,7 +18,7 @@ const messaging = firebase.messaging();
 
 // استقبال الإشعارات لما الموقع مغلق
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[SW] Background message:', payload);
+  console.log('[SW] Background message received:', payload);
   
   const data = payload.data || {};
   const notif = payload.notification || {};
@@ -26,23 +26,39 @@ messaging.onBackgroundMessage(function(payload) {
   const title = notif.title || data._title || 'أمواج للإلكترونيات';
   const body  = notif.body  || data._body  || 'إشعار جديد';
   
+  // 🌊 إعدادات محسّنة لظهور الإشعار على كل المنصات
   const options = {
     body: body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: 'https://www.amwajmob.com/icon-192.png',
+    badge: 'https://www.amwajmob.com/icon-192.png',
     dir: 'rtl',
     lang: 'ar',
-    tag: data.type || 'general',
+    tag: 'amwaj_' + Date.now(),  // ✨ tag مختلف عشان ما يتم استبدال الإشعارات
+    renotify: true,               // ✨ يعرض إشعار حتى لو موجود
+    requireInteraction: true,     // ✨ يبقى ظاهر حتى يضغط عليه
     data: data,
-    vibrate: [200, 100, 200],
-    requireInteraction: data.type === 'admin_new_order' || data.type === 'admin_order_cancelled'
+    vibrate: [300, 100, 300, 100, 300],
+    silent: false,
+    timestamp: Date.now(),
+    actions: [
+      { action: 'open', title: '📱 افتح التطبيق' }
+    ]
   };
   
-  return self.registration.showNotification(title, options);
+  console.log('[SW] Showing notification:', title, options);
+  
+  return self.registration.showNotification(title, options)
+    .then(function(){
+      console.log('[SW] ✅ Notification shown successfully');
+    })
+    .catch(function(err){
+      console.error('[SW] ❌ Failed to show notification:', err);
+    });
 });
 
 // لما المستخدم يضغط على الإشعار
 self.addEventListener('notificationclick', function(event) {
+  console.log('[SW] Notification clicked:', event);
   event.notification.close();
   
   const data = event.notification.data || {};
@@ -50,7 +66,7 @@ self.addEventListener('notificationclick', function(event) {
   const orderId = data.orderId || '';
   const target = data.target || '';
   
-  // ابنِ URL مع بارامترات الإشعار (يستخدمها الموقع للتنقّل)
+  // ابنِ URL مع بارامترات الإشعار
   let targetUrl = '/';
   const params = [];
   if (type) params.push('notif_type=' + encodeURIComponent(type));
@@ -60,7 +76,7 @@ self.addEventListener('notificationclick', function(event) {
   
   event.waitUntil(
     clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(clientList) {
-      // لو الموقع مفتوح، ركز عليه وأرسل الحدث
+      // لو الموقع مفتوح، ركز عليه
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
         if (client.url.indexOf(self.registration.scope) === 0 && 'focus' in client) {
@@ -71,10 +87,15 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus();
         }
       }
-      // لو ما مفتوح، افتح تاب جديد مع البارامترات
+      // لو ما مفتوح، افتح تاب جديد
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
     })
   );
+});
+
+// تسجيل الأخطاء
+self.addEventListener('error', function(e) {
+  console.error('[SW] Error:', e);
 });
