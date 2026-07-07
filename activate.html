@@ -5780,10 +5780,11 @@ function addNotification(notif) {
     type: notif.type || 'general',
     orderId: notif.orderId || '',
     target: notif.target || '',
+    url: notif.url || '',
     timestamp: Date.now(),
     read: false
   };
-  arr.unshift(item); // الأحدث في الأعلى
+  arr.unshift(item);
   _saveNotifs(arr);
   updateBellBadge(true);
 }
@@ -5865,12 +5866,23 @@ function renderNotifications() {
   
   var html = '';
   arr.forEach(function(n) {
+    var urlBtn = '';
+    if (n.url) {
+      var isPlayStore = n.url.indexOf('play.google.com') > -1;
+      var btnText = isPlayStore ? '📱 حمّل من Play Store' : '🔗 افتح الرابط';
+      urlBtn =
+        '<a href="' + n.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" ' +
+        'style="display:inline-block;margin-top:8px;padding:8px 14px;background:linear-gradient(135deg,#10B981,#059669);' +
+        'color:white;text-decoration:none;border-radius:10px;font-size:13px;font-weight:700;' +
+        'box-shadow:0 3px 8px rgba(16,185,129,0.3);">' + btnText + '</a>';
+    }
     html +=
       '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="handleNotifClick(\'' + n.id + '\')">' +
         '<div class="notif-item-icon ' + _notifIconClass(n.type) + '">' + _notifIcon(n.type) + '</div>' +
         '<div class="notif-item-body">' +
           '<div class="notif-item-title">' + n.title + '</div>' +
           '<div class="notif-item-text">' + n.body + '</div>' +
+          urlBtn +
           '<div class="notif-item-time">' + _timeAgo(n.timestamp) + '</div>' +
         '</div>' +
       '</div>';
@@ -5904,15 +5916,42 @@ function handleNotifClick(id) {
   // افتح المكان المناسب
   closeSheet('notificationsSheet');
   setTimeout(function() {
+    // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
     if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
       if (typeof openAdminPanel === 'function') {
         openAdminPanel();
-        setTimeout(function(){ if (typeof adminSwitchTab === 'function') adminSwitchTab('orders'); }, 400);
+        setTimeout(function(){ 
+          if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
+          if (n.orderId && typeof scrollToOrderCard === 'function') {
+            setTimeout(function(){ scrollToOrderCard(n.orderId); }, 800);
+          }
+        }, 400);
       }
-    } else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
-      if (typeof openOrdersSheet === 'function') openOrdersSheet();
-    } else if (n.type === 'broadcast' && n.target) {
-      navigateToTarget(n.target);
+    }
+    // 📦 إشعارات الزبون عن حالة طلبه → افتح طلباتي + مرر للطلب
+    else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
+      if (typeof openOrdersSheet === 'function') {
+        openOrdersSheet();
+        if (n.orderId && typeof scrollToOrderCard === 'function') {
+          setTimeout(function(){ scrollToOrderCard(n.orderId); }, 800);
+        }
+      }
+    }
+    // 📢 إعلان → اعرض المودال (مع الرابط والزر إذا موجود)
+    else if (n.type === 'broadcast') {
+      if (typeof showBroadcastModal === 'function') {
+        showBroadcastModal({
+          id: n.id,
+          title: n.title,
+          body: n.body,
+          target: n.target || '',
+          url: n.url || ''
+        });
+      }
+    }
+    // 🔗 أي إشعار ثاني فيه رابط خارجي → افتح الرابط مباشرة
+    else if (n.url) {
+      try { window.open(n.url, '_blank'); } catch(e) { location.href = n.url; }
     }
   }, 250);
 }
@@ -6048,7 +6087,8 @@ async function setupPushNotifications() {
           body:  body,
           type:  d.type    || 'general',
           orderId: d.orderId || '',
-          target:  d.target  || ''
+          target:  d.target  || '',
+          url:     d.url     || ''
         });
         // اعرض toast داخل التطبيق
         showPushToast(title, body);
@@ -6066,7 +6106,8 @@ async function setupPushNotifications() {
           body:  action.notification.body  || data._body  || '',
           type:  data.type    || 'general',
           orderId: data.orderId || '',
-          target:  data.target  || ''
+          target:  data.target  || '',
+          url:     data.url     || ''
         });
       } catch(e) {}
       // لو الإشعار عن طلب → افتح صفحة الطلبات
@@ -6290,7 +6331,8 @@ async function proceedWithWebPushSetup() {
           body:  body,
           type:  d.type    || 'general',
           orderId: d.orderId || '',
-          target:  d.target  || ''
+          target:  d.target  || '',
+          url:     d.url     || ''
         });
       } catch(e) {}
       
@@ -6417,7 +6459,8 @@ async function checkAndShowBroadcast() {
         title: bc.title,
         body:  bc.body,
         type:  'broadcast',
-        target: bc.target || ''
+        target: bc.target || '',
+        url:    bc.url    || ''
       });
     } catch(e) {}
     
