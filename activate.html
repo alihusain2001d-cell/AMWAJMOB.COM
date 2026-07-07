@@ -6588,8 +6588,11 @@ function loadStatOrdersCount() {
   if (typeof secureApiCall !== 'function') return;
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) return;
-  var action = isAdminPhone(user.phone) ? 'getAllOrders' : 'getMyOrders';
-  secureApiCall(action, { phone: user.phone }).then(function(res) {
+  var isAdmin = isAdminPhone(user.phone);
+  var action = isAdmin ? 'getAllOrders' : 'getMyOrders';
+  var payload = { phone: user.phone };
+  if (isAdmin) payload.adminKey = '1994'; // مفتاح الأدمن
+  secureApiCall(action, payload).then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
     if (el) el.textContent = ords.length;
