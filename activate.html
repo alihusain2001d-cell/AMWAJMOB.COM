@@ -4277,16 +4277,32 @@ async function submitOrder() {
   submitBtn.textContent = '⏳ جاري الإرسال...';
   submitBtn.style.background = '#64748B';
   try {
-    const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chatId: '9647709000160@c.us', message: message })
-    });
-    const data = await response.json();
-    if (data.idMessage) {
-      // Save to backend only for logged-in users
-      if (!guest && user) {
-        try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) {}
-      }
+    // 💾 احفظ الطلب في قاعدة البيانات أولاً (الأهم)
+    if (!guest && user) {
+      try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) { console.error('saveOrder failed:', e); }
+    }
+    
+    // ⏰ أرسل WhatsApp بـ timeout 10 ثواني (لو GreenAPI بطيء ما نعلق)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
+    let waSuccess = false;
+    try {
+      const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: '9647709000160@c.us', message: message }),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      const data = await response.json();
+      if (data.idMessage) waSuccess = true;
+    } catch(e) {
+      clearTimeout(timeoutId);
+      console.error('WhatsApp admin notify failed:', e);
+      // نكمل حتى لو WhatsApp فشل
+    }
+    
+    // ✅ اعرض النجاح (حتى لو WhatsApp فشل - الطلب انحفظ)
+    {
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
       let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\nمرحباً *${name}*،\n\nشكراً لطلبك من أمواج للإلكترونيات 🌊\n\n📋 *تفاصيل طلبك:*\n\n`;
       cart.forEach((item, i) => {
@@ -4302,12 +4318,15 @@ async function submitOrder() {
       });
       customerMessage += `💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع\n\n📍 *عنوان التوصيل:* ${address}\n\nللاستفسار:\n📞 7696\n📞 07709000160\n\nشكراً لثقتكم 🌊\n*أمواج للإلكترونيات*`;
 
-      // Send customer confirmation to whichever phone we have
       var customerPhone = guest ? phone : user.phone;
+      // إرسال WhatsApp للزبون في الخلفية (بـ timeout ما نعلق)
+      const cController = new AbortController();
+      const cTimeoutId = setTimeout(function(){ cController.abort(); }, 10000);
       fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: customerPhone.replace(/^0/, '964') + '@c.us', message: customerMessage })
-      }).catch(err => console.error(err));
+        body: JSON.stringify({ chatId: customerPhone.replace(/^0/, '964') + '@c.us', message: customerMessage }),
+        signal: cController.signal
+      }).then(function(){ clearTimeout(cTimeoutId); }).catch(function(err){ clearTimeout(cTimeoutId); console.error(err); });
       // تحويل زر الإرسال إلى حسناً
       cart = []; saveCart();
       if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
@@ -4352,7 +4371,7 @@ async function submitOrder() {
         document.getElementById('orderForm').style.display = 'block';
         if (clearBtn) clearBtn.style.display = 'none';
       };
-    } else { throw new Error('فشل الإرسال'); }
+    }
   } catch (e) {
     console.error(e);
     result.innerHTML = '<div class="result error">❌ حدث خطأ في الإرسال، حاول مرة أخرى</div>';
@@ -5918,15 +5937,15 @@ function handleNotifClick(id) {
   setTimeout(function() {
     // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
     if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
-      if (typeof openAdminPanel === 'function') {
-        openAdminPanel();
-        setTimeout(function(){ 
-          if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
-          if (n.orderId && typeof scrollToOrderCard === 'function') {
-            setTimeout(function(){ scrollToOrderCard(n.orderId); }, 800);
-          }
-        }, 400);
-      }
+      if (typeof openSheet === 'function') openSheet('adminSheet');
+      // روح مباشرة لتبويب الطلبات (يستدعي loadAdminOrders تلقائياً)
+      setTimeout(function(){ 
+        if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
+        // scrollToOrderCard راح يعيد المحاولة لغاية 3 ثوانٍ حتى يلقى الطلب
+        if (n.orderId && typeof scrollToOrderCard === 'function') {
+          setTimeout(function(){ scrollToOrderCard(n.orderId); }, 500);
+        }
+      }, 300);
     }
     // 📦 إشعارات الزبون عن حالة طلبه → افتح طلباتي + مرر للطلب
     else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
@@ -6385,10 +6404,12 @@ function handleNotificationClickData(data) {
 }
 
 // مرر لكرت الطلب وحدد بضوء أخضر
-function scrollToOrderCard(orderId) {
+function scrollToOrderCard(orderId, retries) {
   if (!orderId) return;
+  if (typeof retries !== 'number') retries = 8; // نحاول 8 مرات كل 400ms = 3.2 ثانية
+  
   // ابحث عن كرت فيه رقم الطلب
-  const cards = document.querySelectorAll('[data-order-id="'+orderId+'"], .order-card, .order-item');
+  const cards = document.querySelectorAll('[data-order-id="'+orderId+'"], .order-card, .order-item, .admin-order-card');
   let found = null;
   cards.forEach(function(c){
     if (found) return;
@@ -6396,6 +6417,7 @@ function scrollToOrderCard(orderId) {
     if (idData === orderId) { found = c; return; }
     if (c.textContent && c.textContent.indexOf(orderId) > -1) found = c;
   });
+  
   if (found) {
     found.scrollIntoView({behavior:'smooth', block:'center'});
     const oldBg = found.style.background;
@@ -6407,6 +6429,12 @@ function scrollToOrderCard(orderId) {
       found.style.background = oldBg;
       found.style.boxShadow = oldBoxShadow;
     }, 3000);
+  } else if (retries > 0) {
+    // الطلب لسه ما تحمّل، انتظر وحاول مرة ثانية
+    console.log('scrollToOrderCard: waiting for order '+orderId+' to load, retries left: '+retries);
+    setTimeout(function(){ scrollToOrderCard(orderId, retries - 1); }, 400);
+  } else {
+    console.log('scrollToOrderCard: order '+orderId+' not found after retries');
   }
 }
 
