@@ -6139,6 +6139,78 @@ async function setupWebPushNotifications() {
     return;
   }
   
+  // 💡 لو الصلاحية مو مطلوبة بعد، اعرض بانر جميل قبل الطلب النظامي
+  if (Notification.permission === 'default') {
+    // تحقق: هل رفض المستخدم من قبل؟ (ما نطلب بشكل مزعج)
+    const dismissedAt = parseInt(localStorage.getItem('amwaj_notif_dismissed_at') || '0');
+    const now = Date.now();
+    const daysSinceDismiss = (now - dismissedAt) / (1000*60*60*24);
+    if (dismissedAt && daysSinceDismiss < 3) {
+      console.log('ℹ️ Web Push: user dismissed recently, waiting');
+      return;
+    }
+    // اعرض البانر الجميل
+    showNotificationOptInBanner();
+    return; // ننتظر رد المستخدم من البانر
+  }
+  
+  // لو الصلاحية مرفوضة، لا نستطيع طلبها مرة ثانية (قيد المتصفح)
+  if (Notification.permission === 'denied') {
+    console.log('⚠️ Web Push: permission was denied earlier');
+    return;
+  }
+  
+  // لو الصلاحية مسموح بها، نكمل التسجيل
+  proceedWithWebPushSetup();
+}
+
+// 🎨 بانر جميل يطلب من الزبون تفعيل الإشعارات
+function showNotificationOptInBanner() {
+  // احذف بانر سابق لو موجود
+  const existing = document.getElementById('notifOptInBanner');
+  if (existing) existing.remove();
+  
+  const banner = document.createElement('div');
+  banner.id = 'notifOptInBanner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:white;border-radius:20px;padding:16px;box-shadow:0 10px 40px rgba(15,23,42,0.25);z-index:9998;max-width:420px;margin:0 auto;border:2px solid #0EA5E9;animation:notifBannerSlide 0.5s;';
+  
+  const style = document.createElement('style');
+  style.textContent = '@keyframes notifBannerSlide{from{transform:translateY(120%);opacity:0}to{transform:translateY(0);opacity:1}}';
+  document.head.appendChild(style);
+  
+  banner.innerHTML = 
+    '<div style="display:flex;align-items:flex-start;gap:12px;">' +
+      '<div style="font-size:36px;flex-shrink:0;">🔔</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:16px;font-weight:800;color:#0F172A;margin-bottom:4px;">فعّل الإشعارات</div>' +
+        '<div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:12px;">احصل على تنبيهات فورية عن العروض الحصرية، وصول قطع جديدة، وتحديثات طلباتك 🚀</div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button id="notifOptInYes" style="flex:1;background:linear-gradient(135deg,#0EA5E9,#0369A1);color:white;border:none;padding:10px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(14,165,233,0.3);">✅ نعم فعّل</button>' +
+          '<button id="notifOptInNo" style="flex:0 0 auto;background:#F1F5F9;color:#475569;border:none;padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">لاحقاً</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  
+  document.body.appendChild(banner);
+  
+  // زر "نعم"
+  document.getElementById('notifOptInYes').onclick = async function(){
+    banner.remove();
+    // الحين نطلب الصلاحية من المتصفح
+    await proceedWithWebPushSetup();
+  };
+  
+  // زر "لاحقاً"
+  document.getElementById('notifOptInNo').onclick = function(){
+    localStorage.setItem('amwaj_notif_dismissed_at', String(Date.now()));
+    banner.remove();
+  };
+}
+
+// الإعداد الفعلي (بعد ما المستخدم يوافق من البانر أو الصلاحية مسموحة سابقاً)
+async function proceedWithWebPushSetup() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) { console.log('⚠️ user not logged in'); return; }
   try {
     // 1. سجل Service Worker خاص بـ Firebase
     let registration;
@@ -6157,7 +6229,7 @@ async function setupWebPushNotifications() {
       await _loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
     }
     
-    // 3. هيّئ Firebase (لـ Cloud Messaging فقط يكفي messagingSenderId)
+    // 3. هيّئ Firebase
     if (!firebase.apps.length) {
       firebase.initializeApp({
         apiKey: "AIzaSyBcH823LBDN9CcBk47eUlaQEyQKe4qgOfs",
