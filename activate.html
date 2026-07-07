@@ -6409,6 +6409,24 @@ function showBroadcastModal(bc) {
     btnGroup.appendChild(goBtn);
   }
   
+  // زر الرابط الخارجي (اذا في url)
+  if (bc.url) {
+    const linkBtn = document.createElement('button');
+    // تحقق إذا الرابط لـ Play Store
+    const isPlayStore = bc.url.indexOf('play.google.com') > -1;
+    linkBtn.innerHTML = isPlayStore ? '📱 حمّل من Play Store' : '🔗 افتح الرابط';
+    linkBtn.style.cssText = 'flex:1;background:linear-gradient(135deg,#10B981,#059669);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);';
+    linkBtn.onclick = function() {
+      overlay.remove();
+      try {
+        window.open(bc.url, '_blank');
+      } catch(e) {
+        location.href = bc.url;
+      }
+    };
+    btnGroup.appendChild(linkBtn);
+  }
+  
   box.appendChild(gradientTop);
   box.appendChild(titleEl);
   box.appendChild(bodyEl);
@@ -6888,6 +6906,17 @@ function openCheckFromAccount() {
           </div>
 
           <div>
+            <label>🔗 رابط خارجي (اختياري)</label>
+            <input type="url" id="broadcastUrl" placeholder="https://play.google.com/store/apps/details?id=com.amwajmob.app" oninput="updateBroadcastPreview()">
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">مثلاً: رابط Play Store، رابط موقع، فيديو، إلخ</div>
+            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+              <button type="button" onclick="document.getElementById('broadcastUrl').value='https://play.google.com/store/apps/details?id=com.amwajmob.app';updateBroadcastPreview();" style="background:#DCFCE7;color:#166534;border:none;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📱 Play Store</button>
+              <button type="button" onclick="document.getElementById('broadcastUrl').value='https://www.amwajmob.com';updateBroadcastPreview();" style="background:#DBEAFE;color:#1E40AF;border:none;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">🌐 الموقع</button>
+              <button type="button" onclick="document.getElementById('broadcastUrl').value='';updateBroadcastPreview();" style="background:#FEE2E2;color:#991B1B;border:none;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">✖️ مسح</button>
+            </div>
+          </div>
+
+          <div>
             <label>👁️ معاينة (شكل الإشعار للزبون)</label>
             <div class="broadcast-preview" id="broadcastPreview">
               <div class="broadcast-preview-icon">📢</div>
@@ -7338,12 +7367,14 @@ async function sendBroadcast() {
   var titleEl = document.getElementById('broadcastTitle');
   var bodyEl  = document.getElementById('broadcastBody');
   var targetEl = document.getElementById('broadcastTarget');
+  var urlEl   = document.getElementById('broadcastUrl');
   var btn     = document.getElementById('broadcastSendBtn');
   var result  = document.getElementById('broadcastResult');
 
   var title  = (titleEl ? titleEl.value : '').trim();
   var body   = (bodyEl  ? bodyEl.value  : '').trim();
   var target = (targetEl ? targetEl.value : '') || '';
+  var url    = (urlEl   ? urlEl.value   : '').trim();
 
   // ✅ التحقق وقت الضغط
   if (title.length < 3) {
@@ -7368,7 +7399,8 @@ async function sendBroadcast() {
       adminKey: '1994',
       title:    title,
       body:     body,
-      target:   target
+      target:   target,
+      url:      url
     });
 
     if (result) {
