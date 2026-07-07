@@ -26,16 +26,15 @@ messaging.onBackgroundMessage(function(payload) {
   const title = notif.title || data._title || 'أمواج للإلكترونيات';
   const body  = notif.body  || data._body  || 'إشعار جديد';
   
-  // 🌊 إعدادات محسّنة لظهور الإشعار على كل المنصات
   const options = {
     body: body,
     icon: 'https://www.amwajmob.com/icon-192.png',
     badge: 'https://www.amwajmob.com/icon-192.png',
     dir: 'rtl',
     lang: 'ar',
-    tag: 'amwaj_' + Date.now(),  // ✨ tag مختلف عشان ما يتم استبدال الإشعارات
-    renotify: true,               // ✨ يعرض إشعار حتى لو موجود
-    requireInteraction: true,     // ✨ يبقى ظاهر حتى يضغط عليه
+    tag: 'amwaj_' + Date.now(),
+    renotify: true,
+    requireInteraction: true,
     data: data,
     vibrate: [300, 100, 300, 100, 300],
     silent: false,
@@ -65,8 +64,21 @@ self.addEventListener('notificationclick', function(event) {
   const type = data.type || 'general';
   const orderId = data.orderId || '';
   const target = data.target || '';
+  const externalUrl = data.url || '';
   
-  // ابنِ URL مع بارامترات الإشعار
+  // 🔗 لو الإشعار فيه رابط خارجي (مثل Play Store) → افتح الرابط مباشرة
+  if (externalUrl) {
+    event.waitUntil(
+      clients.openWindow(externalUrl).then(function(){
+        console.log('[SW] Opened external URL:', externalUrl);
+      }).catch(function(err){
+        console.error('[SW] Failed to open URL:', err);
+      })
+    );
+    return;
+  }
+  
+  // 📍 وإلا افتح الموقع مع بارامترات التوجيه الداخلي
   let targetUrl = '/';
   const params = [];
   if (type) params.push('notif_type=' + encodeURIComponent(type));
