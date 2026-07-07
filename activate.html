@@ -6586,7 +6586,10 @@ function handleAvatarChange(e) {
 
 function loadStatOrdersCount() {
   if (typeof secureApiCall !== 'function') return;
-  secureApiCall('getOrders', {}).then(function(res) {
+  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!user || !user.phone) return;
+  var action = isAdminPhone(user.phone) ? 'getAllOrders' : 'getMyOrders';
+  secureApiCall(action, { phone: user.phone }).then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
     if (el) el.textContent = ords.length;
