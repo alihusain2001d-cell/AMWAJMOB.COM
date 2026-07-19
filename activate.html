@@ -7761,12 +7761,105 @@ function renderAdminOrders() {
   else if (_adminDateFilter === 'custom' && _adminCustomDate) dateLabel = _adminCustomDate;
   else dateLabel = 'الكل';
 
+  // احسب كم طلب يقدر ينتحدد (اللي مو مسلم)
+  var selectableCount = filtered.filter(function(o){ return o.status === 'pending' || o.status === 'picked'; }).length;
+
   var header = '<div style="background:var(--surface-2);padding:10px 14px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
     '<span style="color:var(--muted);">📅 ' + dateLabel + '</span>' +
     '<span style="font-weight:900;color:var(--primary-dark);">' + filtered.length + ' طلب</span>' +
   '</div>';
 
-  listDiv.innerHTML = header + filtered.map(renderAdminOrderCard).join('');
+  // ✅ شريط التحديد الجماعي (يظهر بس لو في طلبات قابلة للتسليم)
+  var bulkBar = '';
+  if (selectableCount > 0) {
+    bulkBar = 
+      '<div id="bulkActionsBar" style="background:linear-gradient(135deg,#10B981,#059669);padding:12px 14px;border-radius:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(16,185,129,0.2);">' +
+        '<label style="display:flex;align-items:center;gap:10px;color:white;font-weight:700;font-size:14px;cursor:pointer;user-select:none;">' +
+          '<input type="checkbox" id="bulkSelectAll" onchange="adminToggleSelectAll(this.checked)" style="width:20px;height:20px;cursor:pointer;accent-color:white;">' +
+          '<span id="bulkSelectLabel">تحديد كل الطلبات (' + selectableCount + ')</span>' +
+        '</label>' +
+        '<button id="bulkDeliverBtn" onclick="adminBulkDeliver()" disabled style="background:white;color:#059669;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;opacity:0.5;transition:all 0.2s;">' +
+          '✅ تسليم <span id="bulkDeliverCount">0</span>' +
+        '</button>' +
+      '</div>';
+  }
+
+  listDiv.innerHTML = header + bulkBar + filtered.map(renderAdminOrderCard).join('');
+}
+
+// ✅ Bulk selection state
+var _adminSelectedOrders = {};
+
+function adminToggleSelectAll(checked) {
+  var checkboxes = document.querySelectorAll('.admin-order-checkbox');
+  checkboxes.forEach(function(cb){
+    cb.checked = checked;
+    var orderId = cb.getAttribute('data-order-id');
+    if (checked) _adminSelectedOrders[orderId] = true;
+    else delete _adminSelectedOrders[orderId];
+  });
+  adminUpdateBulkButton();
+}
+
+function adminToggleOrderSelect(orderId, checked) {
+  if (checked) _adminSelectedOrders[orderId] = true;
+  else delete _adminSelectedOrders[orderId];
+  adminUpdateBulkButton();
+  
+  // حدث "تحديد الكل" checkbox
+  var checkboxes = document.querySelectorAll('.admin-order-checkbox');
+  var allChecked = true;
+  checkboxes.forEach(function(cb){ if (!cb.checked) allChecked = false; });
+  var selectAllCb = document.getElementById('bulkSelectAll');
+  if (selectAllCb) selectAllCb.checked = allChecked && checkboxes.length > 0;
+}
+
+function adminUpdateBulkButton() {
+  var count = Object.keys(_adminSelectedOrders).length;
+  var btn = document.getElementById('bulkDeliverBtn');
+  var countEl = document.getElementById('bulkDeliverCount');
+  if (countEl) countEl.textContent = count;
+  if (btn) {
+    btn.disabled = count === 0;
+    btn.style.opacity = count === 0 ? '0.5' : '1';
+    btn.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
+  }
+}
+
+async function adminBulkDeliver() {
+  var orderIds = Object.keys(_adminSelectedOrders);
+  if (!orderIds.length) return;
+  if (!confirm('هل تريد تسليم ' + orderIds.length + ' طلب؟')) return;
+  
+  var btn = document.getElementById('bulkDeliverBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التسليم...'; }
+  
+  var success = 0, failed = 0;
+  for (var i = 0; i < orderIds.length; i++) {
+    try {
+      await secureApiCall('updateOrderStatus', { 
+        orderId: orderIds[i], 
+        newStatus: 'delivered', 
+        adminKey: '1994' 
+      });
+      success++;
+      // حدث الحالة محلياً
+      var order = _adminAllOrders.find(function(o){ return o.orderId === orderIds[i]; });
+      if (order) order.status = 'delivered';
+    } catch(e) { 
+      console.error('Failed to deliver order ' + orderIds[i], e);
+      failed++;
+    }
+  }
+  
+  _adminSelectedOrders = {}; // امسح التحديد
+  renderAdminOrders();
+  
+  if (failed === 0) {
+    alert('✅ تم تسليم ' + success + ' طلب بنجاح');
+  } else {
+    alert('✅ تم تسليم ' + success + ' طلب\n❌ فشل ' + failed + ' طلب');
+  }
 }
 
 function renderAdminOrderCard(o) {
@@ -7794,6 +7887,16 @@ function renderAdminOrderCard(o) {
 
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
 
+  // ✅ Checkbox للطلبات القابلة للتسليم
+  var isSelectable = (o.status === 'pending' || o.status === 'picked');
+  var checkboxHtml = isSelectable 
+    ? '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
+        '<input type="checkbox" class="admin-order-checkbox" data-order-id="' + o.orderId + '" onchange="adminToggleOrderSelect(\'' + o.orderId + '\',this.checked)" ' + 
+        (_adminSelectedOrders[o.orderId] ? 'checked' : '') + 
+        ' style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">' +
+      '</label>'
+    : '';
+
   // Action buttons based on current status
   var actions = '';
   if (o.status === 'pending' || o.status === 'picked') {
@@ -7806,9 +7909,10 @@ function renderAdminOrderCard(o) {
       '</div>';
   }
 
-  return '<div class="admin-order-card">' +
-    '<div class="admin-order-card-header">' +
-      '<div>' +
+  return '<div class="admin-order-card" data-order-id="' + o.orderId + '">' +
+    '<div class="admin-order-card-header" style="display:flex;align-items:center;gap:10px;">' +
+      checkboxHtml +
+      '<div style="flex:1;">' +
         '<div style="font-size:14px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
         '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' +
       '</div>' +
