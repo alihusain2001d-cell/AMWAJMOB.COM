@@ -16,6 +16,40 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+// 💾 احفظ الإشعار في IndexedDB عشان الموقع يقدر يجيبه لمركز الإشعارات
+function saveNotifToDB(notif) {
+  return new Promise(function(resolve){
+    try {
+      var openReq = indexedDB.open('amwaj_notifs_db', 1);
+      openReq.onupgradeneeded = function(e){
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains('pending')) {
+          db.createObjectStore('pending', { keyPath: 'id' });
+        }
+      };
+      openReq.onsuccess = function(){
+        var db = openReq.result;
+        var tx = db.transaction('pending', 'readwrite');
+        var store = tx.objectStore('pending');
+        var id = 'sw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        store.add({
+          id: id,
+          title: notif.title || '',
+          body: notif.body || '',
+          type: notif.type || 'general',
+          orderId: notif.orderId || '',
+          target: notif.target || '',
+          url: notif.url || '',
+          timestamp: Date.now()
+        });
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ resolve(); };
+      };
+      openReq.onerror = function(){ resolve(); };
+    } catch(e){ console.error('[SW] saveNotifToDB error:', e); resolve(); }
+  });
+}
+
 // استقبال الإشعارات لما الموقع مغلق
 messaging.onBackgroundMessage(function(payload) {
   console.log('[SW] Background message received:', payload);
@@ -25,6 +59,16 @@ messaging.onBackgroundMessage(function(payload) {
   
   const title = notif.title || data._title || 'أمواج للإلكترونيات';
   const body  = notif.body  || data._body  || 'إشعار جديد';
+  
+  // 💾 احفظ للـ notification center
+  const notifData = {
+    title: title,
+    body: body,
+    type: data.type || 'general',
+    orderId: data.orderId || '',
+    target: data.target || '',
+    url: data.url || ''
+  };
   
   const options = {
     body: body,
@@ -46,13 +90,15 @@ messaging.onBackgroundMessage(function(payload) {
   
   console.log('[SW] Showing notification:', title, options);
   
-  return self.registration.showNotification(title, options)
-    .then(function(){
-      console.log('[SW] ✅ Notification shown successfully');
-    })
-    .catch(function(err){
-      console.error('[SW] ❌ Failed to show notification:', err);
-    });
+  // احفظ في IndexedDB بالتوازي مع عرض الإشعار
+  return Promise.all([
+    self.registration.showNotification(title, options),
+    saveNotifToDB(notifData)
+  ]).then(function(){
+    console.log('[SW] ✅ Notification shown + saved to DB');
+  }).catch(function(err){
+    console.error('[SW] ❌ Error:', err);
+  });
 });
 
 // لما المستخدم يضغط على الإشعار
@@ -88,7 +134,6 @@ self.addEventListener('notificationclick', function(event) {
   
   event.waitUntil(
     clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(clientList) {
-      // لو الموقع مفتوح، ركز عليه
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
         if (client.url.indexOf(self.registration.scope) === 0 && 'focus' in client) {
@@ -99,7 +144,6 @@ self.addEventListener('notificationclick', function(event) {
           return client.focus();
         }
       }
-      // لو ما مفتوح، افتح تاب جديد
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
@@ -107,7 +151,6 @@ self.addEventListener('notificationclick', function(event) {
   );
 });
 
-// تسجيل الأخطاء
 self.addEventListener('error', function(e) {
   console.error('[SW] Error:', e);
 });
