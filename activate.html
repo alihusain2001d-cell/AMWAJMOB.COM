@@ -5913,7 +5913,11 @@ function renderNotifications() {
 }
 
 function openNotificationsSheet() {
-  renderNotifications();
+  // جيب الإشعارات اللي وصلت لما الموقع كان مغلق
+  try { syncMissedNotifications(); } catch(e) {}
+  setTimeout(function(){
+    renderNotifications();
+  }, 300);
   openSheet('notificationsSheet');
   // علّم كل الإشعارات كمقروءة بعد ثانية (يحس المستخدم انه شاف الإشعارات)
   setTimeout(function() {
@@ -6599,6 +6603,8 @@ function showBroadcastModal(bc) {
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(setupPushNotifications, 1000); // تأخير بسيط ليضمن جاهزية Capacitor
   setTimeout(function(){ try { updateBellBadge(false); } catch(e){} }, 500);
+  // 🔄 جيب الإشعارات اللي وصلت لما الموقع كان مغلق
+  setTimeout(function(){ try { syncMissedNotifications(); } catch(e){} }, 1500);
   // افحص وجود إعلانات جديدة لما التطبيق يفتح (للزبائن اللي مسجلين مسبقاً)
   setTimeout(function(){
     try {
@@ -6609,6 +6615,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 🔄 تحديث FCM Token بعد تسجيل الدخول (يشتغل لـ Capacitor + Web Push)
+// 🔄 جيب الإشعارات اللي وصلت لما الموقع كان مغلق (من IndexedDB)
+function syncMissedNotifications() {
+  try {
+    if (!window.indexedDB) return;
+    var openReq = indexedDB.open('amwaj_notifs_db', 1);
+    openReq.onupgradeneeded = function(e){
+      var db = e.target.result;
+      if (!db.objectStoreNames.contains('pending')) {
+        db.createObjectStore('pending', { keyPath: 'id' });
+      }
+    };
+    openReq.onsuccess = function(){
+      var db = openReq.result;
+      var tx = db.transaction('pending', 'readwrite');
+      var store = tx.objectStore('pending');
+      var getAllReq = store.getAll();
+      getAllReq.onsuccess = function(){
+        var items = getAllReq.result || [];
+        if (items.length === 0) return;
+        console.log('🔄 Syncing ' + items.length + ' missed notifications from SW');
+        items.forEach(function(item){
+          try {
+            addNotification({
+              title: item.title,
+              body: item.body,
+              type: item.type,
+              orderId: item.orderId,
+              target: item.target,
+              url: item.url
+            });
+          } catch(e) {}
+        });
+        // امسح الإشعارات من IndexedDB بعد ما نقلناها
+        store.clear();
+      };
+    };
+    openReq.onerror = function(){ console.error('syncMissedNotifications: failed to open DB'); };
+  } catch(e) { console.error('syncMissedNotifications error:', e); }
+}
+
 async function updateFcmTokenAfterLogin() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) return;
