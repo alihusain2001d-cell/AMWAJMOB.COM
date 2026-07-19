@@ -7838,9 +7838,9 @@ async function adminBulkDeliver() {
   for (var i = 0; i < orderIds.length; i++) {
     try {
       await secureApiCall('updateOrderStatus', { 
+        adminKey: '1994',
         orderId: orderIds[i], 
-        newStatus: 'delivered', 
-        adminKey: '1994' 
+        status: 'delivered'
       });
       success++;
       // حدث الحالة محلياً
