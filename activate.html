@@ -3537,6 +3537,9 @@ function logout() {
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
   localStorage.removeItem("amwaj_guest");
+  // امسح مركز الإشعارات عشان الزبون الجديد ما يشوف إشعارات القديم
+  localStorage.removeItem("amwaj_notifications");
+  try { updateBellBadge(false); } catch(e) {}
   cart = []; saveCart();
   closeSheet('accountSheet');
   setTimeout(function() { showScreen('loginScreen'); }, 200);
@@ -5937,15 +5940,25 @@ function handleNotifClick(id) {
   setTimeout(function() {
     // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
     if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
+      // ⚠️ تحقق: المستخدم الحالي أدمن؟
+      var currentUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+      if (!currentUser || !isAdminPhone(currentUser.phone)) {
+        // مو أدمن - وجهه لطلباته بدل لوحة التحكم
+        if (typeof openOrdersSheet === 'function') {
+          openOrdersSheet();
+          if (n.orderId && typeof scrollToOrderCard === 'function') {
+            setTimeout(function(){ scrollToOrderCard(n.orderId); }, 500);
+          }
+        }
+        return;
+      }
       if (typeof openAdminPanel === 'function') {
         openAdminPanel();
       } else if (typeof openSheet === 'function') {
         openSheet('adminSheet');
       }
-      // روح لتبويب الطلبات بعد ما تفتح اللوحة
       setTimeout(function(){ 
         if (typeof adminSwitchTab === 'function') adminSwitchTab('orders');
-        // scrollToOrderCard راح يعيد المحاولة لغاية 3 ثوانٍ حتى يلقى الطلب
         if (n.orderId && typeof scrollToOrderCard === 'function') {
           setTimeout(function(){ scrollToOrderCard(n.orderId); }, 500);
         }
