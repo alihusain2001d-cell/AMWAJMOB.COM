@@ -227,11 +227,10 @@ tr:hover td{background:#ffffff05}
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_KEY    = "amwaj.1994";
+const ADMIN_PASS='amwaj.1994';
 const API_URL='https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
 const API_KEY='AMWAJ_efcace98-5cd5-4946-8eb5-2bc9b13d9aa6';
-const IMGBB_KEY = 'd5f48a98f8d541ca99f31958ab1c843d225c4df5158b45e692';
-
+const IMGBB_KEY = '7af80bb5cf3210b48a8e5b7a51f4bb85';
 
 
 async function uploadToImgbb(file) {
@@ -850,7 +849,7 @@ async function startNotifySend(total) {
       formData.append('file', pdfBlob, 'amwaj_catalog.pdf');
       formData.append('fileName', 'amwaj_catalog.pdf');
       formData.append('caption', caption);
-      const res = await fetch('https://api.greenapi.com/waInstance7103498677/sendFileByUpload/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
+      const res = await fetch('https://api.greenapi.com/waInstance7103498677/sendFileByUpload/d5f48a98f8d541ca99f31958ab1c843d225c4df5158b45e692', {
         method: 'POST',
         body: formData
       });
