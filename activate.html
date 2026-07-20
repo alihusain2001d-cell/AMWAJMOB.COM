@@ -7525,7 +7525,7 @@ async function loadAdminOrders() {
   listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;">جاري تحميل الطلبات...</div></div>';
 
   try {
-    var orders = await secureApiCall('getAllOrders', { adminKey: '1994' });
+    var orders = await secureApiCall('getAllOrders', { adminKey: 'amwaj.1994' });
     _adminAllOrders = orders || [];
     renderAdminOrders();
   } catch(e) {
@@ -7602,7 +7602,7 @@ async function sendBroadcast() {
 
   try {
     var response = await secureApiCall('sendBroadcast', {
-      adminKey: '1994',
+      adminKey: 'amwaj.1994',
       title:    title,
       body:     body,
       target:   target,
@@ -7838,7 +7838,7 @@ async function adminBulkDeliver() {
   for (var i = 0; i < orderIds.length; i++) {
     try {
       await secureApiCall('updateOrderStatus', { 
-        adminKey: '1994',
+        adminKey: 'amwaj.1994',
         orderId: orderIds[i], 
         status: 'delivered'
       });
@@ -7942,7 +7942,7 @@ async function adminChangeOrderStatus(orderId, newStatus) {
   if (!confirm('هل تريد تغيير حالة الطلب ' + orderId + ' إلى "' + statusNames[newStatus] + '"؟')) return;
 
   try {
-    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: newStatus });
+    await secureApiCall('updateOrderStatus', { adminKey: 'amwaj.1994', orderId: orderId, status: newStatus });
     // Update local cache immediately
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === orderId) {
@@ -7963,7 +7963,7 @@ async function adminCancelOrder(orderId) {
   if (reason === null) return;
 
   try {
-    await secureApiCall('updateOrderStatus', { adminKey: '1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    await secureApiCall('updateOrderStatus', { adminKey: 'amwaj.1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
     // Update local cache
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === orderId) {
