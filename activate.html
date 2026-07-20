@@ -6923,7 +6923,7 @@ function loadStatOrdersCount() {
   var isAdmin = isAdminPhone(user.phone);
   var action = isAdmin ? 'getAllOrders' : 'getMyOrders';
   var payload = { phone: user.phone };
-  if (isAdmin) payload.adminKey = '1994'; // مفتاح الأدمن
+  if (isAdmin) payload.adminKey = 'amwaj.1994'; // مفتاح الأدمن
   secureApiCall(action, payload).then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
