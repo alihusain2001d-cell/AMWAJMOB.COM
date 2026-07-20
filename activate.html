@@ -2844,6 +2844,20 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="switch-link"><p>ما عندك حساب؟</p><button class="form-btn success-btn" onclick="showScreen('registerScreen')">تسجيل حساب جديد</button></div>
     </div>
 
+    <!-- OTP Verification -->
+    <div id="otpScreen" style="display:none;" class="auth-page">
+      <div class="auth-logo"><img src="1646237145252.png" alt="" onerror="this.style.display='none'"></div>
+      <div class="auth-title">تأكيد رقم الهاتف</div>
+      <div class="auth-sub" id="otpSubText">أدخل الرمز المرسل عبر واتساب</div>
+      <div class="form-group"><label class="form-label">رمز التحقق</label><input class="form-input" type="tel" id="otpCode" placeholder="------" maxlength="6" inputmode="numeric" style="letter-spacing:8px;text-align:center;font-size:22px;"></div>
+      <button class="form-btn" id="btnVerifyOtp" onclick="verifyOtpCode()">تأكيد</button>
+      <div id="otpResult"></div>
+      <div style="margin-top:12px;text-align:center;">
+        <button id="btnResendOtp" onclick="resendOtp()" style="background:none;border:none;color:var(--primary);font-size:15px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;">إعادة إرسال الرمز</button>
+      </div>
+      <div class="switch-link"><button class="form-btn gray" onclick="cancelOtpFlow()">رجوع</button></div>
+    </div>
+
     <!-- HOME -->
     <div id="homeScreen" style="display:none;" class="home-page">
 
@@ -3084,7 +3098,7 @@ function getCachedProduct(pid) {
 // ═══ CORE FUNCTIONS — LOADED FIRST ═══
 
 function showScreen(id) {
-  ['loadingScreen','registerScreen','loginScreen','homeScreen'].forEach(s => {
+  ['loadingScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = 'none';
   });
@@ -3509,10 +3523,7 @@ async function submitRegistration() {
       else { result.innerHTML = '<div class="result error">❌ تم رفض طلبك سابقاً، تواصل معنا للمزيد</div>'; }
       btn.disabled = false; btn.innerText = "إرسال طلب التسجيل"; return;
     }
-    await secureApiCall('addCustomer', { name, shop, phone, address, date: formatDate(new Date()), status: 'pending' });
-    localStorage.setItem("amwaj_phone", phone);
-    result.innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${phone}</b></div>`;
-    document.getElementById("regName").value = ""; document.getElementById("regShop").value = ""; document.getElementById("regPhone").value = ""; document.getElementById("regAddress").value = "";
+    await startOtpFlow(phone, 'register', { name, shop, phone, address });
   } catch (e) { console.error(e); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
   btn.disabled = false; btn.innerText = "إرسال طلب التسجيل";
 }
@@ -3521,16 +3532,97 @@ async function checkLogin() {
   const result = document.getElementById("loginResult");
   const phone = normalizePhone(document.getElementById("loginPhone").value);
   if (!phone || phone.length < 11) { result.innerHTML = '<div class="result error">❌ أدخل رقم هاتف صحيح</div>'; return; }
-  showPage("loadingPage");
-  const timeoutId = setTimeout(() => { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ انتهت المهلة، حاول مرة أخرى</div>'; }, 10000);
+  await startOtpFlow(phone, 'login');
+}
+
+// ==========================================
+// 🔐 OTP (رمز تحقق واتساب) — للتسجيل والدخول
+// ==========================================
+var _otp = { phone: '', purpose: '', pendingReg: null, cooldownTimer: null };
+
+async function startOtpFlow(phone, purpose, pendingReg) {
+  _otp.phone = phone; _otp.purpose = purpose; _otp.pendingReg = pendingReg || null;
+  showScreen('loadingScreen');
   try {
-    const rows = await fetchCustomers(); clearTimeout(timeoutId);
-    const user = rows.find(r => normalizePhone(r.phone) === phone);
-    if (!user) { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ رقم الهاتف غير مسجل<br>سجل حساب جديد أولاً</div>'; }
-    else if (user.status === "approved") { localStorage.setItem("amwaj_user", JSON.stringify(user)); localStorage.setItem("amwaj_phone", phone); const _sw = document.getElementById("homeWelcome"); if(_sw) _sw.textContent = "مرحباً " + user.name.split(" ")[0]; showScreen("homeScreen"); result.innerHTML = ""; setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500); setTimeout(function(){ try { checkAndShowBroadcast(); } catch(e){} }, 2500); }
-    else if (user.status === "pending") { localStorage.setItem("amwaj_phone", phone); showPage("loginPage"); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة<br>انتظر الموافقة وحاول لاحقاً</div>'; }
-    else { showPage("loginPage"); result.innerHTML = '<div class="result error">❌ تم رفض طلبك<br>تواصل معنا للمزيد من المعلومات</div>'; }
-  } catch (e) { clearTimeout(timeoutId); console.error(e); showPage("loginPage"); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
+    await secureApiCall('requestOtp', { phone, purpose });
+    document.getElementById('otpCode').value = '';
+    document.getElementById('otpResult').innerHTML = '';
+    document.getElementById('otpSubText').textContent = 'أدخل الرمز المرسل عبر واتساب إلى ' + phone;
+    showScreen('otpScreen');
+    startOtpCooldown();
+  } catch (e) {
+    const backScreen = purpose === 'register' ? 'registerScreen' : 'loginScreen';
+    const targetResult = document.getElementById(purpose === 'register' ? 'regResult' : 'loginResult');
+    showScreen(backScreen);
+    targetResult.innerHTML = '<div class="result error">❌ ' + (e.message || 'حدث خطأ') + '</div>';
+  }
+}
+
+function startOtpCooldown() {
+  var btn = document.getElementById('btnResendOtp');
+  var seconds = 60;
+  btn.disabled = true;
+  if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
+  function tick() {
+    btn.textContent = 'إعادة الإرسال بعد ' + seconds + ' ثانية';
+    seconds--;
+    if (seconds < 0) {
+      clearInterval(_otp.cooldownTimer);
+      btn.disabled = false;
+      btn.textContent = 'إعادة إرسال الرمز';
+    }
+  }
+  tick();
+  _otp.cooldownTimer = setInterval(tick, 1000);
+}
+
+async function resendOtp() {
+  var resultEl = document.getElementById('otpResult');
+  resultEl.innerHTML = '';
+  try {
+    await secureApiCall('requestOtp', { phone: _otp.phone, purpose: _otp.purpose });
+    startOtpCooldown();
+    resultEl.innerHTML = '<div class="result success">✅ تم إرسال رمز جديد</div>';
+  } catch (e) {
+    resultEl.innerHTML = '<div class="result error">❌ ' + (e.message || 'حدث خطأ') + '</div>';
+  }
+}
+
+function cancelOtpFlow() {
+  if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
+  showScreen(_otp.purpose === 'register' ? 'registerScreen' : 'loginScreen');
+}
+
+async function verifyOtpCode() {
+  var code = document.getElementById('otpCode').value.trim();
+  var resultEl = document.getElementById('otpResult');
+  if (!/^[0-9]{6}$/.test(code)) { resultEl.innerHTML = '<div class="result error">❌ أدخل رمز مكوّن من 6 أرقام</div>'; return; }
+  var btn = document.getElementById('btnVerifyOtp');
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+  try {
+    const res = await secureApiCall('verifyOtp', { phone: _otp.phone, code: code, purpose: _otp.purpose });
+    if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
+
+    if (_otp.purpose === 'register') {
+      const reg = _otp.pendingReg;
+      await secureApiCall('addCustomer', { name: reg.name, shop: reg.shop, phone: reg.phone, address: reg.address, date: formatDate(new Date()), status: 'pending' });
+      localStorage.setItem('amwaj_phone', reg.phone);
+      showScreen('registerScreen');
+      document.getElementById('regResult').innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${reg.phone}</b></div>`;
+      document.getElementById('regName').value = ''; document.getElementById('regShop').value = ''; document.getElementById('regPhone').value = ''; document.getElementById('regAddress').value = '';
+    } else {
+      const user = res;
+      localStorage.setItem('amwaj_user', JSON.stringify(user));
+      localStorage.setItem('amwaj_phone', user.phone);
+      const _sw = document.getElementById('homeWelcome'); if (_sw) _sw.textContent = 'مرحباً ' + user.name.split(' ')[0];
+      showScreen('homeScreen');
+      setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500);
+      setTimeout(function(){ try { checkAndShowBroadcast(); } catch(e){} }, 2500);
+    }
+  } catch (e) {
+    resultEl.innerHTML = '<div class="result error">❌ ' + (e.message || 'رمز غير صحيح') + '</div>';
+    btn.disabled = false; btn.textContent = 'تأكيد';
+  }
 }
 
 function logout() {
@@ -4362,7 +4454,7 @@ function handleSwipe() {
 // ═══ APP SHELL FUNCTIONS ═══
 
 function showScreen(id) {
-  ['loadingScreen','registerScreen','loginScreen','homeScreen'].forEach(s => {
+  ['loadingScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = 'none';
   });
