@@ -4256,80 +4256,25 @@ async function submitOrder() {
   submitBtn.disabled = true; if (clearBtn) clearBtn.disabled = true;
   localStorage.setItem('amwaj_address', address);
 
-  // Build message
-  let message;
-  if (guest) {
-    message = `🔧 *طلب أدوات صيانة جديد*\n\n👤 *الاسم:* ${name}\n📱 *الهاتف:* ${phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
-  } else {
-    message = `🛒 *طلب شراء جديد*\n\n👤 *الاسم:* ${name}\n🏪 *المحل:* ${shop}\n📱 *الهاتف:* ${phone}\n📍 *العنوان:* ${address}\n\n*المنتجات المطلوبة:*\n`;
-  }
-
   let total = 0;
-  cart.forEach((item, i) => {
+  cart.forEach((item) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
-    const itemTotal = price * quantity;
-    total += itemTotal;
-    const isScreen = item.itemType === 'screens';
-    message += `${i+1}. ${item.name} (${item.brand || '-'})\n   النوع: ${item.type||'-'}\n   السعر: ${formatPriceIQD(price)} د.ع\n   الكمية: ${quantity}\n`;
-    if (isScreen) message += item.hasWarranty ? `   ✅ مع ضمان 🛡️ (السعر يتغير)\n` : `   ⚪ بدون ضمان\n`;
-    message += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
-    if (item.notes) message += `   📝 ملاحظة: ${item.notes}\n`;
+    total += price * quantity;
   });
-  message += `\n💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع`;
+
   submitBtn.textContent = '⏳ جاري الإرسال...';
   submitBtn.style.background = '#64748B';
   try {
-    // 💾 احفظ الطلب في قاعدة البيانات أولاً (الأهم)
-    if (!guest && user) {
-      try { await secureApiCall('saveOrder', { name, shop, phone: user.phone, address, items: cart, total }); } catch(e) { console.error('saveOrder failed:', e); }
-    }
-    
-    // ⏰ أرسل WhatsApp بـ timeout 10 ثواني (لو GreenAPI بطيء ما نعلق)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(function(){ controller.abort(); }, 10000);
-    let waSuccess = false;
+    // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
     try {
-      const response = await fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: '9647709000160@c.us', message: message }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      const data = await response.json();
-      if (data.idMessage) waSuccess = true;
-    } catch(e) {
-      clearTimeout(timeoutId);
-      console.error('WhatsApp admin notify failed:', e);
-      // نكمل حتى لو WhatsApp فشل
-    }
-    
-    // ✅ اعرض النجاح (حتى لو WhatsApp فشل - الطلب انحفظ)
+      await secureApiCall('saveOrder', { name, shop, phone, address, items: cart, total, guest });
+    } catch(e) { console.error('saveOrder failed:', e); }
+
+    // ✅ اعرض النجاح
     {
       result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
-      let customerMessage = `✅ *تم استلام طلبك بنجاح*\n\nمرحباً *${name}*،\n\nشكراً لطلبك من أمواج للإلكترونيات 🌊\n\n📋 *تفاصيل طلبك:*\n\n`;
-      cart.forEach((item, i) => {
-        const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
-        const quantity = item.quantity || 1;
-        const itemTotal = price * quantity;
-        const isScreen = item.itemType === 'screens';
-        customerMessage += `${i+1}. ${item.name}\n   الماركة: ${item.brand || '-'}\n   النوع: ${item.type||'-'}\n   السعر: ${formatPriceIQD(price)} د.ع\n   الكمية: ${quantity}\n`;
-        if (isScreen) customerMessage += item.hasWarranty ? `   ✅ مع ضمان 🛡️ (السعر يتغير)\n` : `   ⚪ بدون ضمان\n`;
-        customerMessage += `   المجموع: ${formatPriceIQD(itemTotal)} د.ع\n`;
-        if (item.notes) customerMessage += `   📝 ${item.notes}\n`;
-        customerMessage += `\n`;
-      });
-      customerMessage += `💰 *المجموع الكلي:* ${formatPriceIQD(total)} د.ع\n\n📍 *عنوان التوصيل:* ${address}\n\nللاستفسار:\n📞 7696\n📞 07709000160\n\nشكراً لثقتكم 🌊\n*أمواج للإلكترونيات*`;
 
-      var customerPhone = guest ? phone : user.phone;
-      // إرسال WhatsApp للزبون في الخلفية (بـ timeout ما نعلق)
-      const cController = new AbortController();
-      const cTimeoutId = setTimeout(function(){ cController.abort(); }, 10000);
-      fetch('https://api.greenapi.com/waInstance7103498677/sendMessage/9c30040e79424fd1afc33d7283cd3000d01f88d037204a3f9c', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chatId: customerPhone.replace(/^0/, '964') + '@c.us', message: customerMessage }),
-        signal: cController.signal
-      }).then(function(){ clearTimeout(cTimeoutId); }).catch(function(err){ clearTimeout(cTimeoutId); console.error(err); });
       // تحويل زر الإرسال إلى حسناً
       cart = []; saveCart();
       if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
