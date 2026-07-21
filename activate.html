@@ -3287,6 +3287,8 @@ async function secureApiCall(action, data = {}) {
   }
 }
 
+function getAdminKey(){ return localStorage.getItem('amwaj_admin_token') || ''; }
+
 function normalizeNumber(str) {
   if (!str && str !== 0) return "";
   str = String(str);
@@ -3614,6 +3616,7 @@ async function verifyOtpCode() {
       const user = res;
       localStorage.setItem('amwaj_user', JSON.stringify(user));
       localStorage.setItem('amwaj_phone', user.phone);
+      if (user.adminToken) { localStorage.setItem('amwaj_admin_token', user.adminToken); } else { localStorage.removeItem('amwaj_admin_token'); }
       const _sw = document.getElementById('homeWelcome'); if (_sw) _sw.textContent = 'مرحباً ' + user.name.split(' ')[0];
       showScreen('homeScreen');
       setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500);
@@ -3628,6 +3631,7 @@ async function verifyOtpCode() {
 function logout() {
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
+  localStorage.removeItem("amwaj_admin_token");
   localStorage.removeItem("amwaj_guest");
   // امسح مركز الإشعارات عشان الزبون الجديد ما يشوف إشعارات القديم
   localStorage.removeItem("amwaj_notifications");
@@ -6960,7 +6964,7 @@ function loadStatOrdersCount() {
   var isAdmin = isAdminPhone(user.phone);
   var action = isAdmin ? 'getAllOrders' : 'getMyOrders';
   var payload = { phone: user.phone };
-  if (isAdmin) payload.adminKey = 'amwaj.1994'; // مفتاح الأدمن
+  if (isAdmin) payload.adminKey = getAdminKey(); // مفتاح الأدمن
   secureApiCall(action, payload).then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
@@ -7562,7 +7566,7 @@ async function loadAdminOrders() {
   listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;">جاري تحميل الطلبات...</div></div>';
 
   try {
-    var orders = await secureApiCall('getAllOrders', { adminKey: 'amwaj.1994' });
+    var orders = await secureApiCall('getAllOrders', { adminKey: getAdminKey() });
     _adminAllOrders = orders || [];
     renderAdminOrders();
   } catch(e) {
@@ -7639,7 +7643,7 @@ async function sendBroadcast() {
 
   try {
     var response = await secureApiCall('sendBroadcast', {
-      adminKey: 'amwaj.1994',
+      adminKey: getAdminKey(),
       title:    title,
       body:     body,
       target:   target,
@@ -7875,7 +7879,7 @@ async function adminBulkDeliver() {
   for (var i = 0; i < orderIds.length; i++) {
     try {
       await secureApiCall('updateOrderStatus', { 
-        adminKey: 'amwaj.1994',
+        adminKey: getAdminKey(),
         orderId: orderIds[i], 
         status: 'delivered'
       });
@@ -7979,7 +7983,7 @@ async function adminChangeOrderStatus(orderId, newStatus) {
   if (!confirm('هل تريد تغيير حالة الطلب ' + orderId + ' إلى "' + statusNames[newStatus] + '"؟')) return;
 
   try {
-    await secureApiCall('updateOrderStatus', { adminKey: 'amwaj.1994', orderId: orderId, status: newStatus });
+    await secureApiCall('updateOrderStatus', { adminKey: getAdminKey(), orderId: orderId, status: newStatus });
     // Update local cache immediately
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === orderId) {
@@ -8000,7 +8004,7 @@ async function adminCancelOrder(orderId) {
   if (reason === null) return;
 
   try {
-    await secureApiCall('updateOrderStatus', { adminKey: 'amwaj.1994', orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    await secureApiCall('updateOrderStatus', { adminKey: getAdminKey(), orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
     // Update local cache
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === orderId) {

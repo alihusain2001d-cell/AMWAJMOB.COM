@@ -93,8 +93,15 @@ tr:hover td{background:#ffffff05}
     <div class="login-logo">🛠️</div>
     <div class="login-title">لوحة تحكم أمواج</div>
     <div class="login-sub">للإدارة فقط</div>
-    <input type="password" class="login-input" id="loginPass" placeholder="كلمة السر" onkeyup="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">دخول</button>
+    <div id="loginStepPhone">
+      <input type="tel" class="login-input" id="loginPhone" placeholder="رقم الهاتف" onkeyup="if(event.key==='Enter')requestAdminOtp()">
+      <button class="login-btn" onclick="requestAdminOtp()">إرسال رمز التحقق</button>
+    </div>
+    <div id="loginStepOtp" style="display:none;">
+      <input type="tel" class="login-input" id="loginOtp" placeholder="رمز التحقق (٦ أرقام)" maxlength="6" onkeyup="if(event.key==='Enter')verifyAdminOtp()">
+      <button class="login-btn" onclick="verifyAdminOtp()">دخول</button>
+      <button class="login-btn" style="background:#64748B;margin-top:8px;" onclick="backToPhoneStep()">رجوع</button>
+    </div>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
@@ -227,7 +234,6 @@ tr:hover td{background:#ffffff05}
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_PASS='amwaj.1994';
 const API_URL='https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
 const API_KEY='AMWAJ_efcace98-5cd5-4946-8eb5-2bc9b13d9aa6';
 const IMGBB_KEY = '7af80bb5cf3210b48a8e5b7a51f4bb85';
@@ -253,13 +259,54 @@ async function uploadToImgbb(file) {
 
 let currentPage='dashboard',allCustomers=[],allOrders=[],allWarranties=[],allProducts=[],editTarget=null;
 
-function doLogin(){const p=document.getElementById('loginPass').value;if(p===ADMIN_PASS){localStorage.setItem('amwaj_admin_auth',ADMIN_PASS);document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}else{document.getElementById('loginErr').textContent='❌ كلمة السر غير صحيحة';document.getElementById('loginPass').value='';}}
-function doLogout(){localStorage.removeItem('amwaj_admin_auth');document.getElementById('adminApp').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('loginPass').value='';}
+function getAdminToken(){ return localStorage.getItem('amwaj_admin_token') || ''; }
+
+async function requestAdminOtp(){
+  const phone = document.getElementById('loginPhone').value.trim();
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!phone) { errEl.textContent = '❌ أدخل رقم الهاتف'; return; }
+  try {
+    const r = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,action:'requestOtp',phone:phone,purpose:'login'})});
+    const res = await r.json();
+    if (!res.success) { errEl.textContent = '❌ ' + (res.error||'فشل الإرسال'); return; }
+    window._pendingAdminPhone = phone;
+    document.getElementById('loginStepPhone').style.display='none';
+    document.getElementById('loginStepOtp').style.display='block';
+  } catch(e) { errEl.textContent = '❌ حدث خطأ، حاول مرة أخرى'; }
+}
+
+async function verifyAdminOtp(){
+  const code = document.getElementById('loginOtp').value.trim();
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!/^[0-9]{6}$/.test(code)) { errEl.textContent = '❌ أدخل رمز مكوّن من 6 أرقام'; return; }
+  try {
+    const r = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,action:'verifyOtp',phone:window._pendingAdminPhone,code:code,purpose:'login'})});
+    const res = await r.json();
+    if (!res.success) { errEl.textContent = '❌ ' + (res.error||'رمز غير صحيح'); return; }
+    if (!res.data || !res.data.adminToken) { errEl.textContent = '❌ هذا الرقم غير مصرح له بدخول لوحة التحكم'; return; }
+    localStorage.setItem('amwaj_admin_token', res.data.adminToken);
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('adminApp').style.display='block';
+    startClock();
+    showPage('dashboard');
+  } catch(e) { errEl.textContent = '❌ حدث خطأ، حاول مرة أخرى'; }
+}
+
+function backToPhoneStep(){
+  document.getElementById('loginStepOtp').style.display='none';
+  document.getElementById('loginStepPhone').style.display='block';
+  document.getElementById('loginErr').textContent='';
+  document.getElementById('loginOtp').value='';
+}
+
+function doLogout(){localStorage.removeItem('amwaj_admin_token');document.getElementById('adminApp').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('loginStepPhone').style.display='block';document.getElementById('loginStepOtp').style.display='none';document.getElementById('loginPhone').value='';document.getElementById('loginOtp').value='';}
 function startClock(){function tick(){const s=new Date().toLocaleString('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('topTime').textContent=s;document.getElementById('sidebarTime').textContent=s;}tick();setInterval(tick,1000);}
 const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات',notify:'📢 إشعارات الزبائن'};
 function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p]||p;({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts,notify:loadNotify}[p]||function(){})();}
 function refreshCurrentPage(){showPage(currentPage);}
-async function apiCall(action,extra={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,adminKey:ADMIN_PASS,action,...extra})});return r.json();}
+async function apiCall(action,extra={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,adminKey:getAdminToken(),action,...extra})});const res=await r.json();if(res&&res.success===false&&res.error==='غير مصرح'){doLogout();}return res;}
 function setContent(h){document.getElementById('mainContent').innerHTML=h;}
 function showLoading(){setContent('<div class="loading-row"><div class="spinner"></div><div>جاري التحميل...</div></div>');}
 
@@ -267,7 +314,7 @@ function showLoading(){setContent('<div class="loading-row"><div class="spinner"
 async function loadDashboard(){
   showLoading();
   try{
-    const[cR,oR,wR]=await Promise.all([apiCall('getCustomersList',{adminKey:ADMIN_PASS}),apiCall('getAllOrders',{adminKey:ADMIN_PASS}),apiCall('getWarranties')]);
+    const[cR,oR,wR]=await Promise.all([apiCall('getCustomersList',{}),apiCall('getAllOrders',{}),apiCall('getWarranties')]);
     allCustomers=cR.data||[];allOrders=oR.data||[];allWarranties=wR.data||[];
     const pending=allCustomers.filter(c=>c.status==='pending').length,pendOrders=allOrders.filter(o=>o.status==='pending').length;
     if(pending>0){document.getElementById('pendingBadge').style.display='';document.getElementById('pendingBadge').textContent=pending;}
@@ -292,7 +339,7 @@ async function loadDashboard(){
 
 // CUSTOMERS
 let custFilter='all',custSearch='';
-async function loadCustomers(){showLoading();try{const r=await apiCall('getCustomersList',{adminKey:ADMIN_PASS});allCustomers=r.data||[];renderCustomers();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
+async function loadCustomers(){showLoading();try{const r=await apiCall('getCustomersList',{});allCustomers=r.data||[];renderCustomers();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
 function renderCustomers(){
   let data=allCustomers;
   if(custFilter!=='all')data=data.filter(c=>c.status===custFilter);
@@ -316,15 +363,15 @@ function renderCustomers(){
   </div>`);
 }
 function custBadge(s){const m={pending:'badge-yellow',approved:'badge-green',rejected:'badge-red'};const l={pending:'⏳ انتظار',approved:'✅ موافق',rejected:'❌ مرفوض'};return`<span class="badge ${m[s]||'badge-gray'}">${l[s]||s}</span>`;}
-async function approveCustomer(phone){if(!confirm('موافقة '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'approved'});if(r.success){showToast('✅ تمت الموافقة');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
-async function rejectCustomer(phone){if(!confirm('رفض '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'rejected'});if(r.success){showToast('❌ تم الرفض');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
+async function approveCustomer(phone){if(!confirm('موافقة '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{phone,status:'approved'});if(r.success){showToast('✅ تمت الموافقة');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
+async function rejectCustomer(phone){if(!confirm('رفض '+phone+'؟'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{phone,status:'rejected'});if(r.success){showToast('❌ تم الرفض');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
 function openEditCustomerById(phone){const c=allCustomers.find(x=>String(x.phone||'').replace(/[^0-9]/g,'')===String(phone||'').replace(/[^0-9]/g,''));if(!c){showToast('❌ الزبون غير موجود');return;}editTarget=c;document.getElementById('editCustName').value=c.name||'';document.getElementById('editCustShop').value=c.shop||'';document.getElementById('editCustStatus').value=c.status||'pending';document.getElementById('editCustomerModal').classList.add('open');}
 async function saveEditCustomer(){showToast('⏳ جاري الحفظ...');const ns=document.getElementById('editCustStatus').value;if(ns!==editTarget.status){if(ns==='approved')await approveCustomer(editTarget.phone);else if(ns==='rejected')await rejectCustomer(editTarget.phone);}closeModal('editCustomerModal');showToast('✅ تم الحفظ');loadCustomers();}
-async function deleteCustomer(phone,name){if(!confirm('حذف '+name+'؟\nلا يمكن التراجع!'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{adminKey:ADMIN_PASS,phone,status:'deleted'});if(r.success){showToast('🗑️ تم الحذف');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
+async function deleteCustomer(phone,name){if(!confirm('حذف '+name+'؟\nلا يمكن التراجع!'))return;try{const r=await apiCall('updateCustomerStatusAdmin',{phone,status:'deleted'});if(r.success){showToast('🗑️ تم الحذف');loadCustomers();}else showToast('❌ '+(r.error||'فشل'));}catch(e){showToast('❌ '+e.message);}}
 
 // ORDERS
 let ordFilter='all',ordSearch='';
-async function loadOrders(){showLoading();try{const r=await apiCall('getAllOrders',{adminKey:ADMIN_PASS});allOrders=r.data||[];renderOrders();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
+async function loadOrders(){showLoading();try{const r=await apiCall('getAllOrders',{});allOrders=r.data||[];renderOrders();}catch(e){setContent('<div class="empty-state">❌ فشل التحميل</div>');}}
 function renderOrders(){
   let data=allOrders;
   if(ordFilter!=='all')data=data.filter(o=>o.status===ordFilter);
@@ -416,7 +463,7 @@ async function saveNewWarranty(){
 let prodSearch='',prodSheetFilter='all';
 async function loadProducts(){showLoading();try{
   const [r, toolsR] = await Promise.all([
-    apiCall('getAllProducts',{adminKey:ADMIN_PASS}),
+    apiCall('getAllProducts',{}),
     apiCall('getTools')
   ]);
   const toolsData = (toolsR.data||[]).map(function(p){ return Object.assign({},p,{sheet:'tools',sheetName:'tools',brand:'',type:''}); });
@@ -606,7 +653,7 @@ async function loadNotify() {
   try {
     const [itemsRes, custRes] = await Promise.all([
       apiCall('getNewItems'),
-      apiCall('getCustomersList', {adminKey: ADMIN_PASS})
+      apiCall('getCustomersList', {})
     ]);
     notifyItemsList = (itemsRes.data || []).filter(function(i) {
       return (Number(i.qty)||0) > 0 && (Number(String(i.price||'').replace(/[^0-9]/g,''))||0) > 0;
@@ -828,7 +875,7 @@ async function startNotifySend(total) {
 
   let customers = [];
   try {
-    const r = await apiCall('getCustomersList', {adminKey: ADMIN_PASS});
+    const r = await apiCall('getCustomersList', {});
     customers = (r.data || []).filter(function(c){ return c.status === 'approved'; });
   } catch(e) { showToast('❌ فشل جلب الزبائن'); return; }
   if (!customers.length) { showToast('⚠️ لا يوجد زبائن'); return; }
@@ -871,7 +918,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 function sanitize(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-(function(){const saved=localStorage.getItem('amwaj_admin_auth');if(saved===ADMIN_PASS){document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}})();
+(function(){const saved=localStorage.getItem('amwaj_admin_token');if(saved){document.getElementById('loginPage').style.display='none';document.getElementById('adminApp').style.display='block';startClock();showPage('dashboard');}})();
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');}));
 document.addEventListener('keyup',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));});
 </script>
