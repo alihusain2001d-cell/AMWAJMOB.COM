@@ -2590,6 +2590,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
         <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
+        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -4178,6 +4179,12 @@ function openCart() {
 
 function closeCart() { showPage('pricesPage'); }
 
+function getDeliveryFee(province) {
+  if (province === 'كربلاء') return 0;
+  if (province === 'بغداد') return 5000;
+  return 6000;
+}
+
 function renderCart() {
   const container = document.getElementById('cartItems');
   const totalEl = document.getElementById('cartTotal');
@@ -4271,6 +4278,9 @@ function renderCart() {
   });
 
   // Add summary card at end of items
+  const _provinceEl = document.getElementById('orderProvince');
+  const _deliveryFee = getDeliveryFee(_provinceEl ? _provinceEl.value : 'كربلاء');
+  const _grandTotal = total + _deliveryFee;
   html += `
     <div class="cart-summary">
       <div class="summary-row">
@@ -4281,15 +4291,19 @@ function renderCart() {
         <span>عدد القطع</span>
         <span class="amt">${cart.reduce((s, i) => s + (i.quantity || 1), 0)}</span>
       </div>
+      <div class="summary-row">
+        <span>أجور التوصيل</span>
+        <span class="amt">${_deliveryFee > 0 ? formatPriceIQD(_deliveryFee) + ' د.ع' : 'مجاني'}</span>
+      </div>
       <div class="summary-row total">
         <span>المجموع الكلي</span>
-        <span class="amt">${formatPriceIQD(total)} د.ع</span>
+        <span class="amt">${formatPriceIQD(_grandTotal)} د.ع</span>
       </div>
     </div>
   `;
 
   container.innerHTML = html;
-  if (totalEl) totalEl.textContent = formatPriceIQD(total) + ' د.ع';
+  if (totalEl) totalEl.textContent = formatPriceIQD(_grandTotal) + ' د.ع';
 }
 
 function changeQuantity(index, change) {
@@ -4358,13 +4372,17 @@ async function submitOrder() {
     const quantity = item.quantity || 1;
     total += price * quantity;
   });
+  const province = document.getElementById('orderProvince').value;
+  const deliveryFee = getDeliveryFee(province);
+  total += deliveryFee;
+  const fullAddress = province + '، ' + address;
 
   submitBtn.textContent = '⏳ جاري الإرسال...';
   submitBtn.style.background = '#64748B';
   try {
     // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
     try {
-      await secureApiCall('saveOrder', { name, shop, phone, address, items: cart, total, guest });
+      await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee });
     } catch(e) { console.error('saveOrder failed:', e); }
 
     // ✅ اعرض النجاح
