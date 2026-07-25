@@ -7980,7 +7980,8 @@ function renderAdminOrderCard(o) {
   var actions = '';
   if (o.status === 'pending' || o.status === 'picked') {
     actions =
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>';
+      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>' +
+      '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ إلغاء</button>';
   } else {
     actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">' +
       (o.status === 'delivered' ? '✅ هذا الطلب تم تسليمه' :

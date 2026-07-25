@@ -417,8 +417,39 @@ function showOrderDetail(orderId){
   </div>
   <div style="font-weight:800;margin-bottom:10px">المنتجات:</div>
   <div>${items.map(item=>`<div class="order-item-row"><span>${sanitize(item.name||'')} ${item.type?'('+item.type+')':''}</span><span style="color:var(--primary)">${item.quantity||1} × ${(item.price||0).toLocaleString()} د.ع</span></div>`).join('')}</div>
-  <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:8px;border-top:2px solid var(--border)"><span style="font-weight:800">الإجمالي</span><span style="font-weight:900;color:var(--green);font-size:18px">${(o.total||0).toLocaleString()} د.ع</span></div>`;
+  <div style="display:flex;justify-content:space-between;padding:12px 0;margin-top:8px;border-top:2px solid var(--border)"><span style="font-weight:800">الإجمالي</span><span style="font-weight:900;color:var(--green);font-size:18px">${(o.total||0).toLocaleString()} د.ع</span></div>
+  <div id="orderDetailStatus" style="margin-top:6px;font-size:13px;"></div>
+  ${o.status==='cancelled' ? '' : `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+    ${o.status!=='delivered' ? `<button onclick="adminUpdateOrderStatus('${orderId}','delivered')" style="flex:1;min-width:120px;background:var(--green);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;">✅ تم التسليم</button>` : ''}
+    <button onclick="adminCancelOrderPrompt('${orderId}')" style="flex:1;min-width:120px;background:var(--red);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;cursor:pointer;">❌ إلغاء الطلب</button>
+  </div>`}`;
   document.getElementById('orderDetailModal').classList.add('open');
+}
+
+async function adminUpdateOrderStatus(orderId, newStatus, reason){
+  const statusEl = document.getElementById('orderDetailStatus');
+  if (statusEl) statusEl.innerHTML = '<span style="color:var(--muted)">⏳ جاري التحديث...</span>';
+  try{
+    const payload = {orderId: orderId, status: newStatus};
+    if (reason) payload.cancelReason = reason;
+    const r = await apiCall('updateOrderStatus', payload);
+    if (r.success){
+      showToast(newStatus==='cancelled' ? '❌ تم إلغاء الطلب' : '✅ تم تحديث الحالة');
+      closeModal('orderDetailModal');
+      loadOrders();
+    } else {
+      if (statusEl) statusEl.innerHTML = '<span style="color:var(--red)">❌ '+(r.error||'فشل التحديث')+'</span>';
+    }
+  }catch(e){
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--red)">❌ '+e.message+'</span>';
+  }
+}
+
+function adminCancelOrderPrompt(orderId){
+  const reason = prompt('سبب الإلغاء:');
+  if (reason===null) return;
+  if (!confirm('تأكيد إلغاء الطلب '+orderId+'؟')) return;
+  adminUpdateOrderStatus(orderId, 'cancelled', reason || 'إلغاء من الإدارة');
 }
 
 // WARRANTIES
