@@ -2590,7 +2590,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
         <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
-        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -4180,6 +4180,7 @@ function openCart() {
 function closeCart() { showPage('pricesPage'); }
 
 function getDeliveryFee(province) {
+  if (!province) return null;
   if (province === 'كربلاء') return 0;
   if (province === 'بغداد') return 5000;
   return 6000;
@@ -4279,8 +4280,8 @@ function renderCart() {
 
   // Add summary card at end of items
   const _provinceEl = document.getElementById('orderProvince');
-  const _deliveryFee = getDeliveryFee(_provinceEl ? _provinceEl.value : 'كربلاء');
-  const _grandTotal = total + _deliveryFee;
+  const _deliveryFee = getDeliveryFee(_provinceEl ? _provinceEl.value : '');
+  const _grandTotal = total + (_deliveryFee || 0);
   html += `
     <div class="cart-summary">
       <div class="summary-row">
@@ -4293,7 +4294,7 @@ function renderCart() {
       </div>
       <div class="summary-row">
         <span>أجور التوصيل</span>
-        <span class="amt">${_deliveryFee > 0 ? formatPriceIQD(_deliveryFee) + ' د.ع' : 'مجاني'}</span>
+        <span class="amt">${_deliveryFee === null ? 'اختر المحافظة' : (_deliveryFee > 0 ? formatPriceIQD(_deliveryFee) + ' د.ع' : 'مجاني')}</span>
       </div>
       <div class="summary-row total">
         <span>المجموع الكلي</span>
@@ -4373,71 +4374,90 @@ async function submitOrder() {
     total += price * quantity;
   });
   const province = document.getElementById('orderProvince').value;
+  if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
   const deliveryFee = getDeliveryFee(province);
   total += deliveryFee;
   const fullAddress = province + '، ' + address;
 
-  submitBtn.textContent = '⏳ جاري الإرسال...';
-  submitBtn.style.background = '#64748B';
-  try {
-    // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
+  async function proceedWithSubmit() {
+    submitBtn.textContent = '⏳ جاري الإرسال...';
+    submitBtn.style.background = '#64748B';
     try {
-      await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee });
-    } catch(e) { console.error('saveOrder failed:', e); }
+      // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
+      try {
+        await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee });
+      } catch(e) { console.error('saveOrder failed:', e); }
 
-    // ✅ اعرض النجاح
-    {
-      result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+      // ✅ اعرض النجاح
+      {
+        result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
 
-      // تحويل زر الإرسال إلى حسناً
-      cart = []; saveCart();
-      if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
-      document.getElementById('cartItems').innerHTML = '';
-      document.getElementById('cartSummary').style.display = 'none';
-      // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
-      var _now = new Date();
-      var _day = _now.getDay(); // 5=جمعة
-      var _hour = _now.getHours();
-      var _offHoursText = '';
-      if (_day === 5) {
-        _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
-      } else if (_hour < 9 || _hour >= 22) {
-        _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
-      }
-      if (_offHoursText) {
-        var _ov = document.createElement('div');
-        _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
-        var _box = document.createElement('div');
-        _box.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
-        var _lines = _offHoursText.split('\n').map(function(l){ return '<div>' + l + '</div>'; }).join('');
-        _box.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">🌙</div>' +
-          '<div style="font-size:17px;font-weight:700;color:#854D0E;line-height:1.9;margin-bottom:20px;">' + _lines + '</div>' +
-          '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
-        _box.querySelector('button').onclick = function(){ _ov.remove(); };
-        _ov.onclick = function(e){ if(e.target===_ov) _ov.remove(); };
-        _ov.appendChild(_box);
-        document.body.appendChild(_ov);
-      }
-      document.getElementById('orderResult').innerHTML = '';
-      submitBtn.disabled = false;
-      submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
-      submitBtn.style.background = '#16A34A';
-      submitBtn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.4)';
-      submitBtn.onclick = function() {
-        closeSheet('cartSheet');
-        submitBtn.textContent = '📤 إرسال الطلب';
-        submitBtn.style.background = '';
-        submitBtn.style.boxShadow = '';
-        submitBtn.onclick = submitOrder;
+        // تحويل زر الإرسال إلى حسناً
+        cart = []; saveCart();
+        if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
+        document.getElementById('cartItems').innerHTML = '';
+        document.getElementById('cartSummary').style.display = 'none';
+        // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
+        var _now = new Date();
+        var _day = _now.getDay(); // 5=جمعة
+        var _hour = _now.getHours();
+        var _offHoursText = '';
+        if (_day === 5) {
+          _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
+        } else if (_hour < 9 || _hour >= 22) {
+          _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
+        }
+        if (_offHoursText) {
+          var _ov = document.createElement('div');
+          _ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+          var _box = document.createElement('div');
+          _box.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:320px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+          var _lines = _offHoursText.split('\n').map(function(l){ return '<div>' + l + '</div>'; }).join('');
+          _box.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">🌙</div>' +
+            '<div style="font-size:17px;font-weight:700;color:#854D0E;line-height:1.9;margin-bottom:20px;">' + _lines + '</div>' +
+            '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
+          _box.querySelector('button').onclick = function(){ _ov.remove(); };
+          _ov.onclick = function(e){ if(e.target===_ov) _ov.remove(); };
+          _ov.appendChild(_box);
+          document.body.appendChild(_ov);
+        }
         document.getElementById('orderResult').innerHTML = '';
-        document.getElementById('orderForm').style.display = 'block';
-        if (clearBtn) clearBtn.style.display = 'none';
-      };
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✅ تم الإرسال — سيتم التجهيز قريباً';
+        submitBtn.style.background = '#16A34A';
+        submitBtn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.4)';
+        submitBtn.onclick = function() {
+          closeSheet('cartSheet');
+          submitBtn.textContent = '📤 إرسال الطلب';
+          submitBtn.style.background = '';
+          submitBtn.style.boxShadow = '';
+          submitBtn.onclick = submitOrder;
+          document.getElementById('orderResult').innerHTML = '';
+          document.getElementById('orderForm').style.display = 'block';
+          if (clearBtn) clearBtn.style.display = 'none';
+        };
+      }
+    } catch (e) {
+      console.error(e);
+      result.innerHTML = '<div class="result error">❌ حدث خطأ في الإرسال، حاول مرة أخرى</div>';
+      submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
     }
-  } catch (e) {
-    console.error(e);
-    result.innerHTML = '<div class="result error">❌ حدث خطأ في الإرسال، حاول مرة أخرى</div>';
-    submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
+  }
+
+  // 🚚 طلبات برايم (كل المحافظات عدا كربلاء) — تنبيه فحص الطلب قبل الاستلام لازم يوافق عليه الزبون أول
+  if (province !== 'كربلاء') {
+    var _pv = document.createElement('div');
+    _pv.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);';
+    var _pb = document.createElement('div');
+    _pb.style.cssText = 'background:#FEF9C3;border-radius:20px;padding:28px 22px;width:100%;max-width:340px;text-align:center;direction:rtl;box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+    _pb.innerHTML = '<div style="font-size:38px;margin-bottom:12px;">⚠️</div>' +
+      '<div style="font-size:15px;font-weight:700;color:#854D0E;line-height:1.9;margin-bottom:20px;">ملاحظة: يرجى من الزبون فحص الطلب قبل الاستلام لضمان حقه، وفي حال استلام الطلب دون فحصه لا نتحمل أي مسؤولية</div>' +
+      '<button style="width:100%;background:#F59E0B;color:white;border:none;border-radius:12px;padding:13px;font-size:17px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">حسناً ✓</button>';
+    _pb.querySelector('button').onclick = function(){ _pv.remove(); proceedWithSubmit(); };
+    _pv.appendChild(_pb);
+    document.body.appendChild(_pv);
+  } else {
+    proceedWithSubmit();
   }
 }
 
