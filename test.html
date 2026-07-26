@@ -7988,7 +7988,7 @@ function renderAdminOrderCard(o) {
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
 
   // ✅ Checkbox للطلبات القابلة للتسليم
-  var isSelectable = (o.status === 'pending' || o.status === 'picked');
+  var isSelectable = (o.status === 'pending' || o.status === 'picked') && !primeInfo;
   var checkboxHtml = isSelectable 
     ? '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
         '<input type="checkbox" class="admin-order-checkbox" data-order-id="' + o.orderId + '" onchange="adminToggleOrderSelect(\'' + o.orderId + '\',this.checked)" ' + 
@@ -8007,18 +8007,26 @@ function renderAdminOrderCard(o) {
       '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12px;color:#1E40AF;font-weight:700;">' +
         '🚚 مرسل لبرايم · رقم الشحنة: <span dir="ltr">' + sanitize(String(primeInfo.primeCaseId)) + '</span>' +
         '<br>الحالة: ' + sanitize(_primeStatusLabel(primeInfo.status)) +
+        '<button id="primePrintBtn_' + o.orderId + '" onclick="adminPrintPrimeLabel(\'' + o.orderId + '\')" style="display:block;width:100%;margin-top:8px;padding:9px;border:none;border-radius:8px;background:#1E40AF;color:#fff;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">🖨️ طباعة ملصق الشحنة</button>' +
       '</div>';
   }
 
   // Action buttons based on current status
   var actions = '';
   if (o.status === 'pending' || o.status === 'picked') {
-    actions =
-      '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>' +
-      '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ إلغاء</button>';
-    if (isPrimeEligible && !primeInfo) {
-      actions +=
-        '<button class="admin-action-btn" id="primeBtn_' + o.orderId + '" onclick="adminSendToPrime(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#1D4ED8;color:#fff;margin-top:6px;">🚚 إرسال إلى برايم</button>';
+    if (primeInfo) {
+      // 🚚 الطلب مع برايم — حالته تتحدث تلقائياً، فلا داعي لزر "تم التسليم" اليدوي
+      actions =
+        '<div style="flex:1 1 100%;background:var(--surface-2);border-radius:8px;padding:8px;text-align:center;font-size:12px;color:var(--muted);font-weight:700;">🔄 الحالة تتحدث تلقائياً من برايم</div>' +
+        '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;margin-top:6px;">❌ إلغاء</button>';
+    } else {
+      actions =
+        '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>' +
+        '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ إلغاء</button>';
+      if (isPrimeEligible) {
+        actions +=
+          '<button class="admin-action-btn" id="primeBtn_' + o.orderId + '" onclick="adminSendToPrime(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#1D4ED8;color:#fff;margin-top:6px;">🚚 إرسال إلى برايم</button>';
+      }
     }
   } else {
     actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">' +
@@ -8085,6 +8093,32 @@ async function adminSendToPrime(orderId) {
   } catch (e) {
     alert('❌ فشل الإرسال: ' + (e.message || ''));
     if (btn) { btn.disabled = false; btn.textContent = '🚚 إرسال إلى برايم'; btn.style.opacity = '1'; }
+  }
+}
+
+async function adminPrintPrimeLabel(orderId) {
+  var btn = document.getElementById('primePrintBtn_' + orderId);
+  varoriginalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التحضير...'; btn.style.opacity = '0.7'; }
+
+  // افتح النافذة فوراً — لو انتظرنا الرد يمنعها المتصفح كنافذة منبثقة
+  var win = window.open('', '_blank');
+  if (win) {
+    win.document.write('<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>ملصق الشحنة</title></head>' +
+      '<body style="font-family:Tahoma,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#334155;">' +
+      '<div style="text-align:center;"><div style="font-size:40px;margin-bottom:10px;">🖨️</div>' +
+      '<div style="font-size:16px;font-weight:700;">جاري تحضير ملصق الشحنة...</div></div></body></html>');
+  }
+
+  try {
+    var res = await secureApiCall('printPrimeLabel', { adminKey: getAdminKey(), orderId: orderId });
+    if (win) { win.location.href = res.url; }
+    else { window.location.href = res.url; }  // لو منع المتصفح النافذة، افتحه بنفس التبويب
+  } catch (e) {
+    if (win) win.close();
+    alert('❌ تعذر تحضير الملصق: ' + (e.message || ''));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel || '🖨️ طباعة ملصق الشحنة'; btn.style.opacity = '1'; }
   }
 }
 
