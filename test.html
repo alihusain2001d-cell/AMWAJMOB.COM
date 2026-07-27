@@ -7730,6 +7730,7 @@ async function sendBroadcast() {
         var headersStr = (response && response.headers) || '';
         var sample = (response && response.sample) || '';
         var diagHtml = '⚠️ لم يصل لأي زبون<br><br>';
+        if (serverMsg) diagHtml += '📩 ' + serverMsg + '<br><br>';
         diagHtml += '📊 التشخيص:<br>';
         diagHtml += '• عدد الزبائن الموافق عليهم: <b>' + totalCustomers + '</b><br>';
         if (totalRows !== undefined) {
@@ -7751,7 +7752,13 @@ async function sendBroadcast() {
             diagHtml += '• أجهزة برقم غير موافق عليه: <b>' + unmatched + '</b><br>';
           }
         }
-        if (totalCustomers === 0 && totalRows > 0) {
+        var totalTokens = (response && response.totalTokens);
+        if (totalTokens !== undefined && totalTokens > 0) {
+          diagHtml += '• أجهزة تم استهدافها فعلياً بالإرسال: <b>' + totalTokens + '</b> (نجح: ' + sentCount + ' · فشل: ' + failedCount + ')<br>';
+        }
+        if (serverMsg) {
+          // رسالة السيرفر أعلاه هي التشخيص الدقيق — لا داعي لتخمين إضافي يناقضها
+        } else if (totalCustomers === 0 && totalRows > 0) {
           diagHtml += '<br>🚨 المشكلة: في زبائن بالجدول لكن ما لكينا اي "approved". <br>💡 راجع عمود الحالة في Google Sheets - القيمة يجب تكون كلمة "approved" بالضبط.';
         } else if (emptyPhone > 0) {
           diagHtml += '<br>💡 الحل: قل للزبائن يسجلوا دخول في التطبيق مرة واحدة عشان يتربط رقم هاتفهم بالجهاز.';
@@ -7990,8 +7997,20 @@ function renderAdminOrderCard(o) {
   var itemsHtml = (o.items || []).map(function(it) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
     var qty = it.quantity || 1;
-    var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' 🛡️' : '';
-    return '<div style="font-size:13px;color:var(--text-2);padding:4px 0;">• ' + sanitize(it.name||'-') + ' (× ' + qty + ')' + warranty + '</div>';
+    var metaParts = [];
+    if (it.brand) metaParts.push(sanitize(it.brand));
+    if (it.type) metaParts.push(sanitize(it.type));
+    var metaLine = metaParts.length ? '<div style="font-size:13px;color:var(--muted);margin-top:2px;font-weight:600;">' + metaParts.join(' · ') + '</div>' : '';
+    var notesLine = it.notes ? '<div style="font-size:12px;color:#92400E;margin-top:3px;font-weight:700;">📝 ' + sanitize(it.notes) + '</div>' : '';
+    var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' <span style="color:#10B981;">🛡️ ضمان</span>' : '';
+    var priceLine = price ? '<div style="font-size:13px;color:var(--primary-dark);margin-top:3px;font-weight:800;" dir="ltr">' + formatPriceIQD(price) + ' د.ع</div>' : '';
+    return '<div style="padding:9px 0;border-bottom:1px solid var(--border-light,#E2E8F0);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+          '<div style="font-size:16px;font-weight:900;color:var(--text);line-height:1.35;">' + sanitize(it.name||'-') + warranty + '</div>' +
+          '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;flex-shrink:0;">× ' + qty + '</div>' +
+        '</div>' +
+        metaLine + priceLine + notesLine +
+      '</div>';
   }).join('');
 
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
