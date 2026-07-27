@@ -5058,11 +5058,11 @@ function renderOrdersList() {
   // Render
   listDiv.innerHTML = filtered.map(_renderOrderCard).join('');
 
-  // 🚚 حمّل حالات شحنات برايم ثم أعد الرسم لو تغيّر شي
+  // 🚚 حمّل حالات شحنات برايم (استدعاء واحد، مخزّن مؤقتاً) ثم أعد الرسم لو تغيّر شي
   (async function(){
     try {
       var before = JSON.stringify(_primeStatusCache);
-      await loadPrimeStatuses(filtered);
+      await loadPrimeStatuses();
       if (JSON.stringify(_primeStatusCache) !== before) {
         listDiv.innerHTML = filtered.map(_renderOrderCard).join('');
       }
@@ -7625,7 +7625,7 @@ async function loadAdminOrders() {
 
   try {
     var orders = await secureApiCall('getAllOrders', { adminKey: getAdminKey() });
-    try { await loadPrimeStatuses(orders); } catch(e) { console.error('prime statuses failed', e); }
+    try { await loadPrimeStatuses(null, true); } catch(e) { console.error('prime statuses failed', e); }
     _adminAllOrders = orders || [];
     renderAdminOrders();
   } catch(e) {
@@ -8136,17 +8136,19 @@ async function adminPrintPrimeLabel(orderId) {
   }
 }
 
-async function loadPrimeStatuses(orders) {
-  var eligible = (orders || []).filter(function(o) {
-    var p = String(o.address||'').split('،')[0].trim();
-    return p && p !== 'كربلاء';
-  });
-  await Promise.all(eligible.map(async function(o) {
-    try {
-      var info = await secureApiCall('getPrimeStatus', { orderId: o.orderId });
-      if (info) _primeStatusCache[o.orderId] = info;
-    } catch (e) {}
-  }));
+var _primeStatusesLoadedAt = 0;
+
+// استدعاء واحد يجلب كل الشحنات — كان سابقاً استدعاء لكل طلب وهذا يبطّئ الصفحة بشدة
+async function loadPrimeStatuses(orders, force) {
+  var now = Date.now();
+  if (!force && _primeStatusesLoadedAt && (now - _primeStatusesLoadedAt) < 60000) return;
+  try {
+    var all = await secureApiCall('getAllPrimeStatuses', {});
+    if (all && typeof all === 'object') {
+      _primeStatusCache = all;
+      _primeStatusesLoadedAt = now;
+    }
+  } catch (e) { console.error('loadPrimeStatuses failed', e); }
 }
 
 async function adminChangeOrderStatus(orderId, newStatus) {
