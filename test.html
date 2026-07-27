@@ -5162,7 +5162,7 @@ function _renderOrderCard(o) {
       (_primeStatusCache[orderId]
         ? '<div class="order-address-row" style="color:#1D4ED8;font-weight:700;">🚚 <span>شحنة برايم ' +
             sanitize(String(_primeStatusCache[orderId].primeCaseId)) + ' · ' +
-            sanitize(_primeStatusLabel(_primeStatusCache[orderId].status)) + '</span></div>'
+            sanitize(_primeDisplayStatus(_primeStatusCache[orderId])) + '</span></div>'
         : '') +
     '</div>' +
     '<div class="order-actions">' +
@@ -8006,7 +8006,7 @@ function renderAdminOrderCard(o) {
     primeHtml =
       '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12px;color:#1E40AF;font-weight:700;">' +
         '🚚 مرسل لبرايم · رقم الشحنة: <span dir="ltr">' + sanitize(String(primeInfo.primeCaseId)) + '</span>' +
-        '<br>الحالة: ' + sanitize(_primeStatusLabel(primeInfo.status)) +
+        '<br>الحالة: ' + sanitize(_primeDisplayStatus(primeInfo)) +
         '<button id="primePrintBtn_' + o.orderId + '" onclick="adminPrintPrimeLabel(\'' + o.orderId + '\')" style="display:block;width:100%;margin-top:8px;padding:9px;border:none;border-radius:8px;background:#1E40AF;color:#fff;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">🖨️ طباعة ملصق الشحنة</button>' +
       '</div>';
   }
@@ -8076,9 +8076,23 @@ function _primeStatusLabel(code) {
     'DELIVERED_CHANGE_PRICE': '✅ تم التسليم (بمبلغ معدّل)',
     'PART_DELIVERED': '📦 تسليم جزئي',
     'CNCL': '❌ تعذر التوصيل',
-    'DELETED': '🗑️ محذوفة'
+    'DELETED': '🗑️ ملغاة',
+    'RETURNED': '↩️ مرتجعة'
   };
   return map[code] || code || '—';
+}
+
+// برايم يرجع مرحلة تفصيلية (stepLabel) أدق من الحالة العامة — نعرضها لو توفرت
+function _primeDisplayStatus(info) {
+  if (!info) return '—';
+  var icons = {
+    'ONWAY': '🚚', 'DELIVERED': '✅', 'DELIVERED_CHANGE_PRICE': '✅',
+    'PART_DELIVERED': '📦', 'CNCL': '❌', 'DELETED': '🗑️', 'RETURNED': '↩️'
+  };
+  if (info.stepLabel) {
+    return (icons[info.status] || '🔹') + ' ' + info.stepLabel;
+  }
+  return _primeStatusLabel(info.status);
 }
 
 async function adminSendToPrime(orderId) {
@@ -8161,7 +8175,9 @@ async function adminCancelOrder(orderId) {
   if (reason === null) return;
 
   try {
-    await secureApiCall('updateOrderStatus', { adminKey: getAdminKey(), orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    var _cancelRes = await secureApiCall('updateOrderStatus', { adminKey: getAdminKey(), orderId: orderId, status: 'cancelled', cancelReason: reason || 'إلغاء من الإدارة' });
+    if (_cancelRes && _cancelRes.primeWarning) { alert(_cancelRes.primeWarning); }
+    delete _primeStatusCache[orderId];
     // Update local cache
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === orderId) {
