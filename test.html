@@ -2339,6 +2339,32 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   color: var(--muted);
 }
 
+/* Admin dashboard stat tiles */
+.admin-stat-tile {
+  flex: 1;
+  min-width: 90px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+}
+.admin-stat-tile:active { transform: scale(0.96); }
+.admin-stat-tile .ast-icon { font-size: 20px; }
+.admin-stat-tile .ast-count { font-size: 19px; font-weight: 900; color: var(--text); margin-top: 2px; }
+.admin-stat-tile .ast-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 1px; }
+
+/* Admin customer card */
+.admin-customer-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+
 /* Admin order card */
 .admin-order-card {
   background: var(--card);
@@ -7116,10 +7142,30 @@ function openCheckFromAccount() {
       <span class="bsheet-title">🛠️ لوحة التحكم</span>
     </div>
 
-    <!-- Main tabs: Products / Orders / Broadcast -->
+    <!-- لوحة الإحصائيات السريعة -->
+    <div style="display:flex;gap:8px;padding:10px 14px 0;background:var(--card);">
+      <div class="admin-stat-tile" onclick="adminOpenPrimeOrders()">
+        <div class="ast-icon">🚚</div>
+        <div class="ast-count" id="astPrimeCount">-</div>
+        <div class="ast-label">طلبات برايم</div>
+      </div>
+      <div class="admin-stat-tile" onclick="adminOpenKarbalaOrders()">
+        <div class="ast-icon">🏠</div>
+        <div class="ast-count" id="astKarbalaCount">-</div>
+        <div class="ast-label">طلبات كربلاء</div>
+      </div>
+      <div class="admin-stat-tile" onclick="adminSwitchTab('customers')">
+        <div class="ast-icon">👥</div>
+        <div class="ast-count" id="astCustomersCount">-</div>
+        <div class="ast-label">الزبائن</div>
+      </div>
+    </div>
+
+    <!-- Main tabs: Products / Orders / Customers / Broadcast -->
     <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);overflow-x:auto;flex-wrap:nowrap;">
       <button class="admin-main-tab active" id="adminMainTab-products" onclick="adminSwitchTab('products')">📦 المنتجات</button>
       <button class="admin-main-tab" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
+      <button class="admin-main-tab" id="adminMainTab-customers" onclick="adminSwitchTab('customers')">👥 الزبائن</button>
       <button class="admin-main-tab" id="adminMainTab-broadcast" onclick="adminSwitchTab('broadcast')">📢 إعلانات</button>
     </div>
 
@@ -7156,10 +7202,22 @@ function openCheckFromAccount() {
       </div>
       <!-- Status filter row -->
       <div style="padding:6px 14px 10px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
-        <button class="admin-order-filter active" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
-        <button class="admin-order-filter" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
+        <button class="admin-order-filter active" id="admFilterBtn-all" data-status="all" onclick="adminFilterOrders('all',this)">الكل <span class="badge" id="adm-cnt-all">0</span></button>
+        <button class="admin-order-filter" id="admFilterBtn-delivered" data-status="delivered" onclick="adminFilterOrders('delivered',this)">تم التسليم <span class="badge" id="adm-cnt-delivered">0</span></button>
+        <button class="admin-order-filter" id="admFilterBtn-prime" data-status="prime" onclick="adminFilterOrders('prime',this)">🚚 برايم <span class="badge" id="adm-cnt-prime">0</span></button>
+        <button class="admin-order-filter" id="admFilterBtn-karbala" data-status="karbala" onclick="adminFilterOrders('karbala',this)">🏠 كربلاء <span class="badge" id="adm-cnt-karbala">0</span></button>
       </div>
       <div id="adminOrdersList" style="padding:14px;padding-bottom:120px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
+    </div>
+
+    <!-- Customers view -->
+    <div id="adminCustomersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
+        <button class="admin-order-filter active" id="admCustFilterBtn-all" onclick="adminFilterCustomers('all',this)">الكل <span class="badge" id="adm-cust-cnt-all">0</span></button>
+        <button class="admin-order-filter" id="admCustFilterBtn-pending" onclick="adminFilterCustomers('pending',this)">⏳ بانتظار الموافقة <span class="badge" id="adm-cust-cnt-pending">0</span></button>
+        <button class="admin-order-filter" id="admCustFilterBtn-approved" onclick="adminFilterCustomers('approved',this)">✅ موافق عليهم <span class="badge" id="adm-cust-cnt-approved">0</span></button>
+      </div>
+      <div id="adminCustomersList" style="padding:14px;padding-bottom:120px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:0;-webkit-overflow-scrolling:touch;"></div>
     </div>
 
     <!-- Broadcast view -->
@@ -7580,28 +7638,53 @@ async function openAdminPanel() {
   } catch(e) {
     listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
   }
+
+  // 📊 حمّل الطلبات والزبائن بالخلفية عشان تظهر أرقام مربعات لوحة الإحصائيات فوراً
+  (async function(){
+    try {
+      var orders = await secureApiCall('getAllOrders', { adminKey: getAdminKey() });
+      _adminAllOrders = orders || [];
+      try { await loadPrimeStatuses(null, true); } catch(e) {}
+      updateAdminDashboardTiles();
+    } catch(e) {}
+  })();
+  (async function(){
+    try {
+      var customers = await secureApiCall('getCustomersList', { adminKey: getAdminKey() });
+      _adminAllCustomers = customers || [];
+      updateAdminDashboardTiles();
+    } catch(e) {}
+  })();
 }
 
 function adminSwitchTab(tab) {
   var pView = document.getElementById('adminProductsView');
   var oView = document.getElementById('adminOrdersView');
+  var cView = document.getElementById('adminCustomersView');
   var bView = document.getElementById('adminBroadcastView');
   var pTab  = document.getElementById('adminMainTab-products');
   var oTab  = document.getElementById('adminMainTab-orders');
+  var cTab  = document.getElementById('adminMainTab-customers');
   var bTab  = document.getElementById('adminMainTab-broadcast');
 
   // Hide all
   pView.style.display = 'none';
   oView.style.display = 'none';
+  if (cView) cView.style.display = 'none';
   if (bView) bView.style.display = 'none';
   pTab.classList.remove('active');
   oTab.classList.remove('active');
+  if (cTab) cTab.classList.remove('active');
   if (bTab) bTab.classList.remove('active');
 
   if (tab === 'orders') {
     oView.style.display = 'flex';
     oTab.classList.add('active');
     loadAdminOrders();
+  } else if (tab === 'customers') {
+    if (cView) cView.style.display = 'flex';
+    if (cTab) cTab.classList.add('active');
+    loadAdminCustomers();
   } else if (tab === 'broadcast') {
     if (bView) bView.style.display = 'flex';
     if (bTab) bTab.classList.add('active');
@@ -7845,13 +7928,18 @@ function renderAdminOrders() {
   // Update counts (based on date-filtered orders)
   var counts = { all: dateFiltered.length, pending: 0, picked: 0, delivered: 0, cancelled: 0 };
   dateFiltered.forEach(function(o){ if (counts[o.status] !== undefined) counts[o.status]++; });
+  counts.prime = dateFiltered.filter(_orderIsPrime).length;
+  counts.karbala = dateFiltered.filter(_orderIsKarbala).length;
   Object.keys(counts).forEach(function(k){
     var el = document.getElementById('adm-cnt-' + k);
     if (el) el.textContent = counts[k];
   });
 
-  // Apply status filter
-  var filtered = _adminOrderFilter === 'all' ? dateFiltered : dateFiltered.filter(function(o){ return o.status === _adminOrderFilter; });
+  // Apply status filter (+ الفلترين الخاصين: برايم وكربلاء)
+  var filtered = _adminOrderFilter === 'all' ? dateFiltered
+    : _adminOrderFilter === 'prime'   ? dateFiltered.filter(_orderIsPrime)
+    : _adminOrderFilter === 'karbala' ? dateFiltered.filter(_orderIsKarbala)
+    : dateFiltered.filter(function(o){ return o.status === _adminOrderFilter; });
 
   if (!filtered.length) {
     var emptyMsg = 'لا توجد طلبات';
@@ -7894,6 +7982,146 @@ function renderAdminOrders() {
   }
 
   listDiv.innerHTML = header + bulkBar + filtered.map(renderAdminOrderCard).join('');
+  updateAdminDashboardTiles();
+}
+
+// ═══════════════════════════════════════════
+// 📊 لوحة الإحصائيات السريعة (برايم / كربلاء / الزبائن)
+// ═══════════════════════════════════════════
+var _adminAllCustomers = [];
+var _adminCustomerFilter = 'all';
+
+function _orderIsPrime(o) { return !!_primeStatusCache[o.orderId]; }
+function _orderIsKarbala(o) { return String(o.address||'').split('،')[0].trim() === 'كربلاء'; }
+
+function updateAdminDashboardTiles() {
+  var primeEl = document.getElementById('astPrimeCount');
+  var karbalaEl = document.getElementById('astKarbalaCount');
+  var custEl = document.getElementById('astCustomersCount');
+  if (primeEl) primeEl.textContent = _adminAllOrders.filter(_orderIsPrime).length;
+  if (karbalaEl) karbalaEl.textContent = _adminAllOrders.filter(_orderIsKarbala).length;
+  if (custEl) custEl.textContent = _adminAllCustomers.length;
+}
+
+function adminOpenPrimeOrders() {
+  adminSwitchTab('orders');
+  _adminDateFilter = 'all';
+  document.querySelectorAll('.admin-date-filter').forEach(function(b){ b.classList.remove('active'); });
+  var dateBtn = document.querySelector('.admin-date-filter[data-date="all"]');
+  if (dateBtn) dateBtn.classList.add('active');
+  adminFilterOrders('prime', document.getElementById('admFilterBtn-prime'));
+}
+
+function adminOpenKarbalaOrders() {
+  adminSwitchTab('orders');
+  _adminDateFilter = 'all';
+  document.querySelectorAll('.admin-date-filter').forEach(function(b){ b.classList.remove('active'); });
+  var dateBtn = document.querySelector('.admin-date-filter[data-date="all"]');
+  if (dateBtn) dateBtn.classList.add('active');
+  adminFilterOrders('karbala', document.getElementById('admFilterBtn-karbala'));
+}
+
+// ═══════════════════════════════════════════
+// 👥 تبويب الزبائن — بانتظار الموافقة / موافق عليهم
+// ═══════════════════════════════════════════
+async function loadAdminCustomers() {
+  var listDiv = document.getElementById('adminCustomersList');
+  listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;">جاري تحميل الزبائن...</div></div>';
+  try {
+    var customers = await secureApiCall('getCustomersList', { adminKey: getAdminKey() });
+    _adminAllCustomers = customers || [];
+    renderAdminCustomers();
+    updateAdminDashboardTiles();
+  } catch(e) {
+    listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">⚠️ فشل تحميل الزبائن: ' + (e.message || '') + '</div>';
+  }
+}
+
+function adminFilterCustomers(filter, btn) {
+  _adminCustomerFilter = filter;
+  document.querySelectorAll('#adminCustomersView .admin-order-filter').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderAdminCustomers();
+}
+
+function renderAdminCustomers() {
+  var listDiv = document.getElementById('adminCustomersList');
+  if (!listDiv) return;
+
+  var counts = { all: _adminAllCustomers.length, pending: 0, approved: 0 };
+  _adminAllCustomers.forEach(function(c){ if (counts[c.status] !== undefined) counts[c.status]++; });
+  Object.keys(counts).forEach(function(k){
+    var el = document.getElementById('adm-cust-cnt-' + k);
+    if (el) el.textContent = counts[k];
+  });
+
+  var filtered = _adminCustomerFilter === 'all' ? _adminAllCustomers
+    : _adminAllCustomers.filter(function(c){ return c.status === _adminCustomerFilter; });
+
+  if (!filtered.length) {
+    listDiv.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted);font-size:15px;">📭 لا يوجد زبائن</div>';
+    return;
+  }
+
+  listDiv.innerHTML = filtered.map(renderAdminCustomerCard).join('');
+}
+
+function renderAdminCustomerCard(c) {
+  var statusText = 'بانتظار الموافقة', statusColor = '#F59E0B', statusIcon = '⏳';
+  if (c.status === 'approved') { statusText = 'موافق عليه'; statusColor = '#10B981'; statusIcon = '✅'; }
+  if (c.status === 'rejected') { statusText = 'مرفوض';       statusColor = '#EF4444'; statusIcon = '❌'; }
+
+  var actions = '';
+  if (c.status === 'pending') {
+    actions = '<div style="display:flex;gap:8px;margin-top:10px;">' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ موافقة</button>' +
+      '<button class="admin-action-btn" onclick="adminRejectCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ رفض</button>' +
+    '</div>';
+  }
+
+  return '<div class="admin-customer-card">' +
+    '<div style="display:flex;align-items:center;gap:10px;">' +
+      '<div style="flex:1;">' +
+        '<div style="font-size:15px;font-weight:900;color:var(--text);">👤 ' + sanitize(c.name||'-') + '</div>' +
+        (c.shop ? '<div style="font-size:12px;color:var(--muted);margin-top:2px;">🏪 ' + sanitize(c.shop) + '</div>' : '') +
+      '</div>' +
+      '<div style="padding:4px 10px;border-radius:12px;background:' + statusColor + '20;color:' + statusColor + ';font-size:11px;font-weight:800;white-space:nowrap;">' +
+        statusIcon + ' ' + statusText +
+      '</div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + c.phone + '" style="color:var(--primary);">' + sanitize(c.phone) + '</a>' +
+      '<a href="https://wa.me/' + _waPhone(c.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a></div>' +
+    (c.address ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">📍 ' + sanitize(c.address) + '</div>' : '') +
+    (c.date ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;">🗓️ ' + sanitize(String(c.date)) + '</div>' : '') +
+    actions +
+  '</div>';
+}
+
+async function adminApproveCustomer(phone) {
+  if (!confirm('الموافقة على هذا الزبون؟')) return;
+  try {
+    await secureApiCall('updateCustomerStatusAdmin', { adminKey: getAdminKey(), phone: phone, status: 'approved' });
+    var c = _adminAllCustomers.find(function(x){ return x.phone === phone; });
+    if (c) c.status = 'approved';
+    renderAdminCustomers();
+    updateAdminDashboardTiles();
+    showAdminToast('✅ تمت الموافقة على الزبون');
+  } catch(e) {
+    alert('❌ فشل: ' + (e.message || ''));
+  }
+}
+
+async function adminRejectCustomer(phone) {
+  if (!confirm('رفض هذا الزبون؟')) return;
+  try {
+    await secureApiCall('updateCustomerStatusAdmin', { adminKey: getAdminKey(), phone: phone, status: 'rejected' });
+    var c = _adminAllCustomers.find(function(x){ return x.phone === phone; });
+    if (c) c.status = 'rejected';
+    renderAdminCustomers();
+    showAdminToast('❌ تم رفض الزبون');
+  } catch(e) {
+    alert('❌ فشل: ' + (e.message || ''));
+  }
 }
 
 // ✅ Bulk selection state
