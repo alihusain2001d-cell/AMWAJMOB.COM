@@ -3309,18 +3309,28 @@ function generateDeviceId() {
 }
 
 async function secureApiCall(action, data = {}) {
+  // بدون مهلة زمنية، أي انقطاع/بطء بالشبكة كان يخلي الطلب معلّق للأبد بدون خطأ ولا نجاح — هذا سبب تعليق "جاري التحقق..."
+  const controller = new AbortController();
+  const timeoutId = setTimeout(function(){ controller.abort(); }, 25000);
   try {
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, _ts: Date.now(), ...data })
+      body: JSON.stringify({ apiKey: CONFIG.API_KEY, action: action, identifier: CONFIG.DEVICE_ID, _ts: Date.now(), ...data }),
+      signal: controller.signal
     });
     const result = await response.json();
     if (!result.success) throw new Error(result.error || 'حدث خطأ');
     return result.data;
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error('API Timeout:', action);
+      throw new Error('انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى');
+    }
     console.error('API Error:', error);
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -3661,6 +3671,8 @@ async function verifyOtpCode() {
     }
   } catch (e) {
     resultEl.innerHTML = '<div class="result error">❌ ' + (e.message || 'رمز غير صحيح') + '</div>';
+  } finally {
+    // نضمن رجوع الزر لحالته الطبيعية دائماً — حتى لو صار خطأ غير متوقع أثناء التنقل بين الشاشات
     btn.disabled = false; btn.textContent = 'تأكيد';
   }
 }
@@ -4647,6 +4659,7 @@ async function openProductSheet(type, title) {
   _activeSheetType = type;
   _activeSheetSub = null;
   sheetFlatSubType = null;
+  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات — لا نخلي ماركة قسم سابق تأثر على زر الرجوع
   if (typeof currentPriceType !== 'undefined') currentPriceType = type;
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = title;
@@ -4730,6 +4743,7 @@ function openFlatSubSheet(subType, labelAr, icon) {
   _activeSheetType = 'flatpower';
   _activeSheetSub = subType;
   sheetFlatSubType = subType;
+  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات
   if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
@@ -4829,6 +4843,7 @@ function handleSheetSearch() {
     } else {
       resultsDiv.innerHTML = '';
       brandsDiv.style.display = 'grid';
+      _lastBrandStr = null; // رجعنا لقائمة البراندات — لا يبقى زر الرجوع يظن إنه لسا داخل ماركة
     }
     return;
   }
@@ -6634,6 +6649,83 @@ function dismissSystemNotice() {
 }
 
 // ═══════════════════════════════════════════
+// ↓ اسحب للتحديث (Pull to Refresh) — يشتغل بكل صفحات التطبيق
+// ═══════════════════════════════════════════
+(function() {
+  var PULL_THRESHOLD = 70; // px المسافة المطلوبة قبل ما نعتبرها "اسحب للتحديث"
+  var startX = 0, startY = 0, currentY = 0, pulling = false, scrollEl = null, refreshing = false;
+
+  var styleTag = document.createElement('style');
+  styleTag.textContent = '@keyframes ptrSpin{to{transform:rotate(360deg);}}';
+  document.head.appendChild(styleTag);
+
+  var indicator = document.createElement('div');
+  indicator.id = 'ptrIndicator';
+  indicator.style.cssText = 'position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:center;height:0;overflow:hidden;transition:height 0.15s;z-index:100000;pointer-events:none;';
+  indicator.innerHTML = '<div id="ptrSpinner" style="width:26px;height:26px;border:3px solid #E2E8F0;border-top-color:#0EA5E9;border-radius:50%;"></div>';
+  document.addEventListener('DOMContentLoaded', function(){ document.body.insertBefore(indicator, document.body.firstChild); });
+
+  // يدور على أقرب حاوية تكدر تنسحب فعلياً (بدل document بس) — حتى تشتغل جوه أي شيت/تبويب مفتوح
+  function findScrollable(el) {
+    while (el && el !== document.body && el.nodeType === 1) {
+      var style = window.getComputedStyle(el);
+      var canScroll = (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight;
+      if (canScroll) return el;
+      el = el.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function scrollTopOf(el) {
+    if (!el || el === document.scrollingElement || el === document.documentElement) {
+      return (document.scrollingElement || document.documentElement).scrollTop;
+    }
+    return el.scrollTop;
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (refreshing || e.touches.length !== 1) return;
+    scrollEl = findScrollable(e.target);
+    if (scrollTopOf(scrollEl) > 0) { scrollEl = null; return; }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    currentY = startY;
+    pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!pulling || refreshing) return;
+    currentY = e.touches[0].clientY;
+    var diffY = currentY - startY;
+    var diffX = e.touches[0].clientX - startX;
+    // تجاهل السحب الأفقي (كاروسيل صور مثلاً) وتجاهل السحب لفوق
+    if (diffY <= 0 || Math.abs(diffX) > Math.abs(diffY)) { indicator.style.height = '0px'; return; }
+    if (scrollTopOf(scrollEl) > 0) { pulling = false; indicator.style.height = '0px'; return; }
+    if (e.cancelable) e.preventDefault();
+    var pull = Math.min(diffY * 0.5, 90);
+    indicator.style.height = pull + 'px';
+    var spinner = document.getElementById('ptrSpinner');
+    if (spinner) spinner.style.transform = 'rotate(' + (pull * 3) + 'deg)';
+  }, { passive: false });
+
+  document.addEventListener('touchend', function() {
+    if (!pulling) return;
+    pulling = false;
+    var diffY = currentY - startY;
+    if (diffY > PULL_THRESHOLD && !refreshing) {
+      refreshing = true;
+      indicator.style.height = '50px';
+      var spinner = document.getElementById('ptrSpinner');
+      if (spinner) spinner.style.animation = 'ptrSpin 0.6s linear infinite';
+      setTimeout(function(){ location.reload(); }, 200);
+    } else {
+      indicator.style.height = '0px';
+    }
+    startX = 0; startY = 0; currentY = 0;
+  }, { passive: true });
+})();
+
+// ═══════════════════════════════════════════
 // 📢 In-App Broadcast Modal (يظهر لكل زبون يفتح التطبيق)
 // ═══════════════════════════════════════════
 async function checkAndShowBroadcast() {
@@ -7221,6 +7313,7 @@ function openCheckFromAccount() {
 
     <!-- Orders view -->
     <div id="adminOrdersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="bsheet-search-bar" style="margin:10px 14px 0;flex-shrink:0;"><span>🔍</span><input type="text" id="adminOrderSearch" placeholder="ابحث برقم الطلب (مثال: AMW-1547)" oninput="renderAdminOrders()" autocomplete="off"></div>
       <!-- Date filter row -->
       <div style="padding:10px 14px 6px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;align-items:center;">
         <button class="admin-date-filter active" data-date="today" onclick="adminFilterDate('today',this)">📅 اليوم</button>
@@ -7242,6 +7335,7 @@ function openCheckFromAccount() {
 
     <!-- Customers view -->
     <div id="adminCustomersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+      <div class="bsheet-search-bar" style="margin:10px 14px 0;flex-shrink:0;"><span>🔍</span><input type="text" id="adminCustomerSearch" placeholder="ابحث برقم الموبايل" oninput="renderAdminCustomers()" autocomplete="off" dir="ltr"></div>
       <div style="padding:10px 14px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;">
         <button class="admin-order-filter active" id="admCustFilterBtn-all" onclick="adminFilterCustomers('all',this)">الكل <span class="badge" id="adm-cust-cnt-all">0</span></button>
         <button class="admin-order-filter" id="admCustFilterBtn-pending" onclick="adminFilterCustomers('pending',this)">⏳ بانتظار الموافقة <span class="badge" id="adm-cust-cnt-pending">0</span></button>
@@ -8024,6 +8118,18 @@ function renderAdminOrders() {
   var listDiv = document.getElementById('adminOrdersList');
   if (!listDiv) return;
 
+  // 🔍 بحث برقم الطلب — يتجاوز فلاتر التاريخ والحالة ويدور بكل الطلبات مباشرة
+  var orderSearchInput = document.getElementById('adminOrderSearch');
+  var orderSearchQuery = orderSearchInput ? orderSearchInput.value.trim().toLowerCase() : '';
+  if (orderSearchQuery) {
+    var searchResults = _adminAllOrders.filter(function(o){ return String(o.orderId||'').toLowerCase().includes(orderSearchQuery); });
+    listDiv.innerHTML = searchResults.length
+      ? searchResults.map(renderAdminOrderCard).join('')
+      : '<div style="padding:40px;text-align:center;color:var(--muted);font-size:15px;">📭 ما لكينا طلب برقم "' + sanitize(orderSearchQuery) + '"</div>';
+    updateAdminDashboardTiles();
+    return;
+  }
+
   // Filter by date first
   var dateFiltered = _adminAllOrders.filter(_orderMatchesDate);
 
@@ -8156,6 +8262,17 @@ function renderAdminCustomers() {
     var el = document.getElementById('adm-cust-cnt-' + k);
     if (el) el.textContent = counts[k];
   });
+
+  // 🔍 بحث برقم الموبايل — يتجاوز فلتر الحالة ويدور بكل الزبائن مباشرة
+  var custSearchInput = document.getElementById('adminCustomerSearch');
+  var custSearchQuery = custSearchInput ? custSearchInput.value.replace(/[^0-9]/g,'') : '';
+  if (custSearchQuery) {
+    var searchResults = _adminAllCustomers.filter(function(c){ return String(c.phone||'').replace(/[^0-9]/g,'').includes(custSearchQuery); });
+    listDiv.innerHTML = searchResults.length
+      ? searchResults.map(renderAdminCustomerCard).join('')
+      : '<div style="padding:40px;text-align:center;color:var(--muted);font-size:15px;">📭 ما لكينا زبون برقم "' + sanitize(custSearchQuery) + '"</div>';
+    return;
+  }
 
   var filtered = _adminCustomerFilter === 'all' ? _adminAllCustomers
     : _adminAllCustomers.filter(function(c){ return c.status === _adminCustomerFilter; });
