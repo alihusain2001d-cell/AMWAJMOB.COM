@@ -2514,6 +2514,12 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 </div>
 <style>body{padding-top:30px !important;}</style>
 
+<!-- ⚠️ إشعار عطل/صيانة — يظهر بكل فتحة تطبيق طالما مفعّل من لوحة التحكم -->
+<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:9998;">
+  <span id="systemNoticeText"></span>
+  <button onclick="dismissSystemNotice()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:15px;width:24px;height:24px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
+</div>
+
 <!-- Cart floating btn -->
 <div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
 <button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
@@ -6605,6 +6611,29 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 // ═══════════════════════════════════════════
+// ⚠️ إشعار عطل/صيانة ثابت — يظهر بكل فتحة تطبيق طالما الأدمن مفعّله
+// ═══════════════════════════════════════════
+async function checkSystemNotice() {
+  try {
+    var res = await secureApiCall('getSystemNotice', {});
+    var banner = document.getElementById('systemNoticeBanner');
+    var textEl = document.getElementById('systemNoticeText');
+    if (!banner || !textEl) return;
+    if (res && res.enabled && res.message) {
+      textEl.textContent = '⚠️ ' + res.message;
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch(e) { console.error('checkSystemNotice failed', e); }
+}
+
+function dismissSystemNotice() {
+  var banner = document.getElementById('systemNoticeBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════
 // 📢 In-App Broadcast Modal (يظهر لكل زبون يفتح التطبيق)
 // ═══════════════════════════════════════════
 async function checkAndShowBroadcast() {
@@ -6726,6 +6755,7 @@ function showBroadcastModal(bc) {
 
 // شغّل الإشعارات لما الـ DOM يجهز
 document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function(){ try { checkSystemNotice(); } catch(e){} }, 300); // يشتغل لكل الزبائن حتى الضيوف
   setTimeout(setupPushNotifications, 1000); // تأخير بسيط ليضمن جاهزية Capacitor
   setTimeout(function(){ try { updateBellBadge(false); } catch(e){} }, 500);
   // 🔄 جيب الإشعارات اللي وصلت لما الموقع كان مغلق
@@ -7223,6 +7253,22 @@ function openCheckFromAccount() {
     <!-- Broadcast view -->
     <div id="adminBroadcastView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
       <div style="overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;padding-bottom:120px;">
+
+        <!-- ⚠️ إشعار عطل/صيانة ثابت -->
+        <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:14px;padding:14px;margin:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:15px;font-weight:900;color:#991B1B;">⚠️ إشعار عطل / تبليغ ثابت</div>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="systemNoticeToggle" onchange="updateSystemNoticeStatusLabel()" style="width:20px;height:20px;cursor:pointer;accent-color:#DC2626;">
+              <span id="systemNoticeStatusLabel" style="font-size:12px;font-weight:800;color:#991B1B;">متوقف</span>
+            </label>
+          </div>
+          <div style="font-size:12px;color:#991B1B;margin-bottom:8px;">يظهر بشريط أحمر بأعلى التطبيق لكل زبون يدخل، ويبقى ظاهر لحد ما توقفه من هنا (مو مرة وحدة بس).</div>
+          <textarea id="systemNoticeMessage" placeholder="مثلاً: يوجد عطل مؤقت بخدمة التوصيل اليوم، نعتذر عن التأخير" maxlength="200" style="width:100%;min-height:60px;padding:10px;border:1px solid #FCA5A5;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+          <button onclick="saveSystemNotice()" id="systemNoticeSaveBtn" style="width:100%;margin-top:10px;padding:12px;border:none;border-radius:10px;background:#DC2626;color:#fff;font-size:14px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">💾 حفظ</button>
+          <div id="systemNoticeResult" style="font-size:12px;font-weight:700;margin-top:8px;display:none;"></div>
+        </div>
+
         <div class="broadcast-form">
 
           <div class="broadcast-info">
@@ -7691,6 +7737,7 @@ function adminSwitchTab(tab) {
     // Reset form
     var t = document.getElementById('broadcastTitle');
     if (t && !t.value) updateBroadcastPreview();
+    loadSystemNoticeAdmin();
   } else {
     pView.style.display = 'flex';
     pTab.classList.add('active');
@@ -7869,6 +7916,61 @@ async function sendBroadcast() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🚀 إرسال للجميع';
+  }
+}
+
+// ═══════════════════════════════════════════
+// ⚠️ إشعار عطل/صيانة ثابت — لوحة التحكم
+// ═══════════════════════════════════════════
+function updateSystemNoticeStatusLabel() {
+  var toggle = document.getElementById('systemNoticeToggle');
+  var label = document.getElementById('systemNoticeStatusLabel');
+  if (!toggle || !label) return;
+  label.textContent = toggle.checked ? 'مفعّل' : 'متوقف';
+}
+
+async function loadSystemNoticeAdmin() {
+  try {
+    var res = await secureApiCall('getSystemNotice', {});
+    var toggle = document.getElementById('systemNoticeToggle');
+    var msgEl = document.getElementById('systemNoticeMessage');
+    if (toggle) toggle.checked = !!(res && res.enabled);
+    if (msgEl) msgEl.value = (res && res.message) || '';
+    updateSystemNoticeStatusLabel();
+  } catch(e) { console.error('loadSystemNoticeAdmin failed', e); }
+}
+
+async function saveSystemNotice() {
+  var toggle = document.getElementById('systemNoticeToggle');
+  var msgEl = document.getElementById('systemNoticeMessage');
+  var btn = document.getElementById('systemNoticeSaveBtn');
+  var result = document.getElementById('systemNoticeResult');
+  var enabled = toggle ? toggle.checked : false;
+  var message = msgEl ? msgEl.value.trim() : '';
+
+  if (enabled && message.length < 3) {
+    alert('⚠️ اكتب نص الإشعار أولاً (3 أحرف على الأقل)');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ...';
+  try {
+    await secureApiCall('setSystemNotice', { adminKey: getAdminKey(), enabled: enabled, message: message });
+    if (result) {
+      result.style.display = 'block';
+      result.style.color = '#166534';
+      result.textContent = enabled ? '✅ الإشعار مفعّل الآن — راح يظهر لكل زبون يفتح التطبيق' : '✅ تم إيقاف الإشعار';
+    }
+  } catch(e) {
+    if (result) {
+      result.style.display = 'block';
+      result.style.color = '#991B1B';
+      result.textContent = '❌ فشل الحفظ: ' + (e.message || '');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 حفظ';
   }
 }
 
