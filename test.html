@@ -8296,7 +8296,15 @@ function renderAdminCustomerCard(c) {
       '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ موافقة</button>' +
       '<button class="admin-action-btn" onclick="adminRejectCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ رفض</button>' +
     '</div>';
+  } else if (c.status === 'rejected') {
+    actions = '<div style="display:flex;gap:8px;margin-top:10px;">' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ قبول</button>' +
+    '</div>';
   }
+  actions += '<div style="display:flex;gap:8px;margin-top:8px;">' +
+    '<button class="admin-action-btn" onclick="adminOpenEditCustomer(\'' + c.phone + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#7C3AED;color:#fff;">✏️ تعديل</button>' +
+    '<button class="admin-action-btn" onclick="adminDeleteCustomer(\'' + c.phone + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#F1F5F9;color:#EF4444;">🗑️ حذف</button>' +
+  '</div>';
 
   return '<div class="admin-customer-card">' +
     '<div style="display:flex;align-items:center;gap:10px;">' +
@@ -8340,6 +8348,86 @@ async function adminRejectCustomer(phone) {
     showAdminToast('❌ تم رفض الزبون');
   } catch(e) {
     alert('❌ فشل: ' + (e.message || ''));
+  }
+}
+
+async function adminDeleteCustomer(phone) {
+  if (!confirm('حذف هذا الزبون نهائياً؟ ما يمكن التراجع.')) return;
+  try {
+    await secureApiCall('updateCustomerStatusAdmin', { adminKey: getAdminKey(), phone: phone, status: 'deleted' });
+    _adminAllCustomers = _adminAllCustomers.filter(function(x){ return x.phone !== phone; });
+    renderAdminCustomers();
+    updateAdminDashboardTiles();
+    showAdminToast('🗑️ تم حذف الزبون');
+  } catch(e) {
+    alert('❌ فشل: ' + (e.message || ''));
+  }
+}
+
+// ═══════════════════════════════════════════
+// ✏️ تعديل رقم هاتف/عنوان الزبون
+// ═══════════════════════════════════════════
+var _editCustomerState = null;
+
+function adminOpenEditCustomer(phone) {
+  var c = _adminAllCustomers.find(function(x){ return x.phone === phone; });
+  if (!c) return;
+  _editCustomerState = { originalPhone: c.phone, phone: c.phone, address: c.address || '' };
+  _renderEditCustomerModal();
+}
+
+function _renderEditCustomerModal() {
+  var s = _editCustomerState;
+  if (!s) return;
+  var old = document.getElementById('editCustomerOverlay');
+  if (old) old.remove();
+
+  var html =
+    '<div id="editCustomerOverlay" style="position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center;">' +
+      '<div style="background:var(--surface,#fff);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+          '<div style="font-size:16px;font-weight:900;color:var(--text);">✏️ تعديل بيانات الزبون</div>' +
+          '<button onclick="_editCustomerClose()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94A3B8;">✕</button>' +
+        '</div>' +
+
+        '<label style="font-size:12px;font-weight:700;color:#64748B;">📱 الهاتف</label>' +
+        '<input id="editCustomerPhone" value="' + sanitize(s.phone) + '" style="width:100%;padding:10px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;margin:4px 0 8px;font-family:Tajawal,sans-serif;box-sizing:border-box;" dir="ltr">' +
+
+        '<label style="font-size:12px;font-weight:700;color:#64748B;">📍 العنوان</label>' +
+        '<textarea id="editCustomerAddress" rows="2" style="width:100%;padding:10px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;margin:4px 0 8px;font-family:Tajawal,sans-serif;resize:none;box-sizing:border-box;">' + sanitize(s.address) + '</textarea>' +
+
+        '<button onclick="_editCustomerSave()" style="width:100%;padding:13px;border:none;border-radius:10px;background:#7C3AED;color:#fff;font-size:15px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:6px;">💾 حفظ التعديلات</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function _editCustomerClose() {
+  var el = document.getElementById('editCustomerOverlay');
+  if (el) el.remove();
+  _editCustomerState = null;
+}
+
+async function _editCustomerSave() {
+  var s = _editCustomerState;
+  if (!s) return;
+  var newPhone = document.getElementById('editCustomerPhone').value.trim();
+  var newAddress = document.getElementById('editCustomerAddress').value.trim();
+  if (!newPhone) { alert('رقم الهاتف مطلوب'); return; }
+
+  try {
+    await secureApiCall('editCustomer', {
+      adminKey: getAdminKey(), phone: s.originalPhone,
+      newPhone: newPhone, address: newAddress
+    });
+    var c = _adminAllCustomers.find(function(x){ return x.phone === s.originalPhone; });
+    if (c) { c.phone = newPhone; c.address = newAddress; }
+    _editCustomerClose();
+    renderAdminCustomers();
+    showAdminToast('✅ تم حفظ التعديلات');
+  } catch(e) {
+    alert('❌ فشل الحفظ: ' + (e.message || ''));
   }
 }
 
