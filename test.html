@@ -7778,23 +7778,8 @@ async function openAdminPanel() {
   } catch(e) {
     listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
   }
-
-  // 📊 حمّل الطلبات والزبائن بالخلفية عشان تظهر أرقام مربعات لوحة الإحصائيات فوراً
-  (async function(){
-    try {
-      var orders = await secureApiCall('getAllOrders', { adminKey: getAdminKey() });
-      _adminAllOrders = orders || [];
-      try { await loadPrimeStatuses(null, true); } catch(e) {}
-      updateAdminDashboardTiles();
-    } catch(e) {}
-  })();
-  (async function(){
-    try {
-      var customers = await secureApiCall('getCustomersList', { adminKey: getAdminKey() });
-      _adminAllCustomers = customers || [];
-      updateAdminDashboardTiles();
-    } catch(e) {}
-  })();
+  // 📊 مربعات الطلبات/الزبائن تتحدث أول ما تدخل تبويب الطلبات أو الزبائن (مو فوراً هنا) —
+  // حتى فتح اللوحة ما يستنى على كل هالبيانات ويصير أسرع
 }
 
 function adminSwitchTab(tab) {
