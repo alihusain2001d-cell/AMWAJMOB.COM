@@ -12,7 +12,342 @@
 <!-- manifest.json disabled - using Capacitor native app instead -->
 <title>امواج للالكترونيات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"></noscript>
+</head>
+<body>
+<!-- ⚠️ إشعار عطل/صيانة — يظهر بكل فتحة تطبيق طالما مفعّل من لوحة التحكم -->
+<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:9998;">
+  <span id="systemNoticeText"></span>
+  <button onclick="dismissSystemNotice()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:15px;width:24px;height:24px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
+</div>
+
+<!-- Cart floating btn -->
+<div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
+<button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
+
+<!-- flatpower modal -->
+<div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
+  <div class="flatpower-sheet" onclick="event.stopPropagation()">
+    <div class="flatpower-handle"></div>
+    <div class="fp-head">🔧 قطع غيار منوعة</div>
+    <div class="fp-grid">
+      <div class="fp-btn" onclick="openFlatSub('FLAT POWER','فلات باور','⚡')"><span class="fp-icon">⚡</span><div class="fp-label">فلات باور</div><div class="fp-sub">FLAT POWER</div></div>
+      <div class="fp-btn" onclick="openFlatSub('FLAT VOLUME','فلات صوت','🔉')"><span class="fp-icon">🔉</span><div class="fp-label">فلات صوت</div><div class="fp-sub">FLAT VOLUME</div></div>
+      <div class="fp-btn" onclick="openFlatSub('BUZZER','سماعة جرس','🔔')"><span class="fp-icon">🔔</span><div class="fp-label">سماعة جرس</div><div class="fp-sub">BUZZER</div></div>
+      <div class="fp-btn" onclick="openFlatSub('EAR SPEAKER','سماعة اتصال','📞')"><span class="fp-icon">📞</span><div class="fp-label">سماعة اتصال</div><div class="fp-sub">EAR SPEAKER</div></div>
+      <div class="fp-btn" onclick="openFlatSub('DOOR SIM','باب سيم كارت','💳')"><span class="fp-icon">💳</span><div class="fp-label">باب سيم كارت</div><div class="fp-sub">DOOR SIM</div></div>
+      <div class="fp-btn" onclick="openFlatSub('FINGERPRINT','بصمة','👆')"><span class="fp-icon">👆</span><div class="fp-label">بصمة</div><div class="fp-sub">FINGERPRINT</div></div>
+      <div class="fp-btn" onclick="openFlatSub('OTHER','منوعة','📦')"><span class="fp-icon">📦</span><div class="fp-label">منوعة</div><div class="fp-sub">OTHER</div></div>
+    <div class="fp-btn" onclick="openLensFromModal()"><span class="fp-icon">📷</span><div class="fp-label">عدسة كاميرا</div><div class="fp-sub">LENS CAMERA</div></div>
+    </div>
+    <button class="fp-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
+  </div>
+</div>
+
+<!-- BOTTOM SHEETS -->
+<div id="productsSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="productsSheetBack()"></button>
+      <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
+      <button onclick="refreshCurrentSheet()" id="refreshSheetBtn" title="تحديث" class="header-refresh-btn">⟳</button>
+      <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()"></div>
+      <div id="sheetBrands" class="sheet-brands"></div>
+      <div id="sheetResults"></div>
+    </div>
+  </div>
+</div>
+
+<div id="warrantySheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head"><span class="bsheet-title">✅ تفعيل الضمان</span><button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button></div>
+    <div class="bsheet-body">
+      <div class="form-group"><label class="form-label">اسم الزبون</label><input class="form-input" id="name" placeholder="مثال: أحمد محمد"></div>
+      <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
+      <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
+      <div class="form-group"><label class="form-label">كود الشاشة</label><input class="form-input" id="screenCode" placeholder="الكود خلف الشاشة"></div>
+      <div class="form-group"><label class="form-label">اسم الشاشة (اختياري)</label><input class="form-input" id="screenName" placeholder="مثال: iPhone 11 Pro"></div>
+      <div class="form-group"><label class="form-label">نوع القطعة</label><select class="form-input" id="type"><option value="screen">شاشة</option><option value="battery">بطارية</option></select></div>
+      <div class="form-group"><label class="form-label">تاريخ التركيب</label><input class="form-input" id="start" readonly></div>
+      <div id="dupMsg" style="display:none;background:#FEF2F2;color:#991B1B;padding:10px;border-radius:10px;margin:10px 0;border:1px solid #FECACA;font-size:17px;"></div>
+      <button class="form-btn" id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
+      <div id="result"></div>
+    </div>
+  </div>
+</div>
+
+<div id="checkSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head"><span class="bsheet-title">🔍 التحقق من الضمان</span><button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button></div>
+    <div class="bsheet-body">
+      <div class="form-group"><label class="form-label">أدخل كود الشاشة</label><input class="form-input" id="inv" placeholder="كود الشاشة..."></div>
+      <button class="form-btn" onclick="checkWarranty()">🔍 بحث</button>
+      <div id="out"></div>
+    </div>
+  </div>
+</div>
+
+<div id="ordersSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('ordersSheet')"></button>
+      <span class="bsheet-title">📦 طلباتي</span>
+      <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
+    </div>
+    <div class="orders-tabs" id="ordersTabs">
+      <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
+      <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
+    </div>
+    <div class="bsheet-body" style="padding-top:0;">
+      <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
+      <div id="myOrdersList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cartSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head"><span class="bsheet-title">🛒 سلة المشتريات</span><button class="bsheet-close" onclick="closeSheet('cartSheet')">✕</button></div>
+    <div class="bsheet-body">
+      <div id="cartItems"></div>
+      <div id="cartSummary" style="display:none;background:var(--primary-light);padding:12px;border-radius:10px;margin:10px 0;border:1px solid #BFDBFE;">
+        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;"><span>المجموع:</span><span id="cartTotal" style="color:var(--primary);">0</span></div>
+      </div>
+      <button onclick="clearCart()" class="form-btn danger" id="clearCartBtn" style="display:none;margin-bottom:10px;">🗑️ إفراغ السلة</button>
+      <div id="orderForm" style="display:none;">
+        <div style="text-align:center;font-size:17px;font-weight:800;color:var(--primary);margin:12px 0 10px;">معلومات التوصيل</div>
+        <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
+        <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
+        <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
+        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+        <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
+        <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
+        <div id="orderResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ صفحة الإشعارات ═══ -->
+<div id="notificationsSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔔 الإشعارات</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="notif-clear-btn" onclick="clearAllNotifications()" id="notifClearBtn" style="display:none;">🗑️ مسح الكل</button>
+        <button class="bsheet-close" onclick="closeSheet('notificationsSheet')">✕</button>
+      </div>
+    </div>
+    <div class="bsheet-body" style="padding:0;">
+      <div class="notif-list" id="notifList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="accountSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-body" style="padding-left:0;padding-right:0;padding-top:0;">
+      <div id="accountContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ صفحة تواصل معنا ═══ -->
+<div id="contactSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">📞 تواصل معنا</span>
+      <button class="bsheet-close" onclick="closeSheet('contactSheet')">✕</button>
+    </div>
+    <div class="bsheet-body" style="padding-left:16px;padding-right:16px;">
+
+      <!-- ترحيب -->
+      <div style="background:linear-gradient(135deg,#0EA5E9,#06B6D4,#8B5CF6);border-radius:20px;padding:18px;color:white;text-align:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(14,165,233,0.3);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,0.18),transparent 70%);"></div>
+        <div style="font-size:36px;margin-bottom:6px;position:relative;">👋</div>
+        <div style="font-size:18px;font-weight:800;margin-bottom:4px;position:relative;letter-spacing:-0.3px;">نسعد بخدمتكم</div>
+        <div style="font-size:13px;opacity:0.92;position:relative;">اختر طريقة التواصل المناسبة</div>
+      </div>
+
+      <!-- قسم واتساب الرئيسي -->
+      <div class="contact-section-title">💬 واتساب للطلبات والاستفسار</div>
+      <div class="contact-card primary-contact">
+        <div class="contact-card-row">
+          <div class="contact-card-info">
+            <div class="contact-card-label">📱 الرقم الرئيسي</div>
+            <div class="contact-card-number">0770 900 0160</div>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          <a href="https://wa.me/9647709000160?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
+          <a href="tel:07709000160" class="ccard-btn ccard-call">📞 اتصال</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-card-row">
+          <div class="contact-card-info">
+            <div class="contact-card-label">📱 الرقم الثاني</div>
+            <div class="contact-card-number">0780 137 2000</div>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          <a href="https://wa.me/9647801372000?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
+          <a href="tel:07801372000" class="ccard-btn ccard-call">📞 اتصال</a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="contact-card-row">
+          <div class="contact-card-info">
+            <div class="contact-card-label">📱 الرقم الثالث</div>
+            <div class="contact-card-number">0772 905 5055</div>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          <a href="https://wa.me/9647729055055?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
+          <a href="tel:07729055055" class="ccard-btn ccard-call">📞 اتصال</a>
+        </div>
+      </div>
+
+      <!-- قسم الشكاوى -->
+      <div class="contact-section-title" style="margin-top:24px;">📢 الشكاوى والمقترحات</div>
+      <div class="contact-card complaint-card">
+        <div class="contact-card-row">
+          <div class="contact-card-info">
+            <div class="contact-card-label" style="color:#B45309;">⚡ شكاوى ومقترحات</div>
+            <div class="contact-card-number">0771 753 3595</div>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          <a href="https://wa.me/9647717533595?text=السلام%20عليكم،%20لدي%20شكوى/اقتراح" class="ccard-btn ccard-wa">💬 واتساب</a>
+          <a href="tel:07717533595" class="ccard-btn ccard-call">📞 اتصال</a>
+        </div>
+      </div>
+
+      <div class="contact-card complaint-card">
+        <div class="contact-card-row">
+          <div class="contact-card-info">
+            <div class="contact-card-label" style="color:#B45309;">⚡ شكاوى ومقترحات</div>
+            <div class="contact-card-number">0772 593 8474</div>
+          </div>
+        </div>
+        <div class="contact-card-actions">
+          <a href="https://wa.me/9647725938474?text=السلام%20عليكم،%20لدي%20شكوى/اقتراح" class="ccard-btn ccard-wa">💬 واتساب</a>
+          <a href="tel:07725938474" class="ccard-btn ccard-call">📞 اتصال</a>
+        </div>
+      </div>
+
+      <!-- قسم السوشيال ميديا -->
+      <div class="contact-section-title" style="margin-top:24px;">🌐 تابعونا على</div>
+      <div class="social-grid">
+        <a href="https://t.me/amwajmob" class="social-btn social-telegram">
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+            </svg>
+          </div>
+          <div class="social-name">تلكرام</div>
+          <div class="social-handle">@amwajmob</div>
+        </a>
+        <a href="https://www.instagram.com/amwaj.mob" class="social-btn social-instagram">
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+            </svg>
+          </div>
+          <div class="social-name">انستغرام</div>
+          <div class="social-handle">amwaj.mob</div>
+        </a>
+        <a href="https://www.facebook.com/search/top?q=أمواج للالكترونيات" class="social-btn social-facebook">
+          <div class="social-icon">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </div>
+          <div class="social-name">فيسبوك</div>
+          <div class="social-handle">أمواج للالكترونيات</div>
+        </a>
+      </div>
+
+      <!-- ساعات العمل -->
+      <div style="margin-top:24px;background:var(--surface-2);border:1px solid var(--border-light);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:28px;">🕐</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">ساعات العمل</div>
+          <div style="font-size:13px;color:var(--muted);">يومياً من 9 صباحاً - 9 مساءً</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- New Items Sheet -->
+<div id="newItemsSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">✨ وصلنا حديثاً</span>
+      <button class="bsheet-close" onclick="closeSheet('newItemsSheet')">✕</button>
+    </div>
+    <div class="bsheet-body" id="newItemsSheetBody">
+      <div style="text-align:center;padding:30px;">
+        <div class="loading-spinner" style="margin:0 auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Search Sheet -->
+<div id="searchSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <span class="bsheet-title">🔍 بحث في كل المواد</span>
+      <button class="bsheet-close" onclick="closeSheet('searchSheet')">✕</button>
+    </div>
+    <div class="bsheet-body">
+      <div class="bsheet-search-bar" style="margin-bottom:14px;">
+        <span style="font-size:18px;">🔍</span>
+        <input type="text" id="globalSheetSearch" placeholder="ابحث عن أي منتج..." oninput="doGlobalSheetSearch()" autofocus>
+      </div>
+      <div id="globalSheetResults">
+        <div style="text-align:center;padding:30px;color:#94A3B8;font-size:18px;">اكتب اسم المنتج للبحث...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APP SHELL -->
+<div class="app-shell">
+
+  <!-- Body -->
+  <div class="app-body" id="appBody">
+
+    <!-- Loading screen -->
+    <div id="loadingScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">
+      <img src="1646237145252.png" alt="" style="width:120px;margin-bottom:14px;" onerror="this.style.display='none'">
+      <div style="font-size:26px;font-weight:900;color:#0369A1;font-family:Tajawal,sans-serif;margin-bottom:20px;">أمواج للإلكترونيات</div>
+      <div class="loading-spinner"></div>
+      <div class="loading-text">جاري التحميل...</div>
+    </div>
 <style>
 :root {
   /* Primary palette - more vibrant sky blue */
@@ -2507,340 +2842,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 }
 
 </style>
-</head>
-<body>
-<!-- ⚠️ إشعار عطل/صيانة — يظهر بكل فتحة تطبيق طالما مفعّل من لوحة التحكم -->
-<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:9998;">
-  <span id="systemNoticeText"></span>
-  <button onclick="dismissSystemNotice()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:15px;width:24px;height:24px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
-</div>
-
-<!-- Cart floating btn -->
-<div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
-<button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
-
-<!-- flatpower modal -->
-<div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
-  <div class="flatpower-sheet" onclick="event.stopPropagation()">
-    <div class="flatpower-handle"></div>
-    <div class="fp-head">🔧 قطع غيار منوعة</div>
-    <div class="fp-grid">
-      <div class="fp-btn" onclick="openFlatSub('FLAT POWER','فلات باور','⚡')"><span class="fp-icon">⚡</span><div class="fp-label">فلات باور</div><div class="fp-sub">FLAT POWER</div></div>
-      <div class="fp-btn" onclick="openFlatSub('FLAT VOLUME','فلات صوت','🔉')"><span class="fp-icon">🔉</span><div class="fp-label">فلات صوت</div><div class="fp-sub">FLAT VOLUME</div></div>
-      <div class="fp-btn" onclick="openFlatSub('BUZZER','سماعة جرس','🔔')"><span class="fp-icon">🔔</span><div class="fp-label">سماعة جرس</div><div class="fp-sub">BUZZER</div></div>
-      <div class="fp-btn" onclick="openFlatSub('EAR SPEAKER','سماعة اتصال','📞')"><span class="fp-icon">📞</span><div class="fp-label">سماعة اتصال</div><div class="fp-sub">EAR SPEAKER</div></div>
-      <div class="fp-btn" onclick="openFlatSub('DOOR SIM','باب سيم كارت','💳')"><span class="fp-icon">💳</span><div class="fp-label">باب سيم كارت</div><div class="fp-sub">DOOR SIM</div></div>
-      <div class="fp-btn" onclick="openFlatSub('FINGERPRINT','بصمة','👆')"><span class="fp-icon">👆</span><div class="fp-label">بصمة</div><div class="fp-sub">FINGERPRINT</div></div>
-      <div class="fp-btn" onclick="openFlatSub('OTHER','منوعة','📦')"><span class="fp-icon">📦</span><div class="fp-label">منوعة</div><div class="fp-sub">OTHER</div></div>
-    <div class="fp-btn" onclick="openLensFromModal()"><span class="fp-icon">📷</span><div class="fp-label">عدسة كاميرا</div><div class="fp-sub">LENS CAMERA</div></div>
-    </div>
-    <button class="fp-close" onclick="closeFlatpowerModal()">✕ إغلاق</button>
-  </div>
-</div>
-
-<!-- BOTTOM SHEETS -->
-<div id="productsSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <button class="bsheet-close" onclick="productsSheetBack()"></button>
-      <span id="productsSheetTitle" class="bsheet-title">🖥️ الشاشات</span>
-      <button onclick="refreshCurrentSheet()" id="refreshSheetBtn" title="تحديث" class="header-refresh-btn">⟳</button>
-      <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
-    </div>
-    <div class="bsheet-body">
-      <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()"></div>
-      <div id="sheetBrands" class="sheet-brands"></div>
-      <div id="sheetResults"></div>
-    </div>
-  </div>
-</div>
-
-<div id="warrantySheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head"><span class="bsheet-title">✅ تفعيل الضمان</span><button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button></div>
-    <div class="bsheet-body">
-      <div class="form-group"><label class="form-label">اسم الزبون</label><input class="form-input" id="name" placeholder="مثال: أحمد محمد"></div>
-      <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
-      <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
-      <div class="form-group"><label class="form-label">كود الشاشة</label><input class="form-input" id="screenCode" placeholder="الكود خلف الشاشة"></div>
-      <div class="form-group"><label class="form-label">اسم الشاشة (اختياري)</label><input class="form-input" id="screenName" placeholder="مثال: iPhone 11 Pro"></div>
-      <div class="form-group"><label class="form-label">نوع القطعة</label><select class="form-input" id="type"><option value="screen">شاشة</option><option value="battery">بطارية</option></select></div>
-      <div class="form-group"><label class="form-label">تاريخ التركيب</label><input class="form-input" id="start" readonly></div>
-      <div id="dupMsg" style="display:none;background:#FEF2F2;color:#991B1B;padding:10px;border-radius:10px;margin:10px 0;border:1px solid #FECACA;font-size:17px;"></div>
-      <button class="form-btn" id="btnActivate" onclick="sendData()">تفعيل الضمان</button>
-      <div id="result"></div>
-    </div>
-  </div>
-</div>
-
-<div id="checkSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head"><span class="bsheet-title">🔍 التحقق من الضمان</span><button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button></div>
-    <div class="bsheet-body">
-      <div class="form-group"><label class="form-label">أدخل كود الشاشة</label><input class="form-input" id="inv" placeholder="كود الشاشة..."></div>
-      <button class="form-btn" onclick="checkWarranty()">🔍 بحث</button>
-      <div id="out"></div>
-    </div>
-  </div>
-</div>
-
-<div id="ordersSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <button class="bsheet-close" onclick="closeSheet('ordersSheet')"></button>
-      <span class="bsheet-title">📦 طلباتي</span>
-      <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
-    </div>
-    <div class="orders-tabs" id="ordersTabs">
-      <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
-      <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
-    </div>
-    <div class="bsheet-body" style="padding-top:0;">
-      <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
-      <div id="myOrdersList"></div>
-    </div>
-  </div>
-</div>
-
-<div id="cartSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head"><span class="bsheet-title">🛒 سلة المشتريات</span><button class="bsheet-close" onclick="closeSheet('cartSheet')">✕</button></div>
-    <div class="bsheet-body">
-      <div id="cartItems"></div>
-      <div id="cartSummary" style="display:none;background:var(--primary-light);padding:12px;border-radius:10px;margin:10px 0;border:1px solid #BFDBFE;">
-        <div style="display:flex;justify-content:space-between;font-size:17px;font-weight:800;"><span>المجموع:</span><span id="cartTotal" style="color:var(--primary);">0</span></div>
-      </div>
-      <button onclick="clearCart()" class="form-btn danger" id="clearCartBtn" style="display:none;margin-bottom:10px;">🗑️ إفراغ السلة</button>
-      <div id="orderForm" style="display:none;">
-        <div style="text-align:center;font-size:17px;font-weight:800;color:var(--primary);margin:12px 0 10px;">معلومات التوصيل</div>
-        <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
-        <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
-        <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
-        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
-        <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
-        <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
-        <div id="orderResult"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ صفحة الإشعارات ═══ -->
-<div id="notificationsSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">🔔 الإشعارات</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="notif-clear-btn" onclick="clearAllNotifications()" id="notifClearBtn" style="display:none;">🗑️ مسح الكل</button>
-        <button class="bsheet-close" onclick="closeSheet('notificationsSheet')">✕</button>
-      </div>
-    </div>
-    <div class="bsheet-body" style="padding:0;">
-      <div class="notif-list" id="notifList"></div>
-    </div>
-  </div>
-</div>
-
-<div id="accountSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-body" style="padding-left:0;padding-right:0;padding-top:0;">
-      <div id="accountContent"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ صفحة تواصل معنا ═══ -->
-<div id="contactSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">📞 تواصل معنا</span>
-      <button class="bsheet-close" onclick="closeSheet('contactSheet')">✕</button>
-    </div>
-    <div class="bsheet-body" style="padding-left:16px;padding-right:16px;">
-
-      <!-- ترحيب -->
-      <div style="background:linear-gradient(135deg,#0EA5E9,#06B6D4,#8B5CF6);border-radius:20px;padding:18px;color:white;text-align:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(14,165,233,0.3);position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(255,255,255,0.18),transparent 70%);"></div>
-        <div style="font-size:36px;margin-bottom:6px;position:relative;">👋</div>
-        <div style="font-size:18px;font-weight:800;margin-bottom:4px;position:relative;letter-spacing:-0.3px;">نسعد بخدمتكم</div>
-        <div style="font-size:13px;opacity:0.92;position:relative;">اختر طريقة التواصل المناسبة</div>
-      </div>
-
-      <!-- قسم واتساب الرئيسي -->
-      <div class="contact-section-title">💬 واتساب للطلبات والاستفسار</div>
-      <div class="contact-card primary-contact">
-        <div class="contact-card-row">
-          <div class="contact-card-info">
-            <div class="contact-card-label">📱 الرقم الرئيسي</div>
-            <div class="contact-card-number">0770 900 0160</div>
-          </div>
-        </div>
-        <div class="contact-card-actions">
-          <a href="https://wa.me/9647709000160?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
-          <a href="tel:07709000160" class="ccard-btn ccard-call">📞 اتصال</a>
-        </div>
-      </div>
-
-      <div class="contact-card">
-        <div class="contact-card-row">
-          <div class="contact-card-info">
-            <div class="contact-card-label">📱 الرقم الثاني</div>
-            <div class="contact-card-number">0780 137 2000</div>
-          </div>
-        </div>
-        <div class="contact-card-actions">
-          <a href="https://wa.me/9647801372000?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
-          <a href="tel:07801372000" class="ccard-btn ccard-call">📞 اتصال</a>
-        </div>
-      </div>
-
-      <div class="contact-card">
-        <div class="contact-card-row">
-          <div class="contact-card-info">
-            <div class="contact-card-label">📱 الرقم الثالث</div>
-            <div class="contact-card-number">0772 905 5055</div>
-          </div>
-        </div>
-        <div class="contact-card-actions">
-          <a href="https://wa.me/9647729055055?text=السلام%20عليكم" class="ccard-btn ccard-wa">💬 واتساب</a>
-          <a href="tel:07729055055" class="ccard-btn ccard-call">📞 اتصال</a>
-        </div>
-      </div>
-
-      <!-- قسم الشكاوى -->
-      <div class="contact-section-title" style="margin-top:24px;">📢 الشكاوى والمقترحات</div>
-      <div class="contact-card complaint-card">
-        <div class="contact-card-row">
-          <div class="contact-card-info">
-            <div class="contact-card-label" style="color:#B45309;">⚡ شكاوى ومقترحات</div>
-            <div class="contact-card-number">0771 753 3595</div>
-          </div>
-        </div>
-        <div class="contact-card-actions">
-          <a href="https://wa.me/9647717533595?text=السلام%20عليكم،%20لدي%20شكوى/اقتراح" class="ccard-btn ccard-wa">💬 واتساب</a>
-          <a href="tel:07717533595" class="ccard-btn ccard-call">📞 اتصال</a>
-        </div>
-      </div>
-
-      <div class="contact-card complaint-card">
-        <div class="contact-card-row">
-          <div class="contact-card-info">
-            <div class="contact-card-label" style="color:#B45309;">⚡ شكاوى ومقترحات</div>
-            <div class="contact-card-number">0772 593 8474</div>
-          </div>
-        </div>
-        <div class="contact-card-actions">
-          <a href="https://wa.me/9647725938474?text=السلام%20عليكم،%20لدي%20شكوى/اقتراح" class="ccard-btn ccard-wa">💬 واتساب</a>
-          <a href="tel:07725938474" class="ccard-btn ccard-call">📞 اتصال</a>
-        </div>
-      </div>
-
-      <!-- قسم السوشيال ميديا -->
-      <div class="contact-section-title" style="margin-top:24px;">🌐 تابعونا على</div>
-      <div class="social-grid">
-        <a href="https://t.me/amwajmob" class="social-btn social-telegram">
-          <div class="social-icon">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-            </svg>
-          </div>
-          <div class="social-name">تلكرام</div>
-          <div class="social-handle">@amwajmob</div>
-        </a>
-        <a href="https://www.instagram.com/amwaj.mob" class="social-btn social-instagram">
-          <div class="social-icon">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
-            </svg>
-          </div>
-          <div class="social-name">انستغرام</div>
-          <div class="social-handle">amwaj.mob</div>
-        </a>
-        <a href="https://www.facebook.com/search/top?q=أمواج للالكترونيات" class="social-btn social-facebook">
-          <div class="social-icon">
-            <svg viewBox="0 0 24 24" width="32" height="32" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-            </svg>
-          </div>
-          <div class="social-name">فيسبوك</div>
-          <div class="social-handle">أمواج للالكترونيات</div>
-        </a>
-      </div>
-
-      <!-- ساعات العمل -->
-      <div style="margin-top:24px;background:var(--surface-2);border:1px solid var(--border-light);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;">
-        <div style="font-size:28px;">🕐</div>
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">ساعات العمل</div>
-          <div style="font-size:13px;color:var(--muted);">يومياً من 9 صباحاً - 9 مساءً</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-<!-- New Items Sheet -->
-<div id="newItemsSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">✨ وصلنا حديثاً</span>
-      <button class="bsheet-close" onclick="closeSheet('newItemsSheet')">✕</button>
-    </div>
-    <div class="bsheet-body" id="newItemsSheetBody">
-      <div style="text-align:center;padding:30px;">
-        <div class="loading-spinner" style="margin:0 auto;"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-<!-- Search Sheet -->
-<div id="searchSheet" class="bsheet-overlay">
-  <div class="bsheet">
-    <div class="bsheet-handle"></div>
-    <div class="bsheet-head">
-      <span class="bsheet-title">🔍 بحث في كل المواد</span>
-      <button class="bsheet-close" onclick="closeSheet('searchSheet')">✕</button>
-    </div>
-    <div class="bsheet-body">
-      <div class="bsheet-search-bar" style="margin-bottom:14px;">
-        <span style="font-size:18px;">🔍</span>
-        <input type="text" id="globalSheetSearch" placeholder="ابحث عن أي منتج..." oninput="doGlobalSheetSearch()" autofocus>
-      </div>
-      <div id="globalSheetResults">
-        <div style="text-align:center;padding:30px;color:#94A3B8;font-size:18px;">اكتب اسم المنتج للبحث...</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- APP SHELL -->
-<div class="app-shell">
-
-  <!-- Body -->
-  <div class="app-body" id="appBody">
-
-    <!-- Loading screen -->
-    <div id="loadingScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">
-      <img src="1646237145252.png" alt="" style="width:120px;margin-bottom:14px;" onerror="this.style.display='none'">
-      <div style="font-size:26px;font-weight:900;color:#0369A1;font-family:Tajawal,sans-serif;margin-bottom:20px;">أمواج للإلكترونيات</div>
-      <div class="loading-spinner"></div>
-      <div class="loading-text">جاري التحميل...</div>
-    </div>
 
     <!-- Register -->
     <div id="registerScreen" style="display:none;" class="auth-page">
