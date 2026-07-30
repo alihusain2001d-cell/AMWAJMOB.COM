@@ -2836,7 +2836,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
     <!-- Loading screen -->
     <div id="loadingScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:20px;">
-      <img src="1646237145252.png" alt="" style="width:100px;margin-bottom:16px;" onerror="this.style.display='none'">
+      <img src="1646237145252.png" alt="" style="width:120px;margin-bottom:14px;" onerror="this.style.display='none'">
+      <div style="font-size:26px;font-weight:900;color:#0369A1;font-family:Tajawal,sans-serif;margin-bottom:20px;">أمواج للإلكترونيات</div>
       <div class="loading-spinner"></div>
       <div class="loading-text">جاري التحميل...</div>
     </div>
@@ -6647,8 +6648,33 @@ function dismissSystemNotice() {
 // ═══════════════════════════════════════════
 // ↓ اسحب للتحديث (Pull to Refresh) — يشتغل بكل صفحات التطبيق
 // ═══════════════════════════════════════════
+
+// يحدّث بيانات الصفحة/الشيت المفتوح حالياً بدون ما يبعدك عنه — بدل ما يسوي location.reload() ويرجعك للصفحة الرئيسية
+function _pullToRefreshAction() {
+  var topSheet = (typeof _sheetStack !== 'undefined' && _sheetStack.length) ? _sheetStack[_sheetStack.length - 1] : null;
+
+  if (topSheet === 'adminSheet') {
+    var activeTab = document.querySelector('.admin-main-tab.active');
+    var tabId = activeTab ? activeTab.id : '';
+    if (tabId === 'adminMainTab-orders')    { loadAdminOrders(); return; }
+    if (tabId === 'adminMainTab-customers') { loadAdminCustomers(); return; }
+    if (tabId === 'adminMainTab-products')  { openAdminPanel(); return; }
+    return; // تبويب الإعلانات — ما فيه بيانات تحتاج تحديث
+  }
+
+  if (topSheet === 'productsSheet' && typeof sheetPriceType !== 'undefined' && sheetPriceType && typeof refreshDataInBackground === 'function') {
+    refreshDataInBackground(sheetPriceType);
+    return;
+  }
+
+  if (topSheet) return; // شيت ثاني مفتوح (السلة مثلاً) — بيانات محلية، ما تحتاج تحديث من السيرفر
+
+  // ما فيه شيت مفتوح (الصفحة الرئيسية) — التحديث الكامل هنا آمن لأنه أصلاً مايبعدك عن مكانك
+  location.reload();
+}
+
 (function() {
-  var PULL_THRESHOLD = 70; // px المسافة المطلوبة قبل ما نعتبرها "اسحب للتحديث"
+  var PULL_THRESHOLD = 140; // px المسافة المطلوبة قبل ما نعتبرها "اسحب للتحديث" (ضعف السابق حتى ما يتفعل بالغلط)
   var startX = 0, startY = 0, currentY = 0, pulling = false, scrollEl = null, refreshing = false;
 
   var styleTag = document.createElement('style');
@@ -6713,7 +6739,12 @@ function dismissSystemNotice() {
       indicator.style.height = '50px';
       var spinner = document.getElementById('ptrSpinner');
       if (spinner) spinner.style.animation = 'ptrSpin 0.6s linear infinite';
-      setTimeout(function(){ location.reload(); }, 200);
+      setTimeout(function(){
+        try { _pullToRefreshAction(); } catch(e) { console.error('pull to refresh action failed', e); }
+        refreshing = false;
+        indicator.style.height = '0px';
+        if (spinner) spinner.style.animation = '';
+      }, 400);
     } else {
       indicator.style.height = '0px';
     }
