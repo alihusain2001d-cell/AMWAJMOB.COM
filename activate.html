@@ -128,8 +128,13 @@
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
         <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
-        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart(); _loadDistrictsInto('orderDistrict', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
-        <div class="form-group"><label class="form-label">القضاء / الناحية</label><select class="form-input" id="orderDistrict" disabled><option value="" selected>اختر المحافظة أولاً</option></select></div>
+        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart(); _loadDistrictsInto('order', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">القضاء / الناحية</label>
+          <input class="form-input" type="text" id="orderDistrictSearch" placeholder="اختر المحافظة أولاً" disabled autocomplete="off" oninput="_filterDistrictOptions('order')" onfocus="_filterDistrictOptions('order')">
+          <input type="hidden" id="orderDistrict">
+          <div id="orderDistrictList" class="district-dropdown-list" style="display:none;"></div>
+        </div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -2842,6 +2847,39 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
   box-shadow: 0 2px 8px rgba(16,185,129,0.3);
 }
 
+/* Searchable district (قضاء/ناحية) dropdown */
+.district-dropdown-list {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 500;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.district-dropdown-item {
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light, var(--border));
+}
+.district-dropdown-item:last-child { border-bottom: none; }
+.district-dropdown-item:hover, .district-dropdown-item:active {
+  background: var(--surface-2);
+}
+.district-dropdown-empty {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
 </style>
 
     <!-- Register -->
@@ -2853,8 +2891,13 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
       <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="regAddress" placeholder="مثال: كربلاء، شارع..."></div>
-      <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince" onchange="_loadDistrictsInto('regDistrict', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
-      <div class="form-group"><label class="form-label">القضاء / الناحية</label><select class="form-input" id="regDistrict" disabled><option value="" selected>اختر المحافظة أولاً</option></select></div>
+      <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince" onchange="_loadDistrictsInto('reg', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+      <div class="form-group" style="position:relative;">
+        <label class="form-label">القضاء / الناحية</label>
+        <input class="form-input" type="text" id="regDistrictSearch" placeholder="اختر المحافظة أولاً" disabled autocomplete="off" oninput="_filterDistrictOptions('reg')" onfocus="_filterDistrictOptions('reg')">
+        <input type="hidden" id="regDistrict">
+        <div id="regDistrictList" class="district-dropdown-list" style="display:none;"></div>
+      </div>
       <div class="form-group">
         <label class="form-label">📷 صورة المحل (لتأكيد إنك صاحب مركز صيانة)</label>
         <label style="display:block;background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;">
@@ -3562,13 +3605,24 @@ function renderBrandsGrid(type) {
 }
 
 // 🗺️ يعبي قائمة الأقضية/النواحي الحقيقية مال برايم بناءً على المحافظة المختارة (تسجيل أو طلب شراء)
+// 🔎 قائمة قضاء/ناحية قابلة للبحث — تجيب المناطق الحقيقية مال برايم وتخزنها بذاكرة الصفحة، وتظهر بمربع بحث بدل قائمة طويلة
 var _districtsCache = {};
-async function _loadDistrictsInto(selectId, province) {
-  var sel = document.getElementById(selectId);
-  if (!sel) return;
-  sel.innerHTML = '<option value="">جاري التحميل...</option>';
-  sel.disabled = true;
-  if (!province) { sel.innerHTML = '<option value="">اختر المحافظة أولاً</option>'; return; }
+var _districtsCurrentList = { reg: [], order: [] };
+
+async function _loadDistrictsInto(prefix, province) {
+  var searchInput = document.getElementById(prefix + 'DistrictSearch');
+  var hiddenInput = document.getElementById(prefix + 'District');
+  var listBox = document.getElementById(prefix + 'DistrictList');
+  if (!searchInput || !hiddenInput) return;
+  hiddenInput.value = '';
+  searchInput.value = '';
+  if (listBox) listBox.style.display = 'none';
+  if (!province) {
+    searchInput.disabled = true; searchInput.placeholder = 'اختر المحافظة أولاً';
+    _districtsCurrentList[prefix] = [];
+    return;
+  }
+  searchInput.disabled = true; searchInput.placeholder = 'جاري التحميل...';
   try {
     var list = _districtsCache[province];
     if (!list) {
@@ -3576,25 +3630,68 @@ async function _loadDistrictsInto(selectId, province) {
       list = (res && res.length) ? res : [];
       _districtsCache[province] = list;
     }
-    if (!list.length) { sel.innerHTML = '<option value="">تعذر تحميل المناطق</option>'; return; }
-    var html = '<option value="" selected disabled>اختر القضاء/الناحية</option>';
-    list.forEach(function(d) { html += '<option value="' + d.id + '" data-name="' + sanitize(d.name) + '">' + sanitize(d.name) + '</option>'; });
-    sel.innerHTML = html;
-    sel.disabled = false;
+    _districtsCurrentList[prefix] = list;
+    searchInput.disabled = list.length === 0;
+    searchInput.placeholder = list.length ? '🔎 اكتب للبحث عن القضاء/الناحية...' : 'تعذر تحميل المناطق';
   } catch (e) {
-    sel.innerHTML = '<option value="">تعذر تحميل المناطق</option>';
+    _districtsCurrentList[prefix] = [];
+    searchInput.placeholder = 'تعذر تحميل المناطق';
   }
 }
 
-// يعبي محافظة وقضاء الطلب تلقائياً من بروفايل الزبون المحفوظ (يقدر يغيرها من القائمة المنسدلة لو أراد)
+function _filterDistrictOptions(prefix) {
+  var searchInput = document.getElementById(prefix + 'DistrictSearch');
+  var listBox = document.getElementById(prefix + 'DistrictList');
+  var list = _districtsCurrentList[prefix] || [];
+  if (!searchInput || !listBox || !list.length) { if (listBox) listBox.style.display = 'none'; return; }
+  var q = searchInput.value.trim();
+  var filtered = q ? list.filter(function(d) { return String(d.name).indexOf(q) !== -1; }) : list;
+  filtered = filtered.slice(0, 50);
+  if (!filtered.length) {
+    listBox.innerHTML = '<div class="district-dropdown-empty">لا نتائج مطابقة</div>';
+  } else {
+    listBox.innerHTML = filtered.map(function(d) {
+      return '<div class="district-dropdown-item" data-id="' + d.id + '" data-name="' + sanitize(d.name) + '">' + sanitize(d.name) + '</div>';
+    }).join('');
+  }
+  listBox.style.display = 'block';
+}
+
+function _selectDistrictOption(prefix, id, name) {
+  var hiddenInput = document.getElementById(prefix + 'District');
+  var searchInput = document.getElementById(prefix + 'DistrictSearch');
+  var listBox = document.getElementById(prefix + 'DistrictList');
+  if (hiddenInput) hiddenInput.value = id;
+  if (searchInput) searchInput.value = name;
+  if (listBox) listBox.style.display = 'none';
+}
+
+// اختيار عنصر من القائمة (mousedown حتى يسبق blur مربع البحث) + إغلاق القائمة عند الضغط برا
+document.addEventListener('mousedown', function(e) {
+  var item = e.target.closest && e.target.closest('.district-dropdown-item');
+  if (item) {
+    var prefix = item.parentElement.id.replace('DistrictList', '');
+    _selectDistrictOption(prefix, item.getAttribute('data-id'), item.getAttribute('data-name'));
+    return;
+  }
+  ['reg', 'order'].forEach(function(prefix) {
+    var box = document.getElementById(prefix + 'DistrictList');
+    var input = document.getElementById(prefix + 'DistrictSearch');
+    if (box && input && e.target !== input && !box.contains(e.target)) box.style.display = 'none';
+  });
+});
+
+// يعبي محافظة وقضاء الطلب تلقائياً من بروفايل الزبون المحفوظ (يقدر يغيرها من مربع البحث لو أراد)
 async function _prefillOrderLocation(user) {
   if (!user || !user.province) return;
   var provSel = document.getElementById('orderProvince');
   if (provSel) provSel.value = user.province;
-  await _loadDistrictsInto('orderDistrict', user.province);
+  await _loadDistrictsInto('order', user.province);
   if (user.districtId) {
-    var distSel = document.getElementById('orderDistrict');
-    if (distSel) distSel.value = String(user.districtId);
+    var list = _districtsCurrentList['order'] || [];
+    var match = list.find(function(d) { return String(d.id) === String(user.districtId); });
+    if (match) _selectDistrictOption('order', match.id, match.name);
+    else if (user.district) _selectDistrictOption('order', user.districtId, user.district);
   }
 }
 
@@ -3629,9 +3726,8 @@ async function submitRegistration() {
   const phone = normalizePhone(document.getElementById("regPhone").value);
   const address = document.getElementById("regAddress").value.trim();
   const province = document.getElementById("regProvince").value;
-  const districtSel = document.getElementById("regDistrict");
-  const districtId = districtSel.value;
-  const district = districtId ? (districtSel.selectedOptions[0].getAttribute('data-name') || '') : '';
+  const districtId = document.getElementById("regDistrict").value;
+  const district = document.getElementById("regDistrictSearch").value.trim();
   const shopPhotoInput = document.getElementById("regShopPhoto");
   const shopPhotoFile = shopPhotoInput.files && shopPhotoInput.files[0];
   if (!name || !shop || !phone || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
@@ -4493,10 +4589,9 @@ async function submitOrder() {
 
   const province = document.getElementById('orderProvince').value;
   if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
-  const orderDistrictSel = document.getElementById('orderDistrict');
-  const districtId = orderDistrictSel.value;
+  const districtId = document.getElementById('orderDistrict').value;
   if (!districtId) { result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية</div>'; return; }
-  const district = orderDistrictSel.selectedOptions[0].getAttribute('data-name') || '';
+  const district = document.getElementById('orderDistrictSearch').value.trim();
 
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
