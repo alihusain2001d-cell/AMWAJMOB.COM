@@ -128,7 +128,8 @@
         <div class="form-group"><label class="form-label">الاسم</label><input class="form-input" type="text" id="orderName"></div>
         <div id="orderPhoneGroup" class="form-group" style="display:none;"><label class="form-label">رقم الموبايل</label><input class="form-input" type="tel" id="orderPhone" placeholder="07XXXXXXXXX" inputmode="numeric"></div>
         <div id="orderShopGroup" class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="orderShop"></div>
-        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart()"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+        <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="orderProvince" onchange="renderCart(); _loadDistrictsInto('orderDistrict', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+        <div class="form-group"><label class="form-label">القضاء / الناحية</label><select class="form-input" id="orderDistrict" disabled><option value="" selected>اختر المحافظة أولاً</option></select></div>
         <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="orderAddress"></div>
         <button onclick="submitOrder()" class="form-btn success-btn">📤 إرسال الطلب</button>
         <div id="orderResult"></div>
@@ -2852,7 +2853,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
       <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="regAddress" placeholder="مثال: كربلاء، شارع..."></div>
-      <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+      <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince" onchange="_loadDistrictsInto('regDistrict', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
+      <div class="form-group"><label class="form-label">القضاء / الناحية</label><select class="form-input" id="regDistrict" disabled><option value="" selected>اختر المحافظة أولاً</option></select></div>
       <div class="form-group">
         <label class="form-label">📷 صورة المحل (لتأكيد إنك صاحب مركز صيانة)</label>
         <label style="display:block;background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;">
@@ -3559,6 +3561,43 @@ function renderBrandsGrid(type) {
   }
 }
 
+// 🗺️ يعبي قائمة الأقضية/النواحي الحقيقية مال برايم بناءً على المحافظة المختارة (تسجيل أو طلب شراء)
+var _districtsCache = {};
+async function _loadDistrictsInto(selectId, province) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">جاري التحميل...</option>';
+  sel.disabled = true;
+  if (!province) { sel.innerHTML = '<option value="">اختر المحافظة أولاً</option>'; return; }
+  try {
+    var list = _districtsCache[province];
+    if (!list) {
+      var res = await secureApiCall('getPrimeDistricts', { province: province });
+      list = (res && res.length) ? res : [];
+      _districtsCache[province] = list;
+    }
+    if (!list.length) { sel.innerHTML = '<option value="">تعذر تحميل المناطق</option>'; return; }
+    var html = '<option value="" selected disabled>اختر القضاء/الناحية</option>';
+    list.forEach(function(d) { html += '<option value="' + d.id + '" data-name="' + sanitize(d.name) + '">' + sanitize(d.name) + '</option>'; });
+    sel.innerHTML = html;
+    sel.disabled = false;
+  } catch (e) {
+    sel.innerHTML = '<option value="">تعذر تحميل المناطق</option>';
+  }
+}
+
+// يعبي محافظة وقضاء الطلب تلقائياً من بروفايل الزبون المحفوظ (يقدر يغيرها من القائمة المنسدلة لو أراد)
+async function _prefillOrderLocation(user) {
+  if (!user || !user.province) return;
+  var provSel = document.getElementById('orderProvince');
+  if (provSel) provSel.value = user.province;
+  await _loadDistrictsInto('orderDistrict', user.province);
+  if (user.districtId) {
+    var distSel = document.getElementById('orderDistrict');
+    if (distSel) distSel.value = String(user.districtId);
+  }
+}
+
 function _regPreviewShopPhoto(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
@@ -3590,11 +3629,15 @@ async function submitRegistration() {
   const phone = normalizePhone(document.getElementById("regPhone").value);
   const address = document.getElementById("regAddress").value.trim();
   const province = document.getElementById("regProvince").value;
+  const districtSel = document.getElementById("regDistrict");
+  const districtId = districtSel.value;
+  const district = districtId ? (districtSel.selectedOptions[0].getAttribute('data-name') || '') : '';
   const shopPhotoInput = document.getElementById("regShopPhoto");
   const shopPhotoFile = shopPhotoInput.files && shopPhotoInput.files[0];
   if (!name || !shop || !phone || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
   if (phone.length < 11) { result.innerHTML = '<div class="result error">❌ رقم الهاتف غير صحيح</div>'; return; }
   if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
+  if (!districtId) { result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية</div>'; return; }
   if (!shopPhotoFile) { result.innerHTML = '<div class="result error">❌ يرجى إرفاق صورة المحل</div>'; return; }
   btn.disabled = true; btn.innerText = "جاري الإرسال...";
   try {
@@ -3609,7 +3652,7 @@ async function submitRegistration() {
     btn.innerText = "📤 جاري رفع الصورة...";
     const shopPhoto = await _uploadShopPhoto(shopPhotoFile);
     btn.innerText = "جاري الإرسال...";
-    await startOtpFlow(phone, 'register', { name, shop, phone, address, province, shopPhoto });
+    await startOtpFlow(phone, 'register', { name, shop, phone, address, province, shopPhoto, district, districtId });
   } catch (e) { console.error(e); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
   btn.disabled = false; btn.innerText = "إرسال طلب التسجيل";
 }
@@ -3691,7 +3734,7 @@ async function verifyOtpCode() {
 
     if (_otp.purpose === 'register') {
       const reg = _otp.pendingReg;
-      await secureApiCall('addCustomer', { name: reg.name, shop: reg.shop, phone: reg.phone, address: reg.address, date: formatDate(new Date()), status: 'pending', province: reg.province || '', shopPhoto: reg.shopPhoto || '' });
+      await secureApiCall('addCustomer', { name: reg.name, shop: reg.shop, phone: reg.phone, address: reg.address, date: formatDate(new Date()), status: 'pending', province: reg.province || '', shopPhoto: reg.shopPhoto || '', district: reg.district || '', districtId: reg.districtId || '' });
       localStorage.setItem('amwaj_phone', reg.phone);
       showScreen('registerScreen');
       document.getElementById('regResult').innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${reg.phone}</b></div>`;
@@ -4260,6 +4303,7 @@ function openCart() {
   document.getElementById('orderShop').value = user.shop || '';
   const savedAddress = localStorage.getItem('amwaj_address');
   if (savedAddress) document.getElementById('orderAddress').value = savedAddress;
+  _prefillOrderLocation(user);
 }
 
 function closeCart() { showPage('pricesPage'); }
@@ -4449,6 +4493,10 @@ async function submitOrder() {
 
   const province = document.getElementById('orderProvince').value;
   if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
+  const orderDistrictSel = document.getElementById('orderDistrict');
+  const districtId = orderDistrictSel.value;
+  if (!districtId) { result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية</div>'; return; }
+  const district = orderDistrictSel.selectedOptions[0].getAttribute('data-name') || '';
 
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
   const clearBtn = document.getElementById('clearCartBtn');
@@ -4471,7 +4519,7 @@ async function submitOrder() {
     try {
       // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
       try {
-        await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee });
+        await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee, district, districtId });
       } catch(e) { console.error('saveOrder failed:', e); }
 
       // ✅ اعرض النجاح
@@ -4638,6 +4686,7 @@ function openCartSheet() {
   if (user) {
     document.getElementById('orderName').value = user.name || '';
     document.getElementById('orderShop').value = user.shop || '';
+    _prefillOrderLocation(user);
   }
   var saved = localStorage.getItem('amwaj_address');
   if (saved) document.getElementById('orderAddress').value = saved;
