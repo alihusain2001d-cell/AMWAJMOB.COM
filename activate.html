@@ -3386,6 +3386,7 @@ async function secureApiCall(action, data = {}) {
 }
 
 function getAdminKey(){ return localStorage.getItem('amwaj_admin_token') || ''; }
+function getCustomerToken(){ var u = JSON.parse(localStorage.getItem('amwaj_user')||'null'); return (u && u.customerToken) || ''; }
 
 function normalizeNumber(str) {
   if (!str && str !== 0) return "";
@@ -3737,8 +3738,7 @@ async function submitRegistration() {
   if (!shopPhotoFile) { result.innerHTML = '<div class="result error">❌ يرجى إرفاق صورة المحل</div>'; return; }
   btn.disabled = true; btn.innerText = "جاري الإرسال...";
   try {
-    const rows = await fetchCustomers();
-    const existing = rows.find(r => normalizePhone(r.phone) === phone);
+    const existing = await fetchCustomerByPhone(phone);
     if (existing) {
       if (existing.status === "approved") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result success">✅ رقمك مسجل ومفعل! يمكنك تسجيل الدخول</div>'; }
       else if (existing.status === "pending") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر الموافقة</div>'; }
@@ -3865,7 +3865,7 @@ function logout() {
   closeSheet('accountSheet');
   setTimeout(function() { showScreen('loginScreen'); }, 200);
 }
-async function fetchCustomers() { return await secureApiCall('getCustomers'); }
+async function fetchCustomerByPhone(phone) { return await secureApiCall('getCustomerByPhone', { phone: phone }); }
 
 function clearGlobalSearch() {
   var input = document.getElementById('globalSearch');
@@ -4064,7 +4064,7 @@ async function sendData() {
     let start = document.getElementById("start").value;
     if (!name || !phone || !invoice || !screenCode) { alert("أكمل جميع الحقول"); throw "stop"; }
     if (usedInvoices.has(screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
-    const warranties = await secureApiCall('getWarranties');
+    const warranties = await secureApiCall('getWarranties', { customerToken: getCustomerToken() });
     if (warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
     let days = type === "screen" ? 30 : 365;
     let [d, m, y] = start.split("/");
@@ -4072,7 +4072,7 @@ async function sendData() {
     let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
     result.className = "result success"; result.style.display = "block";
     result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:18px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div><div style="margin-top:10px;padding:8px;background:#e3f2fd;color:#1565c0;border-radius:8px;font-size:17px;">سيتم إفراغ الحقول بعد قليل...</div>`;
-    await secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end) });
+    await secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end), customerToken: getCustomerToken() });
     usedInvoices.add(screenCode);
     setTimeout(() => {
       document.getElementById("name").value = ""; document.getElementById("phone").value = "";
@@ -4089,7 +4089,7 @@ async function checkWarranty() {
   if (!v) { alert("أدخل كود الشاشة"); return; }
   out.innerHTML = '<div class="result pending">جاري البحث...</div>';
   try {
-    const warranties = await secureApiCall('getWarranties');
+    const warranties = await secureApiCall('getWarranties', { customerToken: getCustomerToken() });
     const r = warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === v);
     if (r) {
       let expiryDate = null, startDate = null;
@@ -5412,7 +5412,7 @@ function loadMyOrders() {
   }
   if (loadDiv) loadDiv.style.display = 'block';
   if (listDiv) listDiv.innerHTML = '';
-  secureApiCall('getMyOrders', { phone: user.phone }).then(function(orders) {
+  secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() }).then(function(orders) {
     if (loadDiv) loadDiv.style.display = 'none';
     if (!orders || !orders.length) {
       _allOrdersCache = [];
@@ -5457,7 +5457,7 @@ function loadMyOrdersOld() {
   }
   if (loadDiv) loadDiv.style.display = 'block';
   if (listDiv) listDiv.innerHTML = '';
-  secureApiCall('getMyOrders', { phone: user.phone }).then(function(orders) {
+  secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() }).then(function(orders) {
     if (loadDiv) loadDiv.style.display = 'none';
     if (!orders || !orders.length) {
       if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#64748B;">📦 لا توجد طلبات</div>';
@@ -5618,7 +5618,7 @@ function cancelOrderById(btn) {
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
-  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون' })
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون', customerToken: getCustomerToken() })
     .then(function() { loadMyOrders(); })
     .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
@@ -5634,7 +5634,7 @@ function cancelOrder(orderId) {
     alert('⚠️ يجب كتابة سبب الإلغاء (3 أحرف على الأقل)');
     return;
   }
-  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: reason })
+  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: reason, customerToken: getCustomerToken() })
     .then(function() {
       alert('✅ تم إلغاء الطلب بنجاح');
       loadMyOrders();
@@ -5919,8 +5919,7 @@ async function appBoot() {
     // Background refresh
     setTimeout(async () => {
       try {
-        const rows = await fetchCustomers();
-        const user = rows.find(r => normalizePhone(r.phone) === phone);
+        const user = await fetchCustomerByPhone(phone);
 
         // ── لو الزبون محذوف من الشيت → خروج تلقائي ──
         if (!user) {
@@ -5928,9 +5927,9 @@ async function appBoot() {
           return;
         }
 
-        if (user) localStorage.setItem('amwaj_user', JSON.stringify(user));
+        if (user) { user.customerToken = cachedUser.customerToken; localStorage.setItem('amwaj_user', JSON.stringify(user)); }
     localStorage.removeItem('amwaj_guest');
-        const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone });
+        const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone, customerToken: getCustomerToken() });
         if (ords) {
           var seenIds = []; try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen')||'[]'); } catch(e){}
           var allIds = ords.map(function(o){ return o.orderId; });
@@ -5949,8 +5948,7 @@ async function appBoot() {
   showScreen('loginScreen');
   setTimeout(async () => {
     try {
-      const rows = await fetchCustomers();
-      const user = rows.find(r => normalizePhone(r.phone) === phone);
+      const user = await fetchCustomerByPhone(phone);
 
       // ── لو الزبون محذوف من الشيت → خروج تلقائي ──
       if (!user) { logout(); return; }
@@ -5961,7 +5959,7 @@ async function appBoot() {
         if (welcome) welcome.textContent = 'مرحباً ' + user.name.split(' ')[0];
         showScreen('homeScreen');
         try {
-          const ords = await secureApiCall('getMyOrders', { phone: user.phone });
+          const ords = await secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() });
           if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
         } catch(e) {}
       } else if (user && user.status === 'pending') {
@@ -7384,6 +7382,7 @@ function loadStatOrdersCount() {
   var action = isAdmin ? 'getAllOrders' : 'getMyOrders';
   var payload = { phone: user.phone };
   if (isAdmin) payload.adminKey = getAdminKey(); // مفتاح الأدمن
+  else payload.customerToken = getCustomerToken();
   secureApiCall(action, payload).then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
@@ -8599,17 +8598,17 @@ function renderAdminCustomerCard(c) {
   var actions = '';
   if (c.status === 'pending') {
     actions = '<div style="display:flex;gap:8px;margin-top:10px;">' +
-      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ موافقة</button>' +
-      '<button class="admin-action-btn" onclick="adminRejectCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ رفض</button>' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + sanitize(c.phone) + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ موافقة</button>' +
+      '<button class="admin-action-btn" onclick="adminRejectCustomer(\'' + sanitize(c.phone) + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ رفض</button>' +
     '</div>';
   } else if (c.status === 'rejected') {
     actions = '<div style="display:flex;gap:8px;margin-top:10px;">' +
-      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + c.phone + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ قبول</button>' +
+      '<button class="admin-action-btn btn-deliver" onclick="adminApproveCustomer(\'' + sanitize(c.phone) + '\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ قبول</button>' +
     '</div>';
   }
   actions += '<div style="display:flex;gap:8px;margin-top:8px;">' +
-    '<button class="admin-action-btn" onclick="adminOpenEditCustomer(\'' + c.phone + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#7C3AED;color:#fff;">✏️ تعديل</button>' +
-    '<button class="admin-action-btn" onclick="adminDeleteCustomer(\'' + c.phone + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#F1F5F9;color:#EF4444;">🗑️ حذف</button>' +
+    '<button class="admin-action-btn" onclick="adminOpenEditCustomer(\'' + sanitize(c.phone) + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#7C3AED;color:#fff;">✏️ تعديل</button>' +
+    '<button class="admin-action-btn" onclick="adminDeleteCustomer(\'' + sanitize(c.phone) + '\')" style="flex:1;font-size:13px;padding:9px 14px;background:#F1F5F9;color:#EF4444;">🗑️ حذف</button>' +
   '</div>';
 
   return '<div class="admin-customer-card">' +
@@ -8622,7 +8621,7 @@ function renderAdminCustomerCard(c) {
         statusIcon + ' ' + statusText +
       '</div>' +
     '</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + c.phone + '" style="color:var(--primary);">' + sanitize(c.phone) + '</a>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + sanitize(c.phone) + '" style="color:var(--primary);">' + sanitize(c.phone) + '</a>' +
       '<a href="https://wa.me/' + _waPhone(c.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a></div>' +
     (c.address ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">📍 ' + sanitize(c.address) + (c.province ? ' — ' + sanitize(c.province) : '') + '</div>' : (c.province ? '<div style="font-size:12px;color:var(--muted);margin-top:4px;">📍 ' + sanitize(c.province) + '</div>' : '')) +
     (c.date ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;">🗓️ ' + sanitize(String(c.date)) + '</div>' : '') +
@@ -8923,7 +8922,7 @@ function renderAdminOrderCard(o) {
       '<strong>👤 ' + sanitize(o.name||'') + '</strong>' +
       (o.shop ? ' · ' + sanitize(o.shop) : '') +
     '</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + o.phone + '" style="color:var(--primary);">' + o.phone + '</a>' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + sanitize(o.phone) + '" style="color:var(--primary);">' + sanitize(o.phone) + '</a>' +
       '<a href="https://wa.me/' + _waPhone(o.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a></div>' +
     (o.address ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📍 ' + sanitize(o.address) + '</div>' : '') +
     '<div style="background:var(--surface-2);border-radius:10px;padding:8px 10px;margin:8px 0;">' +
@@ -9036,7 +9035,7 @@ async function loadPrimeStatuses(orders, force) {
   var now = Date.now();
   if (!force && _primeStatusesLoadedAt && (now - _primeStatusesLoadedAt) < 60000) return;
   try {
-    var all = await secureApiCall('getAllPrimeStatuses', {});
+    var all = await secureApiCall('getAllPrimeStatuses', { adminKey: getAdminKey(), customerToken: getCustomerToken() });
     if (all && typeof all === 'object') {
       _primeStatusCache = all;
       _primeStatusesLoadedAt = now;
