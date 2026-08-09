@@ -2890,7 +2890,6 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="form-group"><label class="form-label">الاسم الثلاثي</label><input class="form-input" type="text" id="regName" placeholder="مثال: أحمد محمد علي"></div>
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
-      <div class="form-group"><label class="form-label">العنوان</label><input class="form-input" type="text" id="regAddress" placeholder="مثال: كربلاء، شارع..."></div>
       <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince" onchange="_loadDistrictsInto('reg', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
       <div class="form-group" style="position:relative;">
         <label class="form-label">القضاء / الناحية</label>
@@ -2898,11 +2897,12 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <input type="hidden" id="regDistrict">
         <div id="regDistrictList" class="district-dropdown-list" style="display:none;"></div>
       </div>
+      <div class="form-group"><label class="form-label">أقرب نقطة دالة</label><input class="form-input" type="text" id="regAddress" placeholder="مثال: قرب جامع الحسين، مقابل مدرسة..."></div>
       <div class="form-group">
-        <label class="form-label">📷 صورة المحل (لتأكيد إنك صاحب مركز صيانة)</label>
+        <label class="form-label">📷 واجهة مركز الصيانة</label>
         <label style="display:block;background:var(--surface-2);border:2px dashed var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;">
           <div id="regShopPhotoPreviewWrap" style="display:none;margin-bottom:10px;"><img id="regShopPhotoPreview" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:contain;"></div>
-          <div id="regShopPhotoPlaceholder" style="font-size:15px;color:var(--muted);">📷 اضغط لالتقاط صورة المحل</div>
+          <div id="regShopPhotoPlaceholder" style="font-size:15px;color:var(--muted);">📷 اضغط لالتقاط صورة واجهة المحل</div>
           <input type="file" id="regShopPhoto" accept="image/*" capture="environment" style="display:none;" onchange="_regPreviewShopPhoto(this)">
         </label>
       </div>
@@ -8956,9 +8956,28 @@ function _primeStatusLabel(code) {
   return map[code] || code || '—';
 }
 
-// برايم يرجع مرحلة تفصيلية (stepLabel) أدق من الحالة العامة — نعرضها لو توفرت
+// 🗂️ يبسّط عشرات أكواد برايم الداخلية إلى 5 مراحل مفهومة للزبون والتاجر (نفس ترتيب تطبيق برايم)
+var PRIME_SIMPLE_STEPS = {
+  'READYTOPRINT':        '🖨️ جاهزة للطباعة',
+  'READYTOPICKUP':        '📦 جاهزة للتسليم',
+  'NEW_ONWAY':            '🚶 عند مندوب الاستلام',
+  'NEWINSTORE':           '🏬 قيد الفرز والنقل',
+  'PRINTMANIFEST':        '🏬 قيد الفرز والنقل',
+  'MANIFEST_BRANCHES':    '🏬 قيد الفرز والنقل',
+  'LIAISONAGT_NEWONWAY':  '🏬 قيد الفرز والنقل',
+  'ONWAY':                '🚚 عند مندوب التوصيل',
+  'DLEIVERD':             '✅ واصل',
+  'PART_SUCC':            '✅ واصل',
+  'SUCC_CHANGEPRICE':     '✅ واصل',
+  'FORCE_DLV':            '✅ واصل'
+};
+
+// برايم يرجع مرحلة تفصيلية (stepLabel) أدق من الحالة العامة — نبسّطها لو أمكن، وإلا نعرضها كما هي
 function _primeDisplayStatus(info) {
   if (!info) return '—';
+  if (info.stepCode && PRIME_SIMPLE_STEPS[info.stepCode]) {
+    return PRIME_SIMPLE_STEPS[info.stepCode];
+  }
   var icons = {
     'ONWAY': '🚚', 'DELIVERED': '✅', 'DELIVERED_CHANGE_PRICE': '✅',
     'PART_DELIVERED': '📦', 'CNCL': '❌', 'DELETED': '🗑️', 'RETURNED': '↩️'
