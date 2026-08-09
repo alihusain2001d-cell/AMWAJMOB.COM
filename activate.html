@@ -8505,7 +8505,7 @@ function renderAdminOrders() {
 var _adminAllCustomers = [];
 var _adminCustomerFilter = 'all';
 
-function _orderIsPrime(o) { return !!_primeStatusCache[o.orderId]; }
+function _orderIsPrime(o) { var p = _primeStatusCache[o.orderId]; return !!p && p.status !== 'DELETED'; }
 function _orderIsKarbala(o) { return String(o.address||'').split('،')[0].trim() === 'كربلاء'; }
 
 function updateAdminDashboardTiles() {
@@ -8874,7 +8874,7 @@ function renderAdminOrderCard(o) {
   var province = String(o.address||'').split('،')[0].trim();
   var isPrimeEligible = province && province !== 'كربلاء';
   var primeHtml = '';
-  if (primeInfo) {
+  if (primeInfo && primeInfo.status !== 'DELETED') {
     primeHtml =
       '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12px;color:#1E40AF;font-weight:700;">' +
         '🚚 مرسل لبرايم · رقم الشحنة: <span dir="ltr">' + sanitize(String(primeInfo.primeCaseId)) + '</span>' +
