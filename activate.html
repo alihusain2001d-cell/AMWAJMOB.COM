@@ -4615,6 +4615,11 @@ async function submitOrder() {
       // 💾 احفظ الطلب في قاعدة البيانات — السيرفر يرسل واتساب + إشعارات تلقائياً (لكل الطلبات، ضيف أو مسجل)
       try {
         await secureApiCall('saveOrder', { name, shop, phone, address: fullAddress, items: cart, total, guest, province, deliveryFee, district, districtId });
+        // 💾 حدّث بروفايل الزبون المحفوظ محلياً فوراً — حتى لو فتح السلة مرة ثانية بنفس الجلسة تطلعله نفس المحافظة/القضاء دون انتظار
+        if (!guest) {
+          var _u = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+          if (_u) { _u.province = province; _u.district = district; _u.districtId = districtId; localStorage.setItem('amwaj_user', JSON.stringify(_u)); }
+        }
       } catch(e) { console.error('saveOrder failed:', e); }
 
       // ✅ اعرض النجاح
