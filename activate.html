@@ -4964,6 +4964,7 @@ function renderSheetBrands(type) {
     'Google':  '<span style="font-size:11px;font-weight:700;"><span style="color:#4285F4;">G</span><span style="color:#DB4437;">o</span><span style="color:#F4B400;">o</span><span style="color:#4285F4;">g</span><span style="color:#0F9D58;">l</span><span style="color:#DB4437;">e</span></span>',
     'ZTE':     '<span style="font-size:12px;font-weight:900;color:#005BAC;">ZTE</span>',
     'TCL':     '<span style="font-size:12px;font-weight:900;color:#E4002B;">TCL</span>',
+    'Motorola':'<span style="font-size:11px;font-weight:900;color:#5A31F4;">MOTOROLA</span>',
   };
 
   function getBrandLogos(brandsStr) {
@@ -4991,6 +4992,7 @@ function renderSheetBrands(type) {
     {label:'فيفو',                     brands:'Vivo'},
     {label:'ازوز / كوكل',              brands:'Asus,Google'},
     {label:'ZTE / TCL / Alcatel',      brands:'ZTE,TCL,Alcatel,Blackview'},
+    {label:'موتورولا',                 brands:'Motorola'},
   ];
 
   const commonBrands = [
@@ -5002,6 +5004,7 @@ function renderSheetBrands(type) {
     {label:'الانفنكس / تكنو / ايتل',   brands:'Infinix,Tecno,Itel'},
     {label:'فيفو',                     brands:'Vivo'},
     {label:'ازوز / كوكل',              brands:'Asus,Google'},
+    {label:'موتورولا',                 brands:'Motorola'},
   ];
 
   const list = type === 'screens' ? screenBrands : commonBrands;
