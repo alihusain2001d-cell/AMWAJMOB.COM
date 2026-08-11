@@ -6849,7 +6849,6 @@ function _pullToRefreshAction() {
     var tabId = activeTab ? activeTab.id : '';
     if (tabId === 'adminMainTab-orders')    { loadAdminOrders(); return; }
     if (tabId === 'adminMainTab-customers') { loadAdminCustomers(); return; }
-    if (tabId === 'adminMainTab-products')  { openAdminPanel(); return; }
     return; // تبويب الإعلانات — ما فيه بيانات تحتاج تحديث
   }
 
@@ -7505,14 +7504,13 @@ function openCheckFromAccount() {
 
     <!-- Main tabs: Products / Orders / Customers / Broadcast -->
     <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card);overflow-x:auto;flex-wrap:nowrap;">
-      <button class="admin-main-tab active" id="adminMainTab-products" onclick="adminSwitchTab('products')">📦 المنتجات</button>
-      <button class="admin-main-tab" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
+      <button class="admin-main-tab active" id="adminMainTab-orders" onclick="adminSwitchTab('orders')">🛒 الطلبات</button>
       <button class="admin-main-tab" id="adminMainTab-customers" onclick="adminSwitchTab('customers')">👥 الزبائن</button>
       <button class="admin-main-tab" id="adminMainTab-broadcast" onclick="adminSwitchTab('broadcast')">📢 إعلانات</button>
     </div>
 
-    <!-- Products view -->
-    <div id="adminProductsView" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+    <!-- Products view — أُلغي من هذي اللوحة، إدارة المنتجات صارت بس عبر adminamwaj.html (البقية موجودة بالكود بس مخفية، تحسباً لو احتجناها لاحقاً) -->
+    <div id="adminProductsView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
       <div class="bsheet-search-bar" style="flex-shrink:0;">
         <span>🔍</span>
         <input type="text" id="adminSearch" placeholder="ابحث عن منتج..." oninput="adminFilterProducts()" autocomplete="off">
@@ -7532,7 +7530,7 @@ function openCheckFromAccount() {
     </div>
 
     <!-- Orders view -->
-    <div id="adminOrdersView" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
+    <div id="adminOrdersView" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;">
       <div class="bsheet-search-bar" style="margin:10px 14px 0;flex-shrink:0;"><span>🔍</span><input type="text" id="adminOrderSearch" placeholder="ابحث برقم الطلب (مثال: AMW-1547)" oninput="renderAdminOrders()" autocomplete="off"></div>
       <!-- Date filter row -->
       <div style="padding:10px 14px 6px;display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;border-bottom:1px solid var(--border-light);flex-shrink:0;align-items:center;">
@@ -8040,35 +8038,13 @@ var _adminSheetLabels = {
 
 async function openAdminPanel() {
   openSheet('adminSheet');
-  // Default to products tab
-  adminSwitchTab('products');
-  var listDiv = document.getElementById('adminProductsList');
-  listDiv.innerHTML = '<div style="padding:30px;text-align:center;"><div class="loading-spinner" style="margin:0 auto 10px;width:30px;height:30px;"></div><div style="color:#64748B;font-size:16px;">جاري تحميل المنتجات...</div></div>';
-
-  try {
-    // جيب كل المنتجات من كل الشيتات
-    var allFetches = [
-      secureApiCall('getPrices').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'SHEET'}); }); }),
-      secureApiCall('getBatteries').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'battery'}); }); }),
-      secureApiCall('getChargeboards').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'CHARGE BOARD'}); }); }),
-      secureApiCall('getFlatMain').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'FLAT MAIN'}); }); }),
-      secureApiCall('getBackCover').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'BACK COVER'}); }); }),
-      secureApiCall('getHousing').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'HOUSING'}); }); }),
-      secureApiCall('getLens').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'LENS CAMERA'}); }); }),
-      secureApiCall('getCamera').then(function(d){ return (d||[]).map(function(p){ return Object.assign({},p,{_sheet:'Camera'}); }); }),
-    ];
-
-    var results = await Promise.all(allFetches);
-    _adminAllProducts = [].concat.apply([], results);
-    adminRenderList();
-  } catch(e) {
-    listDiv.innerHTML = '<div style="padding:20px;color:#DC2626;text-align:center;">❌ فشل تحميل المنتجات</div>';
-  }
-  // 📊 مربعات الطلبات/الزبائن تتحدث أول ما تدخل تبويب الطلبات أو الزبائن (مو فوراً هنا) —
-  // حتى فتح اللوحة ما يستنى على كل هالبيانات ويصير أسرع
+  // 🚀 المنتجات أُلغيت من هذي اللوحة (إدارتها صارت بس عبر adminamwaj.html) — الافتراضي الحين "الطلبات"
+  // هذا وحده رفع سرعة فتح اللوحة كثير، لأنه قبل كان يجيب كل المنتجات من +15 شيت بكل مرة تنفتح فيها اللوحة حتى لو ما تريد المنتجات أصلاً
+  adminSwitchTab('orders');
 }
 
 function adminSwitchTab(tab) {
+  // ⚠️ pView/pTab (تبويب المنتجات) محذوف من هذي اللوحة — لسا نتحقق منهم دفاعياً تحسباً لو رجع الزر يوماً
   var pView = document.getElementById('adminProductsView');
   var oView = document.getElementById('adminOrdersView');
   var cView = document.getElementById('adminCustomersView');
@@ -8079,20 +8055,16 @@ function adminSwitchTab(tab) {
   var bTab  = document.getElementById('adminMainTab-broadcast');
 
   // Hide all
-  pView.style.display = 'none';
+  if (pView) pView.style.display = 'none';
   oView.style.display = 'none';
   if (cView) cView.style.display = 'none';
   if (bView) bView.style.display = 'none';
-  pTab.classList.remove('active');
+  if (pTab) pTab.classList.remove('active');
   oTab.classList.remove('active');
   if (cTab) cTab.classList.remove('active');
   if (bTab) bTab.classList.remove('active');
 
-  if (tab === 'orders') {
-    oView.style.display = 'flex';
-    oTab.classList.add('active');
-    loadAdminOrders();
-  } else if (tab === 'customers') {
+  if (tab === 'customers') {
     if (cView) cView.style.display = 'flex';
     if (cTab) cTab.classList.add('active');
     loadAdminCustomers();
@@ -8105,8 +8077,10 @@ function adminSwitchTab(tab) {
     loadSystemNoticeAdmin();
     loadAppVersionAdmin();
   } else {
-    pView.style.display = 'flex';
-    pTab.classList.add('active');
+    // الافتراضي الحين "الطلبات" (بدل المنتجات سابقاً)
+    oView.style.display = 'flex';
+    oTab.classList.add('active');
+    loadAdminOrders();
   }
 }
 
