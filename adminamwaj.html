@@ -84,7 +84,6 @@ tr:hover td{background:#ffffff05}
 }
 .order-item-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)}.order-item-row:last-child{border-bottom:none}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -118,7 +117,6 @@ tr:hover td{background:#ffffff05}
     <div class="nav-item" onclick="showPage('orders')" id="nav-orders"><span class="nav-icon">📦</span><span>الطلبات</span><span class="nav-badge" id="ordersBadge" style="display:none">0</span></div>
     <div class="nav-item" onclick="showPage('warranties')" id="nav-warranties"><span class="nav-icon">🛡️</span><span>الضمانات</span></div>
     <div class="nav-item" onclick="showPage('products')" id="nav-products"><span class="nav-icon">🖼️</span><span>صور المنتجات</span></div>
-    <div class="nav-item" onclick="showPage('notify')" id="nav-notify"><span class="nav-icon">📢</span><span>إشعارات الزبائن</span></div>
     <div class="sidebar-footer">
       <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center" id="sidebarTime"></div>
       <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
@@ -236,25 +234,18 @@ tr:hover td{background:#ffffff05}
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbygskNyh3AHOMhHg5lBCg0fULGUFBu-xZWyKc1B4OfoRcaWKRJDlSia5VstUPf0RtiX7A/exec';
 const API_KEY='AMWAJ_efcace98-5cd5-4946-8eb5-2bc9b13d9aa6';
-const IMGBB_KEY = '7af80bb5cf3210b48a8e5b7a51f4bb85';
 
-
-async function uploadToImgbb(file) {
+// 🚀 الحفظ صار على Google Drive (نفس الطريقة المستخدمة بصورة المحل بالتسجيل) بدل imgbb
+async function uploadToDrive(file) {
   const base64 = await new Promise(function(res, rej) {
     const r = new FileReader();
     r.onload = function(e) { res(e.target.result.split(',')[1]); };
     r.onerror = rej;
     r.readAsDataURL(file);
   });
-  const fd = new FormData();
-  fd.append('key', IMGBB_KEY);
-  fd.append('image', base64);
-  fd.append('expiration', '0'); // لا تنتهي صلاحيتها
-  const resp = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, {method:'POST', body:fd});
-  const data = await resp.json();
-  if (!data.success) throw new Error(data.error && data.error.message || 'فشل الرفع');
-  // استخدم display_url بدل url — هذا الرابط لا يحتاج تسجيل دخول
-  return data.data.display_url || data.data.url;
+  const r = await apiCall('uploadImage', { imageBase64: base64, mimeType: file.type || 'image/jpeg' });
+  if (!r || !r.success || !r.data || !r.data.url) throw new Error((r && r.error) || 'فشل الرفع');
+  return r.data.url;
 }
 
 let currentPage='dashboard',allCustomers=[],allOrders=[],allWarranties=[],allProducts=[],editTarget=null;
@@ -303,8 +294,8 @@ function backToPhoneStep(){
 
 function doLogout(){const _t=getAdminToken();if(_t){fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,action:'adminLogout',adminKey:_t})}).catch(function(){});}localStorage.removeItem('amwaj_admin_token');document.getElementById('adminApp').style.display='none';document.getElementById('loginPage').style.display='flex';document.getElementById('loginStepPhone').style.display='block';document.getElementById('loginStepOtp').style.display='none';document.getElementById('loginPhone').value='';document.getElementById('loginOtp').value='';}
 function startClock(){function tick(){const s=new Date().toLocaleString('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('topTime').textContent=s;document.getElementById('sidebarTime').textContent=s;}tick();setInterval(tick,1000);}
-const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات',notify:'📢 إشعارات الزبائن'};
-function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p]||p;({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts,notify:loadNotify}[p]||function(){})();}
+const pageTitles={dashboard:'📊 الرئيسية',customers:'👥 الزبائن',orders:'📦 الطلبات',warranties:'🛡️ الضمانات',products:'🖼️ صور المنتجات'};
+function showPage(p){currentPage=p;document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('nav-'+p).classList.add('active');document.getElementById('pageTitle').textContent=pageTitles[p]||p;({dashboard:loadDashboard,customers:loadCustomers,orders:loadOrders,warranties:loadWarranties,products:loadProducts}[p]||function(){})();}
 function refreshCurrentPage(){showPage(currentPage);}
 async function apiCall(action,extra={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({apiKey:API_KEY,adminKey:getAdminToken(),action,...extra})});const res=await r.json();if(res&&res.success===false&&res.error==='غير مصرح'){doLogout();}return res;}
 function setContent(h){document.getElementById('mainContent').innerHTML=h;}
@@ -355,8 +346,9 @@ function renderCustomers(){
     </div>
     ${data.length===0?'<div class="empty-state"><div class="empty-icon">👥</div>لا توجد نتائج</div>':`
     <table><thead><tr><th>#</th><th>الاسم</th><th>المحل</th><th>الهاتف</th><th>العنوان</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
-    <tbody>${data.map((c,i)=>`<tr><td style="color:var(--muted)">${i+1}</td><td><b>${sanitize(c.name||'-')}</b></td><td>${sanitize(c.shop||'-')}</td><td dir="ltr">${c.phone||'-'}</td><td>${sanitize(c.address||'-')}</td><td>${custBadge(c.status)}</td><td>${c.date||'-'}</td>
+    <tbody>${data.map((c,i)=>`<tr><td style="color:var(--muted)">${i+1}</td><td><b>${sanitize(c.name||'-')}</b></td><td>${sanitize(c.shop||'-')}</td><td dir="ltr">${c.phone||'-'}</td><td>${sanitize(c.address||'-')}${c.province?' — '+sanitize(c.province):''}${c.district?' / '+sanitize(c.district):''}</td><td>${custBadge(c.status)}</td><td>${c.date||'-'}</td>
     <td>${c.status==='pending'?`<button class="action-btn btn-approve" onclick="approveCustomer('${c.phone}')">✅</button><button class="action-btn btn-reject" onclick="rejectCustomer('${c.phone}')">❌</button>`:''}
+    ${c.shopPhoto&&/^https?:\/\//i.test(c.shopPhoto)?`<a class="action-btn btn-view" href="${sanitize(c.shopPhoto)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">📷</a>`:''}
     <button class="action-btn btn-edit" onclick="openEditCustomerById('${c.phone}')">✏️</button>
     <button class="action-btn btn-delete" onclick="deleteCustomer('${c.phone}','${sanitize(c.name||'')}')">🗑️</button></td></tr>`).join('')}
     </tbody></table>`}
@@ -580,7 +572,7 @@ function openProductImgModal(p){
   modal.classList.add('open');
 }
 function previewProdImg(){const url=document.getElementById('prodImgUrl').value.trim(),img=document.getElementById('prodImgPreview'),empty=document.getElementById('prodImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadProdImgFile(){const file=document.getElementById('prodImgFile').files[0];if(!file)return;const status=document.getElementById('prodImgUploadStatus');status.textContent='⏳ جاري الرفع...';try{const url=await uploadToImgbb(file);document.getElementById('prodImgUrl').value=url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
+async function uploadProdImgFile(){const file=document.getElementById('prodImgFile').files[0];if(!file)return;const status=document.getElementById('prodImgUploadStatus');status.textContent='⏳ جاري الرفع...';try{const url=await uploadToDrive(file);document.getElementById('prodImgUrl').value=url;previewProdImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 
 // ══════════════════════════════════════════════
 // saveProdImg — نفس الاسم + نفس الشيت فقط
@@ -659,7 +651,7 @@ function filterBulkPreview(){
   prev.innerHTML=html;
 }
 function previewBulkImg(){const url=document.getElementById('bulkImgUrl').value.trim(),img=document.getElementById('bulkImgPreview'),empty=document.getElementById('bulkImgEmpty');if(url){img.src=url;img.style.display='';empty.style.display='none';}else{img.style.display='none';empty.style.display='';}}
-async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const url=await uploadToImgbb(file);document.getElementById('bulkImgUrl').value=url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
+async function uploadBulkImgFile(){const file=document.getElementById('bulkImgFile').files[0];if(!file)return;const status=document.getElementById('bulkUploadStatus');status.textContent='⏳ جاري الرفع...';try{const url=await uploadToDrive(file);document.getElementById('bulkImgUrl').value=url;previewBulkImg();status.innerHTML='<span style="color:var(--green)">✅ تم الرفع</span>';}catch(e){status.innerHTML='<span style="color:var(--red)">❌ '+e.message+'</span>';}}
 async function saveBulkImg(){
   const sheet=document.getElementById('bulkSheet').value,prefix=document.getElementById('bulkPrefix').value.trim().toLowerCase(),selTypes=getSelectedTypes(),url=document.getElementById('bulkImgUrl').value.trim(),status=document.getElementById('bulkSaveStatus');
   if(!prefix&&!sheet&&!selTypes.length){status.innerHTML='<span style="color:var(--red)">⚠️ اختر فلتر أولاً</span>';return;}
@@ -673,277 +665,6 @@ async function saveBulkImg(){
   else status.innerHTML=`<span style="color:var(--yellow)">✅ ${done} نجح | ❌ ${failed} فشل</span>`;
 }
 
-
-// ══════════════════════════════════════════════
-// 📢 صفحة الإشعارات الجماعية — PDF
-// ══════════════════════════════════════════════
-let notifyItemsList = [];
-
-async function loadNotify() {
-  setContent('<div class="loading-row"><div class="spinner"></div>جاري تحميل البيانات...</div>');
-  try {
-    const [itemsRes, custRes] = await Promise.all([
-      apiCall('getNewItems'),
-      apiCall('getCustomersList', {})
-    ]);
-    notifyItemsList = (itemsRes.data || []).filter(function(i) {
-      return (Number(i.qty)||0) > 0 && (Number(String(i.price||'').replace(/[^0-9]/g,''))||0) > 0;
-    });
-    const approvedCustomers = (custRes.data || []).filter(function(c){ return c.status === 'approved'; });
-    renderNotifyPage(approvedCustomers);
-  } catch(e) {
-    setContent('<div class="empty-state">❌ فشل التحميل: ' + e.message + '</div>');
-  }
-}
-
-function formatNotifyPrice(price) {
-  const p = Number(String(price||'').replace(/[^0-9]/g,'')) || 0;
-  return p.toLocaleString('de-DE') + ' د.ع';
-}
-
-function getSelectedNotifyItems() {
-  const selected = [];
-  document.querySelectorAll('.notify-item-check:checked').forEach(function(cb) {
-    const idx = parseInt(cb.dataset.idx);
-    if (notifyItemsList[idx]) {
-      const notesEl = document.getElementById('notify-notes-' + idx);
-      selected.push(Object.assign({}, notifyItemsList[idx], {
-        userNotes: notesEl ? notesEl.value.trim() : ''
-      }));
-    }
-  });
-  return selected;
-}
-
-function buildPdfTableHTML(items) {
-  if (!items.length) return '<div style="color:#999;text-align:center;padding:30px">لا توجد مواد محددة</div>';
-  const today = new Date().toLocaleDateString('ar-IQ');
-  let html = '<div dir="rtl" style="font-family:Tajawal,sans-serif;padding:24px;background:#fff;color:#0F172A;">';
-  html += '<div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #0284C7;padding-bottom:14px;">';
-  html += '<div style="font-size:24px;font-weight:900;color:#0284C7;">🌊 أمواج للإلكترونيات</div>';
-  html += '<div style="font-size:13px;color:#64748B;margin-top:6px;">قائمة مواد جديدة — ' + today + '</div>';
-  html += '</div>';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-  html += '<thead><tr style="background:#0284C7;color:#fff;">';
-  html += '<th style="padding:9px 10px;text-align:center;border:1px solid #0369A1;width:38px;">#</th>';
-  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;">اسم المادة</th>';
-  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:90px;">النوع</th>';
-  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:110px;">السعر</th>';
-  html += '<th style="padding:9px 10px;text-align:right;border:1px solid #0369A1;width:150px;">ملاحظة</th>';
-  html += '</tr></thead><tbody>';
-  items.forEach(function(item, i) {
-    const bg = i % 2 === 0 ? '#F8FAFC' : '#FFFFFF';
-    const isScreen = (item.source === 'شاشات');
-    // للشاشات: اعرض الماركة + الموديل في خانة الاسم
-    const displayName = isScreen && item.brand
-      ? sanitize(item.brand) + ' — ' + sanitize(item.name||'-')
-      : sanitize(item.name||'-');
-    // الملاحظة: من حقل المستخدم أو من بيانات المادة
-    const displayNotes = item.userNotes || item.notes || '';
-    html += '<tr style="background:' + bg + ';">';
-    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;text-align:center;font-weight:700;color:#0284C7;">' + (i+1) + '</td>';
-    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;font-weight:700;">' + displayName + '</td>';
-    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#64748B;">' + sanitize(item.type||'-') + '</td>';
-    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#0284C7;font-weight:800;">' + formatNotifyPrice(item.price) + '</td>';
-    html += '<td style="padding:8px 10px;border:1px solid #E2E8F0;color:#F59E0B;">' + sanitize(displayNotes) + '</td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  html += '<div style="text-align:center;margin-top:18px;font-size:12px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:12px;">';
-  html += '📞 للطلب: 7696 &nbsp;|&nbsp; 🌐 www.amwajmob.com';
-  html += '</div></div>';
-  return html;
-}
-
-function updateNotifyPreview() {
-  const selected = getSelectedNotifyItems();
-  const preview = document.getElementById('notifyPdfPreview');
-  if (preview) preview.innerHTML = buildPdfTableHTML(selected);
-  const countEl = document.getElementById('notifySelectedCount');
-  if (countEl) countEl.textContent = selected.length;
-}
-
-async function generateNotifyPDF(items) {
-  return new Promise(function(resolve, reject) {
-    const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:780px;background:#fff;';
-    container.innerHTML = buildPdfTableHTML(items);
-    document.body.appendChild(container);
-    const opt = {
-      margin: [8, 8, 8, 8],
-      filename: 'amwaj_catalog.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(container).outputPdf('blob').then(function(blob) {
-      document.body.removeChild(container);
-      resolve(blob);
-    }).catch(function(err) {
-      document.body.removeChild(container);
-      reject(err);
-    });
-  });
-}
-
-async function downloadNotifyPDF() {
-  const selected = getSelectedNotifyItems();
-  if (!selected.length) { showToast('⚠️ اختر مادة واحدة على الأقل'); return; }
-  const btn = document.getElementById('downloadPdfBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري الإنشاء...'; }
-  try {
-    const pdfBlob = await generateNotifyPDF(selected);
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'amwaj_catalog.pdf'; a.click();
-    URL.revokeObjectURL(url);
-    showToast('✅ تم تحميل الـ PDF');
-  } catch(e) { showToast('❌ فشل: ' + e.message); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = '📥 تحميل PDF'; } }
-}
-
-function renderNotifyPage(customers) {
-  const totalApproved = customers.length;
-
-  const itemsHtml = notifyItemsList.length === 0
-    ? '<div style="color:var(--muted);text-align:center;padding:20px">لا توجد مواد جديدة</div>'
-    : notifyItemsList.map(function(item, i) {
-        return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);">'
-          + '<input type="checkbox" class="notify-item-check" data-idx="' + i + '" checked onchange="updateNotifyPreview()" style="width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;cursor:pointer;">'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-          + (item.source === 'شاشات' && item.brand ? '<span style="color:var(--primary);font-size:12px;">' + sanitize(item.brand) + '</span> ' : '')
-          + sanitize(item.name||'-') + '</div>'
-          + '<div style="font-size:12px;color:var(--muted);">' + sanitize(item.source||'') + (item.type ? ' · <span style="color:var(--yellow)">' + sanitize(item.type) + '</span>' : '') + ' · ' + formatNotifyPrice(item.price) + '</div>'
-          + '</div>'
-          + '<input type="text" id="notify-notes-' + i + '" placeholder="ملاحظة..." oninput="updateNotifyPreview()"'
-          + ' style="width:130px;padding:5px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:Tajawal,sans-serif;font-size:13px;background:var(--bg);color:var(--text);flex-shrink:0;outline:none;transition:border-color .2s;"'
-          + ' onfocus="this.style.borderColor=\'var(--primary)\'" onblur="this.style.borderColor=\'var(--border)\'">'
-          + '</div>';
-      }).join('');
-
-  setContent(
-    // Stats
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">'
-    + '<div class="stat-card" style="background:linear-gradient(135deg,#0284C7,#0891B2);padding:16px;">'
-    + '<div style="font-size:26px;font-weight:900;color:white">' + totalApproved + '</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">زبون موافق</div></div>'
-    + '<div class="stat-card" style="background:linear-gradient(135deg,#16A34A,#15803D);padding:16px;">'
-    + '<div style="font-size:26px;font-weight:900;color:white">' + notifyItemsList.length + '</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">مادة جديدة</div></div>'
-    + '<div class="stat-card" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);padding:16px;">'
-    + '<div style="font-size:26px;font-weight:900;color:white" id="notifySelectedCount">' + notifyItemsList.length + '</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,.8)">مادة محددة</div></div>'
-    + '</div>'
-
-    // Items selection
-    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);margin-bottom:16px;overflow:hidden;">'
-    + '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">'
-    + '<div style="font-weight:800;font-size:15px;">📋 اختر المواد</div>'
-    + '<div style="display:flex;gap:8px;">'
-    + '<button onclick="selectAllNotifyItems(true)" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;">✅ الكل</button>'
-    + '<button onclick="selectAllNotifyItems(false)" style="background:#475569;color:white;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;">❌ إلغاء</button>'
-    + '</div></div>'
-    + '<div style="padding:8px 12px;font-size:11px;color:var(--muted);background:var(--card);">يمكنك كتابة ملاحظة لكل مادة تظهر في عمود الملاحظة بالـ PDF</div>'
-    + '<div id="notifyItemsCheckboxes" style="max-height:320px;overflow-y:auto;">' + itemsHtml + '</div>'
-    + '</div>'
-
-    // PDF Preview
-    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);margin-bottom:16px;overflow:hidden;">'
-    + '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">'
-    + '<div style="font-weight:800;font-size:15px;">👁️ معاينة الـ PDF</div>'
-    + '<button id="downloadPdfBtn" onclick="downloadNotifyPDF()" style="background:var(--purple);color:white;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;">📥 تحميل PDF</button>'
-    + '</div>'
-    + '<div id="notifyPdfPreview" style="background:#fff;max-height:420px;overflow-y:auto;"></div>'
-    + '</div>'
-
-    // Send section
-    + '<div style="background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:20px;margin-bottom:16px;">'
-    + '<div style="font-weight:800;font-size:15px;margin-bottom:12px;">🚀 الإرسال الجماعي</div>'
-    + '<div style="background:#FEF9C3;border:1px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:14px;color:#92400E;">'
-    + '⚠️ سيتم إرسال الـ PDF لـ <b>' + totalApproved + '</b> زبون بفارق دقيقة بين كل رسالة<br>'
-    + 'الوقت المتوقع: <b>' + Math.ceil(totalApproved * 1) + '</b> دقيقة'
-    + '</div>'
-    + '<button onclick="startNotifySend(' + totalApproved + ')" style="width:100%;background:linear-gradient(135deg,#16A34A,#15803D);color:white;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:Tajawal,sans-serif;">'
-    + '📤 إرسال PDF للكل (<span id="notifySelectedCount2">' + totalApproved + '</span> زبون)'
-    + '</button>'
-    + '<div id="notifySendProgress" style="margin-top:12px;display:none;">'
-    + '<div style="background:var(--border);border-radius:10px;height:12px;overflow:hidden;margin-bottom:8px;">'
-    + '<div id="notifyProgressBar" style="background:var(--green);height:100%;width:0%;transition:width .3s;border-radius:10px;"></div>'
-    + '</div>'
-    + '<div id="notifyProgressText" style="text-align:center;font-size:14px;color:var(--muted);"></div>'
-    + '</div>'
-    + '</div>'
-  );
-
-  updateNotifyPreview();
-}
-
-function selectAllNotifyItems(checked) {
-  document.querySelectorAll('.notify-item-check').forEach(function(cb){ cb.checked = checked; });
-  updateNotifyPreview();
-}
-
-async function startNotifySend(total) {
-  const selected = getSelectedNotifyItems();
-  if (!selected.length) { showToast('⚠️ اختر مادة واحدة على الأقل'); return; }
-  if (!confirm('سيتم إرسال PDF لـ ' + total + ' زبون\nهل أنت متأكد؟')) return;
-
-  const progressDiv = document.getElementById('notifySendProgress');
-  const progressBar = document.getElementById('notifyProgressBar');
-  const progressText = document.getElementById('notifyProgressText');
-  if (progressDiv) progressDiv.style.display = 'block';
-  if (progressText) progressText.textContent = '⏳ جاري إنشاء الـ PDF...';
-
-  let pdfBlob;
-  try {
-    pdfBlob = await generateNotifyPDF(selected);
-  } catch(e) {
-    showToast('❌ فشل إنشاء PDF: ' + e.message);
-    if (progressDiv) progressDiv.style.display = 'none';
-    return;
-  }
-
-  let customers = [];
-  try {
-    const r = await apiCall('getCustomersList', {});
-    customers = (r.data || []).filter(function(c){ return c.status === 'approved'; });
-  } catch(e) { showToast('❌ فشل جلب الزبائن'); return; }
-  if (!customers.length) { showToast('⚠️ لا يوجد زبائن'); return; }
-
-  let sent = 0, failed = 0;
-  const caption = '🌊 أمواج للإلكترونيات\n✨ وصلنا حديثاً — مواد جديدة!\n📞 للطلب: 7696\n🌐 www.amwajmob.com';
-
-  for (let i = 0; i < customers.length; i++) {
-    const c = customers[i];
-    let phone = String(c.phone || '').replace(/[^0-9]/g, '');
-    if (!phone || phone.length < 10) { failed++; continue; }
-    if (phone.startsWith('0')) phone = '964' + phone.substring(1);
-    if (!phone.startsWith('964')) phone = '964' + phone;
-
-    try {
-      const formData = new FormData();
-      formData.append('chatId', phone + '@c.us');
-      formData.append('file', pdfBlob, 'amwaj_catalog.pdf');
-      formData.append('fileName', 'amwaj_catalog.pdf');
-      formData.append('caption', caption);
-      const res = await fetch('https://api.greenapi.com/waInstance7103498677/sendFileByUpload/d5f48a98f8d541ca99f31958ab1c843d225c4df5158b45e692', {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) sent++; else failed++;
-    } catch(e) { failed++; }
-
-    const pct = Math.round(((i+1) / customers.length) * 100);
-    if (progressBar) progressBar.style.width = pct + '%';
-    if (progressText) progressText.textContent = (i+1) + ' / ' + customers.length + ' — ✅ ' + sent + ' | ❌ ' + failed;
-
-    if (i < customers.length - 1) await new Promise(function(resolve){ setTimeout(resolve, 60000); });
-  }
-
-  showToast('✅ اكتمل الإرسال — ' + sent + ' نجح | ' + failed + ' فشل');
-  if (progressText) progressText.innerHTML = '<span style="color:var(--green);font-weight:800">✅ اكتمل! ' + sent + ' PDF أُرسل بنجاح | ' + failed + ' فشل</span>';
-}
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
