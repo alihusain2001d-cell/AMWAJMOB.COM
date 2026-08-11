@@ -3371,7 +3371,18 @@ async function secureApiCall(action, data = {}) {
       signal: controller.signal
     });
     const result = await response.json();
-    if (!result.success) throw new Error(result.error || 'حدث خطأ');
+    if (!result.success) {
+      // 🔐 جلسة الزبون انتهت أو انسحبت (تسجيل دخول جديد بالتطبيق من جهاز آخر) — سجّل خروجه هنا تلقائياً بدل ما يضل يشوف أخطاء بدون تفسير
+      if (data.customerToken && (result.error === 'غير مصرح' || result.error === 'يجب تسجيل الدخول') && !window._forcedLogoutInProgress) {
+        window._forcedLogoutInProgress = true;
+        setTimeout(function(){
+          try { alert('⚠️ انتهت صلاحية الجلسة، الرجاء تسجيل الدخول مرة أخرى'); } catch(e){}
+          try { logout(); } catch(e){}
+          window._forcedLogoutInProgress = false;
+        }, 50);
+      }
+      throw new Error(result.error || 'حدث خطأ');
+    }
     return result.data;
   } catch (error) {
     if (error.name === 'AbortError') {
@@ -3825,7 +3836,7 @@ async function verifyOtpCode() {
   var btn = document.getElementById('btnVerifyOtp');
   btn.disabled = true; btn.textContent = 'جاري التحقق...';
   try {
-    const res = await secureApiCall('verifyOtp', { phone: _otp.phone, code: code, purpose: _otp.purpose });
+    const res = await secureApiCall('verifyOtp', { phone: _otp.phone, code: code, purpose: _otp.purpose, isApp: _isNativeApp });
     if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
 
     if (_otp.purpose === 'register') {
