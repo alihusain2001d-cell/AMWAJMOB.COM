@@ -3620,6 +3620,7 @@ function renderBrandsGrid(type) {
 // 🔎 قائمة قضاء/ناحية قابلة للبحث — تجيب المناطق الحقيقية مال برايم وتخزنها بذاكرة الصفحة، وتظهر بمربع بحث بدل قائمة طويلة
 var _districtsCache = {};
 var _districtsCurrentList = { reg: [], order: [] };
+var _districtsLoading = { reg: false, order: false }; // 🔄 نتتبعها حتى نمنع إرسال التسجيل قبل ما تخلص القائمة، ونعطي رسالة واضحة بدل "اختر القضاء" المربكة
 
 async function _loadDistrictsInto(prefix, province) {
   var searchInput = document.getElementById(prefix + 'DistrictSearch');
@@ -3632,9 +3633,11 @@ async function _loadDistrictsInto(prefix, province) {
   if (!province) {
     searchInput.disabled = true; searchInput.placeholder = 'اختر المحافظة أولاً';
     _districtsCurrentList[prefix] = [];
+    _districtsLoading[prefix] = false;
     return;
   }
   searchInput.disabled = true; searchInput.placeholder = 'جاري التحميل...';
+  _districtsLoading[prefix] = true;
   try {
     var list = _districtsCache[province];
     if (!list) {
@@ -3648,6 +3651,8 @@ async function _loadDistrictsInto(prefix, province) {
   } catch (e) {
     _districtsCurrentList[prefix] = [];
     searchInput.placeholder = 'تعذر تحميل المناطق';
+  } finally {
+    _districtsLoading[prefix] = false;
   }
 }
 
@@ -3745,7 +3750,14 @@ async function submitRegistration() {
   if (!name || !shop || !phone || !address) { result.innerHTML = '<div class="result error">❌ يرجى ملء جميع الحقول</div>'; return; }
   if (phone.length < 11) { result.innerHTML = '<div class="result error">❌ رقم الهاتف غير صحيح</div>'; return; }
   if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
-  if (!districtId) { result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية</div>'; return; }
+  if (!districtId) {
+    if (_districtsLoading['reg']) {
+      result.innerHTML = '<div class="result pending">⏳ جاري تحميل قائمة الأقضية، انتظر شوي وحاول مرة أخرى</div>';
+    } else {
+      result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية من القائمة (اضغط عليه من القائمة المنسدلة، مو بس تكتبه)</div>';
+    }
+    return;
+  }
   if (!shopPhotoFile) { result.innerHTML = '<div class="result error">❌ يرجى إرفاق صورة المحل</div>'; return; }
   btn.disabled = true; btn.innerText = "جاري الإرسال...";
   try {
@@ -4603,7 +4615,14 @@ async function submitOrder() {
   const province = document.getElementById('orderProvince').value;
   if (!province) { result.innerHTML = '<div class="result error">❌ يرجى اختيار المحافظة</div>'; return; }
   const districtId = document.getElementById('orderDistrict').value;
-  if (!districtId) { result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية</div>'; return; }
+  if (!districtId) {
+    if (_districtsLoading['order']) {
+      result.innerHTML = '<div class="result pending">⏳ جاري تحميل قائمة الأقضية، انتظر شوي وحاول مرة أخرى</div>';
+    } else {
+      result.innerHTML = '<div class="result error">❌ يرجى اختيار القضاء/الناحية من القائمة (اضغط عليه من القائمة المنسدلة، مو بس تكتبه)</div>';
+    }
+    return;
+  }
   const district = document.getElementById('orderDistrictSearch').value.trim();
 
   const submitBtn = document.querySelector('#orderForm button[onclick="submitOrder()"]');
