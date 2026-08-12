@@ -3869,7 +3869,9 @@ async function resendOtp() {
     startOtpCooldown();
     resultEl.innerHTML = '<div class="result success">✅ تم إرسال رمز جديد</div>';
   } catch (e) {
-    resultEl.innerHTML = '<div class="result error">❌ ' + (e.message || 'حدث خطأ') + '</div>';
+    var _msg = e && e.message;
+    var _isOurArabicMessage = _msg && /[؀-ۿ]/.test(_msg);
+    resultEl.innerHTML = '<div class="result error">❌ ' + (_isOurArabicMessage ? _msg : 'حدث خطأ غير متوقع، حاول مرة أخرى') + '</div>';
   }
 }
 
@@ -3908,7 +3910,9 @@ async function verifyOtpCode() {
       setTimeout(function(){ try { checkAndShowBroadcast(); } catch(e){} }, 2500);
     }
   } catch (e) {
-    resultEl.innerHTML = '<div class="result error">❌ ' + (e.message || 'رمز غير صحيح') + '</div>';
+    var _msg = e && e.message;
+    var _isOurArabicMessage = _msg && /[؀-ۿ]/.test(_msg);
+    resultEl.innerHTML = '<div class="result error">❌ ' + (_isOurArabicMessage ? _msg : 'حدث خطأ غير متوقع، حاول مرة أخرى') + '</div>';
   } finally {
     // نضمن رجوع الزر لحالته الطبيعية دائماً — حتى لو صار خطأ غير متوقع أثناء التنقل بين الشاشات
     btn.disabled = false; btn.textContent = 'تأكيد';
