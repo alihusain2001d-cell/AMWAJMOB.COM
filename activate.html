@@ -5973,14 +5973,10 @@ async function appBoot() {
       if (!user) { logout(); return; }
 
       if (user && user.status === 'approved') {
-        localStorage.setItem('amwaj_user', JSON.stringify(user));
-        const welcome = document.getElementById('homeWelcome');
-        if (welcome) welcome.textContent = 'مرحباً ' + user.name.split(' ')[0];
-        showScreen('homeScreen');
-        try {
-          const ords = await secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() });
-          if (ords) { const ac = ords.filter(o => o.status === 'pending' || o.status === 'picked'); updateOrdersBadge(ac.length); }
-        } catch(e) {}
+        // ✅ تمت الموافقة، بس ما عنده جلسة دخول حقيقية (customerToken) بعد — نعرضله إشعار واضح بدل ما ننقله بصمت لصفحة الرئيسية بدون رمز دخول صالح
+        document.getElementById('loginPhone').value = user.phone;
+        document.getElementById('loginResult').innerHTML =
+          '<div class="result success" style="cursor:pointer;" onclick="checkLogin()">✅ تمت الموافقة على طلب التسجيل! اضغط هنا لتسجيل الدخول</div>';
       } else if (user && user.status === 'pending') {
         document.getElementById('loginResult').innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر موافقة الإدارة</div>';
       }
