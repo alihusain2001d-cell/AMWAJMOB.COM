@@ -9183,20 +9183,25 @@ function showAdminToast(msg) {
 function adminOpenEditOrder(orderId) {
   var o = _adminAllOrders.find(function(x){ return x.orderId === orderId; });
   if (!o) return;
+  var _items = (o.items || []).map(function(it) {
+    return {
+      name: it.name || '',
+      price: Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0,
+      quantity: it.quantity || 1,
+      itemType: it.itemType || '',
+      hasWarranty: !!it.hasWarranty
+    };
+  });
+  // 🚚 نحافظ على مبلغ التوصيل الأصلي (الفرق بين مجموع الطلب القديم ومجموع منتجاته) حتى ما يضيع أثناء التعديل
+  var _itemsTotal = _items.reduce(function(sum, it){ return sum + it.price * it.quantity; }, 0);
+  var _deliveryFee = Math.max(0, (Number(o.total)||0) - _itemsTotal);
   _editOrderState = {
     orderId: orderId,
     name: o.name || '',
     phone: o.phone || '',
     address: o.address || '',
-    items: (o.items || []).map(function(it) {
-      return {
-        name: it.name || '',
-        price: Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0,
-        quantity: it.quantity || 1,
-        itemType: it.itemType || '',
-        hasWarranty: !!it.hasWarranty
-      };
-    })
+    items: _items,
+    deliveryFee: _deliveryFee
   };
   _renderEditOrderModal();
 }
@@ -9242,7 +9247,8 @@ function _renderEditOrderModal() {
     '</div>';
   }).join('') || '<div style="text-align:center;color:#94A3B8;font-size:13px;padding:16px;">لا توجد منتجات — أضف منتج بالأسفل</div>';
 
-  var total = s.items.reduce(function(sum, it){ return sum + it.price * it.quantity; }, 0);
+  var itemsTotal = s.items.reduce(function(sum, it){ return sum + it.price * it.quantity; }, 0);
+  var total = itemsTotal + (s.deliveryFee||0);
 
   var html =
     '<div id="editOrderOverlay" style="position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center;">' +
@@ -9269,6 +9275,9 @@ function _renderEditOrderModal() {
           '<div id="editOrderSearchResults" style="display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;z-index:10001;margin-top:4px;"></div>' +
         '</div>' +
 
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#64748B;padding:4px 2px;">' +
+          '<span>🚚 التوصيل</span><span dir="ltr">' + (s.deliveryFee > 0 ? formatPriceIQD(s.deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
+        '</div>' +
         '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:#0284C7;padding:12px 2px;">' +
           '<span>💰 المجموع</span><span id="editOrderTotal" dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
         '</div>' +
@@ -9298,7 +9307,8 @@ function _editOrderRemoveItem(idx) {
 }
 
 function _editOrderRefreshTotal() {
-  var total = _editOrderState.items.reduce(function(sum, it){ return sum + it.price * it.quantity; }, 0);
+  var itemsTotal = _editOrderState.items.reduce(function(sum, it){ return sum + it.price * it.quantity; }, 0);
+  var total = itemsTotal + (_editOrderState.deliveryFee||0);
   var el = document.getElementById('editOrderTotal');
   if (el) el.textContent = formatPriceIQD(total) + ' د.ع';
 }
