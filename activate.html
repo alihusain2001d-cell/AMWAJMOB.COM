@@ -3836,7 +3836,10 @@ async function startOtpFlow(phone, purpose, pendingReg) {
     const backScreen = purpose === 'register' ? 'registerScreen' : 'loginScreen';
     const targetResult = document.getElementById(purpose === 'register' ? 'regResult' : 'loginResult');
     showScreen(backScreen);
-    targetResult.innerHTML = '<div class="result error">❌ ' + (e.message || 'حدث خطأ') + '</div>';
+    // 🛡️ لو صار خطأ غريب مو من نصوصنا (بالإنكليزي مثلاً من المتصفح/API خارجي)، نعرض رسالة عربية مفهومة بدل النص التقني المربك
+    var _msg = e && e.message;
+    var _isOurArabicMessage = _msg && /[؀-ۿ]/.test(_msg);
+    targetResult.innerHTML = '<div class="result error">❌ ' + (_isOurArabicMessage ? _msg : 'حدث خطأ غير متوقع، حاول مرة أخرى') + '</div>';
   }
 }
 
@@ -6642,9 +6645,11 @@ async function setupWebPushNotifications() {
     return;
   }
   
-  // فقط لو عندنا رقم هاتف معروف (مسجل دخول أو قيد المراجعة بانتظار الموافقة)
-  if (!_getKnownPhone()) {
-    console.log('ℹ️ Web Push: no phone on file yet, skipping');
+  // ⚠️ نطلب صلاحية الإشعارات (وعرض البانر) بس بعد تسجيل دخول حقيقي — مو أثناء ما الزبون لسا بصفحة الدخول/التسجيل
+  // (سبب مشكلة سابقة: البانر كان يطلع فوق شاشة الدخول ويسبب تعارض بالضغط)
+  const _loggedInUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  if (!_loggedInUser || !_loggedInUser.phone) {
+    console.log('ℹ️ Web Push: user not logged in, skipping');
     return;
   }
   
@@ -6716,10 +6721,11 @@ function showNotificationOptInBanner() {
   };
 }
 
-// الإعداد الفعلي (بعد ما المستخدم يوافق من البانر أو الصلاحية مسموحة سابقاً)
+// الإعداد الفعلي (بعد ما المستخدم يوافق من البانر أو الصلاحية مسموحة سابقاً) — يتطلب تسجيل دخول حقيقي (نفس شرط setupWebPushNotifications)
 async function proceedWithWebPushSetup() {
-  const knownPhone = _getKnownPhone();
-  if (!knownPhone) { console.log('⚠️ no phone on file yet'); return; }
+  const _loggedInUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  const knownPhone = _loggedInUser && _loggedInUser.phone;
+  if (!knownPhone) { console.log('⚠️ user not logged in'); return; }
   try {
     // 1. سجل Service Worker خاص بـ Firebase
     let registration;
