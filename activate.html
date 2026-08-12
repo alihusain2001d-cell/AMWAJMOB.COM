@@ -3843,6 +3843,8 @@ async function verifyOtpCode() {
       const reg = _otp.pendingReg;
       await secureApiCall('addCustomer', { name: reg.name, shop: reg.shop, phone: reg.phone, address: reg.address, date: formatDate(new Date()), status: 'pending', province: reg.province || '', shopPhoto: reg.shopPhoto || '', district: reg.district || '', districtId: reg.districtId || '' });
       localStorage.setItem('amwaj_phone', reg.phone);
+      // 🔔 اربط توكن FCM (إذا موجود مسبقاً) برقمه الآن — حتى إشعار "تمت الموافقة" لاحقاً يوصله فعلياً بدل ما يضل بلا رقم
+      try { _syncFcmTokenToPhone(reg.phone); } catch(e){}
       showScreen('registerScreen');
       document.getElementById('regResult').innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${reg.phone}</b></div>`;
       document.getElementById('regName').value = ''; document.getElementById('regShop').value = ''; document.getElementById('regPhone').value = ''; document.getElementById('regAddress').value = '';
@@ -5979,6 +5981,8 @@ async function appBoot() {
           '<div class="result success" style="cursor:pointer;" onclick="checkLogin()">✅ تمت الموافقة على طلب التسجيل! اضغط هنا لتسجيل الدخول</div>';
       } else if (user && user.status === 'pending') {
         document.getElementById('loginResult').innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر موافقة الإدارة</div>';
+        // 🔔 إعادة محاولة ربط توكن FCM برقمه كل ما يفتح التطبيق وهو لسا قيد المراجعة (تحسباً لو التوكن تأخر أول مرة)
+        try { _syncFcmTokenToPhone(phone); } catch(e){}
       }
     } catch(e) {}
   }, 500);
@@ -5991,9 +5995,24 @@ const _origCheckLogin = window.checkLogin;
 
 
 
-loadPrices(); loadBatteries(); loadChargeboards(); loadFlatMain();
-loadBackCover(); loadHousing(); loadLens(); loadCamera();
-loadBuzzer(); loadEarSpeaker(); loadDoorSim(); loadFingerprint(); loadMisc(); loadTools(); loadFlatPowerSheet(); loadFlatVolumeSheet();
+// 🐢 نحمّل المنتجات بدفعات صغيرة (3 بنفس الوقت) بدل الـ16 كلهم دفعة وحدة —
+// كانوا يخنقون السيرفر (Apps Script عنده حد أقصى لعدد الطلبات المتزامنة) ويسببون فشل/تأخر طلبات ثانية بنفس اللحظة (زي تحميل الأقضية)
+async function _loadProductsThrottled(loaders, concurrency) {
+  var i = 0;
+  function worker() {
+    if (i >= loaders.length) return Promise.resolve();
+    var idx = i++;
+    return loaders[idx]().catch(function(){}).then(worker);
+  }
+  var workers = [];
+  for (var w = 0; w < concurrency; w++) workers.push(worker());
+  return Promise.all(workers);
+}
+_loadProductsThrottled([
+  loadPrices, loadBatteries, loadChargeboards, loadFlatMain,
+  loadBackCover, loadHousing, loadLens, loadCamera,
+  loadBuzzer, loadEarSpeaker, loadDoorSim, loadFingerprint, loadMisc, loadTools, loadFlatPowerSheet, loadFlatVolumeSheet
+], 3);
 loadCart();
 appBoot();
 // (snapshot system removed — now using date_added from sheet)
@@ -6377,6 +6396,22 @@ function clearAllNotifications() {
 // ════════════════════════════════════════════
 // 🔔 Push Notifications (FCM via Capacitor)
 // ════════════════════════════════════════════
+// 📱 يرجع رقم الهاتف المعروف حالياً — يفضّل amwaj_user (بعد تسجيل الدخول)، وإلا amwaj_phone (زبون قيد المراجعة لسا ما سجل دخول)
+// حتى تتربط التوكن برقمه من وقت التسجيل، مو بس بعد الموافقة — عشان إشعار "تمت الموافقة" يوصله فعلياً
+function _getKnownPhone() {
+  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+  return (user && user.phone) || localStorage.getItem('amwaj_phone') || '';
+}
+// يربط توكن FCM المحفوظ (إذا موجود) برقم هاتف معيّن — تُستدعى فور التسجيل، قبل ما توصل الموافقة
+async function _syncFcmTokenToPhone(phone) {
+  if (!phone) return;
+  const existingToken = localStorage.getItem('amwaj_fcm_token');
+  if (!existingToken) return;
+  try {
+    await secureApiCall('registerFcmToken', { token: existingToken, phone: phone, isAdmin: isAdminPhone(phone) });
+    console.log('✅ FCM Token linked to phone:', phone);
+  } catch(e) { console.error('❌ FCM token link failed:', e); }
+}
 async function setupPushNotifications() {
   // فقط بالتطبيق المُجمَّع (Capacitor)
   if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.PushNotifications) {
@@ -6438,11 +6473,11 @@ async function setupPushNotifications() {
       localStorage.setItem('amwaj_fcm_token', token.value);
       // ارسل الـ Token للسيرفر
       try {
-        const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+        const phone = _getKnownPhone();
         await secureApiCall('registerFcmToken', {
           token: token.value,
-          phone: user ? user.phone : '',
-          isAdmin: user && isAdminPhone(user.phone) ? true : false
+          phone: phone,
+          isAdmin: phone && isAdminPhone(phone) ? true : false
         });
         console.log('✅ FCM Token sent to server');
       } catch(e) {
@@ -6554,10 +6589,9 @@ async function setupWebPushNotifications() {
     return;
   }
   
-  // فقط للمستخدمين المسجلين (نطلب صلاحية بعد تسجيل الدخول)
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user || !user.phone) {
-    console.log('ℹ️ Web Push: user not logged in, skipping');
+  // فقط لو عندنا رقم هاتف معروف (مسجل دخول أو قيد المراجعة بانتظار الموافقة)
+  if (!_getKnownPhone()) {
+    console.log('ℹ️ Web Push: no phone on file yet, skipping');
     return;
   }
   
@@ -6631,8 +6665,8 @@ function showNotificationOptInBanner() {
 
 // الإعداد الفعلي (بعد ما المستخدم يوافق من البانر أو الصلاحية مسموحة سابقاً)
 async function proceedWithWebPushSetup() {
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user || !user.phone) { console.log('⚠️ user not logged in'); return; }
+  const knownPhone = _getKnownPhone();
+  if (!knownPhone) { console.log('⚠️ no phone on file yet'); return; }
   try {
     // 1. سجل Service Worker خاص بـ Firebase
     let registration;
@@ -6689,8 +6723,8 @@ async function proceedWithWebPushSetup() {
     try {
       await secureApiCall('registerFcmToken', {
         token: token,
-        phone: user.phone,
-        isAdmin: isAdminPhone(user.phone)
+        phone: knownPhone,
+        isAdmin: isAdminPhone(knownPhone)
       });
       console.log('✅ Web Push: token sent to server');
     } catch(e) {
