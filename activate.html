@@ -3373,7 +3373,11 @@ async function secureApiCall(action, data = {}) {
     const result = await response.json();
     if (!result.success) {
       // 🔐 جلسة الزبون انتهت أو انسحبت (تسجيل دخول جديد بالتطبيق من جهاز آخر) — سجّل خروجه هنا تلقائياً بدل ما يضل يشوف أخطاء بدون تفسير
-      if (data.customerToken && (result.error === 'غير مصرح' || result.error === 'يجب تسجيل الدخول') && !window._forcedLogoutInProgress) {
+      // ⚠️ ما نقاطعه إذا هو حالياً وسط تسجيل حساب جديد أو بصفحة إدخال كود OTP — هذا فحص خلفي غير مرتبط بيه، وما نريده يرجعه لصفحة الدخول بمنتصف عملية غير علاقة الها بالجلسة القديمة
+      var _otpEl = document.getElementById('otpScreen');
+      var _regEl = document.getElementById('registerScreen');
+      var _isMidRegOrOtp = (_otpEl && _otpEl.style.display === 'block') || (_regEl && _regEl.style.display === 'block');
+      if (data.customerToken && (result.error === 'غير مصرح' || result.error === 'يجب تسجيل الدخول') && !window._forcedLogoutInProgress && !_isMidRegOrOtp) {
         window._forcedLogoutInProgress = true;
         setTimeout(function(){
           try { alert('⚠️ انتهت صلاحية الجلسة، الرجاء تسجيل الدخول مرة أخرى'); } catch(e){}
