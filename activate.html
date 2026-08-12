@@ -9275,8 +9275,9 @@ function _renderEditOrderModal() {
           '<div id="editOrderSearchResults" style="display:none;position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #E2E8F0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;z-index:10001;margin-top:4px;"></div>' +
         '</div>' +
 
-        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#64748B;padding:4px 2px;">' +
-          '<span>🚚 التوصيل</span><span dir="ltr">' + (s.deliveryFee > 0 ? formatPriceIQD(s.deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#64748B;padding:4px 2px;gap:8px;">' +
+          '<span>🚚 التوصيل (عدّله إذا كان غلط)</span>' +
+          '<input type="number" min="0" value="' + (s.deliveryFee||0) + '" oninput="_editOrderSetDeliveryFee(this.value)" style="width:100px;padding:6px;border:1px solid #E2E8F0;border-radius:6px;font-size:13px;text-align:center;" dir="ltr">' +
         '</div>' +
         '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:#0284C7;padding:12px 2px;">' +
           '<span>💰 المجموع</span><span id="editOrderTotal" dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
@@ -9298,6 +9299,11 @@ function _editOrderSetQty(idx, val) {
 function _editOrderSetPrice(idx, val) {
   var pr = Math.max(0, parseInt(val)||0);
   _editOrderState.items[idx].price = pr;
+  _editOrderRefreshTotal();
+}
+
+function _editOrderSetDeliveryFee(val) {
+  _editOrderState.deliveryFee = Math.max(0, parseInt(val)||0);
   _editOrderRefreshTotal();
 }
 
@@ -9364,7 +9370,8 @@ async function _editOrderSave() {
   try {
     var res = await secureApiCall('editOrder', {
       adminKey: getAdminKey(), orderId: s.orderId,
-      name: s.name, phone: s.phone, address: s.address, items: s.items
+      name: s.name, phone: s.phone, address: s.address, items: s.items,
+      deliveryFee: s.deliveryFee||0
     });
     for (var i = 0; i < _adminAllOrders.length; i++) {
       if (_adminAllOrders[i].orderId === s.orderId) {
