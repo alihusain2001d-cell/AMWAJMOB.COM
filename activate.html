@@ -3857,6 +3857,8 @@ async function submitRegistration() {
     localStorage.setItem('amwaj_phone', phone);
     // 🔔 اربط توكن الإشعارات برقمه من الآن، حتى إشعار "تمت الموافقة" يوصله فعلاً
     try { _syncFcmTokenToPhone(phone); } catch(e){}
+    // 🔔 وهذي أنسب لحظة نطلب منه تفعيل الإشعارات: خلّص التسجيل وينتظر الموافقة — الإشعار هو الي راح يخبره
+    setTimeout(function(){ try { setupWebPushNotifications(true); } catch(e){} }, 900);
     result.innerHTML = '<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>' + sanitize(phone) + '</b></div>';
     document.getElementById('regName').value = ''; document.getElementById('regShop').value = ''; document.getElementById('regAddress').value = '';
   } catch (e) {
@@ -6114,6 +6116,8 @@ async function appBoot() {
         document.getElementById('loginResult').innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر موافقة الإدارة</div>';
         // 🔔 إعادة محاولة ربط توكن FCM برقمه كل ما يفتح التطبيق وهو لسا قيد المراجعة (تحسباً لو التوكن تأخر أول مرة)
         try { _syncFcmTokenToPhone(phone); } catch(e){}
+        // 🔔 وهو ينتظر الموافقة — نطلب تفعيل الإشعارات لأنها الطريقة الي راح توصله خبر الموافقة
+        setTimeout(function(){ try { setupWebPushNotifications(true); } catch(e){} }, 900);
       }
     } catch(e) {}
   }, 500);
@@ -6673,6 +6677,18 @@ async function setupPushNotifications() {
           openAdminPanel();
           setTimeout(() => { if (typeof adminSwitchTab === 'function') adminSwitchTab('orders'); }, 500);
         }
+      } else if (data.type === 'account_approved') {
+        // ✅ انوافق على طلبه — نوديه مباشرة لشاشة الدخول ورقمه معبّى، حتى يسجل دخول بضغطة
+        setTimeout(function(){
+          try {
+            var _ph = (typeof _getKnownPhone === 'function') ? _getKnownPhone() : '';
+            var _inp = document.getElementById('loginPhone');
+            if (_inp && _ph) _inp.value = _ph;
+            showScreen('loginScreen');
+            var _res = document.getElementById('loginResult');
+            if (_res) _res.innerHTML = '<div class="result success">✅ تمت الموافقة على طلبك! اضغط "دخول" للمتابعة</div>';
+          } catch(e){}
+        }, 400);
       } else if (data.type === 'broadcast' && data.target) {
         setTimeout(function(){ navigateToTarget(data.target); }, 400);
       }
@@ -6718,24 +6734,38 @@ function _loadScript(src) {
   });
 }
 
-async function setupWebPushNotifications() {
+// 🖊️ هل الزبون حالياً بشاشة يكتب بيها (رقم/رمز/بيانات التسجيل)؟
+// ما نعرض بانر الإشعارات فوقها حتى ما يتعارض مع الكتابة والضغط (هذي كانت مشكلة سابقة)
+function _isOnAuthInputScreen() {
+  return ['regPhoneScreen','registerScreen','otpScreen','loginScreen'].some(function(id){
+    var el = document.getElementById(id);
+    return el && el.style.display === 'block';
+  });
+}
+
+// force = نعرض البانر حتى لو هو بشاشة تسجيل — نستخدمها باللحظة المناسبة:
+// بعد ما يرسل طلب التسجيل، أو وهو ينتظر الموافقة. لأنه بالضبط وقتها يحتاج الإشعار يوصله.
+async function setupWebPushNotifications(force) {
   // ما نشغلها في التطبيق الأصلي
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
-  
+
   // فحص دعم المتصفح
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
     console.log('ℹ️ Web Push: browser does not support push notifications');
     return;
   }
-  
-  // ⚠️ نطلب صلاحية الإشعارات (وعرض البانر) بس بعد تسجيل دخول حقيقي — مو أثناء ما الزبون لسا بصفحة الدخول/التسجيل
-  // (سبب مشكلة سابقة: البانر كان يطلع فوق شاشة الدخول ويسبب تعارض بالضغط)
-  const _loggedInUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!_loggedInUser || !_loggedInUser.phone) {
-    console.log('ℹ️ Web Push: user not logged in, skipping');
+
+  // ✅ يكفي إنه عندنا رقمه (حتى لو لسا ما سجّل دخول لأنه ينتظر الموافقة) — هذا بالضبط الي يخلي
+  // إشعار "تمت الموافقة" يوصله. بس ما نقاطعه وهو يكتب بشاشة تسجيل إلا إذا طلبناها صراحةً.
+  if (!_getKnownPhone()) {
+    console.log('ℹ️ Web Push: no phone on file yet, skipping');
     return;
   }
-  
+  if (!force && _isOnAuthInputScreen()) {
+    console.log('ℹ️ Web Push: user is typing on an auth screen, will ask later');
+    return;
+  }
+
   // 💡 لو الصلاحية مو مطلوبة بعد، اعرض بانر جميل قبل الطلب النظامي
   if (Notification.permission === 'default') {
     // تحقق: هل رفض المستخدم من قبل؟ (ما نطلب بشكل مزعج)
@@ -6806,9 +6836,9 @@ function showNotificationOptInBanner() {
 
 // الإعداد الفعلي (بعد ما المستخدم يوافق من البانر أو الصلاحية مسموحة سابقاً) — يتطلب تسجيل دخول حقيقي (نفس شرط setupWebPushNotifications)
 async function proceedWithWebPushSetup() {
-  const _loggedInUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const knownPhone = _loggedInUser && _loggedInUser.phone;
-  if (!knownPhone) { console.log('⚠️ user not logged in'); return; }
+  // نربط التوكن بالرقم المعروف — سواء مسجّل دخول أو لسا ينتظر الموافقة
+  const knownPhone = _getKnownPhone();
+  if (!knownPhone) { console.log('⚠️ no phone on file yet'); return; }
   try {
     // 1. سجل Service Worker خاص بـ Firebase
     let registration;
@@ -7138,7 +7168,9 @@ async function checkAndShowBroadcast() {
     if (!bc || !bc.id) return;
     
     // تحقق: شفت هذا الإعلان قبل؟
-    const seenKey = 'amwaj_bc_seen_' + user.phone;
+    // 🔑 نستخدم الأرقام فقط بالمفتاح — أي فرق بصيغة الرقم (علامة ' من الشيت، مسافات، 964 بالبداية)
+    // كان يخلي المفتاح يختلف بين تسجيل دخول وآخر، فيرجع نفس الإعلان يطلع من جديد
+    const seenKey = 'amwaj_bc_seen_' + String(user.phone||'').replace(/[^0-9]/g,'');
     const seenList = JSON.parse(localStorage.getItem(seenKey) || '[]');
     if (seenList.indexOf(bc.id) > -1) {
       console.log('📢 Broadcast already seen:', bc.id);
