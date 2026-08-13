@@ -3383,8 +3383,12 @@ function generateDeviceId() {
 
 async function secureApiCall(action, data = {}) {
   // بدون مهلة زمنية، أي انقطاع/بطء بالشبكة كان يخلي الطلب معلّق للأبد بدون خطأ ولا نجاح — هذا سبب تعليق "جاري التحقق..."
+  // ⏱️ عمليات الرمز تحتاج مهلة أطول: قِسنا مزوّد الرسائل (OTPIQ) وياخذ لحد 11 ثانية بأول اتصال،
+  // وفوقها قراءة بيانات الزبون وتذبذب سيرفر جوجل — فمهلة 25 ثانية كانت تقطع الطلب وهو شغال فعلاً ويفشل تسجيل الدخول
+  const _OTP_ACTIONS = { requestOtp: 1, verifyOtp: 1 };
+  const _timeoutMs = _OTP_ACTIONS[action] ? 60000 : 25000;
   const controller = new AbortController();
-  const timeoutId = setTimeout(function(){ controller.abort(); }, 25000);
+  const timeoutId = setTimeout(function(){ controller.abort(); }, _timeoutMs);
   try {
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
