@@ -106,6 +106,13 @@
       <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
       <button class="orders-tab" data-filter="delivered" onclick="filterOrders('delivered')">تم التسليم <span class="orders-tab-count" id="cnt-delivered">0</span></button>
     </div>
+    <div class="orders-tabs" id="ordersDateTabs">
+      <button class="orders-tab" data-date="today" onclick="filterOrdersDate('today')">اليوم</button>
+      <button class="orders-tab" data-date="yesterday" onclick="filterOrdersDate('yesterday')">أمس</button>
+      <button class="orders-tab" data-date="week" onclick="filterOrdersDate('week')">أسبوع</button>
+      <button class="orders-tab active" data-date="month" onclick="filterOrdersDate('month')">شهر</button>
+      <button class="orders-tab" data-date="all" onclick="filterOrdersDate('all')">الكل</button>
+    </div>
     <div class="bsheet-body" style="padding-top:0;">
       <div id="myOrdersLoading" style="text-align:center;padding:30px;"><div class="loading-spinner"></div><div class="loading-text">جاري التحميل...</div></div>
       <div id="myOrdersList"></div>
@@ -5431,10 +5438,13 @@ function renderOrdersList() {
 
   // Filter
   var filtered = _ordersFilter === 'all' ? orders : orders.filter(function(o) { return o.status === _ordersFilter; });
+  // 📅 وفلتر التاريخ فوقه — يقلل عدد البطاقات المرسومة بدل ما نرسم كل الطلبات دفعة وحدة
+  filtered = filtered.filter(function(o){ return _orderInDateRange(o, _ordersDateFilter); });
 
   if (!filtered.length) {
     var labelMap = { all: 'لا توجد طلبات', pending: 'لا توجد طلبات قيد المراجعة', picked: 'لا توجد طلبات قيد التجهيز', delivered: 'لا توجد طلبات مسلمة', cancelled: 'لا توجد طلبات ملغية' };
-    listDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📦</div><div style="color:var(--muted);font-size:15px;font-weight:600;">' + (labelMap[_ordersFilter] || 'لا توجد طلبات') + '</div></div>';
+    var dateHint = _ordersDateFilter !== 'all' ? '<div style="color:var(--muted);font-size:13px;margin-top:8px;">جرّب تبويب "الكل" لعرض الطلبات الأقدم</div>' : '';
+    listDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📦</div><div style="color:var(--muted);font-size:15px;font-weight:600;">' + (labelMap[_ordersFilter] || 'لا توجد طلبات') + '</div>' + dateHint + '</div>';
     return;
   }
 
@@ -5453,27 +5463,137 @@ function renderOrdersList() {
   })();
 }
 
+// 📅 فلتر التاريخ لطلباتي — يقلل عدد البطاقات المرسومة بشكل كبير بدل ما نرسم كل الطلبات دفعة وحدة
+var _ordersDateFilter = 'month';
+
+function _orderTimeOf(o) {
+  var raw = o.timestamp || o.date || o.createdAt;
+  if (!raw) return NaN;
+  var t = new Date(raw).getTime();
+  return isNaN(t) ? NaN : t;
+}
+
+function _orderInDateRange(o, range) {
+  if (range === 'all') return true;
+  var t = _orderTimeOf(o);
+  if (isNaN(t)) return false;           // بدون تاريخ صالح — يظهر بتبويب "الكل" فقط
+  var now = new Date();
+  var startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  var DAY = 86400000;
+  if (range === 'today')     return t >= startToday;
+  if (range === 'yesterday') return t >= startToday - DAY && t < startToday;
+  if (range === 'week')      return t >= startToday - 6 * DAY;
+  if (range === 'month')     return t >= startToday - 29 * DAY;
+  return true;
+}
+
+function filterOrdersDate(range) {
+  _ordersDateFilter = range;
+  var tabs = document.querySelectorAll('#ordersDateTabs .orders-tab');
+  tabs.forEach(function(b){
+    if (b.getAttribute('data-date') === range) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+  renderOrdersList();
+}
+
+function _orderStatusMeta(o) {
+  var m = { text: 'تم استلام طلبك', cls: 'pill-pending', icon: '✅' };
+  if (o.status === 'picked')         m = { text: 'قيد التجهيز', cls: 'pill-picked',    icon: '📦' };
+  else if (o.status === 'delivered') m = { text: 'تم التسليم',  cls: 'pill-delivered', icon: '✅' };
+  else if (o.status === 'cancelled') m = { text: 'ملغي',        cls: 'pill-cancelled', icon: '❌' };
+  return m;
+}
+
+function _orderDateStr(o) {
+  var t = _orderTimeOf(o);
+  if (isNaN(t)) return '';
+  try {
+    return new Date(t).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch(e) { return ''; }
+}
+
+function _orderMoney(o) {
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
+  var itemsSum = (o.items || []).reduce(function(s, it){
+    return s + (Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0) * (Number(it.quantity) || 1);
+  }, 0);
+  return { total: total, itemsSum: itemsSum, deliveryFee: Math.max(0, total - itemsSum) };
+}
+
+// ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
+function _orderIsCancellable(o) {
+  if (o.status !== 'pending') return false;
+  var t = _orderTimeOf(o);
+  if (isNaN(t)) return false;
+  return ((Date.now() - t) / 60000) < 20;
+}
+
+function _orderWaUrl(o) {
+  var money = _orderMoney(o);
+  var st = _orderStatusMeta(o);
+  var parts = [
+    'السلام عليكم',
+    'أريد الاستفسار عن طلبي:',
+    '🧾 رقم الطلب: ' + (o.orderId || '-'),
+    '📦 عدد المواد: ' + (o.items||[]).length,
+    '💰 المجموع: ' + formatPriceIQD(money.total) + ' IQD',
+    '🔖 الحالة: ' + st.text
+  ];
+  return 'https://wa.me/' + AMWAJ_PRIMARY_WA + '?text=' + encodeURIComponent(parts.join('\n'));
+}
+
+// 📇 بطاقة مختصرة — الأساسيات فقط، والتفاصيل بضغطة "عرض"
 function _renderOrderCard(o) {
-  // ── Status pill ──
-  var statusText = 'تم استلام طلبك';
-  var statusClass = 'pill-pending';
-  var statusIcon = '✅';
-  if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
-  else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
-  else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
+  var st = _orderStatusMeta(o);
+  var dateStr = _orderDateStr(o);
+  var money = _orderMoney(o);
+  var orderId = o.orderId || '-';
+  var prime = _primeStatusCache[orderId];
 
-  // ── Date ──
-  var dateStr = '';
-  if (o.date || o.createdAt) {
-    try {
-      var d = new Date(o.date || o.createdAt);
-      if (!isNaN(d.getTime())) {
-        dateStr = d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
-      }
-    } catch(e) {}
-  }
+  var cancelBtn = _orderIsCancellable(o)
+    ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')" style="margin-right:8px;">إلغاء</button>'
+    : '';
 
-  // ── Items list ──
+  return '<div class="order-card">' +
+    '<div class="order-card-header">' +
+      '<div>' +
+        '<div class="order-id-text">' + sanitize(orderId) + '</div>' +
+        (dateStr ? '<div class="order-date-text">📅 ' + dateStr + '</div>' : '') +
+      '</div>' +
+      '<span class="status-pill ' + st.cls + '">' + st.icon + ' ' + st.text + '</span>' +
+    '</div>' +
+    '<div style="font-size:12.5px;color:var(--muted);margin:2px 0 6px;">📦 ' + (o.items||[]).length + ' منتج' +
+      (o.address ? ' · 📍 ' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') : '') + '</div>' +
+    (prime
+      ? '<div style="display:inline-block;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:3px 8px;font-size:11px;color:#1E40AF;font-weight:800;margin-bottom:6px;">🚚 برايم · ' + sanitize(_primeDisplayStatus(prime)) + '</div>'
+      : '') +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--border-light,#E2E8F0);">' +
+      '<div style="font-size:15px;font-weight:900;color:var(--primary-dark);" dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</div>' +
+      '<div style="display:flex;align-items:center;">' +
+        cancelBtn +
+        '<button onclick="openOrderDetail(\'' + orderId + '\')" style="background:var(--primary);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;white-space:nowrap;">👁️ عرض التفاصيل</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function closeOrderDetail() {
+  var el = document.getElementById('orderDetailOverlay');
+  if (el) el.remove();
+}
+
+// 🔍 نافذة تفاصيل الطلب للزبون
+function openOrderDetail(orderId) {
+  var o = (_allOrdersCache || []).find(function(x){ return (x.orderId || '-') === orderId; });
+  if (!o) return;
+  closeOrderDetail();
+
+  var st = _orderStatusMeta(o);
+  var dateStr = _orderDateStr(o);
+  var money = _orderMoney(o);
+  var prime = _primeStatusCache[orderId];
+
   var itemsHtml = (o.items||[]).map(function(it) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
     var qty = it.quantity || 1;
@@ -5492,67 +5612,54 @@ function _renderOrderCard(o) {
       '</div>' +
       noteHtml +
     '</div>';
-  }).join('');
+  }).join('') || '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;">لا توجد منتجات</div>';
 
-  var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
-  var orderId = o.orderId || '-';
-  var itemCount = (o.items||[]).length;
-  
-  // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
-  var isCancellable = false;
-  if (o.status === 'pending') {
-    try {
-      var orderTime = new Date(o.timestamp || o.date || o.createdAt).getTime();
-      if (!isNaN(orderTime)) {
-        var ageMin = (Date.now() - orderTime) / 60000;
-        isCancellable = ageMin < 20;
-      }
-    } catch(e) {}
-  }
-
-  var waMsgParts = [
-    'السلام عليكم',
-    'أريد الاستفسار عن طلبي:',
-    '🧾 رقم الطلب: ' + orderId,
-    '📦 عدد المواد: ' + itemCount,
-    '💰 المجموع: ' + formatPriceIQD(total) + ' IQD',
-    '🔖 الحالة: ' + statusText
-  ];
-  var waUrl = 'https://wa.me/' + AMWAJ_PRIMARY_WA + '?text=' + encodeURIComponent(waMsgParts.join('\n'));
-
-  var cancelBtn = isCancellable
-    ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')">إلغاء</button>'
+  var cancelBtn = _orderIsCancellable(o)
+    ? '<button onclick="closeOrderDetail();cancelOrder(\'' + orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#EF4444;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:8px;">❌ إلغاء الطلب</button>'
     : '';
 
-  return '<div class="order-card">' +
-    '<div class="order-card-header">' +
-      '<div>' +
-        '<div class="order-id-text">' + sanitize(orderId) + '</div>' +
-        (dateStr ? '<div class="order-date-text">📅 ' + dateStr + '</div>' : '') +
+  var html =
+    '<div id="orderDetailOverlay" style="position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center;">' +
+      '<div style="background:var(--surface,#fff);width:100%;max-width:480px;max-height:90vh;border-radius:18px 18px 0 0;padding:16px;overflow-y:auto;">' +
+
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;">' +
+          '<div style="font-size:18px;font-weight:900;color:var(--text);">الطلب ' + sanitize(orderId) + '</div>' +
+          '<button onclick="closeOrderDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;">✕</button>' +
+        '</div>' +
+        '<div style="margin-bottom:12px;"><span class="status-pill ' + st.cls + '">' + st.icon + ' ' + st.text + '</span>' +
+          (dateStr ? '<span style="font-size:12.5px;color:var(--muted);margin-right:8px;">📅 ' + dateStr + '</span>' : '') + '</div>' +
+
+        (o.address ? '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">📍 ' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</div>' : '') +
+
+        '<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:6px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
+        itemsHtml +
+
+        '<div style="font-size:14px;font-weight:900;color:var(--text);margin:14px 0 6px;">🧾 ملخص الطلب</div>' +
+        '<div style="background:var(--surface-2);border-radius:12px;padding:12px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:3px 0;">' +
+            '<span>مجموع المنتجات</span><span dir="ltr">' + formatPriceIQD(money.itemsSum) + ' د.ع</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:3px 0;">' +
+            '<span>🚚 التوصيل</span><span dir="ltr">' + (money.deliveryFee > 0 ? formatPriceIQD(money.deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--primary-dark);padding:8px 0 2px;border-top:1px solid var(--border-light,#E2E8F0);margin-top:5px;">' +
+            '<span>💰 المجموع الكلي</span><span dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</span>' +
+          '</div>' +
+        '</div>' +
+
+        (prime
+          ? '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12.5px;color:#1E40AF;font-weight:700;">🚚 شحنة برايم ' +
+              sanitize(String(prime.primeCaseId)) + ' · ' + sanitize(_primeDisplayStatus(prime)) + '</div>'
+          : '') +
+
+        '<a href="' + _orderWaUrl(o) + '" target="_blank" class="order-wa-btn" style="display:block;text-align:center;margin-top:12px;">💬 استفسار عن هذا الطلب</a>' +
+        cancelBtn +
       '</div>' +
-      '<span class="status-pill ' + statusClass + '">' + statusIcon + ' ' + statusText + '</span>' +
-    '</div>' +
-    '<div class="order-items-section">' +
-      '<div class="order-items-label">📋 المنتجات (' + itemCount + ')</div>' +
-      itemsHtml +
-    '</div>' +
-    '<div class="order-footer">' +
-      '<div class="order-total-row">' +
-        '<span class="order-total-label">💰 المجموع الكلي</span>' +
-        '<span class="order-total-value"><span dir="ltr">' + formatPriceIQD(total) + '</span> IQD</span>' +
-      '</div>' +
-      (o.address ? '<div class="order-address-row">📍 <span>' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</span></div>' : '') +
-      (_primeStatusCache[orderId]
-        ? '<div class="order-address-row" style="color:#1D4ED8;font-weight:700;">🚚 <span>شحنة برايم ' +
-            sanitize(String(_primeStatusCache[orderId].primeCaseId)) + ' · ' +
-            sanitize(_primeDisplayStatus(_primeStatusCache[orderId])) + '</span></div>'
-        : '') +
-    '</div>' +
-    '<div class="order-actions">' +
-      '<a href="' + waUrl + '" target="_blank" class="order-wa-btn">💬 استفسار عن هذا الطلب</a>' +
-      cancelBtn +
-    '</div>' +
-  '</div>';
+    '</div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+  var ov = document.getElementById('orderDetailOverlay');
+  if (ov) ov.addEventListener('click', function(e){ if (e.target === ov) closeOrderDetail(); });
 }
 
 function loadMyOrders() {
@@ -8674,30 +8781,12 @@ function renderAdminOrders() {
   else if (_adminDateFilter === 'custom' && _adminCustomDate) dateLabel = _adminCustomDate;
   else dateLabel = 'الكل';
 
-  // احسب كم طلب يقدر ينتحدد (اللي مو مسلم)
-  var selectableCount = filtered.filter(function(o){ return o.status === 'pending' || o.status === 'picked'; }).length;
-
   var header = '<div style="background:var(--surface-2);padding:10px 14px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;font-size:13px;">' +
     '<span style="color:var(--muted);">📅 ' + dateLabel + '</span>' +
     '<span style="font-weight:900;color:var(--primary-dark);">' + filtered.length + ' طلب</span>' +
   '</div>';
 
-  // ✅ شريط التحديد الجماعي (يظهر بس لو في طلبات قابلة للتسليم)
-  var bulkBar = '';
-  if (selectableCount > 0) {
-    bulkBar = 
-      '<div id="bulkActionsBar" style="background:linear-gradient(135deg,#10B981,#059669);padding:12px 14px;border-radius:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(16,185,129,0.2);">' +
-        '<label style="display:flex;align-items:center;gap:10px;color:white;font-weight:700;font-size:14px;cursor:pointer;user-select:none;">' +
-          '<input type="checkbox" id="bulkSelectAll" onchange="adminToggleSelectAll(this.checked)" style="width:20px;height:20px;cursor:pointer;accent-color:white;">' +
-          '<span id="bulkSelectLabel">تحديد كل الطلبات (' + selectableCount + ')</span>' +
-        '</label>' +
-        '<button id="bulkDeliverBtn" onclick="adminBulkDeliver()" disabled style="background:white;color:#059669;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;opacity:0.5;transition:all 0.2s;">' +
-          '✅ تسليم <span id="bulkDeliverCount">0</span>' +
-        '</button>' +
-      '</div>';
-  }
-
-  listDiv.innerHTML = header + bulkBar + filtered.map(renderAdminOrderCard).join('');
+  listDiv.innerHTML = header + filtered.map(renderAdminOrderCard).join('');
   updateAdminDashboardTiles();
 }
 
@@ -8942,80 +9031,10 @@ async function _editCustomerSave() {
   }
 }
 
-// ✅ Bulk selection state
-var _adminSelectedOrders = {};
 
-function adminToggleSelectAll(checked) {
-  var checkboxes = document.querySelectorAll('.admin-order-checkbox');
-  checkboxes.forEach(function(cb){
-    cb.checked = checked;
-    var orderId = cb.getAttribute('data-order-id');
-    if (checked) _adminSelectedOrders[orderId] = true;
-    else delete _adminSelectedOrders[orderId];
-  });
-  adminUpdateBulkButton();
-}
 
-function adminToggleOrderSelect(orderId, checked) {
-  if (checked) _adminSelectedOrders[orderId] = true;
-  else delete _adminSelectedOrders[orderId];
-  adminUpdateBulkButton();
-  
-  // حدث "تحديد الكل" checkbox
-  var checkboxes = document.querySelectorAll('.admin-order-checkbox');
-  var allChecked = true;
-  checkboxes.forEach(function(cb){ if (!cb.checked) allChecked = false; });
-  var selectAllCb = document.getElementById('bulkSelectAll');
-  if (selectAllCb) selectAllCb.checked = allChecked && checkboxes.length > 0;
-}
 
-function adminUpdateBulkButton() {
-  var count = Object.keys(_adminSelectedOrders).length;
-  var btn = document.getElementById('bulkDeliverBtn');
-  var countEl = document.getElementById('bulkDeliverCount');
-  if (countEl) countEl.textContent = count;
-  if (btn) {
-    btn.disabled = count === 0;
-    btn.style.opacity = count === 0 ? '0.5' : '1';
-    btn.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
-  }
-}
 
-async function adminBulkDeliver() {
-  var orderIds = Object.keys(_adminSelectedOrders);
-  if (!orderIds.length) return;
-  if (!confirm('هل تريد تسليم ' + orderIds.length + ' طلب؟')) return;
-  
-  var btn = document.getElementById('bulkDeliverBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ جاري التسليم...'; }
-  
-  var success = 0, failed = 0;
-  for (var i = 0; i < orderIds.length; i++) {
-    try {
-      await secureApiCall('updateOrderStatus', { 
-        adminKey: getAdminKey(),
-        orderId: orderIds[i], 
-        status: 'delivered'
-      });
-      success++;
-      // حدث الحالة محلياً
-      var order = _adminAllOrders.find(function(o){ return o.orderId === orderIds[i]; });
-      if (order) order.status = 'delivered';
-    } catch(e) { 
-      console.error('Failed to deliver order ' + orderIds[i], e);
-      failed++;
-    }
-  }
-  
-  _adminSelectedOrders = {}; // امسح التحديد
-  renderAdminOrders();
-  
-  if (failed === 0) {
-    alert('✅ تم تسليم ' + success + ' طلب بنجاح');
-  } else {
-    alert('✅ تم تسليم ' + success + ' طلب\n❌ فشل ' + failed + ' طلب');
-  }
-}
 
 function _waPhone(phone) {
   var p = String(phone||'').replace(/[^0-9]/g,'');
@@ -9023,6 +9042,10 @@ function _waPhone(phone) {
   if (p.startsWith('0')) return '964' + p.slice(1);
   return '964' + p;
 }
+
+// ✅ قاعدة وحدة: منو الطلب القابل للتحديد الجماعي — نستخدمها بكل مكان حتى ما تختلف الأماكن عن بعض
+// طلبات برايم مستثناة لأن حالتها تتحدث تلقائياً من برايم، فتعليمها "تم التسليم" يدوياً يسبب تعارض.
+// (لو انحذفت الشحنة من برايم — DELETED — يرجع الطلب تحت سيطرتك اليدوية فيصير قابل للتحديد)
 
 function _adminOrderStatusMeta(o) {
   var m = { text: 'قيد المراجعة', color: '#F59E0B', icon: '⏳' };
@@ -9059,19 +9082,8 @@ function renderAdminOrderCard(o) {
   var money = _adminOrderMoney(o);
 
   // 🚚 حالة شحنة برايم (إن وجدت) — تُحمّل مسبقاً في _primeStatusCache
-  // ⚠️ لازم تُعرَّف قبل isSelectable — كانت معرّفة تحتها، و var يرفع التعريف بقيمة undefined،
-  //    فيصير شرط "!primeInfo" دائماً صحيح ويطلع مربع الاختيار حتى للطلبات المرسلة لبرايم
   var primeInfo = _primeStatusCache[o.orderId];
   var isPrime = !!(primeInfo && primeInfo.status !== 'DELETED');
-
-  var isSelectable = (o.status === 'pending' || o.status === 'picked') && !primeInfo;
-  var checkboxHtml = isSelectable
-    ? '<label style="display:flex;align-items:center;cursor:pointer;user-select:none;flex-shrink:0;">' +
-        '<input type="checkbox" class="admin-order-checkbox" data-order-id="' + o.orderId + '" onchange="adminToggleOrderSelect(\'' + o.orderId + '\',this.checked)" ' +
-        (_adminSelectedOrders[o.orderId] ? 'checked' : '') +
-        ' style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">' +
-      '</label>'
-    : '';
 
   var primeBadge = isPrime
     ? '<div style="display:inline-block;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:3px 8px;font-size:11px;color:#1E40AF;font-weight:800;margin-top:6px;">🚚 برايم · ' + sanitize(_primeDisplayStatus(primeInfo)) + '</div>'
@@ -9079,7 +9091,6 @@ function renderAdminOrderCard(o) {
 
   return '<div class="admin-order-card" data-order-id="' + o.orderId + '">' +
     '<div class="admin-order-card-header" style="display:flex;align-items:center;gap:10px;">' +
-      checkboxHtml +
       '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:15px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
         (dateStr ? '<div style="font-size:11.5px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' : '') +
