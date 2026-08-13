@@ -2882,14 +2882,36 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 
 </style>
 
-    <!-- Register -->
+    <!-- Register — الخطوة 1: رقم الهاتف (نتحقق منه قبل ما نطلب أي بيانات، حتى ما يضيّع الزبون جهده لو رقمه مسجل مسبقاً) -->
+    <div id="regPhoneScreen" style="display:none;" class="auth-page">
+      <div class="auth-logo"><img src="1646237145252.png" alt="" onerror="this.style.display='none'"></div>
+      <div class="auth-title">تسجيل حساب جديد</div>
+      <div class="auth-sub">أهلاً بك في امواج للإلكترونيات<br>أدخل رقم هاتفك للبدء</div>
+      <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhoneStart" placeholder="07xxxxxxxxx"></div>
+      <button class="form-btn" id="btnRegStart" onclick="startRegistration()">متابعة</button>
+      <div id="regStartResult"></div>
+      <div class="switch-link"><p>عندك حساب مسبقاً؟</p><button class="form-btn gray" onclick="showScreen('loginScreen')">تسجيل الدخول</button></div>
+      <div style="margin-top:12px;">
+        <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
+      </div>
+      <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
+        <a href="tel:7696" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
+        <a href="tel:07709000160" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
+      </div>
+    </div>
+
+    <!-- Register — الخطوة 2: البيانات (بعد ما ينتحقق الرقم) -->
     <div id="registerScreen" style="display:none;" class="auth-page">
       <div class="auth-logo"><img src="1646237145252.png" alt="" onerror="this.style.display='none'"></div>
       <div class="auth-title">تسجيل حساب جديد</div>
-      <div class="auth-sub">أهلاً بك في امواج للإلكترونيات<br>سجل بياناتك للوصول للأسعار والضمان</div>
+      <div class="auth-sub">تم تأكيد رقمك ✅<br>أكمل بياناتك للوصول للأسعار والضمان</div>
+      <div class="form-group">
+        <label class="form-label">رقم الهاتف <span style="background:#DCFCE7;color:#166534;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800;">✅ مُتحقق</span></label>
+        <div id="regPhoneDisplay" style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:12px;padding:13px 14px;font-size:17px;font-weight:800;color:#166534;" dir="ltr"></div>
+        <input type="hidden" id="regPhone">
+      </div>
       <div class="form-group"><label class="form-label">الاسم الثلاثي</label><input class="form-input" type="text" id="regName" placeholder="مثال: أحمد محمد علي"></div>
       <div class="form-group"><label class="form-label">اسم المحل</label><input class="form-input" type="text" id="regShop" placeholder="اسم محلك"></div>
-      <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" type="tel" id="regPhone" placeholder="07xxxxxxxxx"></div>
       <div class="form-group"><label class="form-label">المحافظة</label><select class="form-input" id="regProvince" onchange="_loadDistrictsInto('reg', this.value)"><option value="" selected disabled>اختر المحافظة</option><option value="كربلاء">كربلاء</option><option value="بغداد">بغداد</option><option value="النجف">النجف</option><option value="بابل">بابل</option><option value="واسط">واسط</option><option value="ديالى">ديالى</option><option value="الأنبار">الأنبار</option><option value="صلاح الدين">صلاح الدين</option><option value="كركوك">كركوك</option><option value="نينوى">نينوى</option><option value="أربيل">أربيل</option><option value="دهوك">دهوك</option><option value="السليمانية">السليمانية</option><option value="البصرة">البصرة</option><option value="ميسان">ميسان</option><option value="ذي قار">ذي قار</option><option value="المثنى">المثنى</option><option value="القادسية">القادسية</option></select></div>
       <div class="form-group" style="position:relative;">
         <label class="form-label">القضاء / الناحية</label>
@@ -2929,7 +2951,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div style="margin-top:12px;">
         <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
       </div>
-      <div class="switch-link"><p>ما عندك حساب؟</p><button class="form-btn success-btn" onclick="showScreen('registerScreen')">تسجيل حساب جديد</button></div>
+      <div class="switch-link"><p>ما عندك حساب؟</p><button class="form-btn success-btn" onclick="showScreen('regPhoneScreen')">تسجيل حساب جديد</button></div>
     </div>
 
     <!-- OTP Verification -->
@@ -3186,7 +3208,7 @@ function getCachedProduct(pid) {
 // ═══ CORE FUNCTIONS — LOADED FIRST ═══
 
 function showScreen(id) {
-  ['loadingScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
+  ['loadingScreen','regPhoneScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = 'none';
   });
@@ -3769,6 +3791,33 @@ async function _uploadShopPhoto(file) {
   return res.url;
 }
 
+// 📱 الخطوة 1 من التسجيل: نتحقق من الرقم قبل ما نطلب أي بيانات —
+// حتى ما يعبّي الزبون كل الحقول ويرفع صورة، وبعدها يكتشف إن رقمه مسجل مسبقاً
+async function startRegistration() {
+  const result = document.getElementById("regStartResult");
+  const btn = document.getElementById("btnRegStart");
+  const phone = normalizePhone(document.getElementById("regPhoneStart").value);
+  result.innerHTML = '';
+  if (!phone || phone.length < 11) { result.innerHTML = '<div class="result error">❌ أدخل رقم هاتف صحيح</div>'; return; }
+  btn.disabled = true; btn.innerText = "جاري التحقق...";
+  try {
+    const existing = await fetchCustomerByPhone(phone);
+    if (existing) {
+      if (existing.status === "approved") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result success">✅ رقمك مسجل ومفعل! يمكنك تسجيل الدخول</div>'; }
+      else if (existing.status === "pending") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر الموافقة</div>'; }
+      else { result.innerHTML = '<div class="result error">❌ تم رفض طلبك سابقاً، تواصل معنا للمزيد</div>'; }
+      btn.disabled = false; btn.innerText = "متابعة"; return;
+    }
+    await startOtpFlow(phone, 'register');   // ينقله لشاشة الرمز، وبعد التحقق تنفتح شاشة البيانات
+  } catch (e) {
+    var _msg = e && e.message;
+    var _isAr = _msg && /[؀-ۿ]/.test(_msg);
+    result.innerHTML = '<div class="result error">❌ ' + (_isAr ? _msg : 'حدث خطأ غير متوقع، حاول مرة أخرى') + '</div>';
+  }
+  btn.disabled = false; btn.innerText = "متابعة";
+}
+
+// 📝 الخطوة 3: إرسال البيانات (الرقم صار متحقق أصلاً بالخطوة 2)
 async function submitRegistration() {
   const btn = document.getElementById("btnRegister");
   const result = document.getElementById("regResult");
@@ -3793,20 +3842,30 @@ async function submitRegistration() {
     return;
   }
   if (!shopPhotoFile) { result.innerHTML = '<div class="result error">❌ يرجى إرفاق صورة المحل</div>'; return; }
-  btn.disabled = true; btn.innerText = "جاري الإرسال...";
+  if (!phone) { result.innerHTML = '<div class="result error">❌ انتهت الجلسة، ابدأ التسجيل من جديد</div>'; return; }
+  btn.disabled = true;
   try {
-    const existing = await fetchCustomerByPhone(phone);
-    if (existing) {
-      if (existing.status === "approved") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result success">✅ رقمك مسجل ومفعل! يمكنك تسجيل الدخول</div>'; }
-      else if (existing.status === "pending") { localStorage.setItem("amwaj_phone", phone); result.innerHTML = '<div class="result pending">⏳ طلبك قيد المراجعة، انتظر الموافقة</div>'; }
-      else { result.innerHTML = '<div class="result error">❌ تم رفض طلبك سابقاً، تواصل معنا للمزيد</div>'; }
-      btn.disabled = false; btn.innerText = "إرسال طلب التسجيل"; return;
-    }
     btn.innerText = "📤 جاري رفع الصورة...";
     const shopPhoto = await _uploadShopPhoto(shopPhotoFile);
     btn.innerText = "جاري الإرسال...";
-    await startOtpFlow(phone, 'register', { name, shop, phone, address, province, shopPhoto, district, districtId });
-  } catch (e) { console.error(e); result.innerHTML = '<div class="result error">❌ حدث خطأ، حاول مرة أخرى</div>'; }
+    // الرقم انتحقق بالخطوة السابقة — السيرفر يتأكد من علامة التحقق قبل ما يقبل التسجيل
+    await secureApiCall('addCustomer', { name, shop, phone, address, date: formatDate(new Date()), status: 'pending', province, shopPhoto, district, districtId });
+    localStorage.setItem('amwaj_phone', phone);
+    // 🔔 اربط توكن الإشعارات برقمه من الآن، حتى إشعار "تمت الموافقة" يوصله فعلاً
+    try { _syncFcmTokenToPhone(phone); } catch(e){}
+    result.innerHTML = '<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>' + sanitize(phone) + '</b></div>';
+    document.getElementById('regName').value = ''; document.getElementById('regShop').value = ''; document.getElementById('regAddress').value = '';
+  } catch (e) {
+    console.error(e);
+    var _m = (e && e.message) || '';
+    // لو انتهت مهلة التحقق (المستخدم تأخر كثير بتعبئة البيانات) نوضّحله يبدأ من جديد بدل رسالة غامضة
+    if (_m.indexOf('تأكيد رقم الهاتف') !== -1) {
+      result.innerHTML = '<div class="result error">❌ انتهت مهلة التحقق من الرقم، ابدأ التسجيل من جديد</div>';
+    } else {
+      var _isAr = _m && /[؀-ۿ]/.test(_m);
+      result.innerHTML = '<div class="result error">❌ ' + (_isAr ? _m : 'حدث خطأ، حاول مرة أخرى') + '</div>';
+    }
+  }
   btn.disabled = false; btn.innerText = "إرسال طلب التسجيل";
 }
 
@@ -3833,8 +3892,8 @@ async function startOtpFlow(phone, purpose, pendingReg) {
     showScreen('otpScreen');
     startOtpCooldown();
   } catch (e) {
-    const backScreen = purpose === 'register' ? 'registerScreen' : 'loginScreen';
-    const targetResult = document.getElementById(purpose === 'register' ? 'regResult' : 'loginResult');
+    const backScreen = purpose === 'register' ? 'regPhoneScreen' : 'loginScreen';
+    const targetResult = document.getElementById(purpose === 'register' ? 'regStartResult' : 'loginResult');
     showScreen(backScreen);
     // 🛡️ لو صار خطأ غريب مو من نصوصنا (بالإنكليزي مثلاً من المتصفح/API خارجي)، نعرض رسالة عربية مفهومة بدل النص التقني المربك
     var _msg = e && e.message;
@@ -3877,7 +3936,7 @@ async function resendOtp() {
 
 function cancelOtpFlow() {
   if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
-  showScreen(_otp.purpose === 'register' ? 'registerScreen' : 'loginScreen');
+  showScreen(_otp.purpose === 'register' ? 'regPhoneScreen' : 'loginScreen');
 }
 
 async function verifyOtpCode() {
@@ -3891,14 +3950,12 @@ async function verifyOtpCode() {
     if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
 
     if (_otp.purpose === 'register') {
-      const reg = _otp.pendingReg;
-      await secureApiCall('addCustomer', { name: reg.name, shop: reg.shop, phone: reg.phone, address: reg.address, date: formatDate(new Date()), status: 'pending', province: reg.province || '', shopPhoto: reg.shopPhoto || '', district: reg.district || '', districtId: reg.districtId || '' });
-      localStorage.setItem('amwaj_phone', reg.phone);
-      // 🔔 اربط توكن FCM (إذا موجود مسبقاً) برقمه الآن — حتى إشعار "تمت الموافقة" لاحقاً يوصله فعلياً بدل ما يضل بلا رقم
-      try { _syncFcmTokenToPhone(reg.phone); } catch(e){}
+      // ✅ الرقم انتحقق — ننقله لشاشة البيانات والرقم مقفول ومعلّم "مُتحقق"
+      document.getElementById('regPhone').value = _otp.phone;
+      const _disp = document.getElementById('regPhoneDisplay');
+      if (_disp) _disp.textContent = _otp.phone;
+      document.getElementById('regResult').innerHTML = '';
       showScreen('registerScreen');
-      document.getElementById('regResult').innerHTML = `<div class="result success">✅ تم إرسال طلبك بنجاح!<br>سيتم مراجعته والرد عليك قريباً<br>📱 رقمك: <b>${reg.phone}</b></div>`;
-      document.getElementById('regName').value = ''; document.getElementById('regShop').value = ''; document.getElementById('regPhone').value = ''; document.getElementById('regAddress').value = '';
     } else {
       const user = res;
       localStorage.setItem('amwaj_user', JSON.stringify(user));
@@ -4803,7 +4860,7 @@ function handleSwipe() {
 // ═══ APP SHELL FUNCTIONS ═══
 
 function showScreen(id) {
-  ['loadingScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
+  ['loadingScreen','regPhoneScreen','registerScreen','loginScreen','otpScreen','homeScreen'].forEach(s => {
     const el = document.getElementById(s);
     if (el) el.style.display = 'none';
   });
@@ -4814,7 +4871,7 @@ function showScreen(id) {
 // footerTab defined above
 
 function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
-function toRegisterScreen() { closeSheet('accountSheet'); showScreen('registerScreen'); }
+function toRegisterScreen() { closeSheet('accountSheet'); showScreen('regPhoneScreen'); }
 
 function openOrdersSheet() {
   if (isGuest()) { showLoginPrompt(); return; }
@@ -4886,7 +4943,7 @@ function openFlatSub(subType, labelAr, icon) {
 function showPage(id) { /* no-op */ }
 function backHome() { showScreen('homeScreen'); }
 function showLoginPage() { showScreen('loginScreen'); }
-function showRegisterPage() { showScreen('registerScreen'); }
+function showRegisterPage() { showScreen('regPhoneScreen'); }
 function openAct() { openSheet('warrantySheet'); document.getElementById('start').value = formatDate(new Date()); }
 function openChk() { openSheet('checkSheet'); }
 function openMyOrders() { openOrdersSheet(); }
@@ -5730,7 +5787,7 @@ function openFlatSub(subType, labelAr, icon) { openFlatSubSheet(subType, labelAr
 function showPage(id) { /* no-op */ }
 function backHome() { showScreen('homeScreen'); }
 function showLoginPage() { showScreen('loginScreen'); }
-function showRegisterPage() { showScreen('registerScreen'); }
+function showRegisterPage() { showScreen('regPhoneScreen'); }
 function openAct() { openSheet('warrantySheet'); const s = document.getElementById('start'); if(s) s.value = formatDate(new Date()); }
 function openChk() { openSheet('checkSheet'); }
 function openMyOrders() { openOrdersSheet(); }
@@ -5972,7 +6029,7 @@ function showLoginPrompt() {
   var b2 = document.createElement('button');
   b2.textContent = 'إنشاء حساب جديد';
   b2.style.cssText = 'width:100%;background:#F1F5F9;color:#0F172A;border:none;border-radius:12px;padding:14px;font-size:18px;font-weight:700;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:10px;display:block;';
-  b2.onclick = function(){ overlay.remove(); showScreen('registerScreen'); };
+  b2.onclick = function(){ overlay.remove(); showScreen('regPhoneScreen'); };
   var b3 = document.createElement('button');
   b3.textContent = 'تصفح بدون تسجيل';
   b3.style.cssText = 'width:100%;background:none;border:none;color:#94A3B8;font-size:18px;font-family:Tajawal,sans-serif;cursor:pointer;display:block;';
@@ -5988,7 +6045,7 @@ async function appBoot() {
   // No phone saved → check if guest mode
   if (!phone) {
     if (localStorage.getItem('amwaj_guest') === '1') { showScreen('homeScreen'); return; }
-    showScreen('registerScreen'); return;
+    showScreen('regPhoneScreen'); return;
   }
 
   // Cached approved user → show home IMMEDIATELY, no loading
@@ -7440,7 +7497,7 @@ function renderAccountSheet() {
         <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-0.3px;">مرحباً بك</div>
         <div style="font-size:14px;color:var(--muted);margin-bottom:24px;">سجل دخولك للوصول لكل الخدمات</div>
         <button class="form-btn" onclick="closeSheet('accountSheet');showScreen('loginScreen');">تسجيل الدخول</button>
-        <button class="form-btn success-btn" style="margin-top:10px;" onclick="closeSheet('accountSheet');showScreen('registerScreen');">إنشاء حساب جديد</button>
+        <button class="form-btn success-btn" style="margin-top:10px;" onclick="closeSheet('accountSheet');showScreen('regPhoneScreen');">إنشاء حساب جديد</button>
         <button class="form-btn" style="background:transparent;color:var(--muted);box-shadow:none;border:1px dashed var(--border);margin-top:10px;" onclick="openContactSheet();">📞 تواصل معنا</button>
       </div>
     `;
