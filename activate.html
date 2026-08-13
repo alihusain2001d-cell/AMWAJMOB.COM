@@ -9024,21 +9024,107 @@ function _waPhone(phone) {
   return '964' + p;
 }
 
-function renderAdminOrderCard(o) {
-  var statusText = 'قيد المراجعة', statusColor = '#F59E0B', statusIcon = '⏳';
-  if (o.status === 'picked')    { statusText = 'قيد التجهيز'; statusColor = '#3B82F6'; statusIcon = '📦'; }
-  if (o.status === 'delivered') { statusText = 'تم التسليم';  statusColor = '#10B981'; statusIcon = '✅'; }
-  if (o.status === 'cancelled') { statusText = 'ملغي';         statusColor = '#EF4444'; statusIcon = '❌'; }
+function _adminOrderStatusMeta(o) {
+  var m = { text: 'قيد المراجعة', color: '#F59E0B', icon: '⏳' };
+  if (o.status === 'picked')    { m = { text: 'قيد التجهيز', color: '#3B82F6', icon: '📦' }; }
+  if (o.status === 'delivered') { m = { text: 'تم التسليم',  color: '#10B981', icon: '✅' }; }
+  if (o.status === 'cancelled') { m = { text: 'ملغي',        color: '#EF4444', icon: '❌' }; }
+  return m;
+}
 
-  var dateStr = '';
-  if (o.timestamp) {
-    try {
-      var d = new Date(o.timestamp);
-      if (!isNaN(d.getTime())) {
-        dateStr = d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
-      }
-    } catch(e) {}
-  }
+function _adminOrderDateStr(o) {
+  if (!o.timestamp) return '';
+  try {
+    var d = new Date(o.timestamp);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' }) + ' · ' +
+           d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+  } catch(e) { return ''; }
+}
+
+// 💰 تفصيل مبلغ الطلب: مجموع المنتجات + التوصيل (نستخرج التوصيل من الفرق — نفس منطق نافذة التعديل)
+function _adminOrderMoney(o) {
+  var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
+  var itemsSum = (o.items || []).reduce(function(s, it){
+    return s + (Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0) * (Number(it.quantity) || 1);
+  }, 0);
+  return { total: total, itemsSum: itemsSum, deliveryFee: Math.max(0, total - itemsSum) };
+}
+
+// 📇 بطاقة مختصرة بالقائمة — الأساسيات فقط، والتفاصيل بضغطة "عرض"
+// (قبل كانت كل التفاصيل والأزرار مفتوحة بالقائمة، فتصير القائمة طويلة ومزدحمة)
+function renderAdminOrderCard(o) {
+  var st = _adminOrderStatusMeta(o);
+  var dateStr = _adminOrderDateStr(o);
+  var money = _adminOrderMoney(o);
+
+  // 🚚 حالة شحنة برايم (إن وجدت) — تُحمّل مسبقاً في _primeStatusCache
+  // ⚠️ لازم تُعرَّف قبل isSelectable — كانت معرّفة تحتها، و var يرفع التعريف بقيمة undefined،
+  //    فيصير شرط "!primeInfo" دائماً صحيح ويطلع مربع الاختيار حتى للطلبات المرسلة لبرايم
+  var primeInfo = _primeStatusCache[o.orderId];
+  var isPrime = !!(primeInfo && primeInfo.status !== 'DELETED');
+
+  var isSelectable = (o.status === 'pending' || o.status === 'picked') && !primeInfo;
+  var checkboxHtml = isSelectable
+    ? '<label style="display:flex;align-items:center;cursor:pointer;user-select:none;flex-shrink:0;">' +
+        '<input type="checkbox" class="admin-order-checkbox" data-order-id="' + o.orderId + '" onchange="adminToggleOrderSelect(\'' + o.orderId + '\',this.checked)" ' +
+        (_adminSelectedOrders[o.orderId] ? 'checked' : '') +
+        ' style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">' +
+      '</label>'
+    : '';
+
+  var primeBadge = isPrime
+    ? '<div style="display:inline-block;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:3px 8px;font-size:11px;color:#1E40AF;font-weight:800;margin-top:6px;">🚚 برايم · ' + sanitize(_primeDisplayStatus(primeInfo)) + '</div>'
+    : '';
+
+  return '<div class="admin-order-card" data-order-id="' + o.orderId + '">' +
+    '<div class="admin-order-card-header" style="display:flex;align-items:center;gap:10px;">' +
+      checkboxHtml +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:15px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
+        (dateStr ? '<div style="font-size:11.5px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' : '') +
+      '</div>' +
+      '<div style="padding:4px 10px;border-radius:12px;background:' + st.color + '20;color:' + st.color + ';font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0;">' +
+        st.icon + ' ' + st.text +
+      '</div>' +
+    '</div>' +
+
+    '<div style="font-size:13.5px;color:var(--text);margin-bottom:5px;font-weight:800;">👤 ' + sanitize(o.name||'-') +
+      (o.shop ? '<span style="font-weight:600;color:var(--muted);"> · ' + sanitize(o.shop) + '</span>' : '') + '</div>' +
+
+    '<div style="font-size:12.5px;margin-bottom:5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+      '📱 <a href="tel:' + sanitize(o.phone) + '" style="color:var(--primary);font-weight:700;" dir="ltr">' + sanitize(o.phone) + '</a>' +
+      '<a href="https://wa.me/' + _waPhone(o.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a>' +
+    '</div>' +
+
+    (o.address ? '<div style="font-size:12.5px;color:var(--muted);margin-bottom:2px;">📍 ' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</div>' : '') +
+    primeBadge +
+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light,#E2E8F0);">' +
+      '<div style="font-size:15px;font-weight:900;color:var(--primary-dark);" dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</div>' +
+      '<button onclick="adminOpenOrderDetail(\'' + o.orderId + '\')" style="background:var(--primary);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;white-space:nowrap;">👁️ عرض التفاصيل</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function adminCloseOrderDetail() {
+  var el = document.getElementById('adminOrderDetailOverlay');
+  if (el) el.remove();
+}
+
+// 🔍 نافذة تفاصيل الطلب — المنتجات، تفصيل المبلغ، وكل أزرار الإجراءات
+function adminOpenOrderDetail(orderId) {
+  var o = (_adminAllOrders || []).find(function(x){ return x.orderId === orderId; });
+  if (!o) return;
+  adminCloseOrderDetail();
+
+  var st = _adminOrderStatusMeta(o);
+  var dateStr = _adminOrderDateStr(o);
+  var money = _adminOrderMoney(o);
+
+  var primeInfo = _primeStatusCache[o.orderId];
+  var province = String(o.address||'').split('،')[0].trim();
+  var isPrimeEligible = province && province !== 'كربلاء';
 
   var itemsHtml = (o.items || []).map(function(it) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
@@ -9046,113 +9132,102 @@ function renderAdminOrderCard(o) {
     var metaParts = [];
     if (it.brand) metaParts.push(sanitize(it.brand));
     if (it.type) metaParts.push(sanitize(it.type));
-    var metaLine = metaParts.length ? '<div style="font-size:13px;color:var(--muted);margin-top:2px;font-weight:600;">' + metaParts.join(' · ') + '</div>' : '';
+    var metaLine = metaParts.length ? '<div style="font-size:12.5px;color:var(--muted);margin-top:2px;font-weight:600;">' + metaParts.join(' · ') + '</div>' : '';
     var notesLine = it.notes ? '<div style="font-size:12px;color:#92400E;margin-top:3px;font-weight:700;">📝 ' + sanitize(it.notes) + '</div>' : '';
     var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' <span style="color:#10B981;">🛡️ ضمان</span>' : '';
-    var priceLine = price ? '<div style="font-size:13px;color:var(--primary-dark);margin-top:3px;font-weight:800;" dir="ltr">' + formatPriceIQD(price) + ' د.ع</div>' : '';
-    return '<div style="padding:9px 0;border-bottom:1px solid var(--border-light,#E2E8F0);">' +
+    var lineTotal = price * qty;
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border-light,#E2E8F0);">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
-          '<div style="font-size:16px;font-weight:900;color:var(--text);line-height:1.35;">' + sanitize(it.name||'-') + warranty + '</div>' +
-          '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;flex-shrink:0;">× ' + qty + '</div>' +
+          '<div style="font-size:15px;font-weight:900;color:var(--text);line-height:1.35;flex:1;min-width:0;">' + sanitize(it.name||'-') + warranty + '</div>' +
+          '<div style="font-size:13.5px;font-weight:800;color:var(--muted);white-space:nowrap;flex-shrink:0;">الكمية: ' + qty + '</div>' +
         '</div>' +
-        metaLine + priceLine + notesLine +
+        metaLine +
+        (price ? '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:13px;">' +
+            '<span style="color:var(--muted);" dir="ltr">' + formatPriceIQD(price) + ' × ' + qty + '</span>' +
+            '<span style="color:var(--primary-dark);font-weight:800;" dir="ltr">' + formatPriceIQD(lineTotal) + ' د.ع</span>' +
+          '</div>' : '') +
+        notesLine +
       '</div>';
-  }).join('');
-
-  var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
-
-  // 💰 تفصيل المبلغ: مجموع المنتجات + التوصيل (نستخرج التوصيل من الفرق — نفس منطق نافذة التعديل)
-  var itemsSum = (o.items || []).reduce(function(s, it){
-    return s + (Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0) * (Number(it.quantity) || 1);
-  }, 0);
-  var deliveryFee = Math.max(0, total - itemsSum);
-
-  // 🚚 حالة شحنة برايم (إن وجدت) — تُحمّل مسبقاً في _primeStatusCache
-  // ⚠️ لازم تُعرَّف هنا قبل isSelectable — كانت معرّفة تحتها، و var يرفع التعريف بقيمة undefined،
-  //    فيصير شرط "!primeInfo" دائماً صحيح ويطلع مربع الاختيار حتى للطلبات المرسلة لبرايم
-  var primeInfo = _primeStatusCache[o.orderId];
-  var province = String(o.address||'').split('،')[0].trim();
-  var isPrimeEligible = province && province !== 'كربلاء';
-
-  // ✅ Checkbox للطلبات القابلة للتسليم
-  var isSelectable = (o.status === 'pending' || o.status === 'picked') && !primeInfo;
-  var checkboxHtml = isSelectable 
-    ? '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
-        '<input type="checkbox" class="admin-order-checkbox" data-order-id="' + o.orderId + '" onchange="adminToggleOrderSelect(\'' + o.orderId + '\',this.checked)" ' + 
-        (_adminSelectedOrders[o.orderId] ? 'checked' : '') + 
-        ' style="width:20px;height:20px;cursor:pointer;accent-color:#10B981;">' +
-      '</label>'
-    : '';
+  }).join('') || '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;">لا توجد منتجات</div>';
 
   var primeHtml = '';
   if (primeInfo && primeInfo.status !== 'DELETED') {
     primeHtml =
-      '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:12px;color:#1E40AF;font-weight:700;">' +
+      '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12.5px;color:#1E40AF;font-weight:700;">' +
         '🚚 مرسل لبرايم · رقم الشحنة: <span dir="ltr">' + sanitize(String(primeInfo.primeCaseId)) + '</span>' +
         '<br>الحالة: ' + sanitize(_primeDisplayStatus(primeInfo)) +
         '<button id="primePrintBtn_' + o.orderId + '" onclick="adminPrintPrimeLabel(\'' + o.orderId + '\')" style="display:block;width:100%;margin-top:8px;padding:9px;border:none;border-radius:8px;background:#1E40AF;color:#fff;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">🖨️ طباعة ملصق الشحنة</button>' +
       '</div>';
   }
 
-  // Action buttons based on current status
+  var C = 'adminCloseOrderDetail();';
   var actions = '';
   if (o.status === 'pending' || o.status === 'picked') {
     if (primeInfo) {
-      // 🚚 الطلب مع برايم — حالته تتحدث تلقائياً، فلا داعي لزر "تم التسليم" اليدوي
       actions =
-        '<div style="flex:1 1 100%;background:var(--surface-2);border-radius:8px;padding:8px;text-align:center;font-size:12px;color:var(--muted);font-weight:700;">🔄 الحالة تتحدث تلقائياً من برايم</div>' +
-        '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;margin-top:6px;">❌ إلغاء</button>';
+        '<div style="background:var(--surface-2);border-radius:8px;padding:9px;text-align:center;font-size:12.5px;color:var(--muted);font-weight:700;margin-bottom:8px;">🔄 الحالة تتحدث تلقائياً من برايم</div>' +
+        '<button onclick="' + C + 'adminCancelOrder(\'' + o.orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#EF4444;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">❌ إلغاء الطلب</button>';
     } else {
       actions =
-        '<button class="admin-action-btn btn-deliver" onclick="adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;font-size:14px;padding:10px 14px;">✅ تم التسليم</button>' +
-        '<button class="admin-action-btn" onclick="adminCancelOrder(\'' + o.orderId + '\')" style="flex:1;font-size:14px;padding:10px 14px;background:#EF4444;color:#fff;">❌ إلغاء</button>' +
-        '<button class="admin-action-btn" onclick="adminOpenEditOrder(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#7C3AED;color:#fff;margin-top:6px;">✏️ تعديل الطلب</button>';
+        '<div style="display:flex;gap:8px;margin-bottom:8px;">' +
+          '<button onclick="' + C + 'adminChangeOrderStatus(\'' + o.orderId + '\',\'delivered\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#10B981;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">✅ تم التسليم</button>' +
+          '<button onclick="' + C + 'adminCancelOrder(\'' + o.orderId + '\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#EF4444;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">❌ إلغاء</button>' +
+        '</div>' +
+        '<button onclick="' + C + 'adminOpenEditOrder(\'' + o.orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#7C3AED;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;margin-bottom:8px;">✏️ تعديل الطلب</button>';
       if (isPrimeEligible) {
         actions +=
-          '<button class="admin-action-btn" id="primeBtn_' + o.orderId + '" onclick="adminSendToPrime(\'' + o.orderId + '\')" style="flex:1 1 100%;font-size:14px;padding:10px 14px;background:#1D4ED8;color:#fff;margin-top:6px;">🚚 إرسال إلى برايم</button>';
+          '<button id="primeBtn_' + o.orderId + '" onclick="' + C + 'adminSendToPrime(\'' + o.orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#1D4ED8;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">🚚 إرسال إلى برايم</button>';
       }
     }
   } else {
-    actions = '<div style="color:var(--muted);font-size:12px;font-weight:600;padding:6px;">' +
+    actions = '<div style="text-align:center;color:var(--muted);font-size:13px;font-weight:700;padding:10px;background:var(--surface-2);border-radius:10px;">' +
       (o.status === 'delivered' ? '✅ هذا الطلب تم تسليمه' :
        o.status === 'cancelled' ? '❌ هذا الطلب ملغي' : 'لا يمكن تعديل هذا الطلب') +
       '</div>';
   }
 
-  return '<div class="admin-order-card" data-order-id="' + o.orderId + '">' +
-    '<div class="admin-order-card-header" style="display:flex;align-items:center;gap:10px;">' +
-      checkboxHtml +
-      '<div style="flex:1;">' +
-        '<div style="font-size:14px;font-weight:900;color:var(--text);">' + sanitize(o.orderId || '-') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted);margin-top:2px;">' + dateStr + '</div>' +
+  var html =
+    '<div id="adminOrderDetailOverlay" style="position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:10000;display:flex;align-items:flex-end;justify-content:center;">' +
+      '<div style="background:var(--surface,#fff);width:100%;max-width:480px;max-height:90vh;border-radius:18px 18px 0 0;padding:16px;overflow-y:auto;">' +
+
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;">' +
+          '<div style="font-size:18px;font-weight:900;color:var(--text);">الطلب ' + sanitize(o.orderId || '-') + '</div>' +
+          '<button onclick="adminCloseOrderDetail()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;">✕</button>' +
+        '</div>' +
+        '<div style="display:inline-block;padding:4px 10px;border-radius:12px;background:' + st.color + '20;color:' + st.color + ';font-size:12px;font-weight:800;margin-bottom:12px;">' + st.icon + ' ' + st.text + '</div>' +
+
+        '<div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;">' +
+          '<div style="font-weight:900;color:var(--text);margin-bottom:5px;">👤 ' + sanitize(o.name||'-') + (o.shop ? '<span style="font-weight:600;color:var(--muted);"> · ' + sanitize(o.shop) + '</span>' : '') + '</div>' +
+          '<div style="margin-bottom:5px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">📱 <a href="tel:' + sanitize(o.phone) + '" style="color:var(--primary);font-weight:700;" dir="ltr">' + sanitize(o.phone) + '</a>' +
+            '<a href="https://wa.me/' + _waPhone(o.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a></div>' +
+          (o.address ? '<div style="color:var(--muted);margin-bottom:5px;">📍 ' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</div>' : '') +
+          (dateStr ? '<div style="color:var(--muted);">📅 ' + dateStr + '</div>' : '') +
+        '</div>' +
+
+        '<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:2px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
+        '<div style="background:var(--surface-2);border-radius:12px;padding:4px 12px;margin-bottom:12px;">' + itemsHtml + '</div>' +
+
+        '<div style="font-size:14px;font-weight:900;color:var(--text);margin-bottom:6px;">🧾 ملخص الطلب</div>' +
+        '<div style="background:var(--surface-2);border-radius:12px;padding:12px;margin-bottom:12px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:3px 0;">' +
+            '<span>مجموع المنتجات</span><span dir="ltr">' + formatPriceIQD(money.itemsSum) + ' د.ع</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:3px 0;">' +
+            '<span>🚚 التوصيل</span><span dir="ltr">' + (money.deliveryFee > 0 ? formatPriceIQD(money.deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--primary-dark);padding:8px 0 2px;border-top:1px solid var(--border-light,#E2E8F0);margin-top:5px;">' +
+            '<span>💰 المجموع الكلي</span><span dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</span>' +
+          '</div>' +
+        '</div>' +
+
+        primeHtml +
+        '<div style="margin-top:4px;">' + actions + '</div>' +
       '</div>' +
-      '<div style="padding:4px 10px;border-radius:12px;background:' + statusColor + '20;color:' + statusColor + ';font-size:11px;font-weight:800;">' +
-        statusIcon + ' ' + statusText +
-      '</div>' +
-    '</div>' +
-    '<div style="font-size:13px;color:var(--text);margin-bottom:6px;">' +
-      '<strong>👤 ' + sanitize(o.name||'') + '</strong>' +
-      (o.shop ? ' · ' + sanitize(o.shop) : '') +
-    '</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:10px;">📱 <a href="tel:' + sanitize(o.phone) + '" style="color:var(--primary);">' + sanitize(o.phone) + '</a>' +
-      '<a href="https://wa.me/' + _waPhone(o.phone) + '" target="_blank" style="color:#16A34A;font-weight:700;text-decoration:none;">💬 واتساب</a></div>' +
-    (o.address ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">📍 ' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</div>' : '') +
-    '<div style="background:var(--surface-2);border-radius:10px;padding:8px 10px;margin:8px 0;">' +
-      '<div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:4px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
-      itemsHtml +
-    '</div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0;">' +
-      '<span>مجموع المنتجات</span><span dir="ltr">' + formatPriceIQD(itemsSum) + ' د.ع</span>' +
-    '</div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0;">' +
-      '<span>🚚 التوصيل</span><span dir="ltr">' + (deliveryFee > 0 ? formatPriceIQD(deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
-    '</div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:var(--primary-dark);padding:7px 0 4px;border-top:1px solid var(--border-light,#E2E8F0);margin-top:4px;">' +
-      '<span>💰 المجموع الكلي</span><span dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
-    '</div>' +
-    primeHtml +
-    '<div class="admin-order-actions">' + actions + '</div>' +
-  '</div>';
+    '</div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+  var ov = document.getElementById('adminOrderDetailOverlay');
+  if (ov) ov.addEventListener('click', function(e){ if (e.target === ov) adminCloseOrderDetail(); });
 }
 
 // ══════════════════════════════════════════
