@@ -9061,6 +9061,19 @@ function renderAdminOrderCard(o) {
 
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
 
+  // 💰 تفصيل المبلغ: مجموع المنتجات + التوصيل (نستخرج التوصيل من الفرق — نفس منطق نافذة التعديل)
+  var itemsSum = (o.items || []).reduce(function(s, it){
+    return s + (Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0) * (Number(it.quantity) || 1);
+  }, 0);
+  var deliveryFee = Math.max(0, total - itemsSum);
+
+  // 🚚 حالة شحنة برايم (إن وجدت) — تُحمّل مسبقاً في _primeStatusCache
+  // ⚠️ لازم تُعرَّف هنا قبل isSelectable — كانت معرّفة تحتها، و var يرفع التعريف بقيمة undefined،
+  //    فيصير شرط "!primeInfo" دائماً صحيح ويطلع مربع الاختيار حتى للطلبات المرسلة لبرايم
+  var primeInfo = _primeStatusCache[o.orderId];
+  var province = String(o.address||'').split('،')[0].trim();
+  var isPrimeEligible = province && province !== 'كربلاء';
+
   // ✅ Checkbox للطلبات القابلة للتسليم
   var isSelectable = (o.status === 'pending' || o.status === 'picked') && !primeInfo;
   var checkboxHtml = isSelectable 
@@ -9071,10 +9084,6 @@ function renderAdminOrderCard(o) {
       '</label>'
     : '';
 
-  // 🚚 حالة شحنة برايم (إن وجدت) — تُحمّل مسبقاً في _primeStatusCache
-  var primeInfo = _primeStatusCache[o.orderId];
-  var province = String(o.address||'').split('،')[0].trim();
-  var isPrimeEligible = province && province !== 'كربلاء';
   var primeHtml = '';
   if (primeInfo && primeInfo.status !== 'DELETED') {
     primeHtml =
@@ -9132,8 +9141,14 @@ function renderAdminOrderCard(o) {
       '<div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:4px;">📋 المنتجات (' + (o.items||[]).length + ')</div>' +
       itemsHtml +
     '</div>' +
-    '<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--primary-dark);padding:6px 0;">' +
-      '<span>💰 المجموع</span><span dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
+    '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0;">' +
+      '<span>مجموع المنتجات</span><span dir="ltr">' + formatPriceIQD(itemsSum) + ' د.ع</span>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:3px 0;">' +
+      '<span>🚚 التوصيل</span><span dir="ltr">' + (deliveryFee > 0 ? formatPriceIQD(deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:var(--primary-dark);padding:7px 0 4px;border-top:1px solid var(--border-light,#E2E8F0);margin-top:4px;">' +
+      '<span>💰 المجموع الكلي</span><span dir="ltr">' + formatPriceIQD(total) + ' د.ع</span>' +
     '</div>' +
     primeHtml +
     '<div class="admin-order-actions">' + actions + '</div>' +
