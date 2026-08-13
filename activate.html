@@ -3977,6 +3977,13 @@ async function verifyOtpCode() {
 }
 
 function logout() {
+  // 🔕 ألغِ ربط هذا الجهاز بالإشعارات عند السيرفر — بدونها تضل توصله إشعارات الحساب بعد الخروج.
+  // نبقي التوكن محفوظ محلياً عمداً، حتى يتربط من جديد فوراً بأول تسجيل دخول جاي (updateFcmTokenAfterLogin).
+  // نرسلها بدون انتظار حتى ما نأخّر الخروج نفسه لو الشبكة بطيئة.
+  try {
+    var _fcmTok = localStorage.getItem('amwaj_fcm_token');
+    if (_fcmTok) { secureApiCall('unregisterFcmToken', { token: _fcmTok }).catch(function(){}); }
+  } catch(e) {}
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
   localStorage.removeItem("amwaj_admin_token");
@@ -4866,6 +4873,9 @@ function showScreen(id) {
   });
   const target = document.getElementById(id);
   if (target) target.style.display = (id === 'homeScreen') ? 'block' : 'block';
+  // 🛒 أول ما يوصل لشاشة التصفح (بأي طريق: دخول، ضيف، أو جلسة محفوظة) نبدأ تحميل المنتجات —
+  // بهذا الشكل ما تزاحم طلبات تسجيل الدخول/التحقق أبداً
+  if (id === 'homeScreen') { try { ensureProductsLoaded(); } catch(e){} }
 }
 
 // footerTab defined above
@@ -6125,11 +6135,19 @@ async function _loadProductsThrottled(loaders, concurrency) {
   for (var w = 0; w < concurrency; w++) workers.push(worker());
   return Promise.all(workers);
 }
-_loadProductsThrottled([
-  loadPrices, loadBatteries, loadChargeboards, loadFlatMain,
-  loadBackCover, loadHousing, loadLens, loadCamera,
-  loadBuzzer, loadEarSpeaker, loadDoorSim, loadFingerprint, loadMisc, loadTools, loadFlatPowerSheet, loadFlatVolumeSheet
-], 3);
+// ⏳ ما نحمّل المنتجات إلا لما الزبون يوصل فعلاً لشاشة التصفح —
+// قبل، كانت الـ16 طلب تنطلق فور فتح الصفحة حتى وهو بشاشة تسجيل الدخول/التسجيل وما يحتاجها،
+// فتخنق السيرفر وتتعلّق وراها الطلبات المهمة (طلب الرمز، التحقق، تسجيل الدخول) وتطلع "انتهت مهلة الاتصال".
+var _productsLoadStarted = false;
+function ensureProductsLoaded() {
+  if (_productsLoadStarted) return;
+  _productsLoadStarted = true;
+  _loadProductsThrottled([
+    loadPrices, loadBatteries, loadChargeboards, loadFlatMain,
+    loadBackCover, loadHousing, loadLens, loadCamera,
+    loadBuzzer, loadEarSpeaker, loadDoorSim, loadFingerprint, loadMisc, loadTools, loadFlatPowerSheet, loadFlatVolumeSheet
+  ], 3);
+}
 loadCart();
 appBoot();
 // (snapshot system removed — now using date_added from sheet)
