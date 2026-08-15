@@ -3404,6 +3404,17 @@ async function secureApiCall(action, data = {}) {
       signal: controller.signal
     });
     const result = await response.json();
+    // 🔄 تجديد صامت لجلسة الزبون — السيرفر يعطينا رمز جديد لما يقرب موعد انتهاء القديم.
+    //    نحفظه بهدوء، فالزبون النشط ما يشوف شاشة تسجيل الدخول أبداً.
+    if (result.renewedToken) {
+      try {
+        var _ru = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
+        if (_ru) {
+          _ru.customerToken = result.renewedToken;
+          localStorage.setItem('amwaj_user', JSON.stringify(_ru));
+        }
+      } catch (e) {}
+    }
     if (!result.success) {
       // 🔐 جلسة الزبون انتهت أو انسحبت (تسجيل دخول جديد بالتطبيق من جهاز آخر) — سجّل خروجه هنا تلقائياً بدل ما يضل يشوف أخطاء بدون تفسير
       // ⚠️ ما نقاطعه إذا هو حالياً وسط تسجيل حساب جديد أو بصفحة إدخال كود OTP — هذا فحص خلفي غير مرتبط بيه، وما نريده يرجعه لصفحة الدخول بمنتصف عملية غير علاقة الها بالجلسة القديمة
