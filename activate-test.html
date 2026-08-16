@@ -5667,7 +5667,7 @@ function fitNaCards(rail){
   var w = (avail - NA_GAP * (n - 1)) / n;
   if (w > 160) { n += 1; w = (avail - NA_GAP * (n - 1)) / n; }   // ما نخليهن ضخام بالشاشة العريضة
   rail.style.setProperty('--na-w', w.toFixed(2) + 'px');
-  return w + NA_GAP;                                       // خطوة بطاقة وحدة
+  return (w + NA_GAP) * n;      // 📄 خطوة = صفحة كاملة، يقلب المجموعة كلها سوا
 }
 
 function startNaAuto(){
@@ -5679,15 +5679,23 @@ function startNaAuto(){
   if (!rail._naFit){ rail._naFit = 1; window.addEventListener('resize', function(){ fitNaCards(rail); }); }
 
   /* بعض المتصفحات ترجّع scrollLeft **سالب** بالعربي وبعضها موجب.
-     نكتشفها مرة وحدة بدل ما نفترض ونطلع غلط بنص المتصفحات. */
+     ما نكدر نكتشفها بفحص وقت البناء — الصفحة ممكن تكون بعدها ما انرسمت
+     فيطلع الجواب غلط ويبقى غلط، والشريط يتجمّد للأبد.
+     بدالها: نتحرك، وبعدها نتأكد إن الحركة صارت فعلاً — وإذا ما صارت نقلب. */
   var sign = -1;
-  try { rail.scrollLeft = -1; if (rail.scrollLeft === 0) sign = 1; rail.scrollLeft = 0; } catch(e){}
 
   var paused = false, t = null;
   function hold(){ paused = true; clearTimeout(t); t = setTimeout(function(){ paused = false; }, 4000); }
   rail.addEventListener('touchstart', hold, {passive:true});
-  rail.addEventListener('mouseenter', function(){ paused = true; });
-  rail.addEventListener('mouseleave', function(){ paused = false; });
+
+  /* ⚠️ mouseenter كان يوقف الشريط **بلا مؤقّت** — يعتمد على mouseleave يفكّه.
+     بس بالتلفون ماكو ماوس: اللمسة تنده mouseenter مقلّد، و mouseleave
+     ما يجي أبداً — فالشريط يتحرك مرة وبعدها يبقى واقف للأبد.
+     الحين الماوس ينشتغل بس بالأجهزة اللي عندها ماوس حقيقي. */
+  if (!window.matchMedia || window.matchMedia('(hover: hover)').matches) {
+    rail.addEventListener('mouseenter', function(){ paused = true; clearTimeout(t); });
+    rail.addEventListener('mouseleave', function(){ paused = false; });
+  }
 
   _naTimer = setInterval(function(){
     if (paused || !document.body.contains(rail)) return;
@@ -5698,10 +5706,21 @@ function startNaAuto(){
        الزحف يجمّع كسور وينحرف، وأي سحبة بصبعه تخلي الانحراف دائم. */
     var idx    = Math.round(Math.abs(rail.scrollLeft) / step) + 1;
     var target = idx * step;
-    if (target > max + 2)      target = 0;         // تجاوزنا الآخر → نلف للبداية
-    else if (target > max)     target = max;       // آخر وقفة تنطبق على النهاية بالضبط
+    // آخر صفحة غالباً ناقصة — نوقف على النهاية بالضبط حتى تبان كاملة،
+    // وبالدورة اللي بعدها بس نلف للبداية
+    if (target > max) target = (Math.abs(rail.scrollLeft) >= max - 2) ? 0 : max;
+
+    var before = rail.scrollLeft;
     rail.scrollTo({ left: sign * target, behavior: 'smooth' });
-  }, 1500);   // ⏱️ سرعة الشريط — صغّر الرقم يصير أسرع، كبّره يصير أهدأ
+
+    // 🔄 تصحيح ذاتي: إذا طلبنا حركة وما تحرك شي، معناها الاتجاه معكوس
+    if (target > 0) setTimeout(function(){
+      if (rail.scrollLeft === before) {
+        sign = -sign;
+        rail.scrollTo({ left: sign * target, behavior: 'smooth' });
+      }
+    }, 450);
+  }, 2500);   // ⏱️ سرعة الشريط — صغّر الرقم يصير أسرع، كبّره يصير أهدأ
 }
 
 function openNewArrItem(idx){
