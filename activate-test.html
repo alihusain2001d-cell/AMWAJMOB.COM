@@ -3238,6 +3238,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="cartPage" style="display:none"></div>
 <button id="backToTopBtn" style="display:none;" onclick="backToBrands()"></button>
 
+<script src="sb-config.js"></script>
 <script>
 let cart = [];
 
@@ -3421,12 +3422,14 @@ const CONFIG = {
    المفتاح تحت **عام** ومصمّم للمتصفح: يقرا الكاتلوك بس،
    وما يقدر يعدّل ولا يشوف بيانات زبون.
    ══════════════════════════════════════════════════════════════════════ */
-const SB = {
-  URL: "PUT_YOUR_PROJECT_URL_HERE",
-  KEY: "PUT_YOUR_PUBLISHABLE_KEY_HERE"
-};
+/* 🔑 الإعدادات تجي من ملف sb-config.js المنفصل — عمداً.
+   لأن أي تعديل على هذا الملف كان يدهس المفتاح ويرجّعه فارغ. */
+const SB = (window.SB_CONFIG && window.SB_CONFIG.KEY) ? window.SB_CONFIG : { URL:'', KEY:'' };
 
 async function sbRpc(fn, body){
+  if (!SB.URL || !SB.KEY || SB.KEY.indexOf('الصق') === 0){
+    throw new Error('ملف sb-config.js ناقص أو المفتاح ما انعبّى');
+  }
   const ctrl = new AbortController();
   const to = setTimeout(function(){ ctrl.abort(); }, 20000);
   try{
@@ -5174,9 +5177,12 @@ async function refreshCurrentSheet() {
 // Track last selected brand to re-render after refresh
 var _lastBrandStr = null;
 var _lastCatName = null;
+var _otherTries = 0;
 
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
+  _otherTries = 0;
+  try { ensureProductsLoaded(); } catch(e){}   // لو انفتح القسم قبل ما يوصل الكاتلوك
   sheetPriceType = 'flatpower';
   _activeSheetType = 'flatpower';
   _activeSheetSub = subType;
@@ -5268,7 +5274,21 @@ function renderSheetBrands(type) {
       counts[k] = (counts[k] || 0) + 1;
     });
     var names = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; });
-    if (!names.length){ grid.style.display = 'none'; return; }
+
+    /* ⏳ ممكن ينفتح القسم قبل ما يوصل الكاتلوك — ننتظره بدل ما نعرض شاشة فاضية.
+       (فرع البراندات عنده انتظار من الأصل، وهذا كان ناقصه) */
+    if (!names.length){
+      grid.style.display = 'grid';
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:34px;text-align:center;color:#64748B;">' +
+        '<div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div>' +
+        'جاري تحميل الأقسام…</div>';
+      _otherTries = (_otherTries || 0) + 1;
+      if (_otherTries < 25) setTimeout(function(){ renderSheetBrands('OTHER'); }, 500);
+      else grid.innerHTML = '<div style="grid-column:1/-1;padding:26px;text-align:center;color:#64748B;">' +
+        'ماكو مواد — تحقق من الإنترنت وجرّب زر التحديث</div>';
+      return;
+    }
+    _otherTries = 0;
     var icons = {};
     (CAT_INFO || []).forEach(function(c){ icons[c.name] = c.icon || '📦'; });
     grid.style.display = 'grid';
@@ -6766,14 +6786,49 @@ function renderShopNotice(){
   el.textContent = txt; el.style.display = 'block';
 }
 
+/* 🚨 لو فشل تحميل الكاتلوك، نعرض السبب على الشاشة بدل ما نخلي الأقسام فاضية
+   والزبون (أو انت) ما تعرف ليش. الخطأ الحقيقي يظهر هنا. */
+function showCatalogError(msg){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var el = document.getElementById('catErrBar');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'catErrBar';
+    el.style.cssText = 'margin:10px 12px;padding:12px 14px;border-radius:12px;' +
+      'background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;font-size:13px;' +
+      'font-weight:700;line-height:1.7;font-family:Tajawal,sans-serif;';
+    var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
+    if (after && after.nextSibling) home.insertBefore(el, after.nextSibling);
+    else home.insertBefore(el, home.firstChild);
+  }
+  el.style.display = 'block';
+  el.innerHTML = '⚠️ تعذّر تحميل المواد<div style="font-weight:500;font-size:12px;margin-top:5px;' +
+    'direction:ltr;text-align:left;word-break:break-all;">' + sanitize(String(msg||'')) + '</div>' +
+    '<button onclick="retryCatalog()" style="margin-top:9px;background:#EF4444;color:#fff;border:none;' +
+    'border-radius:9px;padding:8px 16px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">' +
+    'إعادة المحاولة</button>';
+}
+function hideCatalogError(){
+  var el = document.getElementById('catErrBar');
+  if (el) el.style.display = 'none';
+}
+function retryCatalog(){
+  hideCatalogError();
+  _productsLoadStarted = false;
+  ensureProductsLoaded();
+}
+
 function ensureProductsLoaded() {
   if (_productsLoadStarted) return;
   _productsLoadStarted = true;
-  loadCatalogFromServer().catch(function(e){
-    console.error('catalog:', e);
-    _productsLoadStarted = false;    // نخلي محاولة ثانية ممكنة
-    try{ showToast && showToast('تعذّر تحميل المواد — تحقق من الإنترنت'); }catch(_){}
-  });
+  loadCatalogFromServer()
+    .then(function(){ hideCatalogError(); })
+    .catch(function(e){
+      console.error('catalog:', e);
+      _productsLoadStarted = false;    // نخلي محاولة ثانية ممكنة
+      showCatalogError(e && e.message ? e.message : e);
+    });
 }
 loadCart();
 appBoot();
