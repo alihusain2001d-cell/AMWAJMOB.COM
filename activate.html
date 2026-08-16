@@ -17,7 +17,9 @@
 </head>
 <body>
 <!-- ⚠️ إشعار عطل/صيانة — يظهر بكل فتحة تطبيق طالما مفعّل من لوحة التحكم -->
-<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:9998;">
+<!-- 🚨 شريط التنبيه — z-index كان 9998 فيطفو فوق كل شي بضمنه رؤوس الصفحات
+     وزر الرجوع. صار 1: يبان بالرئيسية، وأي صفحة تنفتح فوقه تغطيه طبيعي. -->
+<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:1;">
   <span id="systemNoticeText"></span>
   <button onclick="dismissSystemNotice()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:15px;width:24px;height:24px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
 </div>
@@ -1117,10 +1119,65 @@ body {
   margin-top: auto;
   padding-top: 8px;
 }
+/* 🔘 زر الكل / المتوفر */
+.avail-bar { display:flex; align-items:center; gap:7px; margin-bottom:10px; flex-wrap:wrap; }
+.avail-bar button {
+  padding:6px 15px; border-radius:20px; border:1.5px solid var(--border-light,#E2E8F0);
+  background:#fff; color:#64748B; font-size:13px; font-weight:800;
+  font-family:Tajawal,sans-serif; cursor:pointer;
+}
+.avail-bar button.on { background:var(--primary,#0EA5E9); color:#fff; border-color:var(--primary,#0EA5E9); }
+.avail-count { margin-right:auto; font-size:12.5px; color:#94A3B8; font-weight:700; }
+
+/* 🎞️ شريط «وصلنا حديثاً» المتحرك */
+/* الحشوة الجانبية لازم تكون **برّا** منطقة التمرير.
+   لو خليناها على na-rail تصير جزء من المساحة اللي تتمرر، فأول ما
+   يتحرك الشريط تنفتح 14px زيادة ويطلع منها طرف البطاقة الجاية. */
+.na-strip { margin:12px 0 4px; padding-inline:14px; }
+.na-head { display:flex; align-items:center; justify-content:space-between;
+           padding:0 14px 8px; font-size:15px; }
+.na-all { background:none; border:none; color:var(--primary,#0EA5E9); font-weight:800;
+          font-size:13px; font-family:inherit; cursor:pointer; padding:0; }
+.na-rail { display:flex; gap:10px; overflow-x:auto; padding:2px 0 6px;
+           scroll-snap-type:x mandatory;
+           -ms-overflow-style:none; scrollbar-width:none; }
+.na-rail::-webkit-scrollbar { display:none; }
+/* العرض يتحسب بالجافاسكربت (fitNaCards) حتى ينطبق عدد صحيح من البطاقات على
+   عرض الشاشة — بدونه تبقى بطاقة مقصوصة بالطرف مهما وقف الشريط بمكان صحيح */
+.na-card { flex:0 0 var(--na-w, 118px); scroll-snap-align:start; cursor:pointer; }
+/* ⏳ الهيكل المؤقت — يحجز المكان لحد ما توصل البيانات، بلا قفزة */
+.na-sk { cursor:default; pointer-events:none; }
+.na-sk .na-img, .na-sk .na-name {
+  background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);
+  background-size:200% 100%; animation:naSk 1.3s linear infinite; color:transparent; }
+.na-sk .na-name { border-radius:6px; }
+@keyframes naSk { from { background-position:200% 0; } to { background-position:-200% 0; } }
+.na-img { position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; overflow:hidden;
+          background:#F8FAFC; border:1px solid var(--border-light,#E2E8F0);
+          display:flex; align-items:center; justify-content:center; font-size:26px; }
+.na-img img { width:100%; height:100%; object-fit:cover; }
+.na-ph { font-size:26px; opacity:.25; }
+.na-tag { position:absolute; top:5px; right:5px; font-size:9.5px; font-weight:900;
+          padding:2px 6px; border-radius:20px; color:#fff; }
+.na-new  { background:#10B981; }
+.na-back { background:#3B82F6; }
+.na-name { font-size:12px; font-weight:700; margin-top:5px; line-height:1.4;
+           display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+           overflow:hidden; min-height:33px; }
+
 .pi-img-wrap {
   width:100%; height:160px; display:flex; align-items:center;
   justify-content:center; margin-bottom:8px; flex-shrink:0;
   border-radius:10px; background:#F8FAFC;
+  border:1px solid var(--border-light,#E2E8F0);
+  position:relative; overflow:hidden;
+}
+.pi-img-wrap.has-img { cursor:zoom-in; }
+.pi-img-ph { font-size:30px; opacity:.22; }
+.pi-zoom {
+  position:absolute; bottom:6px; left:6px; background:rgba(15,23,42,.55); color:#fff;
+  border-radius:50%; width:24px; height:24px; display:flex; align-items:center;
+  justify-content:center; font-size:12px; pointer-events:none;
 }
 .pi-img-wrap img {
   width:100%; height:160px; object-fit:contain;
@@ -1338,6 +1395,14 @@ body {
   margin-bottom: 8px;
   letter-spacing: 0.3px;
 }
+.order-item-card { background: var(--surface-2,#F8FAFC); border:1px solid var(--border-light,#E2E8F0);
+                   border-radius:12px; padding:12px 13px; margin-bottom:9px; }
+.order-item-rows { margin-top: 8px; }
+.oi-row { display:flex; align-items:baseline; gap:8px; padding:3px 0;
+          border-top:1px dashed var(--border-light,#E2E8F0); font-size:13px; }
+.oi-row:first-child { border-top:0; }
+.oi-k { color:var(--muted); min-width:62px; font-weight:700; }
+.oi-v { color:var(--text); font-weight:800; flex:1; }
 .order-item-card {
   background: var(--surface-2);
   border: 1px solid var(--border-light);
@@ -2990,7 +3055,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
             <span class="bell-badge" id="bellBadge">0</span>
           </button>
           <button class="home-icon-btn" onclick="openContactSheet()" title="تواصل معنا">📞</button>
-          <button class="home-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
+          <button class="home-icon-btn" onclick="goAccount()" title="حسابي">👤</button>
         </div>
       </div>
 
@@ -3073,7 +3138,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="section-row-title">✨ وصلنا حديثاً</div>
         <button class="section-row-link" onclick="openNewItemsSheet()">عرض الكل ←</button>
       </div>
-      <div onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
+      <div id="naBanner" onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-30%;right:-15%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,0.2),transparent 70%);pointer-events:none;"></div>
         <div style="font-size:36px;position:relative;z-index:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">✨</div>
         <div style="flex:1;position:relative;z-index:1;">
@@ -3169,7 +3234,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
     </button>
-    <button class="footer-tab" id="tab-account" onclick="openSheet('accountSheet');renderAccountSheet();">
+    <button class="footer-tab" id="tab-account" onclick="goAccount()">
       <span class="footer-tab-icon">👤</span>
       <span class="footer-tab-label">حسابي</span>
     </button>
@@ -3190,6 +3255,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <div id="cartPage" style="display:none"></div>
 <button id="backToTopBtn" style="display:none;" onclick="backToBrands()"></button>
 
+<script src="sb-config.js"></script>
 <script>
 let cart = [];
 
@@ -3243,10 +3309,7 @@ function openSheet(id) {
   if (_sheetStack[_sheetStack.length - 1] !== id) {
     _sheetStack.push(id);
   }
-  // Push history state for browser back button
-  try {
-    history.pushState({ sheet: id }, '');
-  } catch(e) {}
+  _navEnsure();   // 🔙 نحجز خطوة رجوع وحدة تكفي كل المستويات
 }
 
 function closeSheet(id) {
@@ -3260,41 +3323,93 @@ function closeSheet(id) {
   if (_sheetStack.length === 0) {
     document.body.style.overflow = '';
   }
+  _navRelease();   // 🔙 سكّر بيده → نسحب خطوة الرجوع اللي حجزناها
 }
 
-// Close topmost open sheet (used by Android back button)
+/* ══════════════════════════════════════════════════════════════════
+   🔙 الرجوع — زر الأندرويد وسحبة الآيفون
+
+   الخلل القديم كان بحساب الخطوات:
+     • فتح صفحة يدفع خطوة بالتاريخ، بس السكّر بالـ ✕ ما يسحبها
+       → تتكدّس خطوات وهمية.
+     • الدخول جوّا براند أو قسم ما يدفع خطوة، بس الرجوع يستهلك وحدة
+       → يصير عندك رجعات أكثر من الخطوات المحجوزة.
+   فأول سحبة بالآيفون تلقى التاريخ فاضي وتطلعك للرئيسية.
+
+   الحل: خطوة وحدة بس («علامة») تبقى محجوزة طول ما أكو شي مفتوح.
+   كل رجوع يستهلكها ونعيد حجزها فوراً إذا بعده أكو شي مفتوح،
+   ولما يسكّر كلشي بيده نسحبها إحنا. فالحساب ما يختل مهما تعمّق.
+   ══════════════════════════════════════════════════════════════════ */
+var _navGuard   = false;   // هل حاجزين خطوة حالياً؟
+var _navSelfPop = false;   // الرجعة الجاية إحنا سويناها — تتجاهل
+var _inPopBack  = false;   // دا ننفّذ رجوع — لا تسحب خطوة زيادة
+
+// أكو شي مفتوح فوق الرئيسية؟
+function _navOpen() {
+  var lb = document.getElementById('imgLightbox');
+  if (lb && lb.parentNode && lb.style.display !== 'none') return true;
+  return _sheetStack.length > 0;
+}
+function _navEnsure() {
+  if (_navGuard) return;
+  try { history.pushState({ amwaj: 1 }, ''); _navGuard = true; } catch (e) {}
+}
+function _navRelease() {
+  if (!_navGuard || _inPopBack || _navOpen()) return;
+  _navGuard = false; _navSelfPop = true;
+  try { history.back(); } catch (e) { _navSelfPop = false; }
+}
+
+/* 🍎 إجبار الآيفون يعيد رسم الشاشة بعد سحبة الرجوع
+
+   iOS يخزّن «لقطة صورة» للصفحة لكل خطوة بالتاريخ، وبعد ما تخلص السحبة
+   يظل يعرض اللقطة القديمة (الرئيسية) بدل المحتوى الحي — فتشوف الشاشة
+   مجمّدة رغم إن التطبيق فعلياً رجع للبراندات، وأول لمسة تفكّها.
+
+   الحل: نغيّر الشفافية فرق ما ينشاف بالعين (0.9999) ونرجّعها.
+   هذا يجبر النظام يبني طبقة رسم جديدة فوراً ويرمي اللقطة.
+   ونعيدها مرة ثانية بعد 80ms لأن حركة السحب تكون بعدها ما استقرت. */
+function _navRepaint() {
+  var h = document.documentElement;
+  if (!h || !h.style) return;
+  function kick() {
+    h.style.opacity = '0.9999';
+    void h.offsetHeight;              // يجبر إعادة حساب فورية
+    requestAnimationFrame(function(){ h.style.opacity = ''; });
+  }
+  kick();
+  setTimeout(kick, 80);
+}
+
+// يرجع **مستوى واحد بس** — يستخدمه زر الأندرويد وسحبة الآيفون
 function closeTopSheet() {
+  // ١) الصورة المكبّرة أول شي — هيه فوق كلشي
+  var lb = document.getElementById('imgLightbox');
+  if (lb && lb.parentNode && lb.style.display !== 'none') {
+    if (lb.querySelector('#imgLightboxImg')) lb.style.display = 'none';  // الثابتة
+    else lb.remove();                                                     // المؤقتة
+    return true;
+  }
   if (_sheetStack.length === 0) return false;
   var topId = _sheetStack[_sheetStack.length - 1];
-  // Smart back for products sheet (brand sub-views)
-  if (topId === 'productsSheet') {
-    // Tools sheet has no brands - close directly
-    if (sheetPriceType === 'tools') {
-      closeSheet(topId);
-      return true;
-    }
-    // If we're inside a brand's products → go back to brands list
-    if (_lastBrandStr) {
-      backToSheetBrands();
-      return true;
-    }
-  }
+  // ٢) صفحة المواد إلها رجوع ذكي (براند / قسم منوعة) —
+  //    ننده نفس دالة زر الشاشة حتى السحبة والزر يتصرفون سوا
+  if (topId === 'productsSheet') { productsSheetBack(); return true; }
   closeSheet(topId);
   return true;
 }
 
-// Browser/Android back button handler
+// زر الرجوع بالأندرويد + سحبة الرجوع بالآيفون
 window.addEventListener('popstate', function(e) {
-  // If a sheet is open, close it and prevent default back behavior
-  if (_sheetStack.length > 0) {
-    closeTopSheet();
-    // Push state again so we don't exit on next back
-    try { history.pushState({}, ''); } catch(err) {}
-  }
+  if (_navSelfPop) { _navSelfPop = false; return; }   // خطوة سحبناها إحنا
+  if (!_navOpen())  { _navGuard = false; return; }    // ماكو شي مفتوح — خليه يطلع طبيعي
+  _inPopBack = true;
+  try { closeTopSheet(); } finally { _inPopBack = false; }
+  // بعده أكو شي مفتوح؟ نعيد حجز الخطوة للرجعة الجاية
+  if (_navOpen()) { try { history.pushState({ amwaj: 1 }, ''); } catch (err) {} _navGuard = true; }
+  else _navGuard = false;
+  _navRepaint();   // 🍎 حتى الآيفون ما يضل معلّق على اللقطة القديمة
 });
-
-// Initialize history state on load so first back press closes a sheet
-try { history.replaceState({ initial: true }, ''); } catch(e) {}
 
 // ── Dismiss keyboard on tap outside input ──
 document.addEventListener('click', function(e) {
@@ -3362,6 +3477,40 @@ const CONFIG = {
   API_KEY: "AMWAJ_efcace98-5cd5-4946-8eb5-2bc9b13d9aa6",
   DEVICE_ID: generateDeviceId()
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   🗄️ الكاتلوك من السيرفر الجديد (Supabase)
+
+   شنو انتقل:   المواد والشاشات والصور + تنبيه الدوام
+   شنو بقى:     تسجيل الدخول · الطلبات · برايم · الإشعارات
+                (كلهن على النظام القديم — ما انلمسوا)
+
+   المفتاح تحت **عام** ومصمّم للمتصفح: يقرا الكاتلوك بس،
+   وما يقدر يعدّل ولا يشوف بيانات زبون.
+   ══════════════════════════════════════════════════════════════════════ */
+/* 🔑 الإعدادات تجي من ملف sb-config.js المنفصل — عمداً.
+   لأن أي تعديل على هذا الملف كان يدهس المفتاح ويرجّعه فارغ. */
+const SB = (window.SB_CONFIG && window.SB_CONFIG.KEY) ? window.SB_CONFIG : { URL:'', KEY:'' };
+
+async function sbRpc(fn, body){
+  if (!SB.URL || !SB.KEY || SB.KEY.indexOf('الصق') === 0){
+    throw new Error('ملف sb-config.js ناقص أو المفتاح ما انعبّى');
+  }
+  const ctrl = new AbortController();
+  const to = setTimeout(function(){ ctrl.abort(); }, 20000);
+  try{
+    const res = await fetch(SB.URL + '/rest/v1/rpc/' + fn, {
+      method:'POST',
+      headers:{'apikey':SB.KEY,'Authorization':'Bearer '+SB.KEY,'Content-Type':'application/json'},
+      body: JSON.stringify(body || {}),
+      signal: ctrl.signal
+    });
+    const t = await res.text();
+    let d; try{ d = t ? JSON.parse(t) : null; }catch(e){ d = null; }
+    if (!res.ok) throw new Error((d && (d.message||d.hint)) || ('HTTP '+res.status));
+    return d;
+  } finally { clearTimeout(to); }
+}
 
 // 👑 قائمة أرقام الأدمن (لإضافة أدمن جديد، أضف رقمه هنا)
 const ADMIN_PHONES = ['07717533595', '07725938474'];
@@ -4347,9 +4496,9 @@ async function openToolsSheet() {
   sheetPriceType = 'tools';
   sheetFlatSubType = null;
 
-  // Always fetch fresh data when opening tools
+  // نجيب من السيرفر الجديد — نفس مصدر باقي المواد
   try {
-    await loadTools();
+    await loadCatalogFromServer();
     renderToolsList();
   } catch(e) {
     console.error('Tools load failed:', e);
@@ -4590,14 +4739,19 @@ function renderCart() {
   orderForm.style.display = 'block';
   clearBtn.style.display = 'block';
 
+  // 🛒 نراجع الأسعار والتوفّر قبل ما نعرض.
+  // إلا إذا الإرسال راجع للتو — وقتها نبقي نتيجته حتى الشريط يبقى يعرض شنو تغيّر
+  if (_skipCartSync) _skipCartSync = false; else syncCartWithCatalog();
+
   let total = 0;
-  let html = '';
+  let html = cartChangesBanner();  // شريط يشرح شنو تغيّر (يطلع بس إذا أكو تغيير)
 
   cart.forEach((item, index) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
     const itemTotal = price * quantity;
-    total += itemTotal;
+    const gone = !!item.unavailable;      // نفذت أو انسحبت من المخزن
+    if (!gone) total += itemTotal;        // ما ندخّلها بالمجموع
     const isScreen = item.itemType === 'screens';
     const warrantyChecked = item.hasWarranty;
 
@@ -4634,11 +4788,12 @@ function renderCart() {
       </div>` : '';
 
     html += `
-      <div class="cart-item-modern">
+      <div class="cart-item-modern" style="${gone ? 'opacity:.6;border:2px solid #FCA5A5;' : ''}">
         <div class="cart-item-img">
           <span>${itemIcon}</span>
         </div>
         <div class="cart-item-info">
+          ${gone ? '<div style="background:#FEE2E2;color:#991B1B;font-size:11.5px;font-weight:900;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:5px;">🚫 ما عاد متوفر</div>' : ''}
           <div class="cart-item-name">${sanitize(item.name || '-')}</div>
           <div class="cart-item-meta">${sanitize(item.brand || '-')}${item.type ? ' · ' + sanitize(item.type) : ''}</div>
           <div class="cart-item-bottom">
@@ -4759,6 +4914,24 @@ async function submitOrder() {
   submitBtn.disabled = true; if (clearBtn) clearBtn.disabled = true;
   localStorage.setItem('amwaj_address', address);
 
+  // 🛒 مراجعة أخيرة قبل الإرسال — الأسعار ممكن تكون تغيّرت والسلة مفتوحة
+  syncCartWithCatalog();
+
+  // ماده نفذت: تبقى نافذة مهما أعاد المحاولة، فلازم يحذفها هو
+  if (cart.some(function(i){ return i.unavailable; })) {
+    _skipCartSync = true; renderCart();
+    submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
+    result.innerHTML = '<div class="result error">🚫 أكو مواد ما عادت متوفرة بالسلة — احذفها حتى تكدر ترسل الطلب</div>';
+    return;
+  }
+  // سعر تغيّر: نعرضله الفرق ونخليه يأكد. المراجعة الجاية تلكاه مطابق فيمر.
+  if (_cartChanges.length) {
+    _skipCartSync = true; renderCart();
+    submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
+    result.innerHTML = '<div class="result error">⚠️ تغيّر سعر بالسلة — راجع التفاصيل فوق ثم أرسل الطلب مرة ثانية</div>';
+    return;
+  }
+
   let total = 0;
   cart.forEach((item) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -4792,15 +4965,26 @@ async function submitOrder() {
         if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
         document.getElementById('cartItems').innerHTML = '';
         document.getElementById('cartSummary').style.display = 'none';
-        // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
-        var _now = new Date();
-        var _day = _now.getDay(); // 5=جمعة
-        var _hour = _now.getHours();
+        // 🌙 رسالة خارج الدوام — تجي من لوحة التحكم مو مكتوبة بالكود.
+        //    كانت «الجمعة عطلة» و«9ص–10م» ثابتات، فلو فتحت جمعة تطلع رسالة غلط.
+        //    الحين تتبع الدوام الأسبوعي والاستثناءات اللي تحطها بنفسك.
         var _offHoursText = '';
-        if (_day === 5) {
-          _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
-        } else if (_hour < 9 || _hour >= 22) {
-          _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
+        if (SHOP_STATUS && SHOP_STATUS.open === false) {
+          if (SHOP_STATUS.source === 'weekly' && SHOP_STATUS.reason === 'عطلة أسبوعية') {
+            _offHoursText = '🌙 اليوم عطلة\nسيتم تجهيز طلبك بأول يوم دوام إن شاء الله ✨';
+          } else if (SHOP_STATUS.reason) {
+            _offHoursText = '🌙 ' + SHOP_STATUS.reason + '\nسيتم تجهيز طلبك أول ما نفتح ✨';
+          } else {
+            _offHoursText = '🌙 تم استلام طلبك\n' +
+              (SHOP_STATUS.from ? ('أوقات الدوام ' + SHOP_STATUS.from + ' – ' + SHOP_STATUS.to + '\n') : '') +
+              'سيتم تجهيز الطلب أثناء أوقات الدوام ✨';
+          }
+        } else if (!SHOP_STATUS) {
+          // احتياط لو السيرفر ما رد — نفس السلوك القديم حتى ما ينكسر شي
+          var _now = new Date(), _day = _now.getDay(), _hour = _now.getHours();
+          if (_day === 5) _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
+          else if (_hour < 9 || _hour >= 22)
+            _offHoursText = '🌙 تم استلام طلبك\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
         }
         if (_offHoursText) {
           var _ov = document.createElement('div');
@@ -4905,6 +5089,12 @@ function showScreen(id) {
 // footerTab defined above
 
 function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
+
+// 👤 الزائر ما عنده حساب يعرضه — نوديه لتسجيل الدخول رأساً بدل ضغطتين
+function goAccount() {
+  if (isGuest()) { closeSheet('accountSheet'); showScreen('loginScreen'); return; }
+  openSheet('accountSheet'); renderAccountSheet();
+}
 function toRegisterScreen() { closeSheet('accountSheet'); showScreen('regPhoneScreen'); }
 
 function openOrdersSheet() {
@@ -4914,6 +5104,13 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
+  // 🕐 نحدّث حالة المحل بهدوء وقت فتح السلة — حتى لو التطبيق مفتوح من ساعات
+  //    والوقت عبر منتصف الليل، الرسالة تطلع صح مو حسب حالة قديمة.
+  try {
+    sbRpc('shop_status').then(function(st){
+      if (st) { SHOP_STATUS = st; try{ renderShopNotice(); }catch(e){} }
+    }).catch(function(){});
+  } catch(e) {}
   var guest = isGuest();
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
 
@@ -5010,7 +5207,7 @@ async function openProductSheet(type, title) {
   _activeSheetType = type;
   _activeSheetSub = null;
   sheetFlatSubType = null;
-  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات — لا نخلي ماركة قسم سابق تأثر على زر الرجوع
+  _lastBrandStr = null; _lastCatName = null; // فتح قسم جديد يبدأ من الأول — ما يبقى فلتر قسم أو ماركة عالق
   if (typeof currentPriceType !== 'undefined') currentPriceType = type;
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = title;
@@ -5027,37 +5224,19 @@ async function openProductSheet(type, title) {
 
 async function refreshDataInBackground(type) {
   try {
-    if (type === 'screens') {
-      pricesData = await secureApiCall('getPrices');
-    } else if (type === 'batteries' && typeof loadBatteries === 'function') {
-      await loadBatteries();
-    } else if (type === 'chargeboards' && typeof loadChargeboards === 'function') {
-      await loadChargeboards();
-    } else if ((type === 'flatcharging' || type === 'flatpower') && typeof loadFlatMain === 'function') {
-      await loadFlatMain();
-      if (typeof loadFlatPowerSheet === 'function') await loadFlatPowerSheet();
-      if (typeof loadFlatVolumeSheet === 'function') await loadFlatVolumeSheet();
-    } else if (type === 'camera' && typeof loadCamera === 'function') {
-      await loadCamera();
-      if (typeof loadLens === 'function') await loadLens();
-    } else if (type === 'backcover' && typeof loadBackCover === 'function') {
-      await loadBackCover();
-    } else if (type === 'housing' && typeof loadHousing === 'function') {
-      await loadHousing();
-    } else if (type === 'tools' && typeof loadTools === 'function') {
-      await loadTools();
-    }
-    // Re-render brands so latest qty/prices reflect immediately
-    // Check user is still viewing the same sheet (didn't navigate away)
-    if (sheetPriceType === type) {
-      renderSheetBrands(type);
-      // If user already selected a brand, re-render that brand's items too
-      var brandsDiv = document.getElementById('sheetBrands');
-      var resultsDiv = document.getElementById('sheetResults');
-      if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '' && typeof _lastBrandStr === 'string' && _lastBrandStr) {
-        openSheetBrand(_lastBrandStr);
-      }
-    }
+    /* ⚠️ كانت هاي تسحب من النظام القديم (Apps Script) وتدهس البيانات
+       اللي جابها السيرفر الجديد — فتختلط البيانات بصمت.
+       الحين نداء واحد يحدّث الكاتلوك كله من نفس المصدر. */
+    await loadCatalogFromServer();
+
+    if (sheetPriceType !== type) return;   // الزبون طلع من هالقسم، ما نلمس شاشته
+
+    /* 🔙 نرجّعه بالضبط لوين كان — براند أو قسم أو قائمة البراندات.
+       الخلل القديم: كان يعيد إظهار البراندات أول، وبعدها يفحص «هل هي مخفية؟»
+       وهو للتو أظهرها — فالقائمة تبقى فوق المواد. */
+    if (_lastCatName)       openSheetCategory(_lastCatName);
+    else if (_lastBrandStr) openSheetBrand(_lastBrandStr);
+    else                    renderSheetBrands(type);
   } catch(e) {
     console.error('Background refresh failed:', e);
   }
@@ -5069,7 +5248,7 @@ async function refreshCurrentSheet() {
   if (btn) { btn.style.animation = 'spin 0.8s linear infinite'; btn.disabled = true; }
   try {
     if (sheetPriceType === 'tools') {
-      await loadTools();
+      await loadCatalogFromServer();
       renderToolsList();
     } else if (sheetPriceType) {
       await refreshDataInBackground(sheetPriceType);
@@ -5087,14 +5266,18 @@ async function refreshCurrentSheet() {
 
 // Track last selected brand to re-render after refresh
 var _lastBrandStr = null;
+var _lastCatName = null;
+var _otherTries = 0;
 
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
+  _otherTries = 0;
+  try { ensureProductsLoaded(); } catch(e){}   // لو انفتح القسم قبل ما يوصل الكاتلوك
   sheetPriceType = 'flatpower';
   _activeSheetType = 'flatpower';
   _activeSheetSub = subType;
   sheetFlatSubType = subType;
-  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات
+  _lastBrandStr = null; _lastCatName = null; // فتح قسم جديد يبدأ من الأول
   if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
@@ -5103,7 +5286,8 @@ function openFlatSubSheet(subType, labelAr, icon) {
   // ✅ Always show brands grid when opening
   var brandsDiv = document.getElementById('sheetBrands');
   if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
-  renderSheetBrands('flatpower');
+  // 📦 «منوعة» إلها أقسام مو براندات — نمرّر نوعها الحقيقي بدل flatpower
+  renderSheetBrands(subType === 'OTHER' ? 'OTHER' : 'flatpower');
   openSheet('productsSheet');
 }
 
@@ -5171,9 +5355,98 @@ function renderSheetBrands(type) {
     {label:'موتورولا',                 brands:'Motorola'},
   ];
 
+  // 📦 «منوع» ما إله براندات — صار أقسام حقيقية (كلاس، تاچ، أنتنا، براغي…)
+  //    فنعرض الأقسام بدل شعارات الشركات.
+  if (type === 'OTHER') {
+    var counts = {};
+    (miscData || []).forEach(function(p){
+      var k = p.type || 'منوعة';
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    var names = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; });
+
+    /* ⏳ ممكن ينفتح القسم قبل ما يوصل الكاتلوك — ننتظره بدل ما نعرض شاشة فاضية.
+       (فرع البراندات عنده انتظار من الأصل، وهذا كان ناقصه) */
+    if (!names.length){
+      grid.style.display = 'grid';
+      grid.innerHTML = '<div style="grid-column:1/-1;padding:34px;text-align:center;color:#64748B;">' +
+        '<div class="loading-spinner" style="margin:0 auto 10px;width:28px;height:28px;"></div>' +
+        'جاري تحميل الأقسام…</div>';
+      _otherTries = (_otherTries || 0) + 1;
+      if (_otherTries < 25) setTimeout(function(){ renderSheetBrands('OTHER'); }, 500);
+      else grid.innerHTML = '<div style="grid-column:1/-1;padding:26px;text-align:center;color:#64748B;">' +
+        'ماكو مواد — تحقق من الإنترنت وجرّب زر التحديث</div>';
+      return;
+    }
+    _otherTries = 0;
+    var icons = {};
+    (CAT_INFO || []).forEach(function(c){ icons[c.name] = c.icon || '📦'; });
+    grid.style.display = 'grid';
+    grid.innerHTML = names.map(function(n){
+      return '<div class="sheet-brand-btn" onclick="openSheetCategory(' +
+        JSON.stringify(n).replace(/"/g,'&quot;') + ')">' +
+        '<div class="brand-logos" style="font-size:22px">' + (icons[n] || '📦') + '</div>' +
+        '<b>' + n + '</b>' +
+        '<div style="font-size:11.5px;color:#64748B;margin-top:2px">' + counts[n] + ' مادة</div>' +
+        '</div>';
+    }).join('');
+    return;
+  }
+
   const list = type === 'screens' ? screenBrands : commonBrands;
   grid.style.display = 'grid';
   grid.innerHTML = list.map(brandCard).join('');
+}
+
+/* 🔘 زر «الكل» و«المتوفر»
+   الزبون يشوف المنتهية كمان (تطلع «غير متوفر») — بس بضغطة يخفيها
+   ويشوف اللي يقدر يطلبه فعلاً. */
+var _availOnly = false;
+function setAvailOnly(v){
+  _availOnly = !!v;
+  var q = (document.getElementById('sheetSearch') || {}).value || '';
+  if (q.trim().length >= 2)   handleSheetSearch();
+  else if (_lastCatName)      openSheetCategory(_lastCatName);
+  else if (_lastBrandStr)     openSheetBrand(_lastBrandStr);
+  else                        handleSheetSearch();
+}
+function applyAvail(list){
+  return _availOnly ? (list || []).filter(function(p){ return (Number(p.qty) || 0) > 0; }) : (list || []);
+}
+function availBar(total, shown){
+  var avail = 0;
+  return '<div class="avail-bar">' +
+    '<button class="' + (!_availOnly ? 'on' : '') + '" onclick="setAvailOnly(false)">الكل</button>' +
+    '<button class="' + (_availOnly ? 'on' : '') + '" onclick="setAvailOnly(true)">✅ المتوفر</button>' +
+    '<span class="avail-count">' + shown + (shown !== total ? ' من ' + total : '') + ' مادة</span>' +
+  '</div>';
+}
+// كل قوائم المواد تمر من هنا — فالزر يشتغل بكل مكان بنفس الطريقة
+function itemsBlock(list, extraNote){
+  var all = list || [];
+  var shown = applyAvail(all);
+  var head = availBar(all.length, shown.length);
+  if (!shown.length){
+    return head + '<div style="padding:24px;text-align:center;color:#64748B;">' +
+      (_availOnly ? '📭 ماكو مادة متوفرة هنا الحين — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
+      '</div>';
+  }
+  return head + (extraNote || '') +
+    '<div class="price-items-grid">' + shown.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
+}
+
+// 📦 فتح قسم من أقسام «منوع»
+function openSheetCategory(catName){
+  _lastCatName = catName;
+  _lastBrandStr = null;
+  var brandsDiv = document.getElementById('sheetBrands');
+  var resultsDiv = document.getElementById('sheetResults');
+  brandsDiv.style.setProperty('display', 'none', 'important');
+  var src = (typeof getFlatSubData === 'function' && _activeSheetSub === 'OTHER')
+              ? (getFlatSubData('OTHER') || miscData) : miscData;
+  var filtered = (src || []).filter(function(p){ return (p.type || 'منوعة') === catName; });
+  resultsDiv.innerHTML = itemsBlock(filtered,
+    '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">' + catName + '</div>');
 }
 
 
@@ -5190,14 +5463,15 @@ function handleSheetSearch() {
       brandsDiv.style.display = 'none';
       if (!q.length) {
         var allData = _sub ? getFlatSubData(_sub) : getDataForType(_type);
-        resultsDiv.innerHTML = allData.length
-          ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + allData.length + ' نتيجة</div><div class="price-items-grid">' + allData.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
-          : '';
+        resultsDiv.innerHTML = allData.length ? itemsBlock(allData) : '';
       }
-    } else {
+    } else if (!q.length && _lastCatName) {
+      openSheetCategory(_lastCatName);      // 🔙 مسح البحث يرجّعك لقسمك مو للبداية
+    } else if (!q.length && _lastBrandStr) {
+      openSheetBrand(_lastBrandStr);        // 🔙 ونفس الشي بالبراند
+    } else if (!q.length) {
       resultsDiv.innerHTML = '';
       brandsDiv.style.display = 'grid';
-      _lastBrandStr = null; // رجعنا لقائمة البراندات — لا يبقى زر الرجوع يظن إنه لسا داخل ماركة
     }
     return;
   }
@@ -5209,19 +5483,33 @@ function handleSheetSearch() {
     attempts++;
     var data = _sub ? getFlatSubData(_sub) : getDataForType(_type);
     if ((!data || data.length === 0) && attempts < 20) { setTimeout(trySearch, 500); return; }
-    var filtered = (data||[]).filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
+
+    // 🔍 البحث يبقى **جوّا** اللي انت داخله — براند أو قسم — مو بكل المواد
+    var scope = data || [];
+    var scopeLabel = '';
+    if (_lastCatName) {
+      scope = scope.filter(function(p){ return (p.type || 'منوعة') === _lastCatName; });
+      scopeLabel = ' ضمن ' + _lastCatName;
+    } else if (_lastBrandStr) {
+      var _br = _lastBrandStr.split(',').map(function(b){ return b.trim().toLowerCase(); });
+      scope = scope.filter(function(p){ return _br.includes((p.brand||'').toLowerCase()); });
+      scopeLabel = ' ضمن ' + _lastBrandStr.split(',')[0];
+    }
+
+    var filtered = scope.filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
     if (!filtered.length) {
-      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;' + scopeLabel + '</div>';
       return;
     }
-    resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
-      '<div class="price-items-grid">' + filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
+    resultsDiv.innerHTML = itemsBlock(filtered.slice(0,50),
+      '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">نتائج البحث' + scopeLabel + '</div>');
   }
   setTimeout(trySearch, 100);
 }
 
 function openSheetBrand(brandsStr) {
   _lastBrandStr = brandsStr; // Save for background refresh re-render
+  _lastCatName = null;       // البراند والقسم ما يشتغلون سوا
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
@@ -5246,9 +5534,7 @@ function openSheetBrand(brandsStr) {
     if (!filtered.length && data && data.length > 0) {
       resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
     } else {
-      resultsDiv.innerHTML =
-        '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + filtered.length + ' منتج</div>' +
-        '<div class="price-items-grid">' + filtered.map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
+      resultsDiv.innerHTML = itemsBlock(filtered);
     }
   }
   setTimeout(tryRender, 100);
@@ -5256,9 +5542,12 @@ function openSheetBrand(brandsStr) {
 
 function backToSheetBrands() {
   _lastBrandStr = null;
+  _lastCatName  = null;
   document.getElementById('sheetBrands').style.setProperty('display', 'grid', 'important');
   document.getElementById('sheetResults').innerHTML = '';
   document.getElementById('sheetSearch').value = '';
+  // نعيد رسم القائمة — لأن «منوعة» أقسام والباقي براندات
+  try { renderSheetBrands(_activeSheetSub === 'OTHER' ? 'OTHER' : (_activeSheetType || sheetPriceType)); } catch(e){}
 }
 
 // Smart back for products sheet: if a brand is open, go back to brands list
@@ -5267,6 +5556,12 @@ function productsSheetBack() {
   // Tools sheet has no brands list - close directly
   if (sheetPriceType === 'tools') {
     closeSheet('productsSheet');
+    return;
+  }
+  // 📦 جوّا قسم من «منوعة» → نرجع لقائمة الأقسام، مو للرئيسية
+  //    (كان يفحص البراند بس، فالقسم يطلعك برّا)
+  if (_lastCatName) {
+    backToSheetBrands();
     return;
   }
   // If we're inside a brand's products → go back to brands list
@@ -5288,6 +5583,297 @@ function getDriveImageUrl(url) {
   return '';
 }
 
+/* ══════════════════════════════════════════════════════════════
+   🆕 وصلنا حديثاً — شريط صور يتحرك لحاله بالرئيسية
+
+   الفرق عن القديم: النظام يعرف بالضبط شنو وصل، مو يخمّن.
+     🆕 جديد كلياً   = مادة ما جانت موجودة أبداً
+     🔄 رجع للتوفر   = كانت منتهية ورجعت
+     والزيادة على كمية موجودة ما تظهر بولا وحدة.
+   ══════════════════════════════════════════════════════════════ */
+var NEW_ARR = { 'new': [], back: [] }, _naTimer = null, _naTab = 'new';
+
+var _naInFlight = null;
+async function loadNewArrivals(){
+  if (_naInFlight) return _naInFlight;   // نداء طائر أصلاً — ما نكرره
+  _naInFlight = (async function(){
+    try{
+      var r = await sbRpc('app_new_arrivals', { p_days: 14 });
+      NEW_ARR = { 'new': (r && r['new']) || [], back: (r && r.back) || [] };
+    }catch(e){ NEW_ARR = { 'new': [], back: [] }; }
+    try{ renderNewStrip(); }catch(e){}
+  })();
+  try { return await _naInFlight; } finally { _naInFlight = null; }
+}
+
+/* ⏳ هيكل مؤقت مكان الشريط لحد ما توصل البيانات.
+
+   بدونه: يبان البانر البرتقالي «أحدث المنتجات»، وبعد ثانيتين ينختفي
+   فجأة ويحل محله الشريط — قفزة بالصفحة ومنظر مو مرتب.
+   الحين نحجز المكان من أول لحظة، والمحتوى يتعبّى بمكانه بهدوء. */
+function showNaSkeleton(){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var banner = document.getElementById('naBanner');
+  var box = document.getElementById('newArrStrip');
+  if (!box){
+    if (!banner || !banner.parentNode) return;
+    box = document.createElement('div');
+    box.id = 'newArrStrip';
+    banner.parentNode.insertBefore(box, banner);
+  }
+  box.className = 'na-strip';
+  box.style.display = '';
+  if (banner) banner.style.display = 'none';
+  box.innerHTML = '<div class="na-rail">' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '</div>';
+  try { fitNaCards(box.querySelector('.na-rail')); } catch(e){}
+}
+
+function _naProduct(it){
+  return {
+    code: it.code, name: it.name || '-', brand: it.brand || '',
+    type: it.type || '', notes: it.notes || '',
+    price: Number(it.price) || 0, qty: Number(it.qty) || 0,
+    image_url: it.image_url || '',
+    itemType: (it.kind === 'screen') ? 'screens' : 'OTHER'
+  };
+}
+
+// 🎞️ الشريط المتحرك — بس المواد اللي عندها صورة (شريط صور بلا صور ما إله معنى)
+function renderNewStrip(){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var box = document.getElementById('newArrStrip');
+  // كل الواصل حديثاً — واللي بلا صورة يطلع بإطار فيه 📷 بدل ما ينخفي
+  var items = (NEW_ARR['new'] || []).concat(NEW_ARR.back || []);
+  var banner = document.getElementById('naBanner');
+
+  if (!items.length){
+    if (box) box.style.display = 'none';
+    if (banner) banner.style.display = '';      // ماكو جديد؟ يبقى البانر القديم
+    return;
+  }
+  if (banner) banner.style.display = 'none';    // الشريط يغني عن البانر
+
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'newArrStrip';
+    // مكانه محل البانر بالضبط — تحت عنوان «وصلنا حديثاً»
+    if (banner && banner.parentNode) banner.parentNode.insertBefore(box, banner);
+    else {
+      var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
+      if (after && after.nextSibling) home.insertBefore(box, after.nextSibling);
+      else home.insertBefore(box, home.firstChild);
+    }
+  }
+  box.style.display = '';
+  box.className = 'na-strip';
+
+  var cards = items.slice(0, 20).map(function(it, idx){
+    var img = getDriveImageUrl(it.image_url);
+    var isNew = (NEW_ARR['new'] || []).indexOf(it) > -1;
+    var tag = '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
+              (isNew ? '🆕 جديد' : '🔄 رجع اتوفر') + '</span>';
+    var inner = img
+      ? '<img src="' + img + '" loading="lazy" onerror="naImgFail(this)">' + tag
+      : '<span class="na-ph">📷</span>' + tag;
+    return '<div class="na-card" onclick="openNewArrItem(' + idx + ')">' +
+      '<div class="na-img">' + inner + '</div>' +
+      '<div class="na-name">' + sanitize(it.name || '-') + '</div>' +
+    '</div>';
+  }).join('');
+
+  // العنوان موجود أصلاً بالصفحة فوق البانر — ما نكرره
+  box.innerHTML = '<div class="na-rail" id="naRail">' + cards + '</div>';
+
+  window._naItems = items.slice(0, 20);
+  startNaAuto();
+}
+
+// يتحرك لحاله، ويوقف إذا الزبون يسحب بيده — ما نقاطعه
+/* 📐 نضبط عرض البطاقة حتى ينطبق **عدد صحيح** منها على عرض الشاشة.
+
+   كان العرض ثابت 118px، وعرض الشاشة نادراً ينقسم عليه — فتبقى بطاقة
+   مقصوصة بالطرف دايماً ومنظرها مو حلو، حتى لو الشريط واقف بمكان صحيح.
+   الحين نحسب كم بطاقة تنطبق ونوزّع الفراغ عليهن. */
+var NA_GAP = 10;
+function fitNaCards(rail){
+  if (!rail || !rail.clientWidth) return 0;
+  // الحشوة انتقلت لـ na-strip، فعرض المسار كله صار مساحة بطاقات صافية
+  var avail = rail.clientWidth;
+  var n = Math.round((avail + NA_GAP) / (118 + NA_GAP));   // الأقرب لـ118px
+  if (n < 2) n = 2;
+  var w = (avail - NA_GAP * (n - 1)) / n;
+  if (w > 160) { n += 1; w = (avail - NA_GAP * (n - 1)) / n; }   // ما نخليهن ضخام بالشاشة العريضة
+  rail.style.setProperty('--na-w', w.toFixed(2) + 'px');
+  return (w + NA_GAP) * n;      // 📄 خطوة = صفحة كاملة، يقلب المجموعة كلها سوا
+}
+
+function startNaAuto(){
+  var rail = document.getElementById('naRail');
+  if (!rail) return;
+  clearInterval(_naTimer);
+  fitNaCards(rail);
+  // تدوير الشاشة أو تغيير حجم النافذة يعيد الحساب
+  if (!rail._naFit){
+    rail._naFit = 1;
+    window.addEventListener('resize', function(){ fitNaCards(rail); });
+    /* 🔍 الشريط ممكن ينبني والصفحة الرئيسية بعدها مخفية (مثلاً المستخدم
+       على شاشة تسجيل الدخول) — وقتها عرضها صفر وما نكدر نحسب شي.
+       هذا يترصّد أول لحظة تاخذ فيها عرض ويحسب فوراً. */
+    if (window.ResizeObserver){
+      try { new ResizeObserver(function(){ fitNaCards(rail); }).observe(rail); } catch(e){}
+    }
+  }
+
+  /* بعض المتصفحات ترجّع scrollLeft **سالب** بالعربي وبعضها موجب.
+     ما نكدر نكتشفها بفحص وقت البناء — الصفحة ممكن تكون بعدها ما انرسمت
+     فيطلع الجواب غلط ويبقى غلط، والشريط يتجمّد للأبد.
+     بدالها: نتحرك، وبعدها نتأكد إن الحركة صارت فعلاً — وإذا ما صارت نقلب. */
+  var sign = -1;
+
+  var paused = false, t = null;
+  function hold(){ paused = true; clearTimeout(t); t = setTimeout(function(){ paused = false; }, 4000); }
+  rail.addEventListener('touchstart', hold, {passive:true});
+
+  /* ⚠️ mouseenter كان يوقف الشريط **بلا مؤقّت** — يعتمد على mouseleave يفكّه.
+     بس بالتلفون ماكو ماوس: اللمسة تنده mouseenter مقلّد، و mouseleave
+     ما يجي أبداً — فالشريط يتحرك مرة وبعدها يبقى واقف للأبد.
+     الحين الماوس ينشتغل بس بالأجهزة اللي عندها ماوس حقيقي. */
+  if (!window.matchMedia || window.matchMedia('(hover: hover)').matches) {
+    rail.addEventListener('mouseenter', function(){ paused = true; clearTimeout(t); });
+    rail.addEventListener('mouseleave', function(){ paused = false; });
+  }
+
+  _naTimer = setInterval(function(){
+    if (paused || !document.body.contains(rail)) return;
+    var step = fitNaCards(rail);
+    if (!step) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    /* نحسب الموقع **من الصفر** كل مرة بدل ما نزحف خطوة فوق خطوة —
+       الزحف يجمّع كسور وينحرف، وأي سحبة بصبعه تخلي الانحراف دائم. */
+    var idx    = Math.round(Math.abs(rail.scrollLeft) / step) + 1;
+    var target = idx * step;
+    // آخر صفحة غالباً ناقصة — نوقف على النهاية بالضبط حتى تبان كاملة،
+    // وبالدورة اللي بعدها بس نلف للبداية
+    if (target > max) target = (Math.abs(rail.scrollLeft) >= max - 2) ? 0 : max;
+
+    var before = rail.scrollLeft;
+    rail.scrollTo({ left: sign * target, behavior: 'smooth' });
+
+    // 🔄 تصحيح ذاتي: إذا طلبنا حركة وما تحرك شي، معناها الاتجاه معكوس
+    if (target > 0) setTimeout(function(){
+      if (rail.scrollLeft === before) {
+        sign = -sign;
+        rail.scrollTo({ left: sign * target, behavior: 'smooth' });
+      }
+    }, 450);
+  }, 2500);   // ⏱️ سرعة الشريط — صغّر الرقم يصير أسرع، كبّره يصير أهدأ
+}
+
+function openNewArrItem(idx){
+  var it = (window._naItems || [])[idx];
+  if (!it) return;
+  var p = _naProduct(it);
+  var img = getDriveImageUrl(p.image_url);
+  var guest = isGuest();
+  var rows = '';
+  if (p.brand) rows += '<div class="oi-row"><span class="oi-k">الماركة</span><span class="oi-v">' + sanitize(p.brand) + '</span></div>';
+  if (p.type)  rows += '<div class="oi-row"><span class="oi-k">النوع</span><span class="oi-v">' + sanitize(p.type) + '</span></div>';
+  if (p.notes) rows += '<div class="oi-row"><span class="oi-k">الملاحظة</span><span class="oi-v">' + sanitize(p.notes) + '</span></div>';
+  rows += '<div class="oi-row"><span class="oi-k">القسم</span><span class="oi-v">' + sanitize(it.cat || '') + '</span></div>';
+
+  var priceLine = guest
+    ? '<div class="pi-price avail" style="filter:blur(5px)">99,999 IQD</div>'
+    : '<div class="pi-price avail">' + formatPriceIQD(p.price) + ' IQD</div>';
+  var actionBtn = guest
+    ? '<button class="form-btn" onclick="closeNaItem();showLoginPrompt()">🔒 سجّل لتشوف السعر</button>'
+    : '<button class="form-btn" onclick="naAdd(' + idx + ')">🛒 أضف للسلة</button>';
+
+  var ov = document.createElement('div');
+  ov.id = 'naItemOv';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99998;' +
+    'display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML =
+    '<div style="background:var(--surface,#fff);width:100%;max-width:480px;border-radius:18px 18px 0 0;' +
+      'padding:16px;max-height:90vh;overflow:auto;">' +
+      (img ? '<div class="pi-img-wrap has-img" onclick="openImgLightbox(' +
+              JSON.stringify(img).replace(/"/g,'&quot;') + ',' +
+              JSON.stringify(String(p.name)).replace(/"/g,'&quot;') + ')" style="height:200px">' +
+              '<img src="' + img + '"><span class="pi-zoom">🔍</span></div>' : '') +
+      '<div style="font-size:17px;font-weight:900;margin:6px 0 4px">' + sanitize(p.name) + '</div>' +
+      priceLine +
+      '<div class="order-item-rows" style="margin-top:10px">' + rows + '</div>' +
+      '<div style="margin-top:14px">' + actionBtn +
+        '<button class="form-btn" style="background:#E2E8F0;color:#0F172A;margin-top:8px" ' +
+        'onclick="closeNaItem()">إغلاق</button></div>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) closeNaItem(); });
+  document.body.appendChild(ov);
+}
+function closeNaItem(){ var e = document.getElementById('naItemOv'); if (e) e.remove(); }
+function naAdd(idx){
+  var it = (window._naItems || [])[idx];
+  if (!it) return;
+  var pid = cacheProduct(_naProduct(it));
+  try { piDirectAdd(pid, null); } catch(e){}
+  closeNaItem();
+  try { showToast && showToast('✅ انضافت للسلة'); } catch(e){}
+}
+
+// 📷 صورة الشريط انكسرت — نبقي الشارة ونحط البديل
+function naImgFail(img){
+  var w = img.parentElement; if (!w) return;
+  var tag = w.querySelector('.na-tag');
+  w.innerHTML = '<span class="na-ph">📷</span>' + (tag ? tag.outerHTML : '');
+}
+
+// 🖼️ صورة انكسرت — نرجّع الإطار الفاضي بدل ما تصير فجوة بالبطاقة
+function piImgFail(img){
+  var w = img.parentElement;
+  if (!w) return;
+  w.classList.remove('has-img');
+  w.removeAttribute('onclick');
+  w.removeAttribute('title');
+  w.innerHTML = '<span class="pi-img-ph">📷</span>';
+}
+
+/* 🔍 تكبير الصورة
+   كانت الدالة هاي **مو موجودة** رغم إن البطاقات تنديها —
+   يعني الضغط على أي صورة ما كان يسوي شي إطلاقاً. */
+function openImgLightbox(url, caption) {
+  if (!url) return;
+  var old = document.getElementById('imgLightbox');
+  if (old) old.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'imgLightbox';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:100000;' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'padding:18px;backdrop-filter:blur(3px);';
+
+  ov.innerHTML =
+    '<button aria-label="إغلاق" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));' +
+      'left:16px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:50%;' +
+      'width:40px;height:40px;font-size:22px;cursor:pointer;line-height:1;">✕</button>' +
+    '<img src="' + url + '" style="max-width:100%;max-height:78vh;object-fit:contain;' +
+      'border-radius:14px;background:#fff;">' +
+    (caption ? '<div style="color:#fff;font-size:15px;font-weight:700;margin-top:14px;' +
+      'text-align:center;max-width:92%;line-height:1.6;">' + sanitize(caption) + '</div>' : '') +
+    '<div style="color:rgba(255,255,255,.55);font-size:12.5px;margin-top:10px;">اضغط بأي مكان للإغلاق</div>';
+
+  function close(){ ov.remove(); document.removeEventListener('keydown', onKey); _navRelease(); }
+  function onKey(e){ if (e.key === 'Escape') close(); }
+  ov.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(ov);
+  _navEnsure();   // 🔙 سحبة الرجوع تسكّر الصورة بس، ما تطلعك من الصفحة
+}
+
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
@@ -5295,7 +5881,14 @@ function createSheetPriceItem(p) {
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+  // 🖼️ الإطار موجود دايماً بنفس القياس — بصورة أو بدونها — حتى تبقى البطاقات متساوية
+  var imgHtml = imgUrl
+    ? '<div class="pi-img-wrap has-img" title="اضغط للتكبير" onclick="event.stopPropagation();openImgLightbox(' +
+        JSON.stringify(imgUrl).replace(/"/g, '&quot;') + ',' +
+        JSON.stringify(String(p.name || '')).replace(/"/g, '&quot;') + ');">' +
+        '<img src="' + imgUrl + '" loading="lazy" onerror="piImgFail(this);">' +
+        '<span class="pi-zoom">🔍</span></div>'
+    : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
 
   var priceHtml, cartRow;
   var isToolsSheet = (sheetPriceType === 'tools');
@@ -5317,7 +5910,7 @@ function createSheetPriceItem(p) {
       '</div>';
   }
 
-  return '<div class="price-item" style="' + (imgUrl ? '' : 'justify-content:space-between;') + '">' + imgHtml +
+  return '<div class="price-item">' + imgHtml +
     '<div class="pi-info">' +
       '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
       '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
@@ -5524,6 +6117,41 @@ function _orderDateStr(o) {
   } catch(e) { return ''; }
 }
 
+
+/* 🧾 تفاصيل مادة داخل الطلب — مكان واحد يخدم «طلباتي» وكل عرض للطلب،
+   حتى ما يختلف الشكل بين مكان ومكان.
+     الشاشة     : الاسم · الماركة · النوع · الملاحظة · السعر
+     باقي المواد: الاسم · السعر     (ما عندها تفاصيل أصلاً) */
+function _oiRow(label, val, ltr){
+  return '<div class="oi-row"><span class="oi-k">' + label + '</span>' +
+         '<span class="oi-v"' + (ltr ? ' dir="ltr"' : '') + '>' + sanitize(val) + '</span></div>';
+}
+function _orderItemHtml(it){
+  var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
+  var qty   = Number(it.quantity) || 1;
+  // شاشة؟ إما مكتوب صراحة، أو عندها تفاصيل ما تجي إلا بالشاشات
+  var isScreen = (it.itemType === 'screens') ||
+                 !!(String(it.type||'').trim() || String(it.notes||'').trim());
+  var rows = '';
+  if (isScreen){
+    if (String(it.brand||'').trim()) rows += _oiRow('الماركة', it.brand);
+    if (String(it.type||'').trim())  rows += _oiRow('النوع', it.type);
+    if (String(it.notes||'').trim()) rows += _oiRow('الملاحظة', it.notes);
+  }
+  rows += _oiRow('السعر', formatPriceIQD(price) + ' د.ع', true);
+  if (qty > 1) rows += _oiRow('المجموع', formatPriceIQD(price * qty) + ' د.ع', true);
+
+  return '<div class="order-item-card">' +
+      '<div class="order-item-top">' +
+        '<div class="order-item-name" style="flex:1;margin:0">' + sanitize(it.name || '-') + '</div>' +
+        '<span class="order-item-qty-pill">× ' + qty + '</span>' +
+      '</div>' +
+      ((it.itemType === 'screens' && it.hasWarranty)
+        ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '') +
+      '<div class="order-item-rows">' + rows + '</div>' +
+    '</div>';
+}
+
 function _orderMoney(o) {
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
   var itemsSum = (o.items || []).reduce(function(s, it){
@@ -5609,20 +6237,7 @@ function openOrderDetail(orderId) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
     var qty = it.quantity || 1;
     var itemTotal = price * qty;
-    var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
-    var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
-    var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
-    var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
-    return '<div class="order-item-card">' +
-      '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
-      '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
-      warrantyBadge +
-      '<div class="order-item-meta">' +
-        '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
-        '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
-      '</div>' +
-      noteHtml +
-    '</div>';
+    return _orderItemHtml(it);
   }).join('') || '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;">لا توجد منتجات</div>';
 
   var cancelBtn = _orderIsCancellable(o)
@@ -5773,21 +6388,7 @@ function loadMyOrdersOld() {
         var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
         var qty = it.quantity || 1;
         var itemTotal = price * qty;
-        var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
-        var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
-        var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
-        var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
-
-        return '<div class="order-item-card">' +
-          '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
-          '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
-          warrantyBadge +
-          '<div class="order-item-meta">' +
-            '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
-            '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
-          '</div>' +
-          noteHtml +
-        '</div>';
+        return _orderItemHtml(it);
       }).join('');
 
       var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
@@ -5857,7 +6458,17 @@ function loadMyOrdersOld() {
   });
 }
 
+/* 🚫 رسالة «طلب جديد وصلك» — موقّفة بطلبك.
+
+   كانت تطلع بوسط الصفحة وتغطي المحتوى، وتنطلق غلط: أي طلب مو مسجّل
+   بقائمة «المشوفة» بجهازك ينحسب جديد — وهاي القائمة تنمسح لو نضّفت
+   بيانات المتصفح أو فتحت من جهاز ثاني، فتطلع رغم إنه ماكو شي جديد.
+
+   البادج الأحمر على «طلباتي» يبقى شغّال ويعدّ الطلبات النشطة — وهو صحيح.
+   لو تريد ترجّعها يوماً: امسح سطر الـreturn الجاي. */
 function showOrdersNotification(count) {
+  return;
+
   var old = document.getElementById('ordersNotifToast');
   if (old) old.remove();
   var toast = document.createElement('div');
@@ -5956,70 +6567,79 @@ function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
+  _naTab = 'new';
+  renderNewItemsSheet();
+  // نحدّثها بالخلفية حتى تكون آخر شي
+  loadNewArrivals().then(function(){ renderNewItemsSheet(); });
+}
+
+function naSwitch(tab){ _naTab = tab; renderNewItemsSheet(); }
+
+function renderNewItemsSheet(){
   var body = document.getElementById('newItemsSheetBody');
-  body.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل المواد الجديدة...</div></div>';
+  if (!body) return;
+  var nNew = (NEW_ARR['new']||[]).length, nBack = (NEW_ARR.back||[]).length;
 
-  secureApiCall('getNewItems').then(function(items) {
-    if (!items || !items.length) {
-      body.innerHTML =
-        '<div style="text-align:center;padding:40px 20px;">' +
-          '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
-          '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:8px;">لا يوجد جديد</div>' +
-          '<div style="font-size:16px;color:#94A3B8;line-height:1.7;">أي مادة تُضاف للمخزون خلال آخر 30 يوم<br>ستظهر هنا تلقائياً</div>' +
-        '</div>';
-      return;
-    }
+  // 🆕 جديد كلياً  |  🔄 رجع للتوفر  — منفصلين حسب طلب علي
+  var tabs =
+    '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
+      '<button onclick="naSwitch(\'new\')" style="flex:1;padding:10px;border-radius:11px;border:1.5px solid ' +
+        (_naTab==='new' ? '#10B981;background:#10B981;color:#fff' : '#E2E8F0;background:#fff;color:#64748B') +
+        ';font-weight:800;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">🆕 جديد كلياً (' + nNew + ')</button>' +
+      '<button onclick="naSwitch(\'back\')" style="flex:1;padding:10px;border-radius:11px;border:1.5px solid ' +
+        (_naTab==='back' ? '#3B82F6;background:#3B82F6;color:#fff' : '#E2E8F0;background:#fff;color:#64748B') +
+        ';font-weight:800;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">🔄 رجع للتوفر (' + nBack + ')</button>' +
+    '</div>';
 
-    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة وصلت حديثاً</div><div class="price-items-grid">';
+  var items = NEW_ARR[_naTab] || [];
+  if (!items.length){
+    body.innerHTML = tabs +
+      '<div style="text-align:center;padding:36px 20px;">' +
+        '<div style="font-size:44px;margin-bottom:10px;">📦</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:6px;">' +
+          (_naTab==='new' ? 'ماكو مواد جديدة' : 'ماكو مواد رجعت للتوفر') + '</div>' +
+        '<div style="font-size:14px;color:#94A3B8;line-height:1.7;">آخر 14 يوم</div></div>';
+    return;
+  }
 
-    items.forEach(function(item) {
-      var price = Number(item.price) || 0;
-      var typeKey = _newItemsTypeMap[item.source] || 'screens';
-      var priceHtml, cartRow;
+  window._naSheetItems = items;
+  var guest = isGuest();
+  var cards = items.map(function(it, idx){
+    var p = _naProduct(it);
+    var img = getDriveImageUrl(p.image_url);
+    var imgHtml = img
+      ? '<div class="pi-img-wrap has-img" onclick="event.stopPropagation();openImgLightbox(' +
+          JSON.stringify(img).replace(/"/g,'&quot;') + ',' +
+          JSON.stringify(String(p.name)).replace(/"/g,'&quot;') + ')"><img src="' + img +
+          '" loading="lazy" onerror="piImgFail(this)"><span class="pi-zoom">🔍</span></div>'
+      : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
+    var priceHtml = guest
+      ? '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>'
+      : '<div class="pi-price avail">' + formatPriceIQD(p.price) + ' IQD</div>';
+    var cartRow = guest
+      ? '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>'
+      : '<div class="pi-cart-row"><button class="add-to-cart-btn" onclick="naSheetAdd(' + idx + ')">🛒 أضف</button></div>';
+    return '<div class="price-item">' + imgHtml +
+      '<div class="pi-info">' +
+        '<div class="pi-name">' + sanitize(p.name) + '</div>' +
+        '<div class="pi-brand">' + sanitize(it.cat || p.brand || '-') + '</div>' +
+        (p.type ? '<div class="pi-type">' + sanitize(p.type) + '</div>' : '') +
+        priceHtml +
+        (p.notes ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '') +
+      '</div>' + cartRow + '</div>';
+  }).join('');
 
-      var itemImgUrl = getDriveImageUrl(item.image_url);
-      var itemImgHtml = itemImgUrl ? '<div class="pi-img-wrap"><img src="' + itemImgUrl + '" onerror="this.parentElement.innerHTML=\'\'"></div>' : '<div class="pi-img-wrap"></div>';
-      var dateHtml = item.date_added ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>' : '';
+  body.innerHTML = tabs +
+    '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + items.length + ' مادة</div>' +
+    '<div class="price-items-grid">' + cards + '</div>';
+}
 
-      if (isGuest()) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
-      } else {
-        var pObj = {
-          name: item.name, brand: item.brand||'', type: item.type||'',
-          price: price, qty: item.qty||0, notes: item.notes||'',
-          image_url: item.image_url||'', itemType: typeKey
-        };
-        var pid = cacheProduct(pObj);
-        var uid = 'q_' + Math.random().toString(36).substr(2,7);
-        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
-        cartRow =
-          '<div class="pi-cart-row">' +
-            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
-            '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
-            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
-          '</div>';
-      }
-
-      html +=
-        '<div class="price-item">' +
-          itemImgHtml +
-          '<div class="pi-info">' +
-            '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
-            '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
-            (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
-            (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
-            priceHtml + dateHtml +
-            (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
-          '</div>' +
-          cartRow +
-        '</div>';
-    });
-
-    body.innerHTML = html + '</div>';
-  }).catch(function(e) {
-    body.innerHTML = '<div class="result error" style="margin:20px;">⚠️ فشل تحميل المواد الجديدة<br><small>' + (e.message||'') + '</small></div>';
-  });
+function naSheetAdd(idx){
+  var it = (window._naSheetItems || [])[idx];
+  if (!it) return;
+  var pid = cacheProduct(_naProduct(it));
+  try { piDirectAdd(pid, null); } catch(e){}
+  try { showToast && showToast('✅ انضافت للسلة'); } catch(e){}
 }
 
 function openSearchSheet() {
@@ -6095,6 +6715,11 @@ function loadNewItems() {
     'باب سيم':'flatpower','بصمة':'flatpower','منوعة':'flatpower'
   };
 
+  // 🎞️ استبدله الشريط المتحرك بأعلى الصفحة — نخفي القديم بدل ما يتكرر نفس المحتوى
+  if (label) label.style.display = 'none';
+  if (grid)  grid.style.display  = 'none';
+  return;
+  /* eslint-disable no-unreachable */
   secureApiCall('getNewItems').then(function(items) {
     if (!items || !items.length) {
       label.style.display = 'none';
@@ -6265,14 +6890,227 @@ async function _loadProductsThrottled(loaders, concurrency) {
 // قبل، كانت الـ16 طلب تنطلق فور فتح الصفحة حتى وهو بشاشة تسجيل الدخول/التسجيل وما يحتاجها،
 // فتخنق السيرفر وتتعلّق وراها الطلبات المهمة (طلب الرمز، التحقق، تسجيل الدخول) وتطلع "انتهت مهلة الاتصال".
 var _productsLoadStarted = false;
+/* 🧪 نداء واحد بدل 16 — كل الكاتلوك يجي دفعة وحدة من السيرفر الجديد.
+   نعبّي نفس المصفوفات القديمة بالضبط، فكل شاشات العرض تشتغل بدون تعديل. */
+var CAT_INFO = [], SHOP_STATUS = null, SYS_NOTICE = null, APP_VER_INFO = null;
+
+// الأقسام الجديدة اللي طلعناها من «منوعة» — كل واحد صار قسم مستقل
+var MISC_SLUGS = ['misc','glass','touch','antenna','board','conn_lcd','keypad','waterproof',
+                  'headphone','ic','mic','vibration','wireless','screw','speaker','frame','charge_con'];
+
+function _mapPart(i, typeLabel){
+  return { code:i.code, name:i.name || '-', brand:extractBrand(i.name || ''),
+           type:typeLabel, price:Number(i.price)||0, qty:Number(i.qty)||0,
+           notes:'', image_url:i.image_url || '' };
+}
+function _take(parts, slug, label){
+  return (parts[slug] || []).map(function(i){ return _mapPart(i, label); });
+}
+
+async function loadCatalogFromServer(){
+  var r = await sbRpc('app_catalog');
+  var parts = r.parts || {};
+
+  pricesData = (r.screens || []).map(function(s){
+    return { code:s.code, brand:s.brand||'', name:s.name||'-', type:s.type||'',
+             notes:s.notes||'', price:Number(s.price)||0, qty:Number(s.qty)||0,
+             image_url:s.image_url||'' };
+  });
+
+  batteriesData     = _take(parts,'battery',    'بطارية');
+  chargeboardsData  = _take(parts,'charge_brd', 'بورد شحن');
+  backcoverData     = _take(parts,'back_cover', 'باك كفر');
+  housingData       = _take(parts,'housing',    'شاصي');
+  lensData          = _take(parts,'lens',       'عدسة كاميرا');
+  cameraData        = _take(parts,'camera',     'كاميرا');
+  buzzerData        = _take(parts,'buzzer',     'سماعة جرس');
+  earSpeakerData    = _take(parts,'ear',        'سماعة اتصال');
+  doorSimData       = _take(parts,'door_sim',   'باب سيم');
+  fingerprintData   = _take(parts,'fingerp',    'بصمة');
+  toolsData         = _take(parts,'tools',      'أدوات');
+  flatPowerSheetData  = _take(parts,'flat_power','فلات باور');
+  flatVolumeSheetData = _take(parts,'flat_vol',  'فلات صوت');
+
+  // شريط الشحن + شريط الشاشة — كانوا مخلوطين بجدول واحد، وصاروا قسمين
+  flatchargingData = _take(parts,'flat_main','شريط شحن')
+              .concat(_take(parts,'flat_lcd','شريط شاشة'));
+  flatpowerData    = _take(parts,'flat_misc','فلاتات أخرى');
+
+  /* ⚠️ لازم نعبّي CAT_INFO **قبل** ما نبني منوعة —
+     لأن اسم كل قسم يجي منها. كانت تنعبّى بعدها، فكل الأقسام
+     تاخذ الاسم الافتراضي «منوعة» وتنعرض كقسم واحد. */
+  CAT_INFO = r.cats || [];
+
+  // منوعة = كل الأقسام الصغيرة اللي ما إلها شاشة مستقلة بالتطبيق بعد
+  miscData = [];
+  MISC_SLUGS.forEach(function(sl){
+    var lbl = (CAT_INFO.find(function(c){ return c.slug === sl; }) || {}).name || 'منوعة';
+    miscData = miscData.concat(_take(parts, sl, lbl));
+  });
+
+  SHOP_STATUS  = r.shop   || null;
+  SYS_NOTICE   = r.notice || null;
+  APP_VER_INFO = r.ver    || null;
+  try { checkSystemNotice(); } catch(e){}
+
+  // 🗂️ فهرس بالكود الثابت — يخلّينا نلكى أي مادة فوراً بدون ما ندوّر بـ17 قائمة
+  CATALOG_BY_CODE = {};
+  (r.screens || []).forEach(function(s){ if (s.code) CATALOG_BY_CODE[s.code] = s; });
+  Object.keys(parts).forEach(function(sl){
+    (parts[sl] || []).forEach(function(p){ if (p.code) CATALOG_BY_CODE[p.code] = p; });
+  });
+
+  loadNewArrivals();          // الشريط المتحرك — بالخلفية، ما يأخّر عرض المواد
+  return r;
+}
+var CATALOG_BY_CODE = {};
+
+/* ══════════════════════════════════════════════════════════════════
+   🛒 مراجعة السلة مقابل المخزن الحي
+
+   السلة تنحفظ بجهاز الزبون (localStorage) بنسخة **مجمّدة** من السعر،
+   وما كانت تتراجع ولا مرة. يعني:
+
+     الزبون يحط ماده بالسلة يوم الأحد
+     أنت ترفع المخزن وتزيد السعر يوم الاثنين
+     الزبون يطلب يوم الأربعاء  →  الطلب يمشي بسعر الأحد
+
+   والسيرفر القديم ما يمسكها: هو يتأكد إن المجموع يطابق أسعار القطع
+   اللي أرسلها التطبيق نفسه — مو أسعار مخزنك. فيمر عادي وأنت تسجّله
+   ببرنامج المحاسبة بسعر قديم بدون ما تنتبه. ونفس الشي للمواد اللي نفذت.
+
+   الحل: نراجع السلة بالكود الثابت وقت فتحها ووقت الإرسال.
+   ══════════════════════════════════════════════════════════════════ */
+var _cartChanges  = [];      // شنو تغيّر بآخر مراجعة — نعرضه للزبون
+var _skipCartSync = false;   // العرض الجاي ما يعيد المراجعة (نبقي نتيجة الإرسال)
+
+function syncCartWithCatalog() {
+  _cartChanges = [];
+  if (!cart || !cart.length) return _cartChanges;
+  if (!CATALOG_BY_CODE || !Object.keys(CATALOG_BY_CODE).length) return _cartChanges;  // الكاتلوك ما وصل — ما نحكم على شي
+
+  cart.forEach(function(item){
+    if (!item.code) return;                       // ماده قديمة بلا كود — ما نكدر نتأكد منها
+    var live = CATALOG_BY_CODE[item.code];
+
+    if (!live || Number(live.qty || 0) <= 0) {    // انسحبت أو نفذت
+      item.unavailable = true;
+      _cartChanges.push({ kind: 'gone', name: item.name });
+      return;
+    }
+    delete item.unavailable;                      // رجعت تتوفر
+
+    var oldP = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var newP = Number(String(live.price || '').replace(/[^0-9]/g, '')) || 0;
+    if (newP > 0 && newP !== oldP) {
+      item.price = live.price;                    // ناخذ سعر المخزن دايماً
+      _cartChanges.push({ kind: 'price', name: item.name, from: oldP, to: newP });
+    }
+  });
+
+  if (_cartChanges.length) saveCart();
+  return _cartChanges;
+}
+
+// شريط يشرح للزبون شنو تغيّر — بدل ما يتفاجأ بالمجموع
+function cartChangesBanner() {
+  if (!_cartChanges.length) return '';
+  var rows = _cartChanges.map(function(ch){
+    return ch.kind === 'gone'
+      ? '<div style="margin-top:4px;">🚫 <b>' + sanitize(ch.name) + '</b> ما عاد متوفر — احذفه حتى تكدر ترسل الطلب</div>'
+      : '<div style="margin-top:4px;">🏷️ <b>' + sanitize(ch.name) + '</b> تغيّر سعره من ' +
+        ch.from.toLocaleString() + ' إلى ' + ch.to.toLocaleString() + ' د.ع</div>';
+  }).join('');
+  return '<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:12px;padding:12px 14px;' +
+         'margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700;line-height:1.7;">' +
+         '<div style="font-size:14px;font-weight:900;">⚠️ تغيّر شي بالسلة</div>' + rows + '</div>';
+}
+
+/* 🚨 التطبيق عنده شريط تنبيه أصلي (systemNoticeBanner) — نستخدمه هو
+   بدل ما نبني شريط ثاني ويصير عندنا تنبيهين بشكلين مختلفين.
+   هاي بقت للتوافق بس، وتحوّل النداء للشريط الأصلي. */
+function renderShopNotice(){
+  try { checkSystemNotice(); } catch(e){}
+  return _renderShopNoticeLegacy();
+}
+function _renderShopNoticeLegacy(){
+  var el = document.getElementById('shopNoticeBar');
+  if (!el) return;                 // ما عاد نبنيه — الشريط الأصلي يكفي
+  if (el){
+    var home = document.getElementById('homeScreen');
+    if (!home) return;
+    el = document.createElement('div');
+    el.id = 'shopNoticeBar';
+    el.style.cssText = 'margin:10px 12px 0;padding:10px 14px;border-radius:12px;'+
+      'font-size:13.5px;font-weight:800;text-align:center;display:none;'+
+      'font-family:Tajawal,sans-serif;line-height:1.7;';
+    // بعد الشريط العلوي مباشرة — فما يغطي ولا زر
+    var bar = home.querySelector('.home-top-bar');
+    if (bar && bar.nextSibling) home.insertBefore(el, bar.nextSibling);
+    else home.insertBefore(el, home.firstChild);
+  }
+  var txt = '', bg = '#FFFBEB', fg = '#92400E';
+  if (SYS_NOTICE && SYS_NOTICE.enabled && SYS_NOTICE.message){
+    txt = SYS_NOTICE.message;
+    if (SYS_NOTICE.kind === 'closed'){ bg = '#FEF2F2'; fg = '#991B1B'; }
+    else if (SYS_NOTICE.kind === 'holiday'){ bg = '#EFF6FF'; fg = '#1E40AF'; }
+  } else if (SHOP_STATUS && SHOP_STATUS.open === false){
+    txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+          '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
+    bg = '#FEF2F2'; fg = '#991B1B';
+  }
+  if (!txt){ el.style.display = 'none'; return; }
+  el.style.background = bg; el.style.color = fg;
+  el.textContent = txt; el.style.display = 'block';
+}
+
+/* 🚨 لو فشل تحميل الكاتلوك، نعرض السبب على الشاشة بدل ما نخلي الأقسام فاضية
+   والزبون (أو انت) ما تعرف ليش. الخطأ الحقيقي يظهر هنا. */
+function showCatalogError(msg){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var el = document.getElementById('catErrBar');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'catErrBar';
+    el.style.cssText = 'margin:10px 12px;padding:12px 14px;border-radius:12px;' +
+      'background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;font-size:13px;' +
+      'font-weight:700;line-height:1.7;font-family:Tajawal,sans-serif;';
+    var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
+    if (after && after.nextSibling) home.insertBefore(el, after.nextSibling);
+    else home.insertBefore(el, home.firstChild);
+  }
+  el.style.display = 'block';
+  el.innerHTML = '⚠️ تعذّر تحميل المواد<div style="font-weight:500;font-size:12px;margin-top:5px;' +
+    'direction:ltr;text-align:left;word-break:break-all;">' + sanitize(String(msg||'')) + '</div>' +
+    '<button onclick="retryCatalog()" style="margin-top:9px;background:#EF4444;color:#fff;border:none;' +
+    'border-radius:9px;padding:8px 16px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;">' +
+    'إعادة المحاولة</button>';
+}
+function hideCatalogError(){
+  var el = document.getElementById('catErrBar');
+  if (el) el.style.display = 'none';
+}
+function retryCatalog(){
+  hideCatalogError();
+  _productsLoadStarted = false;
+  ensureProductsLoaded();
+}
+
 function ensureProductsLoaded() {
   if (_productsLoadStarted) return;
   _productsLoadStarted = true;
-  _loadProductsThrottled([
-    loadPrices, loadBatteries, loadChargeboards, loadFlatMain,
-    loadBackCover, loadHousing, loadLens, loadCamera,
-    loadBuzzer, loadEarSpeaker, loadDoorSim, loadFingerprint, loadMisc, loadTools, loadFlatPowerSheet, loadFlatVolumeSheet
-  ], 3);
+  /* ⚡ الشريط ينجلب **بالتوازي** مع الكاتلوك مو وراه.
+     كان نداء ورا نداء = انتظار مضاعف قبل ما يبان الشريط. */
+  try { showNaSkeleton(); } catch(e){}
+  loadNewArrivals();
+  loadCatalogFromServer()
+    .then(function(){ hideCatalogError(); })
+    .catch(function(e){
+      console.error('catalog:', e);
+      _productsLoadStarted = false;    // نخلي محاولة ثانية ممكنة
+      showCatalogError(e && e.message ? e.message : e);
+    });
 }
 loadCart();
 appBoot();
@@ -7147,18 +7985,31 @@ window.addEventListener('DOMContentLoaded', function() {
 // ═══════════════════════════════════════════
 // ⚠️ إشعار عطل/صيانة ثابت — يظهر بكل فتحة تطبيق طالما الأدمن مفعّله
 // ═══════════════════════════════════════════
+/* 🚨 مصدر واحد للتنبيه: لوحة التحكم الجديدة.
+   كان يقرا من النظام القديم، فتعدّل باللوحة وما يتغيّر شي عند الزبون. */
 async function checkSystemNotice() {
   try {
-    var res = await secureApiCall('getSystemNotice', {});
+    if (!SYS_NOTICE && !SHOP_STATUS) {
+      var r = await sbRpc('app_catalog');   // لو انفتح قبل تحميل الكاتلوك
+      SYS_NOTICE  = (r && r.notice) || null;
+      SHOP_STATUS = (r && r.shop)   || null;
+    }
     var banner = document.getElementById('systemNoticeBanner');
     var textEl = document.getElementById('systemNoticeText');
     if (!banner || !textEl) return;
-    if (res && res.enabled && res.message) {
-      textEl.textContent = '⚠️ ' + res.message;
-      banner.style.display = 'block';
-    } else {
-      banner.style.display = 'none';
+
+    var txt = '';
+    if (SYS_NOTICE && SYS_NOTICE.enabled && SYS_NOTICE.message) {
+      var ico = SYS_NOTICE.kind === 'holiday' ? '🌙'
+              : SYS_NOTICE.kind === 'closed'  ? '🔒'
+              : SYS_NOTICE.kind === 'info'    ? 'ℹ️' : '⚠️';
+      txt = ico + ' ' + SYS_NOTICE.message;
+    } else if (SHOP_STATUS && SHOP_STATUS.open === false) {
+      txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+            '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     }
+    if (txt) { textEl.textContent = txt; banner.style.display = 'block'; }
+    else banner.style.display = 'none';
   } catch(e) { console.error('checkSystemNotice failed', e); }
 }
 
@@ -8093,12 +8944,14 @@ function _isNewerVersion(latest, current) {
   return false;
 }
 
+// 📲 نسخة التطبيق — من لوحة التحكم الجديدة (تبويب التنبيهات والدوام)
 async function checkAppUpdate() {
   if (!_isNativeApp) return; // الموقع دايماً آخر نسخة، هذا للتطبيق المثبّت بس
   try {
-    var res = await secureApiCall('getAppVersion', {});
-    if (res && _isNewerVersion(res.latestVersion, APP_VERSION)) {
-      showAppUpdateModal(res.message, res.storeUrl);
+    var v = APP_VER_INFO;
+    if (!v) { var r = await sbRpc('app_catalog'); v = APP_VER_INFO = (r && r.ver) || null; }
+    if (v && _isNewerVersion(v.version, APP_VERSION)) {
+      showAppUpdateModal(v.message, v.store_url);
     }
   } catch(e) { console.error('checkAppUpdate failed', e); }
 }
@@ -8220,7 +9073,14 @@ function createAllProdItem(p, typeKey) {
   var typeHtml = (typeKey === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+  // 🖼️ الإطار موجود دايماً بنفس القياس — بصورة أو بدونها — حتى تبقى البطاقات متساوية
+  var imgHtml = imgUrl
+    ? '<div class="pi-img-wrap has-img" title="اضغط للتكبير" onclick="event.stopPropagation();openImgLightbox(' +
+        JSON.stringify(imgUrl).replace(/"/g, '&quot;') + ',' +
+        JSON.stringify(String(p.name || '')).replace(/"/g, '&quot;') + ');">' +
+        '<img src="' + imgUrl + '" loading="lazy" onerror="piImgFail(this);">' +
+        '<span class="pi-zoom">🔍</span></div>'
+    : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
 
   var priceHtml, cartRow;
   if (!avail) {
@@ -8602,13 +9462,49 @@ function updateSystemNoticeStatusLabel() {
   label.textContent = toggle.checked ? 'مفعّل' : 'متوقف';
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   🔑 كلمة سر اللوحة — للسيرفر الجديد
+
+   هذي الأقسام (الإشعار + نسخة التطبيق) كانت تكتب على السيرفر القديم،
+   بينما التطبيق صار يقرا من الجديد — يعني تحفظ وما يتغيّر شي عند الزبون
+   وبدون أي رسالة خطأ. صارت تشتغل على الجديد.
+
+   ⚠️ الكلمة تنسأل وقت الحاجة وتبقى بالذاكرة لحد ما تسكّر التطبيق —
+      ما تنحفظ بالجهاز أبداً، حتى لو أحد مسك تلفونك ما يلكاها.
+   ══════════════════════════════════════════════════════════════════ */
+var _panelPw = null;
+function panelPw(force) {
+  if (force) _panelPw = null;
+  if (!_panelPw) {
+    var p = prompt('🔑 كلمة سر لوحة التحكم');
+    if (!p) return null;
+    _panelPw = p;
+  }
+  return _panelPw;
+}
+// ترجّع البيانات، وإذا الكلمة غلط تنساها وترمي خطأ واضح
+async function panelRpc(fn, body) {
+  var pw = panelPw(false);
+  if (!pw) throw new Error('لازم كلمة السر');
+  var r = await sbRpc(fn, Object.assign({ p_key: pw }, body || {}));
+  if (r && r['خطأ']) { _panelPw = null; throw new Error(r['خطأ']); }
+  return r;
+}
+
+// القراءة ما تحتاج كلمة سر — الإشعار والنسخة عامّين بالكاتلوك أصلاً.
+// فما نزعجك بطلب الكلمة إلا وقت الحفظ.
+async function _panelCur() {
+  var r = await sbRpc('app_catalog');
+  return { notice: (r && r.notice) || {}, ver: (r && r.ver) || {} };
+}
+
 async function loadSystemNoticeAdmin() {
   try {
-    var res = await secureApiCall('getSystemNotice', {});
+    var res = (await _panelCur()).notice;
     var toggle = document.getElementById('systemNoticeToggle');
     var msgEl = document.getElementById('systemNoticeMessage');
-    if (toggle) toggle.checked = !!(res && res.enabled);
-    if (msgEl) msgEl.value = (res && res.message) || '';
+    if (toggle) toggle.checked = !!res.enabled;
+    if (msgEl) msgEl.value = res.message || '';
     updateSystemNoticeStatusLabel();
   } catch(e) { console.error('loadSystemNoticeAdmin failed', e); }
 }
@@ -8629,7 +9525,12 @@ async function saveSystemNotice() {
   btn.disabled = true;
   btn.textContent = 'جاري الحفظ...';
   try {
-    await secureApiCall('setSystemNotice', { adminKey: getAdminKey(), enabled: enabled, message: message });
+    // نحافظ على نوع الإشعار (عطلة/مغلق/معلومة) اللي منضبط من اللوحة الكبيرة
+    var cur = (await _panelCur()).notice;
+    await panelRpc('web_setting_set', {
+      p_name: 'system_notice',
+      p_value: { enabled: enabled, message: message, kind: cur.kind || 'warn' }
+    });
     if (result) {
       result.style.display = 'block';
       result.style.color = '#166534';
@@ -8652,11 +9553,11 @@ async function saveSystemNotice() {
 // ═══════════════════════════════════════════
 async function loadAppVersionAdmin() {
   try {
-    var res = await secureApiCall('getAppVersion', {});
+    var res = (await _panelCur()).ver;
     var vEl = document.getElementById('appVersionInput');
     var mEl = document.getElementById('appVersionMessage');
-    if (vEl) vEl.value = (res && res.latestVersion) || '';
-    if (mEl) mEl.value = (res && res.message) || '';
+    if (vEl) vEl.value = res.version || '';
+    if (mEl) mEl.value = res.message || '';
   } catch(e) { console.error('loadAppVersionAdmin failed', e); }
 }
 
@@ -8676,7 +9577,12 @@ async function saveAppVersion() {
   btn.disabled = true;
   btn.textContent = 'جاري الحفظ...';
   try {
-    await secureApiCall('setAppVersion', { adminKey: getAdminKey(), latestVersion: latestVersion, message: message });
+    // نحافظ على رابط المتجر المنضبط من اللوحة الكبيرة
+    var cur = (await _panelCur()).ver;
+    await panelRpc('web_setting_set', {
+      p_name: 'app_version',
+      p_value: { version: latestVersion, message: message, store_url: cur.store_url || '' }
+    });
     if (result) {
       result.style.display = 'block';
       result.style.color = '#166534';
@@ -9148,7 +10054,9 @@ function adminOpenOrderDetail(orderId) {
   var province = String(o.address||'').split('،')[0].trim();
   var isPrimeEligible = province && province !== 'كربلاء';
 
-  var itemsHtml = (o.items || []).map(function(it) {
+  /* 📦 كل مادة ببطاقة مستقلة ومرقّمة — الخط الرفيع كان يخلي المواد تختلط
+     على العين، خصوصاً لو الطلب فيه خمس قطع أو أكثر. */
+  var itemsHtml = (o.items || []).map(function(it, _i) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
     var qty = it.quantity || 1;
     var metaParts = [];
@@ -9158,9 +10066,14 @@ function adminOpenOrderDetail(orderId) {
     var notesLine = it.notes ? '<div style="font-size:12px;color:#92400E;margin-top:3px;font-weight:700;">📝 ' + sanitize(it.notes) + '</div>' : '';
     var warranty = (it.itemType === 'screens' && it.hasWarranty) ? ' <span style="color:#10B981;">🛡️ ضمان</span>' : '';
     var lineTotal = price * qty;
-    return '<div style="padding:10px 0;border-bottom:1px solid var(--border-light,#E2E8F0);">' +
+    var num = '<span style="display:inline-flex;align-items:center;justify-content:center;' +
+      'width:21px;height:21px;border-radius:50%;background:var(--primary,#0EA5E9);color:#fff;' +
+      'font-size:11.5px;font-weight:900;flex-shrink:0;margin-left:7px;">' + (_i + 1) + '</span>';
+    return '<div style="padding:12px 13px;margin-bottom:9px;background:var(--surface-2,#F8FAFC);' +
+        'border:1px solid var(--border-light,#E2E8F0);border-radius:12px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
-          '<div style="font-size:15px;font-weight:900;color:var(--text);line-height:1.35;flex:1;min-width:0;">' + sanitize(it.name||'-') + warranty + '</div>' +
+          '<div style="font-size:15px;font-weight:900;color:var(--text);line-height:1.35;flex:1;min-width:0;display:flex;align-items:flex-start;">' +
+            num + '<span>' + sanitize(it.name||'-') + warranty + '</span></div>' +
           '<div style="font-size:13.5px;font-weight:800;color:var(--muted);white-space:nowrap;flex-shrink:0;">الكمية: ' + qty + '</div>' +
         '</div>' +
         metaLine +
