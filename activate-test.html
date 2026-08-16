@@ -4726,14 +4726,19 @@ function renderCart() {
   orderForm.style.display = 'block';
   clearBtn.style.display = 'block';
 
+  // 🛒 نراجع الأسعار والتوفّر قبل ما نعرض.
+  // إلا إذا الإرسال راجع للتو — وقتها نبقي نتيجته حتى الشريط يبقى يعرض شنو تغيّر
+  if (_skipCartSync) _skipCartSync = false; else syncCartWithCatalog();
+
   let total = 0;
-  let html = '';
+  let html = cartChangesBanner();  // شريط يشرح شنو تغيّر (يطلع بس إذا أكو تغيير)
 
   cart.forEach((item, index) => {
     const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
     const itemTotal = price * quantity;
-    total += itemTotal;
+    const gone = !!item.unavailable;      // نفذت أو انسحبت من المخزن
+    if (!gone) total += itemTotal;        // ما ندخّلها بالمجموع
     const isScreen = item.itemType === 'screens';
     const warrantyChecked = item.hasWarranty;
 
@@ -4770,11 +4775,12 @@ function renderCart() {
       </div>` : '';
 
     html += `
-      <div class="cart-item-modern">
+      <div class="cart-item-modern" style="${gone ? 'opacity:.6;border:2px solid #FCA5A5;' : ''}">
         <div class="cart-item-img">
           <span>${itemIcon}</span>
         </div>
         <div class="cart-item-info">
+          ${gone ? '<div style="background:#FEE2E2;color:#991B1B;font-size:11.5px;font-weight:900;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:5px;">🚫 ما عاد متوفر</div>' : ''}
           <div class="cart-item-name">${sanitize(item.name || '-')}</div>
           <div class="cart-item-meta">${sanitize(item.brand || '-')}${item.type ? ' · ' + sanitize(item.type) : ''}</div>
           <div class="cart-item-bottom">
@@ -4894,6 +4900,24 @@ async function submitOrder() {
   const clearBtn = document.getElementById('clearCartBtn');
   submitBtn.disabled = true; if (clearBtn) clearBtn.disabled = true;
   localStorage.setItem('amwaj_address', address);
+
+  // 🛒 مراجعة أخيرة قبل الإرسال — الأسعار ممكن تكون تغيّرت والسلة مفتوحة
+  syncCartWithCatalog();
+
+  // ماده نفذت: تبقى نافذة مهما أعاد المحاولة، فلازم يحذفها هو
+  if (cart.some(function(i){ return i.unavailable; })) {
+    _skipCartSync = true; renderCart();
+    submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
+    result.innerHTML = '<div class="result error">🚫 أكو مواد ما عادت متوفرة بالسلة — احذفها حتى تكدر ترسل الطلب</div>';
+    return;
+  }
+  // سعر تغيّر: نعرضله الفرق ونخليه يأكد. المراجعة الجاية تلكاه مطابق فيمر.
+  if (_cartChanges.length) {
+    _skipCartSync = true; renderCart();
+    submitBtn.disabled = false; if (clearBtn) clearBtn.disabled = false;
+    result.innerHTML = '<div class="result error">⚠️ تغيّر سعر بالسلة — راجع التفاصيل فوق ثم أرسل الطلب مرة ثانية</div>';
+    return;
+  }
 
   let total = 0;
   cart.forEach((item) => {
@@ -6815,8 +6839,78 @@ async function loadCatalogFromServer(){
   SYS_NOTICE   = r.notice || null;
   APP_VER_INFO = r.ver    || null;
   try { checkSystemNotice(); } catch(e){}
+
+  // 🗂️ فهرس بالكود الثابت — يخلّينا نلكى أي مادة فوراً بدون ما ندوّر بـ17 قائمة
+  CATALOG_BY_CODE = {};
+  (r.screens || []).forEach(function(s){ if (s.code) CATALOG_BY_CODE[s.code] = s; });
+  Object.keys(parts).forEach(function(sl){
+    (parts[sl] || []).forEach(function(p){ if (p.code) CATALOG_BY_CODE[p.code] = p; });
+  });
+
   loadNewArrivals();          // الشريط المتحرك — بالخلفية، ما يأخّر عرض المواد
   return r;
+}
+var CATALOG_BY_CODE = {};
+
+/* ══════════════════════════════════════════════════════════════════
+   🛒 مراجعة السلة مقابل المخزن الحي
+
+   السلة تنحفظ بجهاز الزبون (localStorage) بنسخة **مجمّدة** من السعر،
+   وما كانت تتراجع ولا مرة. يعني:
+
+     الزبون يحط ماده بالسلة يوم الأحد
+     أنت ترفع المخزن وتزيد السعر يوم الاثنين
+     الزبون يطلب يوم الأربعاء  →  الطلب يمشي بسعر الأحد
+
+   والسيرفر القديم ما يمسكها: هو يتأكد إن المجموع يطابق أسعار القطع
+   اللي أرسلها التطبيق نفسه — مو أسعار مخزنك. فيمر عادي وأنت تسجّله
+   ببرنامج المحاسبة بسعر قديم بدون ما تنتبه. ونفس الشي للمواد اللي نفذت.
+
+   الحل: نراجع السلة بالكود الثابت وقت فتحها ووقت الإرسال.
+   ══════════════════════════════════════════════════════════════════ */
+var _cartChanges  = [];      // شنو تغيّر بآخر مراجعة — نعرضه للزبون
+var _skipCartSync = false;   // العرض الجاي ما يعيد المراجعة (نبقي نتيجة الإرسال)
+
+function syncCartWithCatalog() {
+  _cartChanges = [];
+  if (!cart || !cart.length) return _cartChanges;
+  if (!CATALOG_BY_CODE || !Object.keys(CATALOG_BY_CODE).length) return _cartChanges;  // الكاتلوك ما وصل — ما نحكم على شي
+
+  cart.forEach(function(item){
+    if (!item.code) return;                       // ماده قديمة بلا كود — ما نكدر نتأكد منها
+    var live = CATALOG_BY_CODE[item.code];
+
+    if (!live || Number(live.qty || 0) <= 0) {    // انسحبت أو نفذت
+      item.unavailable = true;
+      _cartChanges.push({ kind: 'gone', name: item.name });
+      return;
+    }
+    delete item.unavailable;                      // رجعت تتوفر
+
+    var oldP = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    var newP = Number(String(live.price || '').replace(/[^0-9]/g, '')) || 0;
+    if (newP > 0 && newP !== oldP) {
+      item.price = live.price;                    // ناخذ سعر المخزن دايماً
+      _cartChanges.push({ kind: 'price', name: item.name, from: oldP, to: newP });
+    }
+  });
+
+  if (_cartChanges.length) saveCart();
+  return _cartChanges;
+}
+
+// شريط يشرح للزبون شنو تغيّر — بدل ما يتفاجأ بالمجموع
+function cartChangesBanner() {
+  if (!_cartChanges.length) return '';
+  var rows = _cartChanges.map(function(ch){
+    return ch.kind === 'gone'
+      ? '<div style="margin-top:4px;">🚫 <b>' + sanitize(ch.name) + '</b> ما عاد متوفر — احذفه حتى تكدر ترسل الطلب</div>'
+      : '<div style="margin-top:4px;">🏷️ <b>' + sanitize(ch.name) + '</b> تغيّر سعره من ' +
+        ch.from.toLocaleString() + ' إلى ' + ch.to.toLocaleString() + ' د.ع</div>';
+  }).join('');
+  return '<div style="background:#FFFBEB;border:2px solid #FCD34D;border-radius:12px;padding:12px 14px;' +
+         'margin-bottom:12px;font-size:13px;color:#92400E;font-weight:700;line-height:1.7;">' +
+         '<div style="font-size:14px;font-weight:900;">⚠️ تغيّر شي بالسلة</div>' + rows + '</div>';
 }
 
 /* 🚨 التطبيق عنده شريط تنبيه أصلي (systemNoticeBanner) — نستخدمه هو
