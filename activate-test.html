@@ -1130,13 +1130,16 @@ body {
 .avail-count { margin-right:auto; font-size:12.5px; color:#94A3B8; font-weight:700; }
 
 /* 🎞️ شريط «وصلنا حديثاً» المتحرك */
-.na-strip { margin:12px 0 4px; }
+/* الحشوة الجانبية لازم تكون **برّا** منطقة التمرير.
+   لو خليناها على na-rail تصير جزء من المساحة اللي تتمرر، فأول ما
+   يتحرك الشريط تنفتح 14px زيادة ويطلع منها طرف البطاقة الجاية. */
+.na-strip { margin:12px 0 4px; padding-inline:14px; }
 .na-head { display:flex; align-items:center; justify-content:space-between;
            padding:0 14px 8px; font-size:15px; }
 .na-all { background:none; border:none; color:var(--primary,#0EA5E9); font-weight:800;
           font-size:13px; font-family:inherit; cursor:pointer; padding:0; }
-.na-rail { display:flex; gap:10px; overflow-x:auto; padding:2px 14px 6px;
-           scroll-snap-type:x mandatory; scroll-padding-inline:14px;
+.na-rail { display:flex; gap:10px; overflow-x:auto; padding:2px 0 6px;
+           scroll-snap-type:x mandatory;
            -ms-overflow-style:none; scrollbar-width:none; }
 .na-rail::-webkit-scrollbar { display:none; }
 /* العرض يتحسب بالجافاسكربت (fitNaCards) حتى ينطبق عدد صحيح من البطاقات على
@@ -5658,10 +5661,11 @@ function renderNewStrip(){
    كان العرض ثابت 118px، وعرض الشاشة نادراً ينقسم عليه — فتبقى بطاقة
    مقصوصة بالطرف دايماً ومنظرها مو حلو، حتى لو الشريط واقف بمكان صحيح.
    الحين نحسب كم بطاقة تنطبق ونوزّع الفراغ عليهن. */
-var NA_GAP = 10, NA_PAD = 14;
+var NA_GAP = 10;
 function fitNaCards(rail){
   if (!rail || !rail.clientWidth) return 0;
-  var avail = rail.clientWidth - (NA_PAD * 2);
+  // الحشوة انتقلت لـ na-strip، فعرض المسار كله صار مساحة بطاقات صافية
+  var avail = rail.clientWidth;
   var n = Math.round((avail + NA_GAP) / (118 + NA_GAP));   // الأقرب لـ118px
   if (n < 2) n = 2;
   var w = (avail - NA_GAP * (n - 1)) / n;
