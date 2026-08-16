@@ -1141,6 +1141,7 @@ body {
           background:#F8FAFC; border:1px solid var(--border-light,#E2E8F0);
           display:flex; align-items:center; justify-content:center; font-size:26px; }
 .na-img img { width:100%; height:100%; object-fit:cover; }
+.na-ph { font-size:26px; opacity:.25; }
 .na-tag { position:absolute; top:5px; right:5px; font-size:9.5px; font-weight:900;
           padding:2px 6px; border-radius:20px; color:#fff; }
 .na-new  { background:#10B981; }
@@ -3120,7 +3121,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div class="section-row-title">✨ وصلنا حديثاً</div>
         <button class="section-row-link" onclick="openNewItemsSheet()">عرض الكل ←</button>
       </div>
-      <div onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
+      <div id="naBanner" onclick="openNewItemsSheet()" style="margin:0 12px 14px;background:linear-gradient(135deg,#F97316,#F59E0B);border-radius:18px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 6px 20px rgba(249,115,22,0.3);position:relative;overflow:hidden;">
         <div style="position:absolute;top:-30%;right:-15%;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,0.2),transparent 70%);pointer-events:none;"></div>
         <div style="font-size:36px;position:relative;z-index:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.2));">✨</div>
         <div style="flex:1;position:relative;z-index:1;">
@@ -4426,9 +4427,9 @@ async function openToolsSheet() {
   sheetPriceType = 'tools';
   sheetFlatSubType = null;
 
-  // Always fetch fresh data when opening tools
+  // نجيب من السيرفر الجديد — نفس مصدر باقي المواد
   try {
-    await loadTools();
+    await loadCatalogFromServer();
     renderToolsList();
   } catch(e) {
     console.error('Tools load failed:', e);
@@ -5130,37 +5131,19 @@ async function openProductSheet(type, title) {
 
 async function refreshDataInBackground(type) {
   try {
-    if (type === 'screens') {
-      pricesData = await secureApiCall('getPrices');
-    } else if (type === 'batteries' && typeof loadBatteries === 'function') {
-      await loadBatteries();
-    } else if (type === 'chargeboards' && typeof loadChargeboards === 'function') {
-      await loadChargeboards();
-    } else if ((type === 'flatcharging' || type === 'flatpower') && typeof loadFlatMain === 'function') {
-      await loadFlatMain();
-      if (typeof loadFlatPowerSheet === 'function') await loadFlatPowerSheet();
-      if (typeof loadFlatVolumeSheet === 'function') await loadFlatVolumeSheet();
-    } else if (type === 'camera' && typeof loadCamera === 'function') {
-      await loadCamera();
-      if (typeof loadLens === 'function') await loadLens();
-    } else if (type === 'backcover' && typeof loadBackCover === 'function') {
-      await loadBackCover();
-    } else if (type === 'housing' && typeof loadHousing === 'function') {
-      await loadHousing();
-    } else if (type === 'tools' && typeof loadTools === 'function') {
-      await loadTools();
-    }
-    // Re-render brands so latest qty/prices reflect immediately
-    // Check user is still viewing the same sheet (didn't navigate away)
-    if (sheetPriceType === type) {
-      renderSheetBrands(type);
-      // If user already selected a brand, re-render that brand's items too
-      var brandsDiv = document.getElementById('sheetBrands');
-      var resultsDiv = document.getElementById('sheetResults');
-      if (brandsDiv && brandsDiv.style.display === 'none' && resultsDiv && resultsDiv.innerHTML.trim() !== '' && typeof _lastBrandStr === 'string' && _lastBrandStr) {
-        openSheetBrand(_lastBrandStr);
-      }
-    }
+    /* ⚠️ كانت هاي تسحب من النظام القديم (Apps Script) وتدهس البيانات
+       اللي جابها السيرفر الجديد — فتختلط البيانات بصمت.
+       الحين نداء واحد يحدّث الكاتلوك كله من نفس المصدر. */
+    await loadCatalogFromServer();
+
+    if (sheetPriceType !== type) return;   // الزبون طلع من هالقسم، ما نلمس شاشته
+
+    /* 🔙 نرجّعه بالضبط لوين كان — براند أو قسم أو قائمة البراندات.
+       الخلل القديم: كان يعيد إظهار البراندات أول، وبعدها يفحص «هل هي مخفية؟»
+       وهو للتو أظهرها — فالقائمة تبقى فوق المواد. */
+    if (_lastCatName)       openSheetCategory(_lastCatName);
+    else if (_lastBrandStr) openSheetBrand(_lastBrandStr);
+    else                    renderSheetBrands(type);
   } catch(e) {
     console.error('Background refresh failed:', e);
   }
@@ -5172,7 +5155,7 @@ async function refreshCurrentSheet() {
   if (btn) { btn.style.animation = 'spin 0.8s linear infinite'; btn.disabled = true; }
   try {
     if (sheetPriceType === 'tools') {
-      await loadTools();
+      await loadCatalogFromServer();
       renderToolsList();
     } else if (sheetPriceType) {
       await refreshDataInBackground(sheetPriceType);
@@ -5207,7 +5190,8 @@ function openFlatSubSheet(subType, labelAr, icon) {
   // ✅ Always show brands grid when opening
   var brandsDiv = document.getElementById('sheetBrands');
   if (brandsDiv) brandsDiv.style.setProperty('display', 'grid', 'important');
-  renderSheetBrands('flatpower');
+  // 📦 «منوعة» إلها أقسام مو براندات — نمرّر نوعها الحقيقي بدل flatpower
+  renderSheetBrands(subType === 'OTHER' ? 'OTHER' : 'flatpower');
   openSheet('productsSheet');
 }
 
@@ -5348,7 +5332,9 @@ function openSheetCategory(catName){
   var brandsDiv = document.getElementById('sheetBrands');
   var resultsDiv = document.getElementById('sheetResults');
   brandsDiv.style.setProperty('display', 'none', 'important');
-  var filtered = (miscData || []).filter(function(p){ return (p.type || 'منوعة') === catName; });
+  var src = (typeof getFlatSubData === 'function' && _activeSheetSub === 'OTHER')
+              ? (getFlatSubData('OTHER') || miscData) : miscData;
+  var filtered = (src || []).filter(function(p){ return (p.type || 'منوعة') === catName; });
   resultsDiv.innerHTML = itemsBlock(filtered,
     '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">' + catName + '</div>');
 }
@@ -5511,17 +5497,27 @@ function renderNewStrip(){
   var home = document.getElementById('homeScreen');
   if (!home) return;
   var box = document.getElementById('newArrStrip');
-  var items = (NEW_ARR['new'] || []).concat(NEW_ARR.back || [])
-                .filter(function(i){ return getDriveImageUrl(i.image_url); });
+  // كل الواصل حديثاً — واللي بلا صورة يطلع بإطار فيه 📷 بدل ما ينخفي
+  var items = (NEW_ARR['new'] || []).concat(NEW_ARR.back || []);
+  var banner = document.getElementById('naBanner');
 
-  if (!items.length){ if (box) box.style.display = 'none'; return; }
+  if (!items.length){
+    if (box) box.style.display = 'none';
+    if (banner) banner.style.display = '';      // ماكو جديد؟ يبقى البانر القديم
+    return;
+  }
+  if (banner) banner.style.display = 'none';    // الشريط يغني عن البانر
 
   if (!box){
     box = document.createElement('div');
     box.id = 'newArrStrip';
-    var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
-    if (after && after.nextSibling) home.insertBefore(box, after.nextSibling);
-    else home.insertBefore(box, home.firstChild);
+    // مكانه محل البانر بالضبط — تحت عنوان «وصلنا حديثاً»
+    if (banner && banner.parentNode) banner.parentNode.insertBefore(box, banner);
+    else {
+      var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
+      if (after && after.nextSibling) home.insertBefore(box, after.nextSibling);
+      else home.insertBefore(box, home.firstChild);
+    }
   }
   box.style.display = '';
   box.className = 'na-strip';
@@ -5529,10 +5525,13 @@ function renderNewStrip(){
   var cards = items.slice(0, 20).map(function(it, idx){
     var img = getDriveImageUrl(it.image_url);
     var isNew = (NEW_ARR['new'] || []).indexOf(it) > -1;
+    var tag = '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
+              (isNew ? '🆕 جديد' : '🔄 رجع') + '</span>';
+    var inner = img
+      ? '<img src="' + img + '" loading="lazy" onerror="naImgFail(this)">' + tag
+      : '<span class="na-ph">📷</span>' + tag;
     return '<div class="na-card" onclick="openNewArrItem(' + idx + ')">' +
-      '<div class="na-img"><img src="' + img + '" loading="lazy" onerror="this.parentElement.innerHTML=\'📷\'">' +
-        '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
-        (isNew ? '🆕 جديد' : '🔄 رجع') + '</span></div>' +
+      '<div class="na-img">' + inner + '</div>' +
       '<div class="na-name">' + sanitize(it.name || '-') + '</div>' +
     '</div>';
   }).join('');
@@ -5617,6 +5616,13 @@ function naAdd(idx){
   try { piDirectAdd(pid, null); } catch(e){}
   closeNaItem();
   try { showToast && showToast('✅ انضافت للسلة'); } catch(e){}
+}
+
+// 📷 صورة الشريط انكسرت — نبقي الشارة ونحط البديل
+function naImgFail(img){
+  var w = img.parentElement; if (!w) return;
+  var tag = w.querySelector('.na-tag');
+  w.innerHTML = '<span class="na-ph">📷</span>' + (tag ? tag.outerHTML : '');
 }
 
 // 🖼️ صورة انكسرت — نرجّع الإطار الفاضي بدل ما تصير فجوة بالبطاقة
