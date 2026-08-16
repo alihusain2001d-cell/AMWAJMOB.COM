@@ -5556,10 +5556,8 @@ function renderNewStrip(){
     '</div>';
   }).join('');
 
-  box.innerHTML =
-    '<div class="na-head"><b>✨ وصلنا حديثاً</b>' +
-      '<button class="na-all" onclick="openNewItemsSheet()">عرض الكل ←</button></div>' +
-    '<div class="na-rail" id="naRail">' + cards + '</div>';
+  // العنوان موجود أصلاً بالصفحة فوق البانر — ما نكرره
+  box.innerHTML = '<div class="na-rail" id="naRail">' + cards + '</div>';
 
   window._naItems = items.slice(0, 20);
   startNaAuto();
@@ -6738,6 +6736,11 @@ async function loadCatalogFromServer(){
               .concat(_take(parts,'flat_lcd','شريط شاشة'));
   flatpowerData    = _take(parts,'flat_misc','فلاتات أخرى');
 
+  /* ⚠️ لازم نعبّي CAT_INFO **قبل** ما نبني منوعة —
+     لأن اسم كل قسم يجي منها. كانت تنعبّى بعدها، فكل الأقسام
+     تاخذ الاسم الافتراضي «منوعة» وتنعرض كقسم واحد. */
+  CAT_INFO = r.cats || [];
+
   // منوعة = كل الأقسام الصغيرة اللي ما إلها شاشة مستقلة بالتطبيق بعد
   miscData = [];
   MISC_SLUGS.forEach(function(sl){
@@ -6745,7 +6748,6 @@ async function loadCatalogFromServer(){
     miscData = miscData.concat(_take(parts, sl, lbl));
   });
 
-  CAT_INFO    = r.cats   || [];
   SHOP_STATUS = r.shop   || null;
   SYS_NOTICE  = r.notice || null;
   try { renderShopNotice(); } catch(e){}
