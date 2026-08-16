@@ -13,5 +13,5 @@
    ══════════════════════════════════════════════════════════════════ */
 window.SB_CONFIG = {
   URL: "https://afbeoibaenzivxqcczdn.supabase.co",
-  KEY: "517c82a799f444d0b3cbbc3928fe2939"
+  KEY: "sb_publishable_8YP3HZe5friPmyxslgMIlw_ZZ6sPYwZ"
 };
