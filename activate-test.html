@@ -1145,6 +1145,13 @@ body {
 /* العرض يتحسب بالجافاسكربت (fitNaCards) حتى ينطبق عدد صحيح من البطاقات على
    عرض الشاشة — بدونه تبقى بطاقة مقصوصة بالطرف مهما وقف الشريط بمكان صحيح */
 .na-card { flex:0 0 var(--na-w, 118px); scroll-snap-align:start; cursor:pointer; }
+/* ⏳ الهيكل المؤقت — يحجز المكان لحد ما توصل البيانات، بلا قفزة */
+.na-sk { cursor:default; pointer-events:none; }
+.na-sk .na-img, .na-sk .na-name {
+  background:linear-gradient(90deg,#F1F5F9 25%,#E2E8F0 50%,#F1F5F9 75%);
+  background-size:200% 100%; animation:naSk 1.3s linear infinite; color:transparent; }
+.na-sk .na-name { border-radius:6px; }
+@keyframes naSk { from { background-position:200% 0; } to { background-position:-200% 0; } }
 .na-img { position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; overflow:hidden;
           background:#F8FAFC; border:1px solid var(--border-light,#E2E8F0);
           display:flex; align-items:center; justify-content:center; font-size:26px; }
@@ -5586,12 +5593,44 @@ function getDriveImageUrl(url) {
    ══════════════════════════════════════════════════════════════ */
 var NEW_ARR = { 'new': [], back: [] }, _naTimer = null, _naTab = 'new';
 
+var _naInFlight = null;
 async function loadNewArrivals(){
-  try{
-    var r = await sbRpc('app_new_arrivals', { p_days: 14 });
-    NEW_ARR = { 'new': (r && r['new']) || [], back: (r && r.back) || [] };
-  }catch(e){ NEW_ARR = { 'new': [], back: [] }; }
-  try{ renderNewStrip(); }catch(e){}
+  if (_naInFlight) return _naInFlight;   // نداء طائر أصلاً — ما نكرره
+  _naInFlight = (async function(){
+    try{
+      var r = await sbRpc('app_new_arrivals', { p_days: 14 });
+      NEW_ARR = { 'new': (r && r['new']) || [], back: (r && r.back) || [] };
+    }catch(e){ NEW_ARR = { 'new': [], back: [] }; }
+    try{ renderNewStrip(); }catch(e){}
+  })();
+  try { return await _naInFlight; } finally { _naInFlight = null; }
+}
+
+/* ⏳ هيكل مؤقت مكان الشريط لحد ما توصل البيانات.
+
+   بدونه: يبان البانر البرتقالي «أحدث المنتجات»، وبعد ثانيتين ينختفي
+   فجأة ويحل محله الشريط — قفزة بالصفحة ومنظر مو مرتب.
+   الحين نحجز المكان من أول لحظة، والمحتوى يتعبّى بمكانه بهدوء. */
+function showNaSkeleton(){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var banner = document.getElementById('naBanner');
+  var box = document.getElementById('newArrStrip');
+  if (!box){
+    if (!banner || !banner.parentNode) return;
+    box = document.createElement('div');
+    box.id = 'newArrStrip';
+    banner.parentNode.insertBefore(box, banner);
+  }
+  box.className = 'na-strip';
+  box.style.display = '';
+  if (banner) banner.style.display = 'none';
+  box.innerHTML = '<div class="na-rail">' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '<div class="na-card na-sk"><div class="na-img"></div><div class="na-name">&nbsp;</div></div>' +
+    '</div>';
+  try { fitNaCards(box.querySelector('.na-rail')); } catch(e){}
 }
 
 function _naProduct(it){
@@ -6410,7 +6449,17 @@ function loadMyOrdersOld() {
   });
 }
 
+/* 🚫 رسالة «طلب جديد وصلك» — موقّفة بطلبك.
+
+   كانت تطلع بوسط الصفحة وتغطي المحتوى، وتنطلق غلط: أي طلب مو مسجّل
+   بقائمة «المشوفة» بجهازك ينحسب جديد — وهاي القائمة تنمسح لو نضّفت
+   بيانات المتصفح أو فتحت من جهاز ثاني، فتطلع رغم إنه ماكو شي جديد.
+
+   البادج الأحمر على «طلباتي» يبقى شغّال ويعدّ الطلبات النشطة — وهو صحيح.
+   لو تريد ترجّعها يوماً: امسح سطر الـreturn الجاي. */
 function showOrdersNotification(count) {
+  return;
+
   var old = document.getElementById('ordersNotifToast');
   if (old) old.remove();
   var toast = document.createElement('div');
@@ -7042,6 +7091,10 @@ function retryCatalog(){
 function ensureProductsLoaded() {
   if (_productsLoadStarted) return;
   _productsLoadStarted = true;
+  /* ⚡ الشريط ينجلب **بالتوازي** مع الكاتلوك مو وراه.
+     كان نداء ورا نداء = انتظار مضاعف قبل ما يبان الشريط. */
+  try { showNaSkeleton(); } catch(e){}
+  loadNewArrivals();
   loadCatalogFromServer()
     .then(function(){ hideCatalogError(); })
     .catch(function(e){
