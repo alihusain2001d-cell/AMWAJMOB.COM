@@ -5594,7 +5594,7 @@ function startNaAuto(){
     } else {
       rail.scrollBy({ left: -step, behavior: 'smooth' });   // RTL
     }
-  }, 2600);
+  }, 1500);   // ⏱️ سرعة الشريط — صغّر الرقم يصير أسرع، كبّره يصير أهدأ
 }
 
 function openNewArrItem(idx){
@@ -6703,7 +6703,7 @@ async function _loadProductsThrottled(loaders, concurrency) {
 var _productsLoadStarted = false;
 /* 🧪 نداء واحد بدل 16 — كل الكاتلوك يجي دفعة وحدة من السيرفر الجديد.
    نعبّي نفس المصفوفات القديمة بالضبط، فكل شاشات العرض تشتغل بدون تعديل. */
-var CAT_INFO = [], SHOP_STATUS = null, SYS_NOTICE = null;
+var CAT_INFO = [], SHOP_STATUS = null, SYS_NOTICE = null, APP_VER_INFO = null;
 
 // الأقسام الجديدة اللي طلعناها من «منوعة» — كل واحد صار قسم مستقل
 var MISC_SLUGS = ['misc','glass','touch','antenna','board','conn_lcd','keypad','waterproof',
@@ -6759,19 +6759,25 @@ async function loadCatalogFromServer(){
     miscData = miscData.concat(_take(parts, sl, lbl));
   });
 
-  SHOP_STATUS = r.shop   || null;
-  SYS_NOTICE  = r.notice || null;
-  try { renderShopNotice(); } catch(e){}
+  SHOP_STATUS  = r.shop   || null;
+  SYS_NOTICE   = r.notice || null;
+  APP_VER_INFO = r.ver    || null;
+  try { checkSystemNotice(); } catch(e){}
   loadNewArrivals();          // الشريط المتحرك — بالخلفية، ما يأخّر عرض المواد
   return r;
 }
 
-// 🚨 شريط التنبيه — عطلة أو دوام مختصر أو رسالة من الإدارة
-// ⚠️ كان مثبّت بأعلى الصفحة كلها فيغطي زر الرجوع.
-//    الحين ينحط **داخل** الشاشة الرئيسية فقط، وينزل مع السحب مثل أي محتوى.
+/* 🚨 التطبيق عنده شريط تنبيه أصلي (systemNoticeBanner) — نستخدمه هو
+   بدل ما نبني شريط ثاني ويصير عندنا تنبيهين بشكلين مختلفين.
+   هاي بقت للتوافق بس، وتحوّل النداء للشريط الأصلي. */
 function renderShopNotice(){
+  try { checkSystemNotice(); } catch(e){}
+  return _renderShopNoticeLegacy();
+}
+function _renderShopNoticeLegacy(){
   var el = document.getElementById('shopNoticeBar');
-  if (!el){
+  if (!el) return;                 // ما عاد نبنيه — الشريط الأصلي يكفي
+  if (el){
     var home = document.getElementById('homeScreen');
     if (!home) return;
     el = document.createElement('div');
@@ -7716,18 +7722,31 @@ window.addEventListener('DOMContentLoaded', function() {
 // ═══════════════════════════════════════════
 // ⚠️ إشعار عطل/صيانة ثابت — يظهر بكل فتحة تطبيق طالما الأدمن مفعّله
 // ═══════════════════════════════════════════
+/* 🚨 مصدر واحد للتنبيه: لوحة التحكم الجديدة.
+   كان يقرا من النظام القديم، فتعدّل باللوحة وما يتغيّر شي عند الزبون. */
 async function checkSystemNotice() {
   try {
-    var res = await secureApiCall('getSystemNotice', {});
+    if (!SYS_NOTICE && !SHOP_STATUS) {
+      var r = await sbRpc('app_catalog');   // لو انفتح قبل تحميل الكاتلوك
+      SYS_NOTICE  = (r && r.notice) || null;
+      SHOP_STATUS = (r && r.shop)   || null;
+    }
     var banner = document.getElementById('systemNoticeBanner');
     var textEl = document.getElementById('systemNoticeText');
     if (!banner || !textEl) return;
-    if (res && res.enabled && res.message) {
-      textEl.textContent = '⚠️ ' + res.message;
-      banner.style.display = 'block';
-    } else {
-      banner.style.display = 'none';
+
+    var txt = '';
+    if (SYS_NOTICE && SYS_NOTICE.enabled && SYS_NOTICE.message) {
+      var ico = SYS_NOTICE.kind === 'holiday' ? '🌙'
+              : SYS_NOTICE.kind === 'closed'  ? '🔒'
+              : SYS_NOTICE.kind === 'info'    ? 'ℹ️' : '⚠️';
+      txt = ico + ' ' + SYS_NOTICE.message;
+    } else if (SHOP_STATUS && SHOP_STATUS.open === false) {
+      txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+            '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     }
+    if (txt) { textEl.textContent = txt; banner.style.display = 'block'; }
+    else banner.style.display = 'none';
   } catch(e) { console.error('checkSystemNotice failed', e); }
 }
 
@@ -8662,12 +8681,14 @@ function _isNewerVersion(latest, current) {
   return false;
 }
 
+// 📲 نسخة التطبيق — من لوحة التحكم الجديدة (تبويب التنبيهات والدوام)
 async function checkAppUpdate() {
   if (!_isNativeApp) return; // الموقع دايماً آخر نسخة، هذا للتطبيق المثبّت بس
   try {
-    var res = await secureApiCall('getAppVersion', {});
-    if (res && _isNewerVersion(res.latestVersion, APP_VERSION)) {
-      showAppUpdateModal(res.message, res.storeUrl);
+    var v = APP_VER_INFO;
+    if (!v) { var r = await sbRpc('app_catalog'); v = APP_VER_INFO = (r && r.ver) || null; }
+    if (v && _isNewerVersion(v.version, APP_VERSION)) {
+      showAppUpdateModal(v.message, v.store_url);
     }
   } catch(e) { console.error('checkAppUpdate failed', e); }
 }
