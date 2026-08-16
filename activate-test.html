@@ -1136,10 +1136,13 @@ body {
 .na-all { background:none; border:none; color:var(--primary,#0EA5E9); font-weight:800;
           font-size:13px; font-family:inherit; cursor:pointer; padding:0; }
 .na-rail { display:flex; gap:10px; overflow-x:auto; padding:2px 14px 6px;
-           scroll-snap-type:x mandatory; -ms-overflow-style:none; scrollbar-width:none; }
+           scroll-snap-type:x mandatory; scroll-padding-inline:14px;
+           -ms-overflow-style:none; scrollbar-width:none; }
 .na-rail::-webkit-scrollbar { display:none; }
-.na-card { flex:0 0 118px; scroll-snap-align:start; cursor:pointer; }
-.na-img { position:relative; width:118px; height:118px; border-radius:12px; overflow:hidden;
+/* العرض يتحسب بالجافاسكربت (fitNaCards) حتى ينطبق عدد صحيح من البطاقات على
+   عرض الشاشة — بدونه تبقى بطاقة مقصوصة بالطرف مهما وقف الشريط بمكان صحيح */
+.na-card { flex:0 0 var(--na-w, 118px); scroll-snap-align:start; cursor:pointer; }
+.na-img { position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; overflow:hidden;
           background:#F8FAFC; border:1px solid var(--border-light,#E2E8F0);
           display:flex; align-items:center; justify-content:center; font-size:26px; }
 .na-img img { width:100%; height:100%; object-fit:cover; }
@@ -5650,25 +5653,54 @@ function renderNewStrip(){
 }
 
 // يتحرك لحاله، ويوقف إذا الزبون يسحب بيده — ما نقاطعه
+/* 📐 نضبط عرض البطاقة حتى ينطبق **عدد صحيح** منها على عرض الشاشة.
+
+   كان العرض ثابت 118px، وعرض الشاشة نادراً ينقسم عليه — فتبقى بطاقة
+   مقصوصة بالطرف دايماً ومنظرها مو حلو، حتى لو الشريط واقف بمكان صحيح.
+   الحين نحسب كم بطاقة تنطبق ونوزّع الفراغ عليهن. */
+var NA_GAP = 10, NA_PAD = 14;
+function fitNaCards(rail){
+  if (!rail || !rail.clientWidth) return 0;
+  var avail = rail.clientWidth - (NA_PAD * 2);
+  var n = Math.round((avail + NA_GAP) / (118 + NA_GAP));   // الأقرب لـ118px
+  if (n < 2) n = 2;
+  var w = (avail - NA_GAP * (n - 1)) / n;
+  if (w > 160) { n += 1; w = (avail - NA_GAP * (n - 1)) / n; }   // ما نخليهن ضخام بالشاشة العريضة
+  rail.style.setProperty('--na-w', w.toFixed(2) + 'px');
+  return w + NA_GAP;                                       // خطوة بطاقة وحدة
+}
+
 function startNaAuto(){
   var rail = document.getElementById('naRail');
   if (!rail) return;
   clearInterval(_naTimer);
+  fitNaCards(rail);
+  // تدوير الشاشة أو تغيير حجم النافذة يعيد الحساب
+  if (!rail._naFit){ rail._naFit = 1; window.addEventListener('resize', function(){ fitNaCards(rail); }); }
+
+  /* بعض المتصفحات ترجّع scrollLeft **سالب** بالعربي وبعضها موجب.
+     نكتشفها مرة وحدة بدل ما نفترض ونطلع غلط بنص المتصفحات. */
+  var sign = -1;
+  try { rail.scrollLeft = -1; if (rail.scrollLeft === 0) sign = 1; rail.scrollLeft = 0; } catch(e){}
+
   var paused = false, t = null;
   function hold(){ paused = true; clearTimeout(t); t = setTimeout(function(){ paused = false; }, 4000); }
   rail.addEventListener('touchstart', hold, {passive:true});
   rail.addEventListener('mouseenter', function(){ paused = true; });
   rail.addEventListener('mouseleave', function(){ paused = false; });
+
   _naTimer = setInterval(function(){
     if (paused || !document.body.contains(rail)) return;
-    var card = rail.querySelector('.na-card');
-    var step = card ? (card.offsetWidth + 10) : 130;
-    // وصل للآخر؟ يرجع للبداية بهدوء
-    if (rail.scrollLeft <= -(rail.scrollWidth - rail.clientWidth - 4)) {
-      rail.scrollTo({ left: 0, behavior: 'smooth' });
-    } else {
-      rail.scrollBy({ left: -step, behavior: 'smooth' });   // RTL
-    }
+    var step = fitNaCards(rail);
+    if (!step) return;
+    var max = rail.scrollWidth - rail.clientWidth;
+    /* نحسب الموقع **من الصفر** كل مرة بدل ما نزحف خطوة فوق خطوة —
+       الزحف يجمّع كسور وينحرف، وأي سحبة بصبعه تخلي الانحراف دائم. */
+    var idx    = Math.round(Math.abs(rail.scrollLeft) / step) + 1;
+    var target = idx * step;
+    if (target > max + 2)      target = 0;         // تجاوزنا الآخر → نلف للبداية
+    else if (target > max)     target = max;       // آخر وقفة تنطبق على النهاية بالضبط
+    rail.scrollTo({ left: sign * target, behavior: 'smooth' });
   }, 1500);   // ⏱️ سرعة الشريط — صغّر الرقم يصير أسرع، كبّره يصير أهدأ
 }
 
