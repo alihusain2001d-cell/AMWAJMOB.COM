@@ -1117,10 +1117,51 @@ body {
   margin-top: auto;
   padding-top: 8px;
 }
+/* 🔘 زر الكل / المتوفر */
+.avail-bar { display:flex; align-items:center; gap:7px; margin-bottom:10px; flex-wrap:wrap; }
+.avail-bar button {
+  padding:6px 15px; border-radius:20px; border:1.5px solid var(--border-light,#E2E8F0);
+  background:#fff; color:#64748B; font-size:13px; font-weight:800;
+  font-family:Tajawal,sans-serif; cursor:pointer;
+}
+.avail-bar button.on { background:var(--primary,#0EA5E9); color:#fff; border-color:var(--primary,#0EA5E9); }
+.avail-count { margin-right:auto; font-size:12.5px; color:#94A3B8; font-weight:700; }
+
+/* 🎞️ شريط «وصلنا حديثاً» المتحرك */
+.na-strip { margin:12px 0 4px; }
+.na-head { display:flex; align-items:center; justify-content:space-between;
+           padding:0 14px 8px; font-size:15px; }
+.na-all { background:none; border:none; color:var(--primary,#0EA5E9); font-weight:800;
+          font-size:13px; font-family:inherit; cursor:pointer; padding:0; }
+.na-rail { display:flex; gap:10px; overflow-x:auto; padding:2px 14px 6px;
+           scroll-snap-type:x mandatory; -ms-overflow-style:none; scrollbar-width:none; }
+.na-rail::-webkit-scrollbar { display:none; }
+.na-card { flex:0 0 118px; scroll-snap-align:start; cursor:pointer; }
+.na-img { position:relative; width:118px; height:118px; border-radius:12px; overflow:hidden;
+          background:#F8FAFC; border:1px solid var(--border-light,#E2E8F0);
+          display:flex; align-items:center; justify-content:center; font-size:26px; }
+.na-img img { width:100%; height:100%; object-fit:cover; }
+.na-tag { position:absolute; top:5px; right:5px; font-size:9.5px; font-weight:900;
+          padding:2px 6px; border-radius:20px; color:#fff; }
+.na-new  { background:#10B981; }
+.na-back { background:#3B82F6; }
+.na-name { font-size:12px; font-weight:700; margin-top:5px; line-height:1.4;
+           display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+           overflow:hidden; min-height:33px; }
+
 .pi-img-wrap {
   width:100%; height:160px; display:flex; align-items:center;
   justify-content:center; margin-bottom:8px; flex-shrink:0;
   border-radius:10px; background:#F8FAFC;
+  border:1px solid var(--border-light,#E2E8F0);
+  position:relative; overflow:hidden;
+}
+.pi-img-wrap.has-img { cursor:zoom-in; }
+.pi-img-ph { font-size:30px; opacity:.22; }
+.pi-zoom {
+  position:absolute; bottom:6px; left:6px; background:rgba(15,23,42,.55); color:#fff;
+  border-radius:50%; width:24px; height:24px; display:flex; align-items:center;
+  justify-content:center; font-size:12px; pointer-events:none;
 }
 .pi-img-wrap img {
   width:100%; height:160px; object-fit:contain;
@@ -1338,6 +1379,12 @@ body {
   margin-bottom: 8px;
   letter-spacing: 0.3px;
 }
+.order-item-rows { margin-top: 8px; }
+.oi-row { display:flex; align-items:baseline; gap:8px; padding:3px 0;
+          border-top:1px dashed var(--border-light,#E2E8F0); font-size:13px; }
+.oi-row:first-child { border-top:0; }
+.oi-k { color:var(--muted); min-width:62px; font-weight:700; }
+.oi-v { color:var(--text); font-weight:800; flex:1; }
 .order-item-card {
   background: var(--surface-2);
   border: 1px solid var(--border-light);
@@ -2990,7 +3037,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
             <span class="bell-badge" id="bellBadge">0</span>
           </button>
           <button class="home-icon-btn" onclick="openContactSheet()" title="تواصل معنا">📞</button>
-          <button class="home-icon-btn" onclick="openSheet('accountSheet');renderAccountSheet();" title="حسابي">👤</button>
+          <button class="home-icon-btn" onclick="goAccount()" title="حسابي">👤</button>
         </div>
       </div>
 
@@ -3169,7 +3216,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <span class="footer-tab-label">طلباتي</span>
       <span class="footer-tab-badge" id="footerOrdersBadge" style="display:none;">0</span>
     </button>
-    <button class="footer-tab" id="tab-account" onclick="openSheet('accountSheet');renderAccountSheet();">
+    <button class="footer-tab" id="tab-account" onclick="goAccount()">
       <span class="footer-tab-icon">👤</span>
       <span class="footer-tab-label">حسابي</span>
     </button>
@@ -3374,8 +3421,8 @@ const CONFIG = {
    وما يقدر يعدّل ولا يشوف بيانات زبون.
    ══════════════════════════════════════════════════════════════════════ */
 const SB = {
-  URL: "https://afbeoibaenzivxqcczdn.supabase.co",
-  KEY: "sb_publishable_8YP3HZe5friPmyxslgMIlw_ZZ6sPYwZ"
+  URL: "PUT_YOUR_PROJECT_URL_HERE",
+  KEY: "PUT_YOUR_PUBLISHABLE_KEY_HERE"
 };
 
 async function sbRpc(fn, body){
@@ -4824,15 +4871,26 @@ async function submitOrder() {
         if (clearBtn) { clearBtn.disabled = false; clearBtn.style.display = 'none'; }
         document.getElementById('cartItems').innerHTML = '';
         document.getElementById('cartSummary').style.display = 'none';
-        // رسالة خارج أوقات الدوام (السبت-الخميس 9ص-10م، الجمعة عطلة)
-        var _now = new Date();
-        var _day = _now.getDay(); // 5=جمعة
-        var _hour = _now.getHours();
+        // 🌙 رسالة خارج الدوام — تجي من لوحة التحكم مو مكتوبة بالكود.
+        //    كانت «الجمعة عطلة» و«9ص–10م» ثابتات، فلو فتحت جمعة تطلع رسالة غلط.
+        //    الحين تتبع الدوام الأسبوعي والاستثناءات اللي تحطها بنفسك.
         var _offHoursText = '';
-        if (_day === 5) {
-          _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
-        } else if (_hour < 9 || _hour >= 22) {
-          _offHoursText = '🌙 تم استلام طلبك\nأوقات الدوام 9ص–10م\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
+        if (SHOP_STATUS && SHOP_STATUS.open === false) {
+          if (SHOP_STATUS.source === 'weekly' && SHOP_STATUS.reason === 'عطلة أسبوعية') {
+            _offHoursText = '🌙 اليوم عطلة\nسيتم تجهيز طلبك بأول يوم دوام إن شاء الله ✨';
+          } else if (SHOP_STATUS.reason) {
+            _offHoursText = '🌙 ' + SHOP_STATUS.reason + '\nسيتم تجهيز طلبك أول ما نفتح ✨';
+          } else {
+            _offHoursText = '🌙 تم استلام طلبك\n' +
+              (SHOP_STATUS.from ? ('أوقات الدوام ' + SHOP_STATUS.from + ' – ' + SHOP_STATUS.to + '\n') : '') +
+              'سيتم تجهيز الطلب أثناء أوقات الدوام ✨';
+          }
+        } else if (!SHOP_STATUS) {
+          // احتياط لو السيرفر ما رد — نفس السلوك القديم حتى ما ينكسر شي
+          var _now = new Date(), _day = _now.getDay(), _hour = _now.getHours();
+          if (_day === 5) _offHoursText = '🌙 يوم الجمعة عطلة\nسيتم تجهيز طلبك يوم السبت إن شاء الله ✨';
+          else if (_hour < 9 || _hour >= 22)
+            _offHoursText = '🌙 تم استلام طلبك\nسيتم تجهيز الطلب أثناء أوقات الدوام ✨';
         }
         if (_offHoursText) {
           var _ov = document.createElement('div');
@@ -4937,6 +4995,12 @@ function showScreen(id) {
 // footerTab defined above
 
 function toLoginScreen() { closeSheet('accountSheet'); showScreen('loginScreen'); }
+
+// 👤 الزائر ما عنده حساب يعرضه — نوديه لتسجيل الدخول رأساً بدل ضغطتين
+function goAccount() {
+  if (isGuest()) { closeSheet('accountSheet'); showScreen('loginScreen'); return; }
+  openSheet('accountSheet'); renderAccountSheet();
+}
 function toRegisterScreen() { closeSheet('accountSheet'); showScreen('regPhoneScreen'); }
 
 function openOrdersSheet() {
@@ -4946,6 +5010,13 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
+  // 🕐 نحدّث حالة المحل بهدوء وقت فتح السلة — حتى لو التطبيق مفتوح من ساعات
+  //    والوقت عبر منتصف الليل، الرسالة تطلع صح مو حسب حالة قديمة.
+  try {
+    sbRpc('shop_status').then(function(st){
+      if (st) { SHOP_STATUS = st; try{ renderShopNotice(); }catch(e){} }
+    }).catch(function(){});
+  } catch(e) {}
   var guest = isGuest();
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
 
@@ -5042,7 +5113,7 @@ async function openProductSheet(type, title) {
   _activeSheetType = type;
   _activeSheetSub = null;
   sheetFlatSubType = null;
-  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات — لا نخلي ماركة قسم سابق تأثر على زر الرجوع
+  _lastBrandStr = null; _lastCatName = null; // فتح قسم جديد يبدأ من الأول — ما يبقى فلتر قسم أو ماركة عالق
   if (typeof currentPriceType !== 'undefined') currentPriceType = type;
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = null;
   document.getElementById('productsSheetTitle').textContent = title;
@@ -5119,6 +5190,7 @@ async function refreshCurrentSheet() {
 
 // Track last selected brand to re-render after refresh
 var _lastBrandStr = null;
+var _lastCatName = null;
 
 function openFlatSubSheet(subType, labelAr, icon) {
   closeFlatpowerModal();
@@ -5126,7 +5198,7 @@ function openFlatSubSheet(subType, labelAr, icon) {
   _activeSheetType = 'flatpower';
   _activeSheetSub = subType;
   sheetFlatSubType = subType;
-  _lastBrandStr = null; // فتح قسم جديد دايماً يبدأ بقائمة البراندات
+  _lastBrandStr = null; _lastCatName = null; // فتح قسم جديد يبدأ من الأول
   if (typeof currentPriceType !== 'undefined') currentPriceType = 'flatpower';
   if (typeof currentFlatSubType !== 'undefined') currentFlatSubType = subType;
   document.getElementById('productsSheetTitle').textContent = icon + ' ' + labelAr;
@@ -5203,9 +5275,82 @@ function renderSheetBrands(type) {
     {label:'موتورولا',                 brands:'Motorola'},
   ];
 
+  // 📦 «منوع» ما إله براندات — صار أقسام حقيقية (كلاس، تاچ، أنتنا، براغي…)
+  //    فنعرض الأقسام بدل شعارات الشركات.
+  if (type === 'OTHER') {
+    var counts = {};
+    (miscData || []).forEach(function(p){
+      var k = p.type || 'منوعة';
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    var names = Object.keys(counts).sort(function(a,b){ return counts[b] - counts[a]; });
+    if (!names.length){ grid.style.display = 'none'; return; }
+    var icons = {};
+    (CAT_INFO || []).forEach(function(c){ icons[c.name] = c.icon || '📦'; });
+    grid.style.display = 'grid';
+    grid.innerHTML = names.map(function(n){
+      return '<div class="sheet-brand-btn" onclick="openSheetCategory(' +
+        JSON.stringify(n).replace(/"/g,'&quot;') + ')">' +
+        '<div class="brand-logos" style="font-size:22px">' + (icons[n] || '📦') + '</div>' +
+        '<b>' + n + '</b>' +
+        '<div style="font-size:11.5px;color:#64748B;margin-top:2px">' + counts[n] + ' مادة</div>' +
+        '</div>';
+    }).join('');
+    return;
+  }
+
   const list = type === 'screens' ? screenBrands : commonBrands;
   grid.style.display = 'grid';
   grid.innerHTML = list.map(brandCard).join('');
+}
+
+/* 🔘 زر «الكل» و«المتوفر»
+   الزبون يشوف المنتهية كمان (تطلع «غير متوفر») — بس بضغطة يخفيها
+   ويشوف اللي يقدر يطلبه فعلاً. */
+var _availOnly = false;
+function setAvailOnly(v){
+  _availOnly = !!v;
+  var q = (document.getElementById('sheetSearch') || {}).value || '';
+  if (q.trim().length >= 2)   handleSheetSearch();
+  else if (_lastCatName)      openSheetCategory(_lastCatName);
+  else if (_lastBrandStr)     openSheetBrand(_lastBrandStr);
+  else                        handleSheetSearch();
+}
+function applyAvail(list){
+  return _availOnly ? (list || []).filter(function(p){ return (Number(p.qty) || 0) > 0; }) : (list || []);
+}
+function availBar(total, shown){
+  var avail = 0;
+  return '<div class="avail-bar">' +
+    '<button class="' + (!_availOnly ? 'on' : '') + '" onclick="setAvailOnly(false)">الكل</button>' +
+    '<button class="' + (_availOnly ? 'on' : '') + '" onclick="setAvailOnly(true)">✅ المتوفر</button>' +
+    '<span class="avail-count">' + shown + (shown !== total ? ' من ' + total : '') + ' مادة</span>' +
+  '</div>';
+}
+// كل قوائم المواد تمر من هنا — فالزر يشتغل بكل مكان بنفس الطريقة
+function itemsBlock(list, extraNote){
+  var all = list || [];
+  var shown = applyAvail(all);
+  var head = availBar(all.length, shown.length);
+  if (!shown.length){
+    return head + '<div style="padding:24px;text-align:center;color:#64748B;">' +
+      (_availOnly ? '📭 ماكو مادة متوفرة هنا الحين — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
+      '</div>';
+  }
+  return head + (extraNote || '') +
+    '<div class="price-items-grid">' + shown.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>';
+}
+
+// 📦 فتح قسم من أقسام «منوع»
+function openSheetCategory(catName){
+  _lastCatName = catName;
+  _lastBrandStr = null;
+  var brandsDiv = document.getElementById('sheetBrands');
+  var resultsDiv = document.getElementById('sheetResults');
+  brandsDiv.style.setProperty('display', 'none', 'important');
+  var filtered = (miscData || []).filter(function(p){ return (p.type || 'منوعة') === catName; });
+  resultsDiv.innerHTML = itemsBlock(filtered,
+    '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">' + catName + '</div>');
 }
 
 
@@ -5222,14 +5367,15 @@ function handleSheetSearch() {
       brandsDiv.style.display = 'none';
       if (!q.length) {
         var allData = _sub ? getFlatSubData(_sub) : getDataForType(_type);
-        resultsDiv.innerHTML = allData.length
-          ? '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + allData.length + ' نتيجة</div><div class="price-items-grid">' + allData.map(function(p){ return createSheetPriceItem(p); }).join('') + '</div>'
-          : '';
+        resultsDiv.innerHTML = allData.length ? itemsBlock(allData) : '';
       }
-    } else {
+    } else if (!q.length && _lastCatName) {
+      openSheetCategory(_lastCatName);      // 🔙 مسح البحث يرجّعك لقسمك مو للبداية
+    } else if (!q.length && _lastBrandStr) {
+      openSheetBrand(_lastBrandStr);        // 🔙 ونفس الشي بالبراند
+    } else if (!q.length) {
       resultsDiv.innerHTML = '';
       brandsDiv.style.display = 'grid';
-      _lastBrandStr = null; // رجعنا لقائمة البراندات — لا يبقى زر الرجوع يظن إنه لسا داخل ماركة
     }
     return;
   }
@@ -5241,19 +5387,33 @@ function handleSheetSearch() {
     attempts++;
     var data = _sub ? getFlatSubData(_sub) : getDataForType(_type);
     if ((!data || data.length === 0) && attempts < 20) { setTimeout(trySearch, 500); return; }
-    var filtered = (data||[]).filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
+
+    // 🔍 البحث يبقى **جوّا** اللي انت داخله — براند أو قسم — مو بكل المواد
+    var scope = data || [];
+    var scopeLabel = '';
+    if (_lastCatName) {
+      scope = scope.filter(function(p){ return (p.type || 'منوعة') === _lastCatName; });
+      scopeLabel = ' ضمن ' + _lastCatName;
+    } else if (_lastBrandStr) {
+      var _br = _lastBrandStr.split(',').map(function(b){ return b.trim().toLowerCase(); });
+      scope = scope.filter(function(p){ return _br.includes((p.brand||'').toLowerCase()); });
+      scopeLabel = ' ضمن ' + _lastBrandStr.split(',')[0];
+    }
+
+    var filtered = scope.filter(function(p) { return (p.name||'').toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q); });
     if (!filtered.length) {
-      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;</div>';
+      resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">لا توجد نتائج لـ &quot;' + q + '&quot;' + scopeLabel + '</div>';
       return;
     }
-    resultsDiv.innerHTML = '<div style="font-size:14px;color:#64748B;margin-bottom:8px;">' + Math.min(filtered.length,50) + ' نتيجة</div>' +
-      '<div class="price-items-grid">' + filtered.slice(0,50).map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
+    resultsDiv.innerHTML = itemsBlock(filtered.slice(0,50),
+      '<div style="font-size:13px;color:#64748B;margin-bottom:8px;">نتائج البحث' + scopeLabel + '</div>');
   }
   setTimeout(trySearch, 100);
 }
 
 function openSheetBrand(brandsStr) {
   _lastBrandStr = brandsStr; // Save for background refresh re-render
+  _lastCatName = null;       // البراند والقسم ما يشتغلون سوا
   const brands = brandsStr.split(',').map(function(b) { return b.trim().toLowerCase(); });
   const brandsDiv = document.getElementById('sheetBrands');
   const resultsDiv = document.getElementById('sheetResults');
@@ -5278,9 +5438,7 @@ function openSheetBrand(brandsStr) {
     if (!filtered.length && data && data.length > 0) {
       resultsDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">📭 لا توجد مواد لهذه الماركة</div>';
     } else {
-      resultsDiv.innerHTML =
-        '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + filtered.length + ' منتج</div>' +
-        '<div class="price-items-grid">' + filtered.map(function(p) { return createSheetPriceItem(p); }).join('') + '</div>';
+      resultsDiv.innerHTML = itemsBlock(filtered);
     }
   }
   setTimeout(tryRender, 100);
@@ -5320,6 +5478,188 @@ function getDriveImageUrl(url) {
   return '';
 }
 
+/* ══════════════════════════════════════════════════════════════
+   🆕 وصلنا حديثاً — شريط صور يتحرك لحاله بالرئيسية
+
+   الفرق عن القديم: النظام يعرف بالضبط شنو وصل، مو يخمّن.
+     🆕 جديد كلياً   = مادة ما جانت موجودة أبداً
+     🔄 رجع للتوفر   = كانت منتهية ورجعت
+     والزيادة على كمية موجودة ما تظهر بولا وحدة.
+   ══════════════════════════════════════════════════════════════ */
+var NEW_ARR = { 'new': [], back: [] }, _naTimer = null, _naTab = 'new';
+
+async function loadNewArrivals(){
+  try{
+    var r = await sbRpc('app_new_arrivals', { p_days: 14 });
+    NEW_ARR = { 'new': (r && r['new']) || [], back: (r && r.back) || [] };
+  }catch(e){ NEW_ARR = { 'new': [], back: [] }; }
+  try{ renderNewStrip(); }catch(e){}
+}
+
+function _naProduct(it){
+  return {
+    code: it.code, name: it.name || '-', brand: it.brand || '',
+    type: it.type || '', notes: it.notes || '',
+    price: Number(it.price) || 0, qty: Number(it.qty) || 0,
+    image_url: it.image_url || '',
+    itemType: (it.kind === 'screen') ? 'screens' : 'OTHER'
+  };
+}
+
+// 🎞️ الشريط المتحرك — بس المواد اللي عندها صورة (شريط صور بلا صور ما إله معنى)
+function renderNewStrip(){
+  var home = document.getElementById('homeScreen');
+  if (!home) return;
+  var box = document.getElementById('newArrStrip');
+  var items = (NEW_ARR['new'] || []).concat(NEW_ARR.back || [])
+                .filter(function(i){ return getDriveImageUrl(i.image_url); });
+
+  if (!items.length){ if (box) box.style.display = 'none'; return; }
+
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'newArrStrip';
+    var after = document.getElementById('shopNoticeBar') || home.querySelector('.home-top-bar');
+    if (after && after.nextSibling) home.insertBefore(box, after.nextSibling);
+    else home.insertBefore(box, home.firstChild);
+  }
+  box.style.display = '';
+  box.className = 'na-strip';
+
+  var cards = items.slice(0, 20).map(function(it, idx){
+    var img = getDriveImageUrl(it.image_url);
+    var isNew = (NEW_ARR['new'] || []).indexOf(it) > -1;
+    return '<div class="na-card" onclick="openNewArrItem(' + idx + ')">' +
+      '<div class="na-img"><img src="' + img + '" loading="lazy" onerror="this.parentElement.innerHTML=\'📷\'">' +
+        '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
+        (isNew ? '🆕 جديد' : '🔄 رجع') + '</span></div>' +
+      '<div class="na-name">' + sanitize(it.name || '-') + '</div>' +
+    '</div>';
+  }).join('');
+
+  box.innerHTML =
+    '<div class="na-head"><b>✨ وصلنا حديثاً</b>' +
+      '<button class="na-all" onclick="openNewItemsSheet()">عرض الكل ←</button></div>' +
+    '<div class="na-rail" id="naRail">' + cards + '</div>';
+
+  window._naItems = items.slice(0, 20);
+  startNaAuto();
+}
+
+// يتحرك لحاله، ويوقف إذا الزبون يسحب بيده — ما نقاطعه
+function startNaAuto(){
+  var rail = document.getElementById('naRail');
+  if (!rail) return;
+  clearInterval(_naTimer);
+  var paused = false, t = null;
+  function hold(){ paused = true; clearTimeout(t); t = setTimeout(function(){ paused = false; }, 4000); }
+  rail.addEventListener('touchstart', hold, {passive:true});
+  rail.addEventListener('mouseenter', function(){ paused = true; });
+  rail.addEventListener('mouseleave', function(){ paused = false; });
+  _naTimer = setInterval(function(){
+    if (paused || !document.body.contains(rail)) return;
+    var card = rail.querySelector('.na-card');
+    var step = card ? (card.offsetWidth + 10) : 130;
+    // وصل للآخر؟ يرجع للبداية بهدوء
+    if (rail.scrollLeft <= -(rail.scrollWidth - rail.clientWidth - 4)) {
+      rail.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      rail.scrollBy({ left: -step, behavior: 'smooth' });   // RTL
+    }
+  }, 2600);
+}
+
+function openNewArrItem(idx){
+  var it = (window._naItems || [])[idx];
+  if (!it) return;
+  var p = _naProduct(it);
+  var img = getDriveImageUrl(p.image_url);
+  var guest = isGuest();
+  var rows = '';
+  if (p.brand) rows += '<div class="oi-row"><span class="oi-k">الماركة</span><span class="oi-v">' + sanitize(p.brand) + '</span></div>';
+  if (p.type)  rows += '<div class="oi-row"><span class="oi-k">النوع</span><span class="oi-v">' + sanitize(p.type) + '</span></div>';
+  if (p.notes) rows += '<div class="oi-row"><span class="oi-k">الملاحظة</span><span class="oi-v">' + sanitize(p.notes) + '</span></div>';
+  rows += '<div class="oi-row"><span class="oi-k">القسم</span><span class="oi-v">' + sanitize(it.cat || '') + '</span></div>';
+
+  var priceLine = guest
+    ? '<div class="pi-price avail" style="filter:blur(5px)">99,999 IQD</div>'
+    : '<div class="pi-price avail">' + formatPriceIQD(p.price) + ' IQD</div>';
+  var actionBtn = guest
+    ? '<button class="form-btn" onclick="closeNaItem();showLoginPrompt()">🔒 سجّل لتشوف السعر</button>'
+    : '<button class="form-btn" onclick="naAdd(' + idx + ')">🛒 أضف للسلة</button>';
+
+  var ov = document.createElement('div');
+  ov.id = 'naItemOv';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99998;' +
+    'display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML =
+    '<div style="background:var(--surface,#fff);width:100%;max-width:480px;border-radius:18px 18px 0 0;' +
+      'padding:16px;max-height:90vh;overflow:auto;">' +
+      (img ? '<div class="pi-img-wrap has-img" onclick="openImgLightbox(' +
+              JSON.stringify(img).replace(/"/g,'&quot;') + ',' +
+              JSON.stringify(String(p.name)).replace(/"/g,'&quot;') + ')" style="height:200px">' +
+              '<img src="' + img + '"><span class="pi-zoom">🔍</span></div>' : '') +
+      '<div style="font-size:17px;font-weight:900;margin:6px 0 4px">' + sanitize(p.name) + '</div>' +
+      priceLine +
+      '<div class="order-item-rows" style="margin-top:10px">' + rows + '</div>' +
+      '<div style="margin-top:14px">' + actionBtn +
+        '<button class="form-btn" style="background:#E2E8F0;color:#0F172A;margin-top:8px" ' +
+        'onclick="closeNaItem()">إغلاق</button></div>' +
+    '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) closeNaItem(); });
+  document.body.appendChild(ov);
+}
+function closeNaItem(){ var e = document.getElementById('naItemOv'); if (e) e.remove(); }
+function naAdd(idx){
+  var it = (window._naItems || [])[idx];
+  if (!it) return;
+  var pid = cacheProduct(_naProduct(it));
+  try { piDirectAdd(pid, null); } catch(e){}
+  closeNaItem();
+  try { showToast && showToast('✅ انضافت للسلة'); } catch(e){}
+}
+
+// 🖼️ صورة انكسرت — نرجّع الإطار الفاضي بدل ما تصير فجوة بالبطاقة
+function piImgFail(img){
+  var w = img.parentElement;
+  if (!w) return;
+  w.classList.remove('has-img');
+  w.removeAttribute('onclick');
+  w.removeAttribute('title');
+  w.innerHTML = '<span class="pi-img-ph">📷</span>';
+}
+
+/* 🔍 تكبير الصورة
+   كانت الدالة هاي **مو موجودة** رغم إن البطاقات تنديها —
+   يعني الضغط على أي صورة ما كان يسوي شي إطلاقاً. */
+function openImgLightbox(url, caption) {
+  if (!url) return;
+  var old = document.getElementById('imgLightbox');
+  if (old) old.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'imgLightbox';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.92);z-index:100000;' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'padding:18px;backdrop-filter:blur(3px);';
+
+  ov.innerHTML =
+    '<button aria-label="إغلاق" style="position:absolute;top:calc(14px + env(safe-area-inset-top,0px));' +
+      'left:16px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:50%;' +
+      'width:40px;height:40px;font-size:22px;cursor:pointer;line-height:1;">✕</button>' +
+    '<img src="' + url + '" style="max-width:100%;max-height:78vh;object-fit:contain;' +
+      'border-radius:14px;background:#fff;">' +
+    (caption ? '<div style="color:#fff;font-size:15px;font-weight:700;margin-top:14px;' +
+      'text-align:center;max-width:92%;line-height:1.6;">' + sanitize(caption) + '</div>' : '') +
+    '<div style="color:rgba(255,255,255,.55);font-size:12.5px;margin-top:10px;">اضغط بأي مكان للإغلاق</div>';
+
+  function close(){ ov.remove(); document.removeEventListener('keydown', onKey); }
+  function onKey(e){ if (e.key === 'Escape') close(); }
+  ov.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(ov);
+}
+
 function createSheetPriceItem(p) {
   var price = Number(String(p.price||'').replace(/[^0-9]/g,'')) || 0;
   var qty = Number(p.qty) || 0;
@@ -5327,7 +5667,14 @@ function createSheetPriceItem(p) {
   var typeHtml = (sheetPriceType === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+  // 🖼️ الإطار موجود دايماً بنفس القياس — بصورة أو بدونها — حتى تبقى البطاقات متساوية
+  var imgHtml = imgUrl
+    ? '<div class="pi-img-wrap has-img" title="اضغط للتكبير" onclick="event.stopPropagation();openImgLightbox(' +
+        JSON.stringify(imgUrl).replace(/"/g, '&quot;') + ',' +
+        JSON.stringify(String(p.name || '')).replace(/"/g, '&quot;') + ');">' +
+        '<img src="' + imgUrl + '" loading="lazy" onerror="piImgFail(this);">' +
+        '<span class="pi-zoom">🔍</span></div>'
+    : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
 
   var priceHtml, cartRow;
   var isToolsSheet = (sheetPriceType === 'tools');
@@ -5349,7 +5696,7 @@ function createSheetPriceItem(p) {
       '</div>';
   }
 
-  return '<div class="price-item" style="' + (imgUrl ? '' : 'justify-content:space-between;') + '">' + imgHtml +
+  return '<div class="price-item">' + imgHtml +
     '<div class="pi-info">' +
       '<div class="pi-name">' + sanitize(p.name||'-') + '</div>' +
       '<div class="pi-brand">' + sanitize(p.brand||'-') + '</div>' +
@@ -5556,6 +5903,41 @@ function _orderDateStr(o) {
   } catch(e) { return ''; }
 }
 
+
+/* 🧾 تفاصيل مادة داخل الطلب — مكان واحد يخدم «طلباتي» وكل عرض للطلب،
+   حتى ما يختلف الشكل بين مكان ومكان.
+     الشاشة     : الاسم · الماركة · النوع · الملاحظة · السعر
+     باقي المواد: الاسم · السعر     (ما عندها تفاصيل أصلاً) */
+function _oiRow(label, val, ltr){
+  return '<div class="oi-row"><span class="oi-k">' + label + '</span>' +
+         '<span class="oi-v"' + (ltr ? ' dir="ltr"' : '') + '>' + sanitize(val) + '</span></div>';
+}
+function _orderItemHtml(it){
+  var price = Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0;
+  var qty   = Number(it.quantity) || 1;
+  // شاشة؟ إما مكتوب صراحة، أو عندها تفاصيل ما تجي إلا بالشاشات
+  var isScreen = (it.itemType === 'screens') ||
+                 !!(String(it.type||'').trim() || String(it.notes||'').trim());
+  var rows = '';
+  if (isScreen){
+    if (String(it.brand||'').trim()) rows += _oiRow('الماركة', it.brand);
+    if (String(it.type||'').trim())  rows += _oiRow('النوع', it.type);
+    if (String(it.notes||'').trim()) rows += _oiRow('الملاحظة', it.notes);
+  }
+  rows += _oiRow('السعر', formatPriceIQD(price) + ' د.ع', true);
+  if (qty > 1) rows += _oiRow('المجموع', formatPriceIQD(price * qty) + ' د.ع', true);
+
+  return '<div class="order-item-card">' +
+      '<div class="order-item-top">' +
+        '<div class="order-item-name" style="flex:1;margin:0">' + sanitize(it.name || '-') + '</div>' +
+        '<span class="order-item-qty-pill">× ' + qty + '</span>' +
+      '</div>' +
+      ((it.itemType === 'screens' && it.hasWarranty)
+        ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '') +
+      '<div class="order-item-rows">' + rows + '</div>' +
+    '</div>';
+}
+
 function _orderMoney(o) {
   var total = Number(String(o.total||'').replace(/[^0-9]/g,'')) || 0;
   var itemsSum = (o.items || []).reduce(function(s, it){
@@ -5641,20 +6023,7 @@ function openOrderDetail(orderId) {
     var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
     var qty = it.quantity || 1;
     var itemTotal = price * qty;
-    var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
-    var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
-    var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
-    var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
-    return '<div class="order-item-card">' +
-      '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
-      '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
-      warrantyBadge +
-      '<div class="order-item-meta">' +
-        '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
-        '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
-      '</div>' +
-      noteHtml +
-    '</div>';
+    return _orderItemHtml(it);
   }).join('') || '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;">لا توجد منتجات</div>';
 
   var cancelBtn = _orderIsCancellable(o)
@@ -5805,21 +6174,7 @@ function loadMyOrdersOld() {
         var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
         var qty = it.quantity || 1;
         var itemTotal = price * qty;
-        var typeBadge = it.type ? '<span class="order-item-type-badge">' + sanitize(it.type) + '</span>' : '';
-        var brandBadge = it.brand ? '<span class="order-item-brand-badge">' + sanitize(it.brand) + '</span>' : '';
-        var warrantyBadge = (it.itemType === 'screens' && it.hasWarranty) ? '<div class="order-item-warranty">🛡️ مع ضمان</div>' : '';
-        var noteHtml = (it.notes && String(it.notes).trim()) ? '<div class="order-item-note">📝 <span>' + sanitize(it.notes) + '</span></div>' : '';
-
-        return '<div class="order-item-card">' +
-          '<div class="order-item-top">' + typeBadge + brandBadge + '<span class="order-item-qty-pill">× ' + qty + '</span></div>' +
-          '<div class="order-item-name">' + sanitize(it.name || '-') + '</div>' +
-          warrantyBadge +
-          '<div class="order-item-meta">' +
-            '<span><strong>السعر:</strong> <span dir="ltr">' + formatPriceIQD(price) + '</span> د.ع</span>' +
-            '<span><strong>المجموع:</strong> <span dir="ltr">' + formatPriceIQD(itemTotal) + '</span> د.ع</span>' +
-          '</div>' +
-          noteHtml +
-        '</div>';
+        return _orderItemHtml(it);
       }).join('');
 
       var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
@@ -5988,70 +6343,79 @@ function openNewItemsSheet() {
   var u = JSON.parse(localStorage.getItem('amwaj_user')||'null');
   if (!u && !isGuest()) { showScreen('loginScreen'); return; }
   openSheet('newItemsSheet');
+  _naTab = 'new';
+  renderNewItemsSheet();
+  // نحدّثها بالخلفية حتى تكون آخر شي
+  loadNewArrivals().then(function(){ renderNewItemsSheet(); });
+}
+
+function naSwitch(tab){ _naTab = tab; renderNewItemsSheet(); }
+
+function renderNewItemsSheet(){
   var body = document.getElementById('newItemsSheetBody');
-  body.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto 12px;width:32px;height:32px;"></div><div style="color:#64748B;font-size:17px;">جاري تحميل المواد الجديدة...</div></div>';
+  if (!body) return;
+  var nNew = (NEW_ARR['new']||[]).length, nBack = (NEW_ARR.back||[]).length;
 
-  secureApiCall('getNewItems').then(function(items) {
-    if (!items || !items.length) {
-      body.innerHTML =
-        '<div style="text-align:center;padding:40px 20px;">' +
-          '<div style="font-size:48px;margin-bottom:12px;">📦</div>' +
-          '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:8px;">لا يوجد جديد</div>' +
-          '<div style="font-size:16px;color:#94A3B8;line-height:1.7;">أي مادة تُضاف للمخزون خلال آخر 30 يوم<br>ستظهر هنا تلقائياً</div>' +
-        '</div>';
-      return;
-    }
+  // 🆕 جديد كلياً  |  🔄 رجع للتوفر  — منفصلين حسب طلب علي
+  var tabs =
+    '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
+      '<button onclick="naSwitch(\'new\')" style="flex:1;padding:10px;border-radius:11px;border:1.5px solid ' +
+        (_naTab==='new' ? '#10B981;background:#10B981;color:#fff' : '#E2E8F0;background:#fff;color:#64748B') +
+        ';font-weight:800;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">🆕 جديد كلياً (' + nNew + ')</button>' +
+      '<button onclick="naSwitch(\'back\')" style="flex:1;padding:10px;border-radius:11px;border:1.5px solid ' +
+        (_naTab==='back' ? '#3B82F6;background:#3B82F6;color:#fff' : '#E2E8F0;background:#fff;color:#64748B') +
+        ';font-weight:800;font-size:14px;font-family:Tajawal,sans-serif;cursor:pointer;">🔄 رجع للتوفر (' + nBack + ')</button>' +
+    '</div>';
 
-    var html = '<div style="font-size:17px;font-weight:700;color:#16A34A;margin-bottom:12px;padding:8px 12px;background:#DCFCE7;border-radius:10px;">✨ ' + items.length + ' مادة وصلت حديثاً</div><div class="price-items-grid">';
+  var items = NEW_ARR[_naTab] || [];
+  if (!items.length){
+    body.innerHTML = tabs +
+      '<div style="text-align:center;padding:36px 20px;">' +
+        '<div style="font-size:44px;margin-bottom:10px;">📦</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:6px;">' +
+          (_naTab==='new' ? 'ماكو مواد جديدة' : 'ماكو مواد رجعت للتوفر') + '</div>' +
+        '<div style="font-size:14px;color:#94A3B8;line-height:1.7;">آخر 14 يوم</div></div>';
+    return;
+  }
 
-    items.forEach(function(item) {
-      var price = Number(item.price) || 0;
-      var typeKey = _newItemsTypeMap[item.source] || 'screens';
-      var priceHtml, cartRow;
+  window._naSheetItems = items;
+  var guest = isGuest();
+  var cards = items.map(function(it, idx){
+    var p = _naProduct(it);
+    var img = getDriveImageUrl(p.image_url);
+    var imgHtml = img
+      ? '<div class="pi-img-wrap has-img" onclick="event.stopPropagation();openImgLightbox(' +
+          JSON.stringify(img).replace(/"/g,'&quot;') + ',' +
+          JSON.stringify(String(p.name)).replace(/"/g,'&quot;') + ')"><img src="' + img +
+          '" loading="lazy" onerror="piImgFail(this)"><span class="pi-zoom">🔍</span></div>'
+      : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
+    var priceHtml = guest
+      ? '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>'
+      : '<div class="pi-price avail">' + formatPriceIQD(p.price) + ' IQD</div>';
+    var cartRow = guest
+      ? '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>'
+      : '<div class="pi-cart-row"><button class="add-to-cart-btn" onclick="naSheetAdd(' + idx + ')">🛒 أضف</button></div>';
+    return '<div class="price-item">' + imgHtml +
+      '<div class="pi-info">' +
+        '<div class="pi-name">' + sanitize(p.name) + '</div>' +
+        '<div class="pi-brand">' + sanitize(it.cat || p.brand || '-') + '</div>' +
+        (p.type ? '<div class="pi-type">' + sanitize(p.type) + '</div>' : '') +
+        priceHtml +
+        (p.notes ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '') +
+      '</div>' + cartRow + '</div>';
+  }).join('');
 
-      var itemImgUrl = getDriveImageUrl(item.image_url);
-      var itemImgHtml = itemImgUrl ? '<div class="pi-img-wrap"><img src="' + itemImgUrl + '" onerror="this.parentElement.innerHTML=\'\'"></div>' : '<div class="pi-img-wrap"></div>';
-      var dateHtml = item.date_added ? '<div style="font-size:12px;color:#94A3B8;margin-top:3px;">📅 ' + item.date_added + '</div>' : '';
+  body.innerHTML = tabs +
+    '<div style="font-size:14px;color:#64748B;margin-bottom:10px;">' + items.length + ' مادة</div>' +
+    '<div class="price-items-grid">' + cards + '</div>';
+}
 
-      if (isGuest()) {
-        priceHtml = '<div class="pi-price avail" style="filter:blur(5px);cursor:pointer;" onclick="showLoginPrompt()">99,999 IQD</div>';
-        cartRow = '<div class="pi-cart-row"><button class="add-to-cart-btn gray-btn" style="border-radius:10px;" onclick="showLoginPrompt()">🔒 سجل</button></div>';
-      } else {
-        var pObj = {
-          name: item.name, brand: item.brand||'', type: item.type||'',
-          price: price, qty: item.qty||0, notes: item.notes||'',
-          image_url: item.image_url||'', itemType: typeKey
-        };
-        var pid = cacheProduct(pObj);
-        var uid = 'q_' + Math.random().toString(36).substr(2,7);
-        priceHtml = '<div class="pi-price avail">' + formatPriceIQD(price) + ' IQD</div>';
-        cartRow =
-          '<div class="pi-cart-row">' +
-            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')">+</button>' +
-            '<button class="add-to-cart-btn" onclick="piDirectAdd(\'' + pid + '\',\'' + uid + '\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
-            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\'' + pid + '\',\'' + uid + '\')">−</button>' +
-          '</div>';
-      }
-
-      html +=
-        '<div class="price-item">' +
-          itemImgHtml +
-          '<div class="pi-info">' +
-            '<span class="pi-type" style="background:#EFF6FF;color:#0284C7;">' + (item.icon||'') + ' ' + sanitize(item.source||'') + '</span>' +
-            '<div class="pi-name" style="margin-top:5px;">' + sanitize(item.name||'-') + '</div>' +
-            (item.brand ? '<div class="pi-brand">' + sanitize(item.brand) + '</div>' : '') +
-            (item.type ? '<span class="pi-type" style="background:#F0FDF4;color:#15803D;margin-top:4px;display:inline-block;">' + sanitize(item.type) + '</span>' : '') +
-            priceHtml + dateHtml +
-            (item.notes ? '<div class="pi-notes">📝 ' + sanitize(item.notes) + '</div>' : '') +
-          '</div>' +
-          cartRow +
-        '</div>';
-    });
-
-    body.innerHTML = html + '</div>';
-  }).catch(function(e) {
-    body.innerHTML = '<div class="result error" style="margin:20px;">⚠️ فشل تحميل المواد الجديدة<br><small>' + (e.message||'') + '</small></div>';
-  });
+function naSheetAdd(idx){
+  var it = (window._naSheetItems || [])[idx];
+  if (!it) return;
+  var pid = cacheProduct(_naProduct(it));
+  try { piDirectAdd(pid, null); } catch(e){}
+  try { showToast && showToast('✅ انضافت للسلة'); } catch(e){}
 }
 
 function openSearchSheet() {
@@ -6127,6 +6491,11 @@ function loadNewItems() {
     'باب سيم':'flatpower','بصمة':'flatpower','منوعة':'flatpower'
   };
 
+  // 🎞️ استبدله الشريط المتحرك بأعلى الصفحة — نخفي القديم بدل ما يتكرر نفس المحتوى
+  if (label) label.style.display = 'none';
+  if (grid)  grid.style.display  = 'none';
+  return;
+  /* eslint-disable no-unreachable */
   secureApiCall('getNewItems').then(function(items) {
     if (!items || !items.length) {
       label.style.display = 'none';
@@ -6354,18 +6723,27 @@ async function loadCatalogFromServer(){
   SHOP_STATUS = r.shop   || null;
   SYS_NOTICE  = r.notice || null;
   try { renderShopNotice(); } catch(e){}
+  loadNewArrivals();          // الشريط المتحرك — بالخلفية، ما يأخّر عرض المواد
   return r;
 }
 
 // 🚨 شريط التنبيه — عطلة أو دوام مختصر أو رسالة من الإدارة
+// ⚠️ كان مثبّت بأعلى الصفحة كلها فيغطي زر الرجوع.
+//    الحين ينحط **داخل** الشاشة الرئيسية فقط، وينزل مع السحب مثل أي محتوى.
 function renderShopNotice(){
   var el = document.getElementById('shopNoticeBar');
   if (!el){
+    var home = document.getElementById('homeScreen');
+    if (!home) return;
     el = document.createElement('div');
     el.id = 'shopNoticeBar';
-    el.style.cssText = 'position:sticky;top:0;z-index:900;padding:9px 14px;font-size:13.5px;'+
-      'font-weight:800;text-align:center;display:none;font-family:Tajawal,sans-serif;';
-    document.body.insertBefore(el, document.body.firstChild);
+    el.style.cssText = 'margin:10px 12px 0;padding:10px 14px;border-radius:12px;'+
+      'font-size:13.5px;font-weight:800;text-align:center;display:none;'+
+      'font-family:Tajawal,sans-serif;line-height:1.7;';
+    // بعد الشريط العلوي مباشرة — فما يغطي ولا زر
+    var bar = home.querySelector('.home-top-bar');
+    if (bar && bar.nextSibling) home.insertBefore(el, bar.nextSibling);
+    else home.insertBefore(el, home.firstChild);
   }
   var txt = '', bg = '#FFFBEB', fg = '#92400E';
   if (SYS_NOTICE && SYS_NOTICE.enabled && SYS_NOTICE.message){
@@ -8337,7 +8715,14 @@ function createAllProdItem(p, typeKey) {
   var typeHtml = (typeKey === 'screens' && p.type) ? '<div class="pi-type">' + p.type + '</div>' : '';
   var notesHtml = (p.notes && p.notes.trim()) ? '<div class="pi-notes">&#128221; ' + sanitize(p.notes) + '</div>' : '';
   var imgUrl = getDriveImageUrl(p.image_url);
-  var imgHtml = imgUrl ? '<div class="pi-img-wrap" onclick="event.stopPropagation();openImgLightbox(\''+imgUrl+'\');" style="cursor:zoom-in;"><img src="' + imgUrl + '" onerror="this.parentElement.innerHTML=\'\';"></div>' : '<div class="pi-img-wrap"></div>';
+  // 🖼️ الإطار موجود دايماً بنفس القياس — بصورة أو بدونها — حتى تبقى البطاقات متساوية
+  var imgHtml = imgUrl
+    ? '<div class="pi-img-wrap has-img" title="اضغط للتكبير" onclick="event.stopPropagation();openImgLightbox(' +
+        JSON.stringify(imgUrl).replace(/"/g, '&quot;') + ',' +
+        JSON.stringify(String(p.name || '')).replace(/"/g, '&quot;') + ');">' +
+        '<img src="' + imgUrl + '" loading="lazy" onerror="piImgFail(this);">' +
+        '<span class="pi-zoom">🔍</span></div>'
+    : '<div class="pi-img-wrap"><span class="pi-img-ph">📷</span></div>';
 
   var priceHtml, cartRow;
   if (!avail) {
