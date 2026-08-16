@@ -9251,13 +9251,49 @@ function updateSystemNoticeStatusLabel() {
   label.textContent = toggle.checked ? 'مفعّل' : 'متوقف';
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   🔑 كلمة سر اللوحة — للسيرفر الجديد
+
+   هذي الأقسام (الإشعار + نسخة التطبيق) كانت تكتب على السيرفر القديم،
+   بينما التطبيق صار يقرا من الجديد — يعني تحفظ وما يتغيّر شي عند الزبون
+   وبدون أي رسالة خطأ. صارت تشتغل على الجديد.
+
+   ⚠️ الكلمة تنسأل وقت الحاجة وتبقى بالذاكرة لحد ما تسكّر التطبيق —
+      ما تنحفظ بالجهاز أبداً، حتى لو أحد مسك تلفونك ما يلكاها.
+   ══════════════════════════════════════════════════════════════════ */
+var _panelPw = null;
+function panelPw(force) {
+  if (force) _panelPw = null;
+  if (!_panelPw) {
+    var p = prompt('🔑 كلمة سر لوحة التحكم');
+    if (!p) return null;
+    _panelPw = p;
+  }
+  return _panelPw;
+}
+// ترجّع البيانات، وإذا الكلمة غلط تنساها وترمي خطأ واضح
+async function panelRpc(fn, body) {
+  var pw = panelPw(false);
+  if (!pw) throw new Error('لازم كلمة السر');
+  var r = await sbRpc(fn, Object.assign({ p_key: pw }, body || {}));
+  if (r && r['خطأ']) { _panelPw = null; throw new Error(r['خطأ']); }
+  return r;
+}
+
+// القراءة ما تحتاج كلمة سر — الإشعار والنسخة عامّين بالكاتلوك أصلاً.
+// فما نزعجك بطلب الكلمة إلا وقت الحفظ.
+async function _panelCur() {
+  var r = await sbRpc('app_catalog');
+  return { notice: (r && r.notice) || {}, ver: (r && r.ver) || {} };
+}
+
 async function loadSystemNoticeAdmin() {
   try {
-    var res = await secureApiCall('getSystemNotice', {});
+    var res = (await _panelCur()).notice;
     var toggle = document.getElementById('systemNoticeToggle');
     var msgEl = document.getElementById('systemNoticeMessage');
-    if (toggle) toggle.checked = !!(res && res.enabled);
-    if (msgEl) msgEl.value = (res && res.message) || '';
+    if (toggle) toggle.checked = !!res.enabled;
+    if (msgEl) msgEl.value = res.message || '';
     updateSystemNoticeStatusLabel();
   } catch(e) { console.error('loadSystemNoticeAdmin failed', e); }
 }
@@ -9278,7 +9314,12 @@ async function saveSystemNotice() {
   btn.disabled = true;
   btn.textContent = 'جاري الحفظ...';
   try {
-    await secureApiCall('setSystemNotice', { adminKey: getAdminKey(), enabled: enabled, message: message });
+    // نحافظ على نوع الإشعار (عطلة/مغلق/معلومة) اللي منضبط من اللوحة الكبيرة
+    var cur = (await _panelCur()).notice;
+    await panelRpc('web_setting_set', {
+      p_name: 'system_notice',
+      p_value: { enabled: enabled, message: message, kind: cur.kind || 'warn' }
+    });
     if (result) {
       result.style.display = 'block';
       result.style.color = '#166534';
@@ -9301,11 +9342,11 @@ async function saveSystemNotice() {
 // ═══════════════════════════════════════════
 async function loadAppVersionAdmin() {
   try {
-    var res = await secureApiCall('getAppVersion', {});
+    var res = (await _panelCur()).ver;
     var vEl = document.getElementById('appVersionInput');
     var mEl = document.getElementById('appVersionMessage');
-    if (vEl) vEl.value = (res && res.latestVersion) || '';
-    if (mEl) mEl.value = (res && res.message) || '';
+    if (vEl) vEl.value = res.version || '';
+    if (mEl) mEl.value = res.message || '';
   } catch(e) { console.error('loadAppVersionAdmin failed', e); }
 }
 
@@ -9325,7 +9366,12 @@ async function saveAppVersion() {
   btn.disabled = true;
   btn.textContent = 'جاري الحفظ...';
   try {
-    await secureApiCall('setAppVersion', { adminKey: getAdminKey(), latestVersion: latestVersion, message: message });
+    // نحافظ على رابط المتجر المنضبط من اللوحة الكبيرة
+    var cur = (await _panelCur()).ver;
+    await panelRpc('web_setting_set', {
+      p_name: 'app_version',
+      p_value: { version: latestVersion, message: message, store_url: cur.store_url || '' }
+    });
     if (result) {
       result.style.display = 'block';
       result.style.color = '#166534';
