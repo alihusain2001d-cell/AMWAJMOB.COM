@@ -17,7 +17,9 @@
 </head>
 <body>
 <!-- ⚠️ إشعار عطل/صيانة — يظهر بكل فتحة تطبيق طالما مفعّل من لوحة التحكم -->
-<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:9998;">
+<!-- 🚨 شريط التنبيه — z-index كان 9998 فيطفو فوق كل شي بضمنه رؤوس الصفحات
+     وزر الرجوع. صار 1: يبان بالرئيسية، وأي صفحة تنفتح فوقه تغطيه طبيعي. -->
+<div id="systemNoticeBanner" style="display:none;position:relative;background:#DC2626;color:#fff;padding:10px 40px;font-size:13px;font-weight:800;font-family:Tajawal,sans-serif;text-align:center;line-height:1.5;z-index:1;">
   <span id="systemNoticeText"></span>
   <button onclick="dismissSystemNotice()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:15px;width:24px;height:24px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
 </div>
