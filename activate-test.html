@@ -3296,10 +3296,7 @@ function openSheet(id) {
   if (_sheetStack[_sheetStack.length - 1] !== id) {
     _sheetStack.push(id);
   }
-  // Push history state for browser back button
-  try {
-    history.pushState({ sheet: id }, '');
-  } catch(e) {}
+  _navEnsure();   // 🔙 نحجز خطوة رجوع وحدة تكفي كل المستويات
 }
 
 function closeSheet(id) {
@@ -3313,41 +3310,71 @@ function closeSheet(id) {
   if (_sheetStack.length === 0) {
     document.body.style.overflow = '';
   }
+  _navRelease();   // 🔙 سكّر بيده → نسحب خطوة الرجوع اللي حجزناها
 }
 
-// Close topmost open sheet (used by Android back button)
+/* ══════════════════════════════════════════════════════════════════
+   🔙 الرجوع — زر الأندرويد وسحبة الآيفون
+
+   الخلل القديم كان بحساب الخطوات:
+     • فتح صفحة يدفع خطوة بالتاريخ، بس السكّر بالـ ✕ ما يسحبها
+       → تتكدّس خطوات وهمية.
+     • الدخول جوّا براند أو قسم ما يدفع خطوة، بس الرجوع يستهلك وحدة
+       → يصير عندك رجعات أكثر من الخطوات المحجوزة.
+   فأول سحبة بالآيفون تلقى التاريخ فاضي وتطلعك للرئيسية.
+
+   الحل: خطوة وحدة بس («علامة») تبقى محجوزة طول ما أكو شي مفتوح.
+   كل رجوع يستهلكها ونعيد حجزها فوراً إذا بعده أكو شي مفتوح،
+   ولما يسكّر كلشي بيده نسحبها إحنا. فالحساب ما يختل مهما تعمّق.
+   ══════════════════════════════════════════════════════════════════ */
+var _navGuard   = false;   // هل حاجزين خطوة حالياً؟
+var _navSelfPop = false;   // الرجعة الجاية إحنا سويناها — تتجاهل
+var _inPopBack  = false;   // دا ننفّذ رجوع — لا تسحب خطوة زيادة
+
+// أكو شي مفتوح فوق الرئيسية؟
+function _navOpen() {
+  var lb = document.getElementById('imgLightbox');
+  if (lb && lb.parentNode && lb.style.display !== 'none') return true;
+  return _sheetStack.length > 0;
+}
+function _navEnsure() {
+  if (_navGuard) return;
+  try { history.pushState({ amwaj: 1 }, ''); _navGuard = true; } catch (e) {}
+}
+function _navRelease() {
+  if (!_navGuard || _inPopBack || _navOpen()) return;
+  _navGuard = false; _navSelfPop = true;
+  try { history.back(); } catch (e) { _navSelfPop = false; }
+}
+
+// يرجع **مستوى واحد بس** — يستخدمه زر الأندرويد وسحبة الآيفون
 function closeTopSheet() {
+  // ١) الصورة المكبّرة أول شي — هيه فوق كلشي
+  var lb = document.getElementById('imgLightbox');
+  if (lb && lb.parentNode && lb.style.display !== 'none') {
+    if (lb.querySelector('#imgLightboxImg')) lb.style.display = 'none';  // الثابتة
+    else lb.remove();                                                     // المؤقتة
+    return true;
+  }
   if (_sheetStack.length === 0) return false;
   var topId = _sheetStack[_sheetStack.length - 1];
-  // Smart back for products sheet (brand sub-views)
-  if (topId === 'productsSheet') {
-    // Tools sheet has no brands - close directly
-    if (sheetPriceType === 'tools') {
-      closeSheet(topId);
-      return true;
-    }
-    // If we're inside a brand's products → go back to brands list
-    if (_lastBrandStr) {
-      backToSheetBrands();
-      return true;
-    }
-  }
+  // ٢) صفحة المواد إلها رجوع ذكي (براند / قسم منوعة) —
+  //    ننده نفس دالة زر الشاشة حتى السحبة والزر يتصرفون سوا
+  if (topId === 'productsSheet') { productsSheetBack(); return true; }
   closeSheet(topId);
   return true;
 }
 
-// Browser/Android back button handler
+// زر الرجوع بالأندرويد + سحبة الرجوع بالآيفون
 window.addEventListener('popstate', function(e) {
-  // If a sheet is open, close it and prevent default back behavior
-  if (_sheetStack.length > 0) {
-    closeTopSheet();
-    // Push state again so we don't exit on next back
-    try { history.pushState({}, ''); } catch(err) {}
-  }
+  if (_navSelfPop) { _navSelfPop = false; return; }   // خطوة سحبناها إحنا
+  if (!_navOpen())  { _navGuard = false; return; }    // ماكو شي مفتوح — خليه يطلع طبيعي
+  _inPopBack = true;
+  try { closeTopSheet(); } finally { _inPopBack = false; }
+  // بعده أكو شي مفتوح؟ نعيد حجز الخطوة للرجعة الجاية
+  if (_navOpen()) { try { history.pushState({ amwaj: 1 }, ''); } catch (err) {} _navGuard = true; }
+  else _navGuard = false;
 });
-
-// Initialize history state on load so first back press closes a sheet
-try { history.replaceState({ initial: true }, ''); } catch(e) {}
 
 // ── Dismiss keyboard on tap outside input ──
 document.addEventListener('click', function(e) {
@@ -5559,7 +5586,7 @@ function renderNewStrip(){
     var img = getDriveImageUrl(it.image_url);
     var isNew = (NEW_ARR['new'] || []).indexOf(it) > -1;
     var tag = '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
-              (isNew ? '🆕 جديد' : '🔄 رجع') + '</span>';
+              (isNew ? '🆕 جديد' : '🔄 رجع اتوفر') + '</span>';
     var inner = img
       ? '<img src="' + img + '" loading="lazy" onerror="naImgFail(this)">' + tag
       : '<span class="na-ph">📷</span>' + tag;
@@ -5690,11 +5717,12 @@ function openImgLightbox(url, caption) {
       'text-align:center;max-width:92%;line-height:1.6;">' + sanitize(caption) + '</div>' : '') +
     '<div style="color:rgba(255,255,255,.55);font-size:12.5px;margin-top:10px;">اضغط بأي مكان للإغلاق</div>';
 
-  function close(){ ov.remove(); document.removeEventListener('keydown', onKey); }
+  function close(){ ov.remove(); document.removeEventListener('keydown', onKey); _navRelease(); }
   function onKey(e){ if (e.key === 'Escape') close(); }
   ov.addEventListener('click', close);
   document.addEventListener('keydown', onKey);
   document.body.appendChild(ov);
+  _navEnsure();   // 🔙 سحبة الرجوع تسكّر الصورة بس، ما تطلعك من الصفحة
 }
 
 function createSheetPriceItem(p) {
