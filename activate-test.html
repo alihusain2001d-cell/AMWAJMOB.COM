@@ -3347,6 +3347,27 @@ function _navRelease() {
   try { history.back(); } catch (e) { _navSelfPop = false; }
 }
 
+/* 🍎 إجبار الآيفون يعيد رسم الشاشة بعد سحبة الرجوع
+
+   iOS يخزّن «لقطة صورة» للصفحة لكل خطوة بالتاريخ، وبعد ما تخلص السحبة
+   يظل يعرض اللقطة القديمة (الرئيسية) بدل المحتوى الحي — فتشوف الشاشة
+   مجمّدة رغم إن التطبيق فعلياً رجع للبراندات، وأول لمسة تفكّها.
+
+   الحل: نغيّر الشفافية فرق ما ينشاف بالعين (0.9999) ونرجّعها.
+   هذا يجبر النظام يبني طبقة رسم جديدة فوراً ويرمي اللقطة.
+   ونعيدها مرة ثانية بعد 80ms لأن حركة السحب تكون بعدها ما استقرت. */
+function _navRepaint() {
+  var h = document.documentElement;
+  if (!h || !h.style) return;
+  function kick() {
+    h.style.opacity = '0.9999';
+    void h.offsetHeight;              // يجبر إعادة حساب فورية
+    requestAnimationFrame(function(){ h.style.opacity = ''; });
+  }
+  kick();
+  setTimeout(kick, 80);
+}
+
 // يرجع **مستوى واحد بس** — يستخدمه زر الأندرويد وسحبة الآيفون
 function closeTopSheet() {
   // ١) الصورة المكبّرة أول شي — هيه فوق كلشي
@@ -3374,6 +3395,7 @@ window.addEventListener('popstate', function(e) {
   // بعده أكو شي مفتوح؟ نعيد حجز الخطوة للرجعة الجاية
   if (_navOpen()) { try { history.pushState({ amwaj: 1 }, ''); } catch (err) {} _navGuard = true; }
   else _navGuard = false;
+  _navRepaint();   // 🍎 حتى الآيفون ما يضل معلّق على اللقطة القديمة
 });
 
 // ── Dismiss keyboard on tap outside input ──
