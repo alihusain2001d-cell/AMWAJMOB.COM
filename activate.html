@@ -4367,15 +4367,33 @@ async function sendData() {
     let start = document.getElementById("start").value;
     if (!name || !phone || !invoice || !screenCode) { alert("أكمل جميع الحقول"); throw "stop"; }
     if (usedInvoices.has(screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
-    const warranties = await secureApiCall('getWarranties', { customerToken: getCustomerToken() });
-    if (warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
-    let days = type === "screen" ? 30 : 365;
-    let [d, m, y] = start.split("/");
-    let end = new Date(y, m - 1, d); end.setDate(end.getDate() + days - 1);
-    let remaining = Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24));
+
+    /* 🗄️ الضمان انتقل للسيرفر الجديد.
+       السيرفر هو اللي يفحص التكرار ويحسب تاريخ الانتهاء — مو التطبيق.
+       (قبل: كان ينزّل ضمانات كل الزبائن للمتصفح ويدوّر بيها) */
+    const _wRes = await sbRpc('app_warranty_add', {
+      p_token:     getCustomerToken(),
+      p_code:      screenCode,
+      p_invoice:   invoice,
+      p_name:      name,
+      p_phone:     phone,
+      p_item_name: screenName,
+      p_kind:      type,
+      p_start:     start
+    });
+    if (!_wRes || !_wRes.ok) {
+      dupMsg.innerText = "⚠️ " + ((_wRes && _wRes.error) || "تعذّر تفعيل الضمان، حاول مرة ثانية");
+      dupMsg.style.display = "block";
+      throw "stop";
+    }
+    const endText  = _wRes.end;
+    const remaining = _wRes.daysLeft;
     result.className = "result success"; result.style.display = "block";
-    result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${formatDate(end)}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:18px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div><div style="margin-top:10px;padding:8px;background:#e3f2fd;color:#1565c0;border-radius:8px;font-size:17px;">سيتم إفراغ الحقول بعد قليل...</div>`;
-    await secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: formatDate(end), customerToken: getCustomerToken() });
+    result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${endText}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:18px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div><div style="margin-top:10px;padding:8px;background:#e3f2fd;color:#1565c0;border-radius:8px;font-size:17px;">سيتم إفراغ الحقول بعد قليل...</div>`;
+
+    /* 📱 نسخة للنظام القديم — سببها الوحيد رسالة الواتساب للزبون.
+       ما تعطّل الضمان لو فشلت، لأن الضمان انحفظ بالسيرفر الجديد فوق. */
+    secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: endText, customerToken: getCustomerToken() }).catch(function(e){ console.warn('warranty whatsapp copy failed', e); });
     usedInvoices.add(screenCode);
     setTimeout(() => {
       document.getElementById("name").value = ""; document.getElementById("phone").value = "";
@@ -4392,22 +4410,15 @@ async function checkWarranty() {
   if (!v) { alert("أدخل كود الشاشة"); return; }
   out.innerHTML = '<div class="result pending">جاري البحث...</div>';
   try {
-    const warranties = await secureApiCall('getWarranties', { customerToken: getCustomerToken() });
-    const r = warranties.find(w => normalizeNumber(String(w.screencode || "")).trim().toUpperCase() === v);
-    if (r) {
-      let expiryDate = null, startDate = null;
-      if (r.start_date) {
-        if (typeof r.start_date === 'string' && r.start_date.includes('/')) { let [d,m,y] = r.start_date.split("/"); startDate = new Date(y,m-1,d); }
-        else if (typeof r.start_date === 'number') startDate = new Date((r.start_date-25569)*86400*1000);
-        else startDate = new Date(r.start_date);
-      }
-      if (r.expiry) {
-        if (typeof r.expiry === 'string' && r.expiry.includes('/')) { let [d,m,y] = r.expiry.split("/"); expiryDate = new Date(y,m-1,d); }
-        else if (typeof r.expiry === 'number') expiryDate = new Date((r.expiry-25569)*86400*1000);
-        else expiryDate = new Date(r.expiry);
-      }
-      let remaining = expiryDate ? Math.ceil((expiryDate - new Date()) / (1000*60*60*24)) : null;
-      out.innerHTML = `<div class="result ${remaining !== null && remaining >= 0 ? 'success' : 'error'}">${remaining !== null && remaining >= 0 ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.screenname||"-"}<br>النوع: ${r.type||"-"}<br>تاريخ البدء: ${startDate ? formatDate(startDate) : (r.start_date||"-")}<br>تاريخ الانتهاء: ${expiryDate ? formatDate(expiryDate) : (r.expiry||"-")}<br>${remaining !== null && remaining >= 0 ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
+    /* 🗄️ من السيرفر الجديد — يرجّع ضمان واحد بس، اللي كوده مطابق.
+       (قبل: كان ينزّل كل الضمانات بأسماء وأرقام أصحابها) */
+    const r = await sbRpc('app_warranty_check', { p_token: getCustomerToken(), p_code: v });
+    if (!r || !r.ok) { out.innerHTML = '<div class="result error">❌ ' + ((r && r.error) || 'تعذّر البحث') + '</div>'; return; }
+    if (r.found) {
+      const remaining = Number(r.daysLeft);
+      const alive = !!r.active;
+      const kindText = r.kind === 'battery' ? 'بطارية' : 'شاشة';
+      out.innerHTML = `<div class="result ${alive ? 'success' : 'error'}">${alive ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.itemName||"-"}<br>النوع: ${kindText}<br>تاريخ البدء: ${r.start||"-"}<br>تاريخ الانتهاء: ${r.end||"-"}<br>${alive ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
     } else {
       out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
     }
@@ -6288,6 +6299,15 @@ function openOrderDetail(orderId) {
   if (ov) ov.addEventListener('click', function(e){ if (e.target === ov) closeOrderDetail(); });
 }
 
+/* 🗄️ «طلباتي» انتقلت للسيرفر الجديد.
+   الهوية تجي من التوكن — ما نرسل رقم الهاتف أبداً، فما يقدر
+   أحد يكتب رقم غيره ويشوف طلباته. (قبل: كان الرقم ينرسل مع الطلب) */
+async function fetchMyOrders() {
+  const r = await sbRpc('app_my_orders', { p_token: getCustomerToken() });
+  if (!r || !r.ok) throw new Error((r && r.error) || 'تعذّر تحميل الطلبات');
+  return r.orders || [];
+}
+
 function loadMyOrders() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   const listDiv = document.getElementById('myOrdersList');
@@ -6299,7 +6319,7 @@ function loadMyOrders() {
   }
   if (loadDiv) loadDiv.style.display = 'block';
   if (listDiv) listDiv.innerHTML = '';
-  secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() }).then(function(orders) {
+  fetchMyOrders().then(function(orders) {
     if (loadDiv) loadDiv.style.display = 'none';
     if (!orders || !orders.length) {
       _allOrdersCache = [];
@@ -6826,7 +6846,7 @@ async function appBoot() {
 
         if (user) { user.customerToken = cachedUser.customerToken; localStorage.setItem('amwaj_user', JSON.stringify(user)); }
     localStorage.removeItem('amwaj_guest');
-        const ords = await secureApiCall('getMyOrders', { phone: cachedUser.phone, customerToken: getCustomerToken() });
+        const ords = await fetchMyOrders();
         if (ords) {
           var seenIds = []; try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen')||'[]'); } catch(e){}
           var allIds = ords.map(function(o){ return o.orderId; });
@@ -8570,11 +8590,11 @@ function loadStatOrdersCount() {
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) return;
   var isAdmin = isAdminPhone(user.phone);
-  var action = isAdmin ? 'getAllOrders' : 'getMyOrders';
-  var payload = { phone: user.phone };
-  if (isAdmin) payload.adminKey = getAdminKey(); // مفتاح الأدمن
-  else payload.customerToken = getCustomerToken();
-  secureApiCall(action, payload).then(function(res) {
+  // 🗄️ الزبون يعدّ طلباته من السيرفر الجديد · الأدمن لسه على القديم
+  var p = isAdmin
+    ? secureApiCall('getAllOrders', { phone: user.phone, adminKey: getAdminKey() })
+    : fetchMyOrders();
+  p.then(function(res) {
     var ords = res && res.orders ? res.orders : (Array.isArray(res) ? res : []);
     var el = document.getElementById('statOrdersCount');
     if (el) el.textContent = ords.length;
