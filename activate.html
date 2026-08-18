@@ -3529,6 +3529,10 @@ async function sbFn(fn, body){
     const t = await res.text();
     let d; try{ d = t ? JSON.parse(t) : null; }catch(e){ d = null; }
     if (!res.ok) throw new Error((d && (d.error||d.message)) || ('HTTP '+res.status));
+    /* ⚠️ السيرفر يرجّع أخطاء الشغل برد ناجح مع ok:false
+       (مثلاً «رقم الهاتف غير مسجل»). بدون هذا السطر التطبيق
+       كان يكمل وكأن كلشي تمام. */
+    if (d && d.ok === false) throw new Error(d.error || 'تعذّر تنفيذ الطلب');
     return d;
   } finally { clearTimeout(to); }
 }
@@ -4041,7 +4045,7 @@ async function submitRegistration() {
     const shopPhoto = await _uploadShopPhoto(shopPhotoFile);
     btn.innerText = "جاري الإرسال...";
     // الرقم انتحقق بالخطوة السابقة — السيرفر يتأكد من علامة التحقق قبل ما يقبل التسجيل
-    await secureApiCall('addCustomer', { name, shop, phone, address, date: formatDate(new Date()), status: 'pending', province, shopPhoto, district, districtId });
+    await sbFn('login', { action: 'register', payload: { name: name, shop: shop, phone: phone, address: address, province: province, shopPhoto: shopPhoto, district: district, districtId: districtId } });
     localStorage.setItem('amwaj_phone', phone);
     // 🔔 اربط توكن الإشعارات برقمه من الآن، حتى إشعار "تمت الموافقة" يوصله فعلاً
     try { _syncFcmTokenToPhone(phone); } catch(e){}
@@ -4079,7 +4083,7 @@ async function startOtpFlow(phone, purpose, pendingReg) {
   _otp.phone = phone; _otp.purpose = purpose; _otp.pendingReg = pendingReg || null;
   showScreen('loadingScreen');
   try {
-    await secureApiCall('requestOtp', { phone, purpose });
+    await sbFn('login', { action: 'request', phone: phone, purpose: purpose });
     document.getElementById('otpCode').value = '';
     document.getElementById('otpResult').innerHTML = '';
     document.getElementById('otpSubText').textContent = 'أدخل الرمز المرسل عبر واتساب إلى ' + phone;
@@ -4118,7 +4122,7 @@ async function resendOtp() {
   var resultEl = document.getElementById('otpResult');
   resultEl.innerHTML = '';
   try {
-    await secureApiCall('requestOtp', { phone: _otp.phone, purpose: _otp.purpose });
+    await sbFn('login', { action: 'request', phone: _otp.phone, purpose: _otp.purpose });
     startOtpCooldown();
     resultEl.innerHTML = '<div class="result success">✅ تم إرسال رمز جديد</div>';
   } catch (e) {
@@ -4140,7 +4144,7 @@ async function verifyOtpCode() {
   var btn = document.getElementById('btnVerifyOtp');
   btn.disabled = true; btn.textContent = 'جاري التحقق...';
   try {
-    const res = await secureApiCall('verifyOtp', { phone: _otp.phone, code: code, purpose: _otp.purpose, isApp: _isNativeApp });
+    const res = await sbFn('login', { action: 'verify', phone: _otp.phone, code: code, purpose: _otp.purpose, isApp: _isNativeApp });
     if (_otp.cooldownTimer) clearInterval(_otp.cooldownTimer);
 
     if (_otp.purpose === 'register') {
@@ -4176,7 +4180,7 @@ function logout() {
   // نرسلها بدون انتظار حتى ما نأخّر الخروج نفسه لو الشبكة بطيئة.
   try {
     var _fcmTok = localStorage.getItem('amwaj_fcm_token');
-    if (_fcmTok) { secureApiCall('unregisterFcmToken', { token: _fcmTok }).catch(function(){}); }
+    if (_fcmTok) { sbRpc('app_unregister_token', { p_token: _fcmTok }).catch(function(){}); }
   } catch(e) {}
   localStorage.removeItem("amwaj_user");
   localStorage.removeItem("amwaj_phone");
@@ -4189,7 +4193,12 @@ function logout() {
   closeSheet('accountSheet');
   setTimeout(function() { showScreen('loginScreen'); }, 200);
 }
-async function fetchCustomerByPhone(phone) { return await secureApiCall('getCustomerByPhone', { phone: phone }); }
+/* 👤 بيانات الزبون من السيرفر الجديد — بالتوكن، مو بالرقم.
+   قبل: أي واحد يكتب رقم غيره ويشوف اسمه وعنوانه ومحله. */
+async function fetchCustomerByPhone(phone) {
+  const r = await sbRpc('app_me', { p_token: getCustomerToken() });
+  return (r && r.ok) ? r : null;
+}
 
 function clearGlobalSearch() {
   var input = document.getElementById('globalSearch');
@@ -6566,7 +6575,7 @@ function cancelOrderById(btn) {
   if (!confirm('هل تريد إلغاء الطلب ' + orderId + '؟')) return;
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) { alert('يرجى تسجيل الدخول'); return; }
-  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: 'إلغاء من الزبون', customerToken: getCustomerToken() })
+  sbFn('cancelorder', { token: getCustomerToken(), orderId: orderId, reason: 'إلغاء من الزبون' })
     .then(function() { loadMyOrders(); })
     .catch(function(e) { alert('فشل إلغاء الطلب: ' + (e.message || '')); });
 }
@@ -6582,7 +6591,7 @@ function cancelOrder(orderId) {
     alert('⚠️ يجب كتابة سبب الإلغاء (3 أحرف على الأقل)');
     return;
   }
-  secureApiCall('cancelOrder', { orderId: orderId, phone: user.phone, reason: reason, customerToken: getCustomerToken() })
+  sbFn('cancelorder', { token: getCustomerToken(), orderId: orderId, reason: reason })
     .then(function() {
       alert('✅ تم إلغاء الطلب بنجاح');
       loadMyOrders();
@@ -7572,7 +7581,7 @@ async function _syncFcmTokenToPhone(phone) {
   const existingToken = localStorage.getItem('amwaj_fcm_token');
   if (!existingToken) return;
   try {
-    await secureApiCall('registerFcmToken', { token: existingToken, phone: phone, isAdmin: isAdminPhone(phone) });
+    await sbRpc('app_register_token', { p_token: existingToken, p_customer_token: getCustomerToken(), p_platform: 'android' });
     console.log('✅ FCM Token linked to phone:', phone);
   } catch(e) { console.error('❌ FCM token link failed:', e); }
 }
@@ -7638,10 +7647,10 @@ async function setupPushNotifications() {
       // ارسل الـ Token للسيرفر
       try {
         const phone = _getKnownPhone();
-        await secureApiCall('registerFcmToken', {
-          token: token.value,
-          phone: phone,
-          isAdmin: phone && isAdminPhone(phone) ? true : false
+        await sbRpc('app_register_token', {
+          p_token: token.value,
+          p_customer_token: getCustomerToken(),
+          p_platform: 'android'
         });
         console.log('✅ FCM Token sent to server');
       } catch(e) {
@@ -7914,10 +7923,10 @@ async function proceedWithWebPushSetup() {
     
     // 6. أرسل للسيرفر (نفس الـ endpoint)
     try {
-      await secureApiCall('registerFcmToken', {
-        token: token,
-        phone: knownPhone,
-        isAdmin: isAdminPhone(knownPhone)
+      await sbRpc('app_register_token', {
+        p_token: token,
+        p_customer_token: getCustomerToken(),
+        p_platform: 'web'
       });
       console.log('✅ Web Push: token sent to server');
     } catch(e) {
@@ -8197,8 +8206,13 @@ async function checkAndShowBroadcast() {
     const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
     if (!user || !user.phone) return;
     
-    const res = await secureApiCall('getLatestBroadcast', {});
-    const bc = res && res.broadcast;
+    /* 📢 الإعلانات من السيرفر الجديد — جدول broadcasts مفتوح للقراءة */
+    const _r = await fetch(SB.URL + '/rest/v1/broadcasts?select=id,title,body,target,url,sent_at' +
+      '&is_active=is.true&order=sent_at.desc.nullslast&limit=1', {
+      headers: { apikey: SB.KEY, Authorization: 'Bearer ' + SB.KEY }
+    });
+    const _list = _r.ok ? await _r.json() : [];
+    const bc = Array.isArray(_list) && _list.length ? _list[0] : null;
     if (!bc || !bc.id) return;
     
     // تحقق: شفت هذا الإعلان قبل؟
@@ -8379,10 +8393,10 @@ async function updateFcmTokenAfterLogin() {
   // 1. لو عندنا token محفوظ، حدثه بالسيرفر مع رقم الهاتف الجديد
   if (existingToken) {
     try {
-      await secureApiCall('registerFcmToken', {
-        token: existingToken,
-        phone: user.phone,
-        isAdmin: isAdmin
+      await sbRpc('app_register_token', {
+        p_token: existingToken,
+        p_customer_token: getCustomerToken(),
+        p_platform: (window.Capacitor ? 'android' : 'web')
       });
       console.log('✅ FCM Token updated with phone:', user.phone);
     } catch(e) {
@@ -9294,7 +9308,16 @@ var _adminSheetLabels = {
   'INVENTORY':    'منوعات',
 };
 
+/* 🛠️ لوحة التحكم الكاملة — انتقلت لصفحة مستقلة على نفس الموقع.
+   اللوحة اللي داخل التطبيق كانت تقرا من النظام القديم، وبعد النقل
+   ما عادت تشوف الطلبات ولا التسجيلات الجديدة. */
+const ADMIN_PANEL_URL = 'https://www.amwajmob.com/admin.html';
+
 async function openAdminPanel() {
+  window.open(ADMIN_PANEL_URL, '_blank');
+}
+
+async function openAdminPanelOld() {
   openSheet('adminSheet');
   // 🚀 المنتجات أُلغيت من هذي اللوحة (إدارتها صارت بس عبر adminamwaj.html) — الافتراضي الحين "الطلبات"
   // هذا وحده رفع سرعة فتح اللوحة كثير، لأنه قبل كان يجيب كل المنتجات من +15 شيت بكل مرة تنفتح فيها اللوحة حتى لو ما تريد المنتجات أصلاً
@@ -10328,7 +10351,8 @@ async function loadPrimeStatuses(orders, force) {
   var now = Date.now();
   if (!force && _primeStatusesLoadedAt && (now - _primeStatusesLoadedAt) < 60000) return;
   try {
-    var all = await secureApiCall('getAllPrimeStatuses', { adminKey: getAdminKey(), customerToken: getCustomerToken() });
+    /* 🚚 شحنات برايم من السيرفر الجديد — الزبون يشوف شحناته هو بس */
+    var all = await sbRpc('app_prime_statuses', { p_token: getCustomerToken() });
     if (all && typeof all === 'object') {
       _primeStatusCache = all;
       _primeStatusesLoadedAt = now;
