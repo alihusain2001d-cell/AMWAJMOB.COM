@@ -456,6 +456,7 @@ function custRow(c){
       (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick="custSet('+c.id+',{status:\'approved\'},'+JSON.stringify(c.phone||'')+','+JSON.stringify(c.name||'')+')">قبول</button>' : '')+
       (c.status!=='rejected' ? '<button class="action-btn btn-reject" onclick="custSet('+c.id+',{status:\'rejected\'})">رفض</button>' : '')+
       '<button class="action-btn btn-edit" onclick=\'custEdit('+JSON.stringify(c)+')\'>✏️</button>'+
+      '<button class="action-btn btn-reject" onclick=\'custDelete('+JSON.stringify(c.id)+','+JSON.stringify(c.shop_name||c.name||'')+')\'>🗑️</button>'+
     '</td></tr>';
 }
 async function custSet(id, patch, phone, name){
@@ -472,6 +473,12 @@ async function custSet(id, patch, phone, name){
     }
     toast('✅ انحفظ'); pCust();
   }
+  catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+// 🗑️ حذف نهائي — الطلبات والضمانات القديمة تبقى بتاريخها، بس تفقد الربط بحسابه
+async function custDelete(id, label){
+  if (!confirm('حذف "'+label+'" نهائياً؟ ما بيه تراجع.')) return;
+  try{ await rpc('web_customer_delete',{p_id:id}); toast('✅ انحذف'); pCust(); }
   catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 function custEdit(c){
