@@ -453,8 +453,8 @@ function custRow(c){
           'onclick="lightbox(\''+esc(c.shop_photo_url)+'\')">'
         : '<span class="hint">—</span>')+'</td>'+
     '<td style="white-space:nowrap">'+
-      (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick="custSet('+c.id+',{status:\'approved\'},'+JSON.stringify(c.phone||'')+','+JSON.stringify(c.name||'')+')">قبول</button>' : '')+
-      (c.status!=='rejected' ? '<button class="action-btn btn-reject" onclick="custSet('+c.id+',{status:\'rejected\'})">رفض</button>' : '')+
+      (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick=\'custSet('+c.id+',{status:"approved"},'+JSON.stringify(c.phone||'')+','+JSON.stringify(c.name||'')+')\'>قبول</button>' : '')+
+      (c.status!=='rejected' ? '<button class="action-btn btn-reject" onclick=\'custSet('+c.id+',{status:"rejected"})\'>رفض</button>' : '')+
       '<button class="action-btn btn-edit" onclick=\'custEdit('+JSON.stringify(c)+')\'>✏️</button>'+
       '<button class="action-btn btn-reject" onclick=\'custDelete('+JSON.stringify(c.id)+','+JSON.stringify(c.shop_name||c.name||'')+')\'>🗑️</button>'+
     '</td></tr>';
