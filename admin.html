@@ -723,6 +723,45 @@ async function ordEditItems(id){
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
+var _editSearchResults = [];
+function _editSearch(){
+  clearTimeout(window._eist);
+  window._eist = setTimeout(async function(){
+    var q = ($('eiSearch')||{}).value || '';
+    q = q.trim();
+    var box = $('eiSearchResults');
+    if (!box) return;
+    if (q.length < 2){ box.innerHTML = ''; _editSearchResults = []; return; }
+    box.innerHTML = '<div class="hint">⏳ جاري البحث...</div>';
+    try{
+      var rp = await rpc('web_catalog', {p_kind:'product', p_q:q, p_limit:8});
+      var rs = await rpc('web_catalog', {p_kind:'screen',  p_q:q, p_limit:8});
+      var list = (rp['البيانات']||[]).map(function(x){
+        return {kind:'product', code:x['code'], name:x['name'], brand:'', type:'',
+                notes:'', price:Number(x['price'])||0};
+      }).concat((rs['البيانات']||[]).map(function(x){
+        return {kind:'screen', code:x['code'], name:x['name'], brand:x['brand']||'',
+                type:x['type']||'', notes:x['notes']||'', price:Number(x['price'])||0};
+      }));
+      _editSearchResults = list;
+      box.innerHTML = list.length ? list.map(function(item, i){
+        return '<button type="button" class="action-btn btn-view" style="display:block;width:100%;'+
+          'text-align:right;margin:3px 0" onclick="_editPickCatalog('+i+')">'+
+          esc(item.name)+' <span class="hint" dir="ltr">'+esc(item.code)+'</span> — '+nf(item.price)+' د.ع</button>';
+      }).join('') : '<div class="hint">ماكو نتائج</div>';
+    }catch(e){ box.innerHTML = '<div class="hint">'+esc(e.message)+'</div>'; }
+  }, 350);
+}
+function _editPickCatalog(i){
+  var item = _editSearchResults[i];
+  if (!item) return;
+  _editRows.push({code:item.code, name:item.name, brand:item.brand, type:item.type,
+                  notes:item.notes, price:item.price, qty:1, kind:item.kind});
+  var s = $('eiSearch'); if (s) s.value = '';
+  var box = $('eiSearchResults'); if (box) box.innerHTML = '';
+  _editSearchResults = [];
+  renderEditItems();
+}
 function _editAddRow(){
   _editRows.push({code:'',name:'',brand:'',type:'',notes:'',price:0,qty:1,kind:'product'});
   renderEditItems();
@@ -748,7 +787,10 @@ function renderEditItems(){
 
   modal('<h3>✏️ تعديل مواد '+esc(code)+'</h3>'+
     '<div id="eiRows">'+rowsHtml+'</div>'+
-    '<button class="btn-solid gray" style="width:100%;margin-top:6px" onclick="_editAddRow()">➕ أضف مادة</button>'+
+    '<label style="margin-top:10px">🔍 دوّر عن مادة بالكاتلوك (كود أو اسم)</label>'+
+    '<input class="modal-input" id="eiSearch" placeholder="مثال: LCD-00814 أو REDMI" oninput="_editSearch()">'+
+    '<div id="eiSearchResults" style="margin-top:4px"></div>'+
+    '<button class="btn-solid gray" style="width:100%;margin-top:6px" onclick="_editAddRow()">➕ مادة يدوية (مو موجودة بالكاتلوك)</button>'+
     '<div style="text-align:left;font-weight:900;margin:10px 0" dir="ltr">مجموع المواد: '+nf(total)+' د.ع</div>'+
     '<div class="msg" id="eiMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:8px">'+
@@ -758,18 +800,6 @@ function renderEditItems(){
 
 async function ordEditSave(){
   var id = _curOrderId, m = $('eiMsg');
-  var items = _editRows.filter(function(r){ return r.name && r.name.trim(); })
-    .map(function(r){ return {code:r.code,name:r.name,brand:r.brand,type:r.type,
-                              notes:r.notes,price:r.price,qty:r.qty,kind:r.kind}; });
-  if (!items.length){ if(m){ m.className='msg err'; m.textContent='لازم مادة وحدة على الأقل'; } return; }
-  try{
-    await rpc('web_order_edit_items', {p_id:id, p_items:items});
-    toast('✅ انحفظ التعديل'); ordOpen(id); pOrd();
-  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
-}
-
-async function ordEditSave(id){
-  var m = $('eiMsg');
   var items = _editRows.filter(function(r){ return r.name && r.name.trim(); })
     .map(function(r){ return {code:r.code,name:r.name,brand:r.brand,type:r.type,
                               notes:r.notes,price:r.price,qty:r.qty,kind:r.kind}; });
