@@ -582,16 +582,18 @@ function orderItemHtml(i){
     '<div style="margin-top:6px">'+rows+'</div></div>';
 }
 
+var _curOrderId = null;
 async function ordOpen(id){
+  _curOrderId = id;
   try{
     var r = await rpc('web_order_detail',{p_id:id});
     var o = r['الطلب'], it = r['المواد'], pr = r['برايم'];
     var s = OST[o.status] || ['—','badge-gray'];
+    // كربلاء توصيل داخلي، ما تروح لبرايم
+    var isKerbala = /^كربلاء/.test(o.address || '');
     modal('<h3>🧾 '+esc(o.order_code)+' <span class="badge '+s[1]+'">'+s[0]+'</span></h3>'+
       '<div class="hint">'+esc(o.cust_shop||'')+' · <span dir="ltr">'+esc(o.cust_phone||'')+'</span></div>'+
       '<div class="hint" style="margin-bottom:10px">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
-      (pr ? '<div class="msg warn">🚚 برايم '+esc(pr.prime_case_id)+' · '+esc(pr.status||'')+
-            ' · '+esc(pr.step_code||'')+'</div>' : '')+
       '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">'+
       it.map(orderItemHtml).join('')+'</div>'+
       '<div style="text-align:left;font-size:17px;font-weight:900;margin:10px 0" dir="ltr">'+nf(o.total)+' د.ع</div>'+
@@ -605,32 +607,47 @@ async function ordOpen(id){
       '<div style="display:flex;gap:8px;margin-top:12px">'+
         '<button class="btn-solid" onclick="ordSave('+o.id+')">حفظ</button>'+
         '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
-      /* 🚚 برايم — الإرسال والملصق */
-      '<div style="display:flex;gap:8px;margin-top:8px">'+
-        (pr && pr.prime_case_id
-          ? '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ ملصق برايم</button>'
-          : '<button class="btn-solid" onclick="prSend(\''+esc(o.order_code)+'\')">🚚 إرسال لبرايم</button>')+
-      '</div>');
+      /* 🚚 برايم — صندوق منفصل بمكانه، مو مخلوط مع باقي الأزرار.
+         كربلاء توصيل داخلي، ماله شغل ببرايم أبداً. */
+      (isKerbala ? '' :
+      '<div style="border-top:2px solid var(--border);margin-top:14px;padding-top:12px">'+
+        '<div style="font-weight:800;font-size:13px;color:var(--muted);margin-bottom:8px">🚚 برايم</div>'+
+        (!pr || !pr.prime_case_id
+          ? '<button class="btn-solid" onclick="prSendAndPrint(\''+esc(o.order_code)+'\')">🚚 إرسال لبرايم وطباعة الملصق</button>'
+        : pr.label_printed_at
+          ? ('<div class="msg ok">✅ جاهز للتسليم — شحنة '+esc(pr.prime_case_id)+
+             '<div class="hint" style="margin-top:2px">آخر طباعة: '+dstr(pr.label_printed_at)+'</div></div>'+
+             '<button class="btn-solid gray" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ إعادة الطباعة</button>')
+        : ('<div class="msg warn">📦 مرسل لبرايم — شحنة '+esc(pr.prime_case_id)+'، ما انطبع الملصق بعد</div>'+
+           '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ اطبع الملصق</button>'))+
+      '</div>'));
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
-async function prSend(code){
+// 🚚 إرسال لبرايم + طباعة الملصق بضغطة وحدة — وبعدها الصندوق يصير «جاهز للتسليم» تلقائياً
+async function prSendAndPrint(code){
   if (!confirm('إرسال '+code+' لبرايم؟ راح تنعمل شحنة حقيقية.')) return;
   var m = $('oMsg'); if (m){ m.className='msg'; m.textContent='⏳ جاري الإرسال لبرايم...'; }
   try{
-    var r = await fn('prime', {action:'send', orderId:code});
-    if (m){ m.className='msg warn'; m.textContent='✅ رقم الشحنة: '+r.primeCaseId; }
-    toast('✅ انرسل لبرايم');
-    setTimeout(function(){ prLabel(code); }, 600);
+    var r1 = await fn('prime', {action:'send', orderId:code});
+    if (m){ m.className='msg'; m.textContent='⏳ رقم الشحنة '+r1.primeCaseId+' — جاري توليد الملصق...'; }
+    var r2 = await fn('prime', {action:'label', orderId:code});
+    window.open(r2.url, '_blank');
+    if (m){ m.className='msg ok'; m.textContent='✅ انرسل وانطبع الملصق'; }
+    toast('✅ جاهز للتسليم');
+    ordOpen(_curOrderId); // نحدّث الصندوق يطلع «جاهز للتسليم»
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } else toast('⚠️ '+e.message, 5000); }
 }
 
+// 🖨️ طباعة/إعادة طباعة الملصق بس — يستعمل لو الشحنة موجودة مسبقاً
 async function prLabel(code){
   var m = $('oMsg'); if (m){ m.className='msg'; m.textContent='⏳ جاري توليد الملصق...'; }
   try{
     var r = await fn('prime', {action:'label', orderId:code});
-    if (m){ m.className='msg ok'; m.innerHTML = '🖨️ <a href="'+esc(r.url)+'" target="_blank"><b>افتح الملصق واطبعه</b></a>'; }
     window.open(r.url, '_blank');
+    if (m){ m.className='msg ok'; m.textContent='✅ انطبع الملصق'; }
+    toast('🖨️ انطبع');
+    ordOpen(_curOrderId); // نحدّث وقت آخر طباعة بالصندوق
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } else toast('⚠️ '+e.message, 5000); }
 }
 async function ordSave(id){
@@ -671,12 +688,9 @@ async function pPrime(){
           '<td class="hint">'+dstr(p.last_checked)+'</td></tr>';
       }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو شحنات</td></tr>')+
       '</tbody></table></div></div>'+
-      /* ⚠️ هاي لقطة مجمّدة مو بيانات حيّة.
-         ماكو شي يكتب بجدول برايم هنا غير الاستيراد اللي صار مرة وحدة —
-         لأن الطلبات وبرايم بعدهن على النظام القديم. */
-      '<div class="msg err"><b>⚠️ هاي لقطة قديمة — مو الحالة الحالية</b><br>'+
-      'شحنات برايم بعدها تنشتغل على النظام القديم، وهذا الجدول ما يتحدّث.<br>'+
-      'للحالة الحقيقية والإرسال وطبع الليبل: افتح <b>adminamwaj.html</b> (اللوحة القديمة).</div>';
+      /* 🔄 الجدول حي — يتحدّث تلقائياً كل 15 دقيقة من برايم مباشرة
+         (مؤقّت بالسيرفر)، والإرسال والملصق يصيرن من هذي اللوحة. */
+      '<div class="hint" style="margin-top:6px">🔄 الحالات تتحدّث تلقائياً كل 15 دقيقة</div>';
   }catch(e){ $('content').innerHTML = errBox(e); }
 }
 
