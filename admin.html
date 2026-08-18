@@ -91,6 +91,7 @@ tbody tr:hover td{background:#0EA5E906}
   font-size:13.5px;font-weight:800;font-family:inherit;cursor:pointer}
 .btn-solid.green{background:var(--green)} .btn-solid.gray{background:var(--card);color:var(--text);
   border:1px solid var(--border)}
+.btn-solid.red{background:#DC2626}
 .btn-solid:disabled{opacity:.45;cursor:not-allowed}
 .modal-overlay{display:none;position:fixed;inset:0;background:#0f172a99;z-index:999;
   align-items:center;justify-content:center;padding:18px}
@@ -209,7 +210,7 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
 /* ══════════════════════ الأساس ══════════════════════ */
 var CFG = {url:'', key:'', pass:''};
 var PAGE = 'home';
-var F = {cust:'', ord:'', ordRange:'month', prime:'', war:'', cat:'', catKind:'product', catCat:''};
+var F = {cust:'', ord:'', ordRange:'month', ordPrime:false, prime:'', war:'', cat:'', catKind:'product', catCat:''};
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){
@@ -512,6 +513,7 @@ function setOrdF(v){ F.ord=v; pOrd(); }
 function setOrdR(v){ F.ordRange=v; pOrd(); }
 var OST = {pending:['ينتظر','badge-yellow'], picked:['بالطريق','badge-blue'],
            delivered:['تم التسليم','badge-green'], cancelled:['ملغي','badge-red']};
+function setOrdPrime(v){ F.ordPrime = v; pOrd(); }
 async function pOrd(){
   try{
     var q = (window._oq||'');
@@ -530,19 +532,27 @@ async function pOrd(){
         ftab(F.ordRange,'today','اليوم',null,'setOrdR')+ftab(F.ordRange,'week','أسبوع',null,'setOrdR')+
         ftab(F.ordRange,'month','شهر',null,'setOrdR')+ftab(F.ordRange,'year','سنة',null,'setOrdR')+
         ftab(F.ordRange,'all','الكل',null,'setOrdR')+'</div>'+
+      /* 🚚 فلتر «برايم بس» — فوق البيانات اللي وصلت أصلاً، بلا نداء ثاني للسيرفر */
+      '<div class="filters" style="border-top:0">'+
+        '<button class="filter-tab'+(F.ordPrime?' active':'')+'" onclick="setOrdPrime(!'+F.ordPrime+')">🚚 برايم بس'+
+        (F.ordPrime?' ✓':'')+'</button></div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>رقم الطلب</th><th>المحل</th><th>الهاتف</th>'+
         '<th>العنوان</th><th>المجموع</th><th>مواد</th><th>الحالة</th><th>التاريخ</th><th></th>'+
         '</tr></thead><tbody>'+
-      (d.length ? d.map(function(o){
-        var s = OST[o.status] || ['—','badge-gray'];
-        return '<tr><td><b>'+esc(o.order_code)+'</b></td><td>'+esc(o.cust_shop||o.cust_name||'—')+'</td>'+
-          '<td dir="ltr">'+esc(o.cust_phone||'—')+'</td>'+
-          '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
-          '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
-          '<td><span class="badge '+s[1]+'">'+s[0]+'</span></td>'+
-          '<td class="hint">'+dstr(o.placed_at)+'</td>'+
-          '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
-      }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>')+
+      (function(){
+        var rows = F.ordPrime ? d.filter(function(o){ return !!o.prime_case_id; }) : d;
+        if (!rows.length) return '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>';
+        return rows.map(function(o){
+          var s = OST[o.status] || ['—','badge-gray'];
+          return '<tr><td><b>'+esc(o.order_code)+'</b></td><td>'+esc(o.cust_shop||o.cust_name||'—')+'</td>'+
+            '<td dir="ltr">'+esc(o.cust_phone||'—')+'</td>'+
+            '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
+            '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
+            '<td><span class="badge '+s[1]+'">'+s[0]+'</span></td>'+
+            '<td class="hint">'+dstr(o.placed_at)+'</td>'+
+            '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
+        }).join('');
+      })()+
       '</tbody></table></div></div>';
     var el = $('oq');
     el.oninput = function(){ window._oq = el.value; clearTimeout(window._ot);
@@ -581,7 +591,7 @@ function orderItemHtml(i){
     '<div style="margin-top:6px">'+rows+'</div></div>';
 }
 
-var _curOrderId = null;
+var _curOrderId = null, _curOrderCode = '', _curPrimeActive = false;
 async function ordOpen(id){
   _curOrderId = id;
   try{
@@ -590,6 +600,8 @@ async function ordOpen(id){
     var s = OST[o.status] || ['—','badge-gray'];
     // كربلاء توصيل داخلي، ما تروح لبرايم
     var isKerbala = /^كربلاء/.test(o.address || '');
+    _curOrderCode = o.order_code;
+    _curPrimeActive = !!(pr && pr.prime_case_id && pr.status !== 'DELETED' && pr.status !== 'CNCL');
     modal('<h3>🧾 '+esc(o.order_code)+' <span class="badge '+s[1]+'">'+s[0]+'</span></h3>'+
       '<div class="hint">'+esc(o.cust_shop||'')+' · <span dir="ltr">'+esc(o.cust_phone||'')+'</span></div>'+
       '<div class="hint" style="margin-bottom:10px">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
@@ -606,20 +618,30 @@ async function ordOpen(id){
       '<div style="display:flex;gap:8px;margin-top:12px">'+
         '<button class="btn-solid" onclick="ordSave('+o.id+')">حفظ</button>'+
         '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
+      // ✏️ تعديل المواد — بس لو الطلب لسه ينتظر/بالطريق وماكو شحنة برايم فعّالة عليه
+      ((o.status==='pending'||o.status==='picked') && !_curPrimeActive
+        ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordEditItems('+o.id+')">✏️ تعديل المواد (إضافة/حذف)</button>'
+        : '')+
       /* 🚚 برايم — صندوق منفصل بمكانه، مو مخلوط مع باقي الأزرار.
          كربلاء توصيل داخلي، ماله شغل ببرايم أبداً. */
       (isKerbala ? '' :
-      '<div style="border-top:2px solid var(--border);margin-top:14px;padding-top:12px">'+
-        '<div style="font-weight:800;font-size:13px;color:var(--muted);margin-bottom:8px">🚚 برايم</div>'+
-        (!pr || !pr.prime_case_id
-          ? '<button class="btn-solid" onclick="prSendAndPrint(\''+esc(o.order_code)+'\')">🚚 إرسال لبرايم وطباعة الملصق</button>'
-        : pr.label_printed_at
-          ? ('<div class="msg ok">✅ جاهز للتسليم — شحنة '+esc(pr.prime_case_id)+
-             '<div class="hint" style="margin-top:2px">آخر طباعة: '+dstr(pr.label_printed_at)+'</div></div>'+
-             '<button class="btn-solid gray" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ إعادة الطباعة</button>')
-        : ('<div class="msg warn">📦 مرسل لبرايم — شحنة '+esc(pr.prime_case_id)+'، ما انطبع الملصق بعد</div>'+
-           '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ اطبع الملصق</button>'))+
-      '</div>'));
+      (function(){
+        var active = pr && pr.prime_case_id && pr.status !== 'DELETED' && pr.status !== 'CNCL';
+        var cancelBtn = active
+          ? '<button class="btn-solid red" style="margin-top:6px" onclick="prCancel(\''+esc(o.order_code)+'\')">❌ إلغاء الشحنة عند برايم</button>'
+          : '';
+        return '<div style="border-top:2px solid var(--border);margin-top:14px;padding-top:12px">'+
+          '<div style="font-weight:800;font-size:13px;color:var(--muted);margin-bottom:8px">🚚 برايم</div>'+
+          (!active
+            ? '<button class="btn-solid" onclick="prSendAndPrint(\''+esc(o.order_code)+'\')">🚚 إرسال لبرايم وطباعة الملصق</button>'
+          : pr.label_printed_at
+            ? ('<div class="msg ok">✅ جاهز للتسليم — شحنة '+esc(pr.prime_case_id)+
+               '<div class="hint" style="margin-top:2px">آخر طباعة: '+dstr(pr.label_printed_at)+'</div></div>'+
+               '<button class="btn-solid gray" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ إعادة الطباعة</button>'+cancelBtn)
+          : ('<div class="msg warn">📦 مرسل لبرايم — شحنة '+esc(pr.prime_case_id)+'، ما انطبع الملصق بعد</div>'+
+             '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ اطبع الملصق</button>'+cancelBtn))+
+        '</div>';
+      })()));
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
@@ -652,9 +674,110 @@ async function prLabel(code){
 async function ordSave(id){
   var st = $('oSt').value, reason = null;
   if (st === 'cancelled'){ reason = prompt('سبب الإلغاء؟') || 'إلغاء من الإدارة'; }
-  try{ await rpc('web_order_set',{p_id:id,p_status:st,p_reason:reason});
-       closeModal(); toast('✅ انحفظ'); pOrd(); }
-  catch(e){ var m=$('oMsg'); m.className='msg err'; m.textContent=e.message; }
+  var m = $('oMsg');
+  try{
+    await rpc('web_order_set',{p_id:id,p_status:st,p_reason:reason});
+    // 🚚 إلغاء الطلب من اللوحة يلغي شحنة برايم وياه — نفس أمان النظام القديم،
+    //    حتى المندوب ما يوصل طلب انلغى
+    var warn = '';
+    if (st === 'cancelled' && _curPrimeActive){
+      try{ await fn('prime', {action:'cancel', orderId:_curOrderCode}); }
+      catch(e2){ warn = ' — ⚠️ تم الإلغاء عندنا، لكن تعذّر إلغاء الشحنة عند برايم: '+e2.message+' — اتصل بهم لإيقافها يدوياً'; }
+    }
+    closeModal(); toast(warn ? ('✅ انحفظ'+warn) : '✅ انحفظ', warn ? 7000 : 2600); pOrd();
+  }
+  catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
+}
+
+// ❌ إلغاء شحنة برايم يدوياً — بدون ما نلغي الطلب نفسه
+async function prCancel(code){
+  if (!confirm('إلغاء شحنة '+code+' عند برايم؟')) return;
+  var m = $('oMsg'); if (m){ m.className='msg'; m.textContent='⏳ جاري الإلغاء عند برايم...'; }
+  try{
+    await fn('prime', {action:'cancel', orderId:code});
+    if (m){ m.className='msg ok'; m.textContent='✅ انلغت الشحنة'; }
+    toast('✅ انلغت الشحنة عند برايم');
+    ordOpen(_curOrderId);
+  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } else toast('⚠️ '+e.message, 5000); }
+}
+
+// ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلّم أو يتلغي
+// ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلم أو يتلغي
+var _editRows = [];
+async function ordEditItems(id){
+  try{
+    var r = await rpc('web_order_detail',{p_id:id});
+    var o = r['الطلب'], it = r['المواد'];
+    if (o.status !== 'pending' && o.status !== 'picked'){
+      toast('⚠️ ما يمكن التعديل بعد التسليم أو الإلغاء', 4000); return;
+    }
+    _curOrderId = id; _curOrderCode = o.order_code;
+    _editRows = it.map(function(i){
+      var isScreen = !!(String(i['النوع']||'').trim() || String(i['الملاحظة']||'').trim());
+      return { code:i['الكود']||'', name:i['الاسم']||'', brand:i['الماركة']||'',
+               type:i['النوع']||'', notes:i['الملاحظة']||'',
+               price:Number(i['السعر'])||0, qty:Number(i['الكمية'])||1,
+               kind: isScreen ? 'screen' : 'product' };
+    });
+    renderEditItems();
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+
+function _editAddRow(){
+  _editRows.push({code:'',name:'',brand:'',type:'',notes:'',price:0,qty:1,kind:'product'});
+  renderEditItems();
+}
+function _editRemoveRow(i){ _editRows.splice(i,1); renderEditItems(); }
+
+function renderEditItems(){
+  var id = _curOrderId, code = _curOrderCode;
+  var rowsHtml = _editRows.map(function(row, i){
+    return '<div style="display:flex;gap:6px;align-items:center;margin:6px 0;padding:8px;'+
+      'border:1px solid var(--border);border-radius:8px">'+
+      '<input class="modal-input" style="flex:2" value="'+esc(row.name)+'" '+
+        'oninput="_editRows['+i+'].name=this.value" placeholder="اسم المادة">'+
+      '<input class="modal-input" style="width:90px" type="number" value="'+row.price+'" '+
+        'oninput="_editRows['+i+'].price=Number(this.value)||0" placeholder="السعر">'+
+      '<input class="modal-input" style="width:60px" type="number" value="'+row.qty+'" '+
+        'oninput="_editRows['+i+'].qty=Math.max(1,Number(this.value)||1)" placeholder="الكمية">'+
+      '<button class="btn-solid red" style="padding:6px 10px" onclick="_editRemoveRow('+i+')">🗑️</button>'+
+      '</div>';
+  }).join('') || '<div class="hint">ماكو مواد — أضف وحدة على الأقل</div>';
+
+  var total = _editRows.reduce(function(s,r){ return s + r.price*r.qty; }, 0);
+
+  modal('<h3>✏️ تعديل مواد '+esc(code)+'</h3>'+
+    '<div id="eiRows">'+rowsHtml+'</div>'+
+    '<button class="btn-solid gray" style="width:100%;margin-top:6px" onclick="_editAddRow()">➕ أضف مادة</button>'+
+    '<div style="text-align:left;font-weight:900;margin:10px 0" dir="ltr">مجموع المواد: '+nf(total)+' د.ع</div>'+
+    '<div class="msg" id="eiMsg"></div>'+
+    '<div style="display:flex;gap:8px;margin-top:8px">'+
+      '<button class="btn-solid" onclick="ordEditSave()">💾 حفظ التعديل</button>'+
+      '<button class="btn-solid gray" onclick="ordOpen('+id+')">إلغاء</button></div>');
+}
+
+async function ordEditSave(){
+  var id = _curOrderId, m = $('eiMsg');
+  var items = _editRows.filter(function(r){ return r.name && r.name.trim(); })
+    .map(function(r){ return {code:r.code,name:r.name,brand:r.brand,type:r.type,
+                              notes:r.notes,price:r.price,qty:r.qty,kind:r.kind}; });
+  if (!items.length){ if(m){ m.className='msg err'; m.textContent='لازم مادة وحدة على الأقل'; } return; }
+  try{
+    await rpc('web_order_edit_items', {p_id:id, p_items:items});
+    toast('✅ انحفظ التعديل'); ordOpen(id); pOrd();
+  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
+}
+
+async function ordEditSave(id){
+  var m = $('eiMsg');
+  var items = _editRows.filter(function(r){ return r.name && r.name.trim(); })
+    .map(function(r){ return {code:r.code,name:r.name,brand:r.brand,type:r.type,
+                              notes:r.notes,price:r.price,qty:r.qty,kind:r.kind}; });
+  if (!items.length){ if(m){ m.className='msg err'; m.textContent='لازم مادة وحدة على الأقل'; } return; }
+  try{
+    await rpc('web_order_edit_items', {p_id:id, p_items:items});
+    toast('✅ انحفظ التعديل'); ordOpen(id); pOrd();
+  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
 }
 
 /* ══════════════════════ برايم ══════════════════════ */
