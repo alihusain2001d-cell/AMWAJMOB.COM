@@ -3863,8 +3863,9 @@ async function _loadDistrictsInto(prefix, province) {
   try {
     var list = _districtsCache[province];
     if (!list) {
-      var res = await secureApiCall('getPrimeDistricts', { province: province });
-      list = (res && res.length) ? res : [];
+      /* 🗄️ من السيرفر الجديد — بلا بوابة Apps Script البطيئة */
+      var res = await sbFn('prime', { action: 'districts', province: province });
+      list = (res && res.data && res.data.length) ? res.data : [];
       _districtsCache[province] = list;
     }
     _districtsCurrentList[prefix] = list;
