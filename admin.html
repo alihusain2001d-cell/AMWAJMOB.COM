@@ -462,14 +462,21 @@ function custRow(c){
 async function custSet(id, patch, phone, name){
   try{
     await rpc('web_customer_set',{p_id:id,p_patch:patch});
-    // 🔔 إشعار الموافقة — نفس نص النظام القديم، يوصل الزبون فوراً
+    // 🔔 واتساب + إشعار — نفس نصوص النظام القديم.
+    //    الواتساب هو الأهم: يوصل بغض النظر عن نسخة التطبيق المثبّتة عند الزبون.
     if (patch.status === 'approved' && phone){
+      try{
+        var _msg = '🌊 أمواج للإلكترونيات\n\n✅ تمت الموافقة على تسجيلك!\n\n'+
+          'مرحباً بك '+(name||'')+'\n\nيمكنك الآن\n• تفعيل الضمان\n• التحقق من الضمان\n• الاطلاع على الأسعار\n\n'+
+          'للدخول للنظام:\n🌐 www.amwajmob.com\n📱 رقمك: '+phone+'\n\n📞 للمساعدة: 7696';
+        await fn('sendwhatsapp', {phone:phone, text:_msg});
+      }catch(e3){ /* ثانوي */ }
       try{
         await fn('sendpush', {target:'phone', phone:phone,
           title:'✅ تمت الموافقة على طلبك',
           body:'مرحباً '+(name||'')+'! سجّل دخولك الحين للوصول للأسعار والضمان',
           data:{type:'account_approved'}});
-      }catch(e2){ /* الإشعار ثانوي — الموافقة صارت بغض النظر */ }
+      }catch(e2){ /* ثانوي — الموافقة صارت بغض النظر */ }
     }
     toast('✅ انحفظ'); pCust();
   }
