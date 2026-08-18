@@ -453,13 +453,25 @@ function custRow(c){
           'onclick="lightbox(\''+esc(c.shop_photo_url)+'\')">'
         : '<span class="hint">—</span>')+'</td>'+
     '<td style="white-space:nowrap">'+
-      (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick="custSet('+c.id+',{status:\'approved\'})">قبول</button>' : '')+
+      (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick="custSet('+c.id+',{status:\'approved\'},'+JSON.stringify(c.phone||'')+','+JSON.stringify(c.name||'')+')">قبول</button>' : '')+
       (c.status!=='rejected' ? '<button class="action-btn btn-reject" onclick="custSet('+c.id+',{status:\'rejected\'})">رفض</button>' : '')+
       '<button class="action-btn btn-edit" onclick=\'custEdit('+JSON.stringify(c)+')\'>✏️</button>'+
     '</td></tr>';
 }
-async function custSet(id, patch){
-  try{ await rpc('web_customer_set',{p_id:id,p_patch:patch}); toast('✅ انحفظ'); pCust(); }
+async function custSet(id, patch, phone, name){
+  try{
+    await rpc('web_customer_set',{p_id:id,p_patch:patch});
+    // 🔔 إشعار الموافقة — نفس نص النظام القديم، يوصل الزبون فوراً
+    if (patch.status === 'approved' && phone){
+      try{
+        await fn('sendpush', {target:'phone', phone:phone,
+          title:'✅ تمت الموافقة على طلبك',
+          body:'مرحباً '+(name||'')+'! سجّل دخولك الحين للوصول للأسعار والضمان',
+          data:{type:'account_approved'}});
+      }catch(e2){ /* الإشعار ثانوي — الموافقة صارت بغض النظر */ }
+    }
+    toast('✅ انحفظ'); pCust();
+  }
   catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 function custEdit(c){
