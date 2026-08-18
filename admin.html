@@ -531,7 +531,7 @@ async function pOrd(){
         ftab(F.ordRange,'month','شهر',null,'setOrdR')+ftab(F.ordRange,'year','سنة',null,'setOrdR')+
         ftab(F.ordRange,'all','الكل',null,'setOrdR')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>رقم الطلب</th><th>المحل</th><th>الهاتف</th>'+
-        '<th>العنوان</th><th>المجموع</th><th>مواد</th><th>الحالة</th><th>برايم</th><th>التاريخ</th><th></th>'+
+        '<th>العنوان</th><th>المجموع</th><th>مواد</th><th>الحالة</th><th>التاريخ</th><th></th>'+
         '</tr></thead><tbody>'+
       (d.length ? d.map(function(o){
         var s = OST[o.status] || ['—','badge-gray'];
@@ -540,10 +540,9 @@ async function pOrd(){
           '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
           '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
           '<td><span class="badge '+s[1]+'">'+s[0]+'</span></td>'+
-          '<td>'+(o.prime_case_id ? '<span class="badge badge-purple">'+esc(o.prime_status||'—')+'</span>' : '—')+'</td>'+
           '<td class="hint">'+dstr(o.placed_at)+'</td>'+
           '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
-      }).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>')+
+      }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>')+
       '</tbody></table></div></div>';
     var el = $('oq');
     el.oninput = function(){ window._oq = el.value; clearTimeout(window._ot);
