@@ -4368,18 +4368,18 @@ async function sendData() {
     if (!name || !phone || !invoice || !screenCode) { alert("أكمل جميع الحقول"); throw "stop"; }
     if (usedInvoices.has(screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
 
-    /* 🗄️ الضمان انتقل للسيرفر الجديد.
-       السيرفر هو اللي يفحص التكرار ويحسب تاريخ الانتهاء — مو التطبيق.
-       (قبل: كان ينزّل ضمانات كل الزبائن للمتصفح ويدوّر بيها) */
-    const _wRes = await sbRpc('app_warranty_add', {
-      p_token:     getCustomerToken(),
-      p_code:      screenCode,
-      p_invoice:   invoice,
-      p_name:      name,
-      p_phone:     phone,
-      p_item_name: screenName,
-      p_kind:      type,
-      p_start:     start
+    /* 🗄️ الضمان كله على السيرفر الجديد — الحفظ ورسالة الواتساب سوا.
+       السيرفر يفحص التكرار ويحسب تاريخ الانتهاء ويرسل الرسالة.
+       (نص الرسالة ينتعدّل من لوحة التحكم ← إعدادات الرسائل) */
+    const _wRes = await sbFn('warranty', {
+      token:    getCustomerToken(),
+      code:     screenCode,
+      invoice:  invoice,
+      name:     name,
+      phone:    phone,
+      itemName: screenName,
+      kind:     type,
+      start:    start
     });
     if (!_wRes || !_wRes.ok) {
       dupMsg.innerText = "⚠️ " + ((_wRes && _wRes.error) || "تعذّر تفعيل الضمان، حاول مرة ثانية");
@@ -4391,9 +4391,6 @@ async function sendData() {
     result.className = "result success"; result.style.display = "block";
     result.innerHTML = `✔️ تم تفعيل الضمان<br>تاريخ الانتهاء: <b>${endText}</b><br>⏳ المتبقي: <b>${remaining}</b> يوم<div style="margin-top:10px;padding:8px 12px;background:#fff3cd;color:#856404;border-radius:8px;font-size:18px;">⚠️ الضمان لا يشمل الكسر، السوائل، أو التركيب الخاطئ<br>الفاتورة جزء من ضمانكم، يرجى الاحتفاظ بها</div><div style="margin-top:10px;padding:8px;background:#e3f2fd;color:#1565c0;border-radius:8px;font-size:17px;">سيتم إفراغ الحقول بعد قليل...</div>`;
 
-    /* 📱 نسخة للنظام القديم — سببها الوحيد رسالة الواتساب للزبون.
-       ما تعطّل الضمان لو فشلت، لأن الضمان انحفظ بالسيرفر الجديد فوق. */
-    secureApiCall('addWarranty', { name, phone, invoice, screenCode, screenName, type, start, end: endText, customerToken: getCustomerToken() }).catch(function(e){ console.warn('warranty whatsapp copy failed', e); });
     usedInvoices.add(screenCode);
     setTimeout(() => {
       document.getElementById("name").value = ""; document.getElementById("phone").value = "";
@@ -9111,6 +9108,13 @@ async function openAdminPanelOld() {
 }
 
 function adminSwitchTab(tab) {
+  /* 🚫 موقوفة — اللوحة المدمجة القديمة ما عادت تنفتح.
+     زر «لوحة التحكم» صار يفتح admin.html بره، بس إشعارات الأدمن
+     لسا تنادي هالدالة بعد ما تفتحها. ولو اشتغلت، تشغّل كود يكلّم
+     گوگل سكربت القديم (getAllOrders) — وهو على وشك ما ينطفي.
+     فنوقفها من هنا: سطر واحد يقفل كل المسارات دفعة وحدة. */
+  return;
+  /* eslint-disable no-unreachable */
   // ⚠️ pView/pTab (تبويب المنتجات) محذوف من هذي اللوحة — لسا نتحقق منهم دفاعياً تحسباً لو رجع الزر يوماً
   var pView = document.getElementById('adminProductsView');
   var oView = document.getElementById('adminOrdersView');
