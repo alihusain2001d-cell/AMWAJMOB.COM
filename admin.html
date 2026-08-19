@@ -186,6 +186,7 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
     <div class="nav-item" id="nav-up"    onclick="showPage('up')"><span class="nav-icon">📤</span><span>رفع المخزن</span></div>
     <div class="nav-item" id="nav-bc"    onclick="showPage('bc')"><span class="nav-icon">📢</span><span>الإعلانات</span></div>
     <div class="nav-item" id="nav-set"   onclick="showPage('set')"><span class="nav-icon">🚨</span><span>التنبيهات والدوام</span></div>
+    <div class="nav-item" id="nav-msg"   onclick="showPage('msg')"><span class="nav-icon">⚙️</span><span>إعدادات الرسائل</span></div>
     <div class="sidebar-footer">
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:7px;text-align:center" id="sideTime"></div>
       <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
@@ -303,15 +304,15 @@ function tick(){
 /* ══════════════════════ التنقّل ══════════════════════ */
 var TITLES = {home:'الرئيسية',cust:'الزبائن',ord:'الطلبات',prime:'شحنات برايم',
               war:'الضمانات',cat:'المواد والشاشات',up:'رفع المخزن',bc:'الإعلانات',
-              set:'التنبيهات والدوام'};
+              set:'التنبيهات والدوام',msg:'إعدادات الرسائل'};
 function showPage(p){
   PAGE = p;
-  ['home','cust','ord','prime','war','cat','up','bc','set'].forEach(function(k){
+  ['home','cust','ord','prime','war','cat','up','bc','set','msg'].forEach(function(k){
     var el = $('nav-'+k); if (el) el.className = 'nav-item' + (k===p ? ' active' : '');
   });
   $('pageTitle').textContent = TITLES[p] || '';
   $('content').innerHTML = '<div class="loading">جاري التحميل…</div>';
-  ({home:pHome,cust:pCust,ord:pOrd,prime:pPrime,war:pWar,cat:pCat,up:pUp,bc:pBc,set:pSet})[p]();
+  ({home:pHome,cust:pCust,ord:pOrd,prime:pPrime,war:pWar,cat:pCat,up:pUp,bc:pBc,set:pSet,msg:pMsg})[p]();
 }
 
 /* ══════════════════════ رفع الصور للسيرفر ══════════════════════ */
@@ -465,16 +466,28 @@ async function custSet(id, patch, phone, name){
     // 🔔 واتساب + إشعار — نفس نصوص النظام القديم.
     //    الواتساب هو الأهم: يوصل بغض النظر عن نسخة التطبيق المثبّتة عند الزبون.
     if (patch.status === 'approved' && phone){
+      var _tpl = {}, _phone1 = '7696';
       try{
-        var _msg = '🌊 أمواج للإلكترونيات\n\n✅ تمت الموافقة على تسجيلك!\n\n'+
+        var _cfg = await rpc('web_msg_settings', {});
+        (_cfg['القوالب']||[]).forEach(function(t){ _tpl[t.key] = t.template; });
+        _phone1 = (_cfg['التواصل']||{}).contact_phone_1 || '7696';
+      }catch(e0){ /* نكمل بالنصوص الافتراضية */ }
+      function _render(t, vars, fb){
+        var s = t || fb;
+        Object.keys(vars).forEach(function(k){ s = s.split('{{'+k+'}}').join(vars[k]||''); });
+        return s;
+      }
+      try{
+        var _msg = _render(_tpl.wa_approval, {name:name||'', phone:phone, phone1:_phone1},
+          '🌊 أمواج للإلكترونيات\n\n✅ تمت الموافقة على تسجيلك!\n\n'+
           'مرحباً بك '+(name||'')+'\n\nيمكنك الآن\n• تفعيل الضمان\n• التحقق من الضمان\n• الاطلاع على الأسعار\n\n'+
-          'للدخول للنظام:\n🌐 www.amwajmob.com\n📱 رقمك: '+phone+'\n\n📞 للمساعدة: 7696';
+          'للدخول للنظام:\n🌐 www.amwajmob.com\n📱 رقمك: '+phone+'\n\n📞 للمساعدة: 7696');
         await fn('sendwhatsapp', {phone:phone, text:_msg});
       }catch(e3){ /* ثانوي */ }
       try{
         await fn('sendpush', {target:'phone', phone:phone,
-          title:'✅ تمت الموافقة على طلبك',
-          body:'مرحباً '+(name||'')+'! سجّل دخولك الحين للوصول للأسعار والضمان',
+          title: _render(_tpl.push_approval_title, {}, '✅ تمت الموافقة على طلبك'),
+          body: _render(_tpl.push_approval_body, {name:name||''}, 'مرحباً '+(name||'')+'! سجّل دخولك الحين للوصول للأسعار والضمان'),
           data:{type:'account_approved'}});
       }catch(e2){ /* ثانوي — الموافقة صارت بغض النظر */ }
     }
@@ -1304,6 +1317,78 @@ async function setSaveOv(){
 async function setDelOv(d){
   try{ await rpc('web_override_del',{p_date:d}); toast('🗑️ انحذف'); pSet(); }
   catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+
+/* ══════════════════════ إعدادات الرسائل ══════════════════════ */
+async function pMsg(){
+  try{
+    var r = await rpc('web_msg_settings', {});
+    var c = r['التواصل'] || {}, tpls = r['القوالب'] || [];
+
+    var contactHtml =
+      '<div class="section-card"><div class="section-head"><div class="section-title">📞 أرقام التواصل وروابط التواصل</div></div>'+
+      '<div style="padding:14px">'+
+        '<div class="grid2">'+
+          '<div><label>رقم الدعم الأول</label><input class="modal-input" id="msgP1" dir="ltr" value="'+esc(c.contact_phone_1||'')+'"></div>'+
+          '<div><label>رقم واتساب الإدارة</label><input class="modal-input" id="msgP2" dir="ltr" value="'+esc(c.contact_phone_2||'')+'"></div>'+
+        '</div>'+
+        '<div class="grid2" style="margin-top:8px">'+
+          '<div><label>رابط فيسبوك</label><input class="modal-input" id="msgFb" dir="ltr" value="'+esc(c.facebook_url||'')+'" placeholder="https://facebook.com/..."></div>'+
+          '<div><label>رابط انستا</label><input class="modal-input" id="msgIg" dir="ltr" value="'+esc(c.instagram_url||'')+'" placeholder="https://instagram.com/..."></div>'+
+        '</div>'+
+        '<div class="msg" id="msgContactMsg"></div>'+
+        '<button class="btn-solid" style="width:100%;margin-top:10px" onclick="msgSaveContact()">💾 حفظ أرقام التواصل والروابط</button>'+
+      '</div></div>';
+
+    var byCat = {whatsapp:[], push:[]};
+    tpls.forEach(function(t){ (byCat[t.category]||byCat.whatsapp).push(t); });
+
+    function tplSection(title, list){
+      if (!list.length) return '';
+      return '<div class="section-card"><div class="section-head"><div class="section-title">'+title+'</div></div>'+
+        '<div style="padding:14px">'+
+        list.map(function(t){
+          return '<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">'+
+            '<label>'+esc(t.label)+'</label>'+
+            (t.placeholders && t.placeholders !== '—' ? '<div class="hint" style="margin-bottom:4px">المتغيّرات المتاحة: '+esc(t.placeholders)+'</div>' : '')+
+            '<textarea class="modal-input" id="tplBox_'+esc(t.key)+'" rows="'+(t.category==='whatsapp'?7:2)+'" style="font-family:inherit">'+esc(t.template)+'</textarea>'+
+            '<button class="btn-solid gray" style="margin-top:6px" onclick="msgSaveTpl('+JSON.stringify(t.key)+')">💾 حفظ</button>'+
+            '<span class="msg" id="tplMsg_'+esc(t.key)+'" style="display:inline-block;margin-right:8px"></span>'+
+          '</div>';
+        }).join('')+
+        '</div></div>';
+    }
+
+    $('content').innerHTML = contactHtml +
+      tplSection('💬 نصوص واتساب', byCat.whatsapp) +
+      tplSection('🔔 نصوص الإشعارات', byCat.push) +
+      '<div class="hint" style="padding:0 4px 20px">⚠️ فاتورة الطلب (رسالة الواتساب الطويلة اللي فيها قائمة المواد) تبقى بالكود — فيها حلقة على مواد السلة ما تصير نص ثابت.</div>';
+  }catch(e){ $('content').innerHTML = errBox(e); }
+}
+
+async function msgSaveContact(){
+  var m = $('msgContactMsg');
+  var vals = {
+    contact_phone_1: $('msgP1').value.trim(),
+    contact_phone_2: $('msgP2').value.trim(),
+    facebook_url:    $('msgFb').value.trim(),
+    instagram_url:   $('msgIg').value.trim()
+  };
+  if (m){ m.className='msg'; m.textContent='⏳ جاري الحفظ...'; }
+  try{
+    for (var k in vals){
+      await rpc('web_setting_set', {p_name:k, p_value: vals[k]});
+    }
+    if (m){ m.className='msg ok'; m.textContent='✅ انحفظ'; }
+  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
+}
+
+async function msgSaveTpl(key){
+  var box = $('tplBox_'+key), m = $('tplMsg_'+key);
+  try{
+    await rpc('web_template_set', {p_tpl_key:key, p_template: box.value});
+    if (m){ m.className='msg ok'; m.textContent='✅ انحفظ'; }
+  }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
 }
 
 
