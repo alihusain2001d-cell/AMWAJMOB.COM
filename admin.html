@@ -322,6 +322,9 @@ var UPFX = null;
 async function uploadPrefix(){
   if (UPFX) return UPFX;
   var r = await rpc('web_upload_prefix', {});
+  /* بدون هالسطر، لو ما رجع المفتاح يصير المسار «undefined/…» ويرفضه
+     السيرفر برسالة تقنية غامضة (row-level security) ما تدل على السبب. */
+  if (!r || !r.prefix) throw new Error('ما وصل مفتاح الرفع من السيرفر — شغّل ملف 64_تصليح_رفع_الصور.sql');
   UPFX = r.prefix;
   return UPFX;
 }
@@ -356,6 +359,11 @@ async function uploadImage(file, folder, nameHint){
     body: blob });
   if (!res.ok){
     var t = await res.text();
+    /* «row-level security» معناها السيرفر رفض المسار، مو إن الشبكة فشلت —
+       نترجمها لرسالة تدل على الحل بدل النص التقني. */
+    if (t.indexOf('row-level security') !== -1 || t.indexOf('AccessDenied') !== -1) {
+      throw new Error('السيرفر رفض الرفع — شغّل ملف 64_تصليح_رفع_الصور.sql بـ Supabase');
+    }
     throw new Error('فشل الرفع: ' + t.slice(0,120));
   }
   return CFG.url + '/storage/v1/object/public/catalog/' + path;
