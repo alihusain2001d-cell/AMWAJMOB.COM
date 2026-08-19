@@ -2972,8 +2972,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
       </div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
-        <a href="tel:7696" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
-        <a href="tel:07709000160" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
+        <a href="tel:7696" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
+        <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
     </div>
 
@@ -3012,8 +3012,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
       </div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
-        <a href="tel:7696" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
-        <a href="tel:07709000160" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
+        <a href="tel:7696" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
+        <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
     </div>
 
@@ -3212,8 +3212,8 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="sec-label">تواصل معنا</div>
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:21px;padding:18px;">🟢 واتساب</a>
       <div class="contact-strip" style="margin-top:8px;">
-        <a href="tel:07709000160" class="contact-btn">📱 07709000160</a>
-        <a href="tel:7696" class="contact-btn">📱 7696</a>
+        <a href="tel:07709000160" class="contact-btn contact-phone2">📱 07709000160</a>
+        <a href="tel:7696" class="contact-btn contact-phone1">📱 7696</a>
       </div>
 </div>
       <div style="height:16px;"></div>
@@ -6993,6 +6993,24 @@ function _take(parts, slug, label){
   return (parts[slug] || []).map(function(i){ return _mapPart(i, label); });
 }
 
+/* 📞 أرقام التواصل — تجي من لوحة التحكم، تتحدّث فوري بلا رفعة كود.
+   نحدّث كل الروابط اللي عليها هالصفوف بضربة وحدة كل ما يتحمّل الكاتلوك. */
+function applyContactInfo(contact){
+  if (!contact) return;
+  if (contact.phone1) {
+    document.querySelectorAll('.contact-phone1').forEach(function(el){
+      el.href = 'tel:' + contact.phone1;
+      el.textContent = '📱 ' + contact.phone1;
+    });
+  }
+  if (contact.phone2) {
+    document.querySelectorAll('.contact-phone2').forEach(function(el){
+      el.href = 'tel:' + contact.phone2;
+      el.textContent = '📱 ' + contact.phone2;
+    });
+  }
+}
+
 /* 🖼️ إطار الصور — صورة وحدة ثابتة، تتحط فوق صورة المنتج بـCSS بلا
    ما تلمس الصورة نفسها. لتحديثها: بدّل الرابط هنا بس وارفع الملف. */
 var FIXED_FRAME_URL = 'https://afbeoibaenzivxqcczdn.supabase.co/storage/v1/object/public/frames/frame-transparent.png';
@@ -7046,6 +7064,7 @@ async function loadCatalogFromServer(){
   SYS_NOTICE   = r.notice || null;
   APP_VER_INFO = r.ver    || null;
   try { checkSystemNotice(); } catch(e){}
+  try { applyContactInfo(r.contact); } catch(e){}
 
   // 🗂️ فهرس بالكود الثابت — يخلّينا نلكى أي مادة فوراً بدون ما ندوّر بـ17 قائمة
   CATALOG_BY_CODE = {};
