@@ -5751,7 +5751,7 @@ function renderNewStrip(){
     var tag = '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
               (isNew ? '🆕 جديد' : '🔄 رجع اتوفر') + '</span>';
     /* 🖼️ الشريط يخلط أقسام مختلفة، فنحطله الإطار الافتراضي بس (مو المخصص لكل قسم) */
-    var naFrame = CATALOG_FRAMES.default ? '<div class="na-frame-layer" style="background-image:url(&quot;' + CATALOG_FRAMES.default.replace(/"/g,'&quot;') + '&quot;)"></div>' : '';
+    var naFrame = FIXED_FRAME_URL ? '<div class="na-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;') + '&quot;)"></div>' : '';
     var inner = img
       ? '<img src="' + img + '" loading="lazy" onerror="naImgFail(this)">' + naFrame + tag
       : '<span class="na-ph">📷</span>' + tag;
@@ -6987,27 +6987,23 @@ var MISC_SLUGS = ['misc','glass','touch','antenna','board','conn_lcd','keypad','
 function _mapPart(i, typeLabel, slug){
   return { code:i.code, name:i.name || '-', brand:extractBrand(i.name || ''),
            type:typeLabel, price:Number(i.price)||0, qty:Number(i.qty)||0,
-           notes:'', image_url:i.image_url || '', catSlug:slug };
+           notes:'', image_url:i.image_url || '' };
 }
 function _take(parts, slug, label){
-  return (parts[slug] || []).map(function(i){ return _mapPart(i, label, slug); });
+  return (parts[slug] || []).map(function(i){ return _mapPart(i, label); });
 }
 
-/* 🖼️ إطارات الصور — طبقة تتحط فوق صورة المنتج بـCSS، بلا ما نلمس
-   الصورة نفسها. تبديل الإطار من اللوحة يطبّق فوري على كل الصور. */
-var CATALOG_FRAMES = { default:null, screens:null, byCategory:{} };
+/* 🖼️ إطار الصور — صورة وحدة ثابتة، تتحط فوق صورة المنتج بـCSS بلا
+   ما تلمس الصورة نفسها. لتحديثها: بدّل الرابط هنا بس وارفع الملف. */
+var FIXED_FRAME_URL = '';
 function _frameLayerHtml(p, isScreen){
-  var url = isScreen
-    ? (CATALOG_FRAMES.screens || CATALOG_FRAMES.default)
-    : ((p && p.catSlug && CATALOG_FRAMES.byCategory[p.catSlug]) || CATALOG_FRAMES.default);
-  if (!url) return '';
-  return '<div class="pi-frame-layer" style="background-image:url(&quot;' + String(url).replace(/"/g,'&quot;').replace(/'/g,'%27') + '&quot;)"></div>';
+  if (!FIXED_FRAME_URL) return '';
+  return '<div class="pi-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;').replace(/'/g,'%27') + '&quot;)"></div>';
 }
 
 async function loadCatalogFromServer(){
   var r = await sbRpc('app_catalog');
   var parts = r.parts || {};
-  CATALOG_FRAMES = r.frames || { default:null, screens:null, byCategory:{} };
 
   pricesData = (r.screens || []).map(function(s){
     return { code:s.code, brand:s.brand||'', name:s.name||'-', type:s.type||'',
