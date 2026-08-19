@@ -3757,43 +3757,6 @@ function openChk() { openSheet("checkSheet"); }
 
 let currentPriceType = 'screens';
 
-function openPrices(type) {
-  currentPriceType = type;
-  currentFlatSubType = null;
-  showPage("pricesPage");
-  showBackButton();
-  const title = document.getElementById("pricesTitle");
-  if (type === 'batteries') title.innerHTML = "🔋 البطاريات";
-  else if (type === 'chargeboards') title.innerHTML = "🔌 بورد شحن";
-  else if (type === 'flatcharging') title.innerHTML = "⚡ شريط شحن + شاشة";
-  else if (type === 'backcover') title.innerHTML = "📱 باك كفر";
-  else if (type === 'housing') title.innerHTML = "🏠 شاصي";
-  else if (type === 'lens') title.innerHTML = "📷 عدسة كاميرا";
-  else if (type === 'camera') title.innerHTML = "📸 كاميرا";
-  else title.innerHTML = "🖥️ الشاشات";
-  document.getElementById("brandsSection").style.display = "block";
-  document.getElementById("brandPrices").style.display = "none";
-  renderBrandsGrid(type);
-  const searchInput = document.getElementById("searchInput");
-  searchInput.value = "";
-  searchInput.oninput = function() {
-    const q = this.value.trim().toLowerCase();
-    if (q.length < 2) { document.getElementById("brandsSection").style.display = "block"; document.getElementById("brandPrices").style.display = "none"; return; }
-    document.getElementById("brandsSection").style.display = "none";
-    document.getElementById("brandPrices").style.display = "block";
-    const box = document.getElementById("brandPricesBox");
-    box.innerHTML = `<div style="text-align:center;padding:40px 20px;"><div class="loading-spinner"></div><div style="color:#1e88e5;font-size:18px;margin-top:15px;">جاري البحث...</div></div>`;
-    setTimeout(() => {
-      const dataToSearch = getDataForType(type);
-      if (dataToSearch.length === 0) { box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:#666;">جاري تحميل الأسعار...</div>`; return; }
-      box.innerHTML = `<h3 style="color:#1e88e5;margin:10px 0;">نتائج البحث: "${q}"</h3>`;
-      const filtered = dataToSearch.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.brand && p.brand.toLowerCase().includes(q)));
-      if (filtered.length === 0) { box.innerHTML += "<div style='padding:10px;color:#666;'>لا توجد نتائج</div>"; return; }
-      filtered.slice(0, 50).forEach(p => { box.innerHTML += createPriceItem(p); });
-      if (filtered.length > 50) box.innerHTML += `<div style="padding:10px;color:#666;text-align:center;">... و ${filtered.length - 50} نتيجة أخرى</div>`;
-    }, 300);
-  };
-}
 
 function getDataForType(type) {
   switch(type) {
@@ -4468,7 +4431,6 @@ let cameraData = [], buzzerData = [], earSpeakerData = [], doorSimData = [];
 let fingerprintData = [], miscData = [], toolsData = [];
 let flatPowerSheetData = [], flatVolumeSheetData = [];
 
-async function loadPrices() { try { pricesData = await secureApiCall('getPrices'); } catch(e){} }
 // Safely extract numeric value - respects 0 as a real value
 // Tries primary key first; falls back ONLY if primary is truly missing (undefined/null/'')
 function _safeNum(item, primaryKey, fallbackKey) {
@@ -4488,46 +4450,6 @@ function _safeStr(item, primaryKey, fallbackKey, defaultVal) {
   return (v === undefined || v === null || v === '') ? (defaultVal || '') : String(v);
 }
 
-async function loadBatteries() { try { const r = await secureApiCall('getBatteries'); batteriesData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بطارية',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadChargeboards() { try { const r = await secureApiCall('getChargeboards'); chargeboardsData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بورد شحن',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadFlatMain() {
-  try {
-    const r = await secureApiCall('getFlatMain');
-    const all = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')}));
-    flatchargingData = all.filter(i=>{const n=i.name.toUpperCase();return n.includes('FLAT LCD')||n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط شحن/شاشة'}));
-    flatpowerData = all.filter(i=>{const n=i.name.toUpperCase();return !n.includes('FLAT LCD')&&!n.includes('FLAT MAIN');}).map(i=>({...i,type:'شريط باور/صوت/منوعة'}));
-  } catch(e){}
-}
-async function loadBackCover() { try { const r = await secureApiCall('getBackCover'); backcoverData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باك كفر',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadHousing() { try { const r = await secureApiCall('getHousing'); housingData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'شاصي',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadLens() { try { const r = await secureApiCall('getLens'); lensData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'عدسة كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadCamera() { try { const r = await secureApiCall('getCamera'); cameraData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'كاميرا',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadBuzzer() { try { const r = await secureApiCall('getBuzzer'); buzzerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة جرس',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadEarSpeaker() { try { const r = await secureApiCall('getEarSpeaker'); earSpeakerData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'سماعة اتصال',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadDoorSim() { try { const r = await secureApiCall('getDoorSim'); doorSimData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'باب سيم كارت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadFingerprint() { try { const r = await secureApiCall('getFingerprint'); fingerprintData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'بصمة',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadMisc() { try { const r = await secureApiCall('getMisc'); miscData = r.map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'منوع',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد'),notes:_safeStr(i,'notes','ملاحظات')})); } catch(e){} }
-async function loadFlatPowerSheet() { try { const r = await secureApiCall('getFlatPower'); flatPowerSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات باور',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
-async function loadFlatVolumeSheet() { try { const r = await secureApiCall('getFlatVolume'); flatVolumeSheetData = (r||[]).map(i=>({...i,brand:extractBrand(_safeStr(i,'name','الاسم')),type:'فلات صوت',name:_safeStr(i,'name','الاسم','-'),price:_safeNum(i,'price','السعر'),qty:_safeNum(i,'qty','العدد')})); } catch(e){} }
-async function loadTools() {
-  try {
-    const r = await secureApiCall('getTools');
-    toolsData = (r || []).map(i => ({
-      ...i,
-      brand: '',
-      type: 'أداة',
-      name: _safeStr(i, 'name', 'الاسم', '-'),
-      price: _safeNum(i, 'price', 'السعر'),
-      qty: _safeNum(i, 'qty', 'العدد'),
-      notes: _safeStr(i, 'notes', 'ملاحظات'),
-      image_url: i.image_url || ''
-    }));
-    return toolsData;
-  } catch(e) {
-    console.error('loadTools error:', e);
-    throw e;
-  }
-}
 
 async function openToolsSheet() {
   sheetPriceType = 'tools';
@@ -6418,130 +6340,6 @@ function loadMyOrders() {
 }
 
 // Legacy function - now unused, kept for safety
-function loadMyOrdersOld() {
-  const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  const listDiv = document.getElementById('myOrdersList');
-  const loadDiv = document.getElementById('myOrdersLoading');
-  if (!user) {
-    if (loadDiv) loadDiv.style.display = 'none';
-    if (listDiv) listDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#64748B;">يرجى تسجيل الدخول أولاً</div>';
-    return;
-  }
-  if (loadDiv) loadDiv.style.display = 'block';
-  if (listDiv) listDiv.innerHTML = '';
-  secureApiCall('getMyOrders', { phone: user.phone, customerToken: getCustomerToken() }).then(function(orders) {
-    if (loadDiv) loadDiv.style.display = 'none';
-    if (!orders || !orders.length) {
-      if (listDiv) listDiv.innerHTML = '<div style="padding:30px;text-align:center;color:#64748B;">📦 لا توجد طلبات</div>';
-      updateOrdersBadge(0);
-      localStorage.setItem('amwaj_orders_seen', '[]');
-      return;
-    }
-
-    // ── كشف طلبات جديدة ──
-    var seenIds = [];
-    try { seenIds = JSON.parse(localStorage.getItem('amwaj_orders_seen') || '[]'); } catch(e) {}
-    var allIds = orders.map(function(o){ return o.orderId; });
-    var newOrders = orders.filter(function(o){ return o.orderId && !seenIds.includes(o.orderId); });
-    if (newOrders.length > 0 && seenIds.length > 0) {
-      showOrdersNotification(newOrders.length);
-    }
-    localStorage.setItem('amwaj_orders_seen', JSON.stringify(allIds));
-
-    var html = orders.map(function(o) {
-      // ── Status pill ──
-      var statusText = 'تم استلام طلبك';
-      var statusClass = 'pill-pending';
-      var statusIcon = '✅';
-      if (o.status === 'picked') { statusText = 'قيد التجهيز'; statusClass = 'pill-picked'; statusIcon = '📦'; }
-      else if (o.status === 'delivered') { statusText = 'تم التسليم'; statusClass = 'pill-delivered'; statusIcon = '✅'; }
-      else if (o.status === 'cancelled') { statusText = 'ملغي'; statusClass = 'pill-cancelled'; statusIcon = '❌'; }
-
-      // ── Date ──
-      var dateStr = '';
-      if (o.date || o.createdAt) {
-        try {
-          var d = new Date(o.date || o.createdAt);
-          if (!isNaN(d.getTime())) {
-            dateStr = d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' });
-          }
-        } catch(e) {}
-      }
-
-      // ── Items list with rich detail ──
-      var itemsHtml = (o.items||[]).map(function(it) {
-        var price = Number(String(it.price||'').replace(/[^0-9]/g,''))||0;
-        var qty = it.quantity || 1;
-        var itemTotal = price * qty;
-        return _orderItemHtml(it);
-      }).join('');
-
-      var total = Number(String(o.total||'').replace(/[^0-9]/g,''))||0;
-      var orderId = o.orderId || '-';
-      var itemCount = (o.items||[]).length;
-      
-      // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
-      var isCancellable = false;
-      if (o.status === 'pending') {
-        try {
-          var orderTime = new Date(o.timestamp || o.date || o.createdAt).getTime();
-          if (!isNaN(orderTime)) {
-            var ageMin = (Date.now() - orderTime) / 60000;
-            isCancellable = ageMin < 20;
-          }
-        } catch(e) {}
-      }
-
-      // WhatsApp message for this specific order
-      var waMsgParts = [
-        'السلام عليكم',
-        'أريد الاستفسار عن طلبي:',
-        '🧾 رقم الطلب: ' + orderId,
-        '📦 عدد المواد: ' + itemCount,
-        '💰 المجموع: ' + formatPriceIQD(total) + ' IQD',
-        '🔖 الحالة: ' + statusText
-      ];
-      var waUrl = 'https://wa.me/' + AMWAJ_PRIMARY_WA + '?text=' + encodeURIComponent(waMsgParts.join('\n'));
-
-      var cancelBtn = isCancellable
-        ? '<button class="cancel-order-btn" onclick="cancelOrder(\'' + orderId + '\')">إلغاء</button>'
-        : '';
-
-      return '<div class="order-card">' +
-        '<div class="order-card-header">' +
-          '<div>' +
-            '<div class="order-id-text">' + sanitize(orderId) + '</div>' +
-            (dateStr ? '<div class="order-date-text">📅 ' + dateStr + '</div>' : '') +
-          '</div>' +
-          '<span class="status-pill ' + statusClass + '">' + statusIcon + ' ' + statusText + '</span>' +
-        '</div>' +
-        '<div class="order-items-section">' +
-          '<div class="order-items-label">📋 المنتجات (' + itemCount + ')</div>' +
-          itemsHtml +
-        '</div>' +
-        '<div class="order-footer">' +
-          '<div class="order-total-row">' +
-            '<span class="order-total-label">💰 المجموع الكلي</span>' +
-            '<span class="order-total-value"><span dir="ltr">' + formatPriceIQD(total) + '</span> IQD</span>' +
-          '</div>' +
-          (o.address ? '<div class="order-address-row">📍 <span>' + sanitize(o.address) + (o.district ? ' / ' + sanitize(o.district) : '') + '</span></div>' : '') +
-        '</div>' +
-        '<div class="order-actions">' +
-          '<a href="' + waUrl + '" target="_blank" class="order-wa-btn">💬 استفسار عن هذا الطلب</a>' +
-          cancelBtn +
-        '</div>' +
-      '</div>';
-    }).join('');
-    if (listDiv) listDiv.innerHTML = html;
-
-    // مسح الرقم بعد الفتح
-    updateOrdersBadge(0);
-
-  }).catch(function(e) {
-    if (loadDiv) loadDiv.style.display = 'none';
-    if (listDiv) listDiv.innerHTML = '<div class="result error">⚠️ فشل تحميل الطلبات</div>';
-  });
-}
 
 /* 🚫 رسالة «طلب جديد وصلك» — موقّفة بطلبك.
 
@@ -6784,66 +6582,6 @@ function doGlobalSheetSearch() {
 }
 
 // ── New Arrivals ──
-function loadNewItems() {
-  var label = document.getElementById('newItemsLabel');
-  var grid = document.getElementById('newItemsGrid');
-  if (!label || !grid) return;
-
-  label.style.display = 'flex';
-  grid.style.display = 'block';
-  grid.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loading-spinner" style="margin:0 auto;width:28px;height:28px;"></div></div>';
-
-  var typeMap = {
-    'شاشات':'screens','بطاريات':'batteries','بورد شحن':'chargeboards',
-    'فلات':'flatcharging','باك كفر':'backcover','شاصي':'housing',
-    'عدسة كاميرا':'lens','كاميرا':'camera',
-    'سماعة جرس':'flatpower','سماعة اتصال':'flatpower',
-    'باب سيم':'flatpower','بصمة':'flatpower','منوعة':'flatpower'
-  };
-
-  // 🎞️ استبدله الشريط المتحرك بأعلى الصفحة — نخفي القديم بدل ما يتكرر نفس المحتوى
-  if (label) label.style.display = 'none';
-  if (grid)  grid.style.display  = 'none';
-  return;
-  /* eslint-disable no-unreachable */
-  secureApiCall('getNewItems').then(function(items) {
-    if (!items || !items.length) {
-      label.style.display = 'none';
-      grid.style.display = 'none';
-      return;
-    }
-    var html = '';
-    items.forEach(function(item) {
-      var price = Number(item.price)||0;
-      var typeKey = typeMap[item.source] || 'screens';
-      var pObj = {
-        name: item.name, brand: item.brand||'', type: item.type||'',
-        price: price, qty: item.qty||0, notes: item.notes||'',
-        image_url: item.image_url||'', itemType: typeKey
-      };
-      var pid = cacheProduct(pObj);
-      var uid = 'nw_' + Math.random().toString(36).substr(2,8);
-      html +=
-        '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">' +
-          '<div style="flex:1;min-width:0;">' +
-            '<span style="font-size:12px;background:#EFF6FF;color:#0284C7;border-radius:6px;padding:2px 8px;font-weight:700;">' + sanitize(item.source||'') + ' ' + (item.icon||'') + '</span>' +
-            '<div style="font-size:15px;font-weight:700;margin:4px 0 2px;color:#0F172A;">' + sanitize(item.name||'-') + '</div>' +
-            (item.type ? '<div style="font-size:13px;color:#16A34A;font-weight:700;">' + sanitize(item.type) + '</div>' : '') +
-            '<div style="font-size:16px;font-weight:800;color:#0284C7;margin-top:3px;" dir="ltr">' + formatPriceIQD(price) + ' IQD</div>' +
-          '</div>' +
-          '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;flex-shrink:0;">' +
-            '<button class="pi-qty-btn pi-qty-plus" onclick="piDirectAdd(\''+pid+'\',\''+uid+'\')">+</button>' +
-            '<button style="background:#475569;color:white;border:none;border-radius:6px;padding:4px 8px;font-size:13px;min-width:32px;text-align:center;cursor:pointer;" onclick="piDirectAdd(\''+pid+'\',\''+uid+'\')"><span id="' + uid + '" class="pi-qty-display">0</span></button>' +
-            '<button class="pi-qty-btn pi-qty-minus" onclick="piDirectRemove(\''+pid+'\',\''+uid+'\')">−</button>' +
-          '</div>' +
-        '</div>';
-    });
-    grid.innerHTML = html;
-  }).catch(function() {
-    label.style.display = 'none';
-    grid.style.display = 'none';
-  });
-}
 
 function isGuest() {
   var u = localStorage.getItem('amwaj_user');
@@ -7013,7 +6751,7 @@ function applyContactInfo(contact){
 
 /* 🖼️ إطار الصور — صورة وحدة ثابتة، تتحط فوق صورة المنتج بـCSS بلا
    ما تلمس الصورة نفسها. لتحديثها: بدّل الرابط هنا بس وارفع الملف. */
-var FIXED_FRAME_URL = 'https://afbeoibaenzivxqcczdn.supabase.co/storage/v1/object/public/frames/frame-transparent.png';
+var FIXED_FRAME_URL = 'https://afbeoibaenzivxqcczdn.supabase.co/storage/v1/object/public/frames/f/frame-transparent.png';
 function _frameLayerHtml(p, isScreen){
   if (!FIXED_FRAME_URL) return '';
   return '<div class="pi-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;').replace(/'/g,'%27') + '&quot;)"></div>';
