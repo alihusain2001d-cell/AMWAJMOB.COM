@@ -6995,7 +6995,7 @@ function _take(parts, slug, label){
 
 /* 🖼️ إطار الصور — صورة وحدة ثابتة، تتحط فوق صورة المنتج بـCSS بلا
    ما تلمس الصورة نفسها. لتحديثها: بدّل الرابط هنا بس وارفع الملف. */
-var FIXED_FRAME_URL = '';
+var FIXED_FRAME_URL = 'https://afbeoibaenzivxqcczdn.supabase.co/storage/v1/object/public/frames/frame-transparent.png';
 function _frameLayerHtml(p, isScreen){
   if (!FIXED_FRAME_URL) return '';
   return '<div class="pi-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;').replace(/'/g,'%27') + '&quot;)"></div>';
