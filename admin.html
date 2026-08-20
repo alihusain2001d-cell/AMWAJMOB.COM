@@ -8,6 +8,12 @@
 <!-- إعدادات الاتصال — نفس الملف اللي يستعمله الموقع.
      موجود محلياً وعلى السيرفر، فما أحد يحتاج يكتب رابط ولا مفتاح. -->
 <script src="sb-config.js"></script>
+<!-- 📱 تنصيب اللوحة كتطبيق بالشاشة الرئيسية -->
+<link rel="manifest" href="admin-manifest.json">
+<link rel="apple-touch-icon" href="pwa-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="أمواج">
 <style>
 :root{
   --bg:#F6F8FB; --surface:#FFFFFF; --card:#F8FAFC; --border:#E5E9F0;
@@ -253,6 +259,9 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
 
       <button class="login-btn" id="lgChange" style="background:var(--card);color:var(--muted);margin-top:8px"
               onclick="forgetAll()">تغيير الاتصال</button>
+      <button class="login-btn" id="pwaBtn" style="display:none;background:var(--card);color:var(--primary);
+              border:1.5px solid var(--primary);margin-top:8px" onclick="pwaInstall()">
+        📲 ثبّتها بالشاشة الرئيسية</button>
     </div>
     <div class="login-err" id="lgErr"></div>
   </div>
@@ -411,6 +420,61 @@ async function fn(name, body){
 function savedCfg(){
   try{ return JSON.parse(localStorage.getItem('amwaj_sb') || 'null'); }catch(e){ return null; }
 }
+/* ══════════════════ التنصيب كتطبيق ══════════════════
+   على الموقع بس — الملف المحلي ما ينتصّب.
+   أندرويد يعطينا الحدث فنخزنه ونعرض زر بوقته.
+   آيفون ما يعطي حدث أبداً، فنشرحله الخطوات بنفسنا.      */
+var _pwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _pwaPrompt = e;
+  var b = document.getElementById('pwaBtn');
+  if (b) b.style.display = '';
+});
+window.addEventListener('appinstalled', function(){
+  _pwaPrompt = null;
+  var b = document.getElementById('pwaBtn');
+  if (b) b.style.display = 'none';
+  try{ toast('✅ انضافت للشاشة الرئيسية'); }catch(e){}
+});
+
+function pwaInstall(){
+  if (_pwaPrompt){
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(function(){ _pwaPrompt = null;
+      var b = document.getElementById('pwaBtn'); if (b) b.style.display = 'none'; });
+    return;
+  }
+  /* آيفون: ماكو زر تنصيب بالنظام — نوري الخطوات */
+  var iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  alert(iOS
+    ? '📲 لإضافتها للشاشة الرئيسية:\n\n١) اضغط زر المشاركة ⬆️ تحت\n٢) اختر «إضافة إلى الشاشة الرئيسية»'
+    : '📲 من قائمة المتصفح ⋮ اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»');
+}
+
+/* نسجّل عامل الخدمة — بدونه ما تنتصّب. على الملف المحلي ما يشتغل. */
+if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('admin-sw.js').catch(function(e){
+      console.warn('service worker:', e && e.message);
+    });
+  });
+}
+
+/* آيفون ما يطلق حدث التنصيب أبداً، فالزر ما يظهر لحاله.
+   نظهره إحنا — إلا إذا هو أصلاً فاتحها كتطبيق منصّب. */
+(function(){
+  if (location.protocol.indexOf('http') !== 0) return;
+  var iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var installed = navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if (!iOS || installed) return;
+  var show = function(){ var b = document.getElementById('pwaBtn'); if (b) b.style.display = ''; };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+  else show();
+})();
+
 /* 💻 اللوحة المحلية (تفتحها بدبل كليك) مقابل النسخة اللي على الموقع.
    المحلية إلك أنت: فيها دخول بكلمة سر الإدارة للطوارئ.
    اللي على الموقع للموظفين: إيميل وكلمة سر بس، ما تشوف كلمة الإدارة. */
