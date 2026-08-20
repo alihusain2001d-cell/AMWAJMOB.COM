@@ -291,6 +291,8 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
     <div class="sidebar-footer">
       <div style="font-size:12px;font-weight:800;margin-bottom:2px;text-align:center" id="sideWho"></div>
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:7px;text-align:center" id="sideTime"></div>
+      <button class="logout-btn" id="muteBtn" style="margin-bottom:6px"
+              onclick="pulseMute()" title="صوت التنبيهات">🔔 التنبيهات</button>
       <button class="logout-btn" onclick="doLogout()">🚪 خروج</button>
     </div>
   </div>
@@ -585,6 +587,12 @@ function enterPanel(){
       .observe(el, { childList:true, subtree:true });
   });
   tick(); setInterval(tick, 30000);
+  pulseStart();
+  /* الإذن ينطلب بعد أول ضغطة — المتصفح يرفض أي طلب تلقائي */
+  document.addEventListener('click', function once(){
+    pulseAskPermission();
+    document.removeEventListener('click', once);
+  });
   showPage(firstAllowedPage());
 }
 function forgetAll(){
@@ -610,16 +618,188 @@ async function doLogin(quick){
     enterPanel();
   }catch(err){ e.textContent = err.message; }
 }
-function doLogout(){
+async function doLogout(){
   var c = savedCfg() || {};
   delete c.pass;                        // نحتفظ بالاتصال، ننسى كلمة السر بس
   localStorage.setItem('amwaj_sb', JSON.stringify(c));
+  await pushForget();                   // ما نريد إشعارات توصله بعد ما يطلع
   authClear();                          // ونغلق الجلسة هم
   location.reload();
 }
 function tick(){
   var d = new Date();
   $('sideTime').textContent = d.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* ══════════════════════ التنبيهات الحيّة ══════════════════════
+   اللوحة تسأل السيرفر كل نصف دقيقة «أكو شي جديد؟». لو زاد العدد
+   عن آخر مرة، يطلع تنبيه + صوت + إشعار من المتصفح.
+
+   ليش سؤال متكرر مو بث مباشر: جداول الطلبات والزبائن مقفّلة عن
+   المتصفح عمداً، والبث المباشر يحتاج نفتحها. السؤال المتكرر
+   يمر بدالة محروسة — نفس الحماية بلا ما نفتح شي.               */
+var PULSE = { ord:null, cust:null, timer:null, muted:false };
+
+function pulseSound(){
+  if (PULSE.muted) return;
+  try{
+    var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    var a = new C(), o = a.createOscillator(), g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type = 'sine'; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.25, a.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.45);
+    o.start(); o.stop(a.currentTime + 0.5);
+  }catch(e){}
+}
+
+function pulseNotify(title, body, page){
+  pulseSound();
+  toast('🔔 ' + title + ' — ' + body, 6000);
+  /* إشعار من النظام — يوصلك حتى لو اللوحة بالخلفية */
+  try{
+    if (window.Notification && Notification.permission === 'granted'){
+      var n = new Notification(title, { body: body, icon: 'pwa-192.png', tag: 'amwaj-'+page });
+      n.onclick = function(){ window.focus(); showPage(page); n.close(); };
+    }
+  }catch(e){}
+}
+
+function pulseBadge(id, n){
+  var el = $(id); if (!el) return;
+  if (n > 0){ el.style.display = 'inline-block'; el.textContent = n; }
+  else el.style.display = 'none';
+}
+
+async function pulse(){
+  if (document.hidden) return;               // مخفية؟ ما نتعب السيرفر
+  try{
+    var p = await rpc('web_pulse', {});
+    if (!p || p['خطأ']) return;
+
+    if (typeof p['طلبات'] === 'number'){
+      pulseBadge('bgOrd', p['طلبات']);
+      if (PULSE.ord !== null && p['طلبات'] > PULSE.ord){
+        var o = p['آخر_طلب'] || {};
+        pulseNotify('طلب جديد', (o['محل'] || '') + ' · ' + nf(o['مبلغ'] || 0) + ' د.ع', 'ord');
+      }
+      PULSE.ord = p['طلبات'];
+    }
+
+    if (typeof p['زبائن'] === 'number'){
+      pulseBadge('bgCust', p['زبائن']);
+      if (PULSE.cust !== null && p['زبائن'] > PULSE.cust){
+        var c = p['آخر_زبون'] || {};
+        pulseNotify('تسجيل جديد', (c['اسم'] || '') + ' · ' + (c['محل'] || ''), 'cust');
+      }
+      PULSE.cust = p['زبائن'];
+    }
+  }catch(e){ /* انقطاع نت مؤقت — نحاول بالدورة الجاية */ }
+}
+
+function pulseStart(){
+  if (PULSE.timer) return;
+  try{ PULSE.muted = !!localStorage.getItem('amwaj_mute'); }catch(e){}
+  pulseMuteLabel();
+  pulse();                                    // أول قراءة تضبط الأرقام بلا تنبيه
+  PULSE.timer = setInterval(pulse, 30000);
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden) pulse();            // رجعت للوحة؟ حدّث فوراً
+  });
+}
+
+/* كتم صوت التنبيهات — الاختيار ينحفظ بالجهاز */
+function pulseMute(){
+  PULSE.muted = !PULSE.muted;
+  try{ localStorage.setItem('amwaj_mute', PULSE.muted ? '1' : ''); }catch(e){}
+  pulseMuteLabel();
+  if (!PULSE.muted) pulseSound();          // نسمّعه لما يشغّله
+}
+function pulseMuteLabel(){
+  var b = $('muteBtn'); if (!b) return;
+  b.textContent = PULSE.muted ? '🔕 الصوت مكتوم' : '🔔 التنبيهات';
+  b.style.color = PULSE.muted ? 'var(--muted)' : 'var(--primary)';
+}
+
+/* نطلب إذن الإشعارات بأول ضغطة — المتصفح يرفض الطلب التلقائي */
+function pulseAskPermission(){
+  try{
+    if (window.Notification && Notification.permission === 'default'){
+      Notification.requestPermission().then(function(p){
+        if (p === 'granted') pushRegister();
+      });
+    } else if (window.Notification && Notification.permission === 'granted'){
+      pushRegister();
+    }
+  }catch(e){}
+}
+
+/* ══════════════════ إشعارات حتى واللوحة مسكّرة ══════════════════
+   التنبيه الحي فوق يشتغل واللوحة مفتوحة بس. هذا يمر بفايربيس،
+   فيوصل حتى لو سكّرتها — نفس آلية إشعارات التطبيق بالضبط.
+
+   نستعمل نفس مشروع فايربيس ونفس عامل الخدمة اللي بالموقع،
+   فما نحتاج نضيف ولا إعداد جديد.                                */
+var FB = {
+  apiKey: "AIzaSyBcH823LBDN9CcBk47eUlaQEyQKe4qgOfs",
+  authDomain: "amwaj-electronics.firebaseapp.com",
+  projectId: "amwaj-electronics",
+  storageBucket: "amwaj-electronics.firebasestorage.app",
+  messagingSenderId: "680328798771",
+  appId: "1:680328798771:web:79b848045402abe3b2b946"
+};
+var VAPID = 'BP493zoJGSCPd4e_CejfUd55nD2zLl2-0vmbWAWwol1v4fP_hwhAv6REM4yE1CnC_oSf0dVGKT8eqQVoIhvmzBE';
+
+function _loadJs(src){
+  return new Promise(function(res, rej){
+    if ([].some.call(document.scripts, function(s){ return s.src === src; })) return res();
+    var s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function pushRegister(){
+  /* الملف المحلي ما يقدر يسجّل — يحتاج https وعامل خدمة */
+  if (location.protocol.indexOf('http') !== 0) return;
+  if (!('serviceWorker' in navigator) || !window.Notification) return;
+  if (Notification.permission !== 'granted') return;
+  if (!AUTH.token) return;                     // الدخول بكلمة السر ما إله حساب
+
+  try{
+    var reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {scope:'/'});
+    await navigator.serviceWorker.ready;
+
+    if (!window.firebase || !firebase.messaging){
+      await _loadJs('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+      await _loadJs('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+    }
+    if (!firebase.apps.length) firebase.initializeApp(FB);
+
+    var token = await firebase.messaging().getToken({
+      vapidKey: VAPID, serviceWorkerRegistration: reg });
+    if (!token) return;
+
+    await rpcOpen('staff_push_register', { p_token: token, p_agent: navigator.userAgent });
+    try{ localStorage.setItem('amwaj_push', token); }catch(e){}
+    console.log('✅ إشعارات اللوحة مفعّلة');
+
+    /* واللوحة مفتوحة: نعرضه بأنفسنا حتى ما يتكرر مع التنبيه الحي */
+    firebase.messaging().onMessage(function(p){
+      var n = (p && p.notification) || {};
+      if (n.title) toast('🔔 ' + n.title + (n.body ? ' — ' + n.body : ''), 6000);
+    });
+  }catch(e){ console.warn('push:', e && e.message); }
+}
+
+/* عند الخروج نشيل الجهاز حتى ما توصله إشعارات بعد ما يطلع */
+async function pushForget(){
+  try{
+    var t = localStorage.getItem('amwaj_push');
+    if (t && AUTH.token) await rpcOpen('staff_push_forget', { p_token: t });
+    localStorage.removeItem('amwaj_push');
+  }catch(e){}
 }
 
 /* ══════════════════════ التنقّل ══════════════════════ */
@@ -1890,11 +2070,39 @@ async function pStaff(){
 }
 
 function stfPermBoxes(sel){
-  return Object.keys(PERM_LABELS).map(function(p){
-    return '<label style="display:block;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border-light)">'+
-      '<input type="checkbox" class="stfPerm" value="'+p+'"'+((sel||[]).indexOf(p)>-1?' checked':'')+'> '+
-      PERM_LABELS[p]+'</label>';
-  }).join('');
+  return '<div style="display:flex;gap:6px;margin-bottom:6px">'+
+      '<button type="button" class="btn-solid gray" style="flex:1;padding:6px" onclick="stfMark(1)">أشّر الكل</button>'+
+      '<button type="button" class="btn-solid gray" style="flex:1;padding:6px" onclick="stfMark(0)">شيل الكل</button>'+
+    '</div>'+
+    Object.keys(PERM_LABELS).map(function(p){
+      return '<label style="display:block;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border-light)">'+
+        '<input type="checkbox" class="stfPerm" value="'+p+'"'+((sel||[]).indexOf(p)>-1?' checked':'')+'> '+
+        PERM_LABELS[p]+'</label>';
+    }).join('');
+}
+function stfMark(on){
+  [].forEach.call(document.querySelectorAll('.stfPerm'), function(c){ c.checked = !!on; });
+}
+
+/* اختيار الدور — المدير ما يحتاج قائمة صلاحيات، عنده الكل */
+function stfRoleBox(role){
+  var mgr = role === 'manager';
+  return '<label>الدور</label>'+
+    '<select class="modal-select" id="sfRole" onchange="stfRoleChanged()">'+
+      '<option value="employee"'+(mgr?'':' selected')+'>موظف — تختار صلاحياته</option>'+
+      '<option value="manager"'+(mgr?' selected':'')+'>مدير — كل شي بلا استثناء</option>'+
+    '</select>'+
+    '<div class="hint" id="sfRoleHint" style="margin:5px 0 8px">'+
+      (mgr ? '👑 عنده كل شي — حتى أي ميزة نضيفها مستقبلاً.'
+           : 'أشّر اللي تريده يسوي. تقدر تبدّلها بأي وقت.')+'</div>';
+}
+function stfRoleChanged(){
+  var mgr = $('sfRole') && $('sfRole').value === 'manager';
+  var box = $('sfPermsBox'), h = $('sfRoleHint');
+  if (box) box.style.display = mgr ? 'none' : '';
+  if (h) h.textContent = mgr
+    ? '👑 عنده كل شي — حتى أي ميزة نضيفها مستقبلاً.'
+    : 'أشّر اللي تريده يسوي. تقدر تبدّلها بأي وقت.';
 }
 
 function stfNew(){
@@ -1907,9 +2115,10 @@ function stfNew(){
     '<label>الإيميل</label><input class="modal-input" id="sfEmail" type="email" dir="ltr" placeholder="name@example.com">'+
     '<label>كلمة السر (٨ أحرف على الأقل)</label><input class="modal-input" id="sfPass" dir="ltr" value="'+stfSuggestPass()+'">'+
     '<div class="hint" style="margin:4px 0 10px">اكتبها للموظف — يقدر يدخل بيها من أي جهاز.</div>'+
-    '<label>الصلاحيات</label>'+
-    '<div style="max-height:230px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px 10px">'+
-      stfPermBoxes(['orders','products_image'])+'</div>'+
+    stfRoleBox('employee')+
+    '<div id="sfPermsBox">'+
+      '<div style="max-height:230px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px 10px">'+
+        stfPermBoxes(['orders','products_image'])+'</div></div>'+
     '<div class="msg" id="sfMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
       '<button class="btn-solid green" style="flex:1" onclick="stfCreate()">إنشاء الحساب</button>'+
@@ -1931,12 +2140,14 @@ async function stfCreate(){
   var m = $('sfMsg');
   m.className='msg warn'; m.textContent='جاري الإنشاء…';
   try{
+    var role = $('sfRole') ? $('sfRole').value : 'employee';
     await fn('staff', { action:'create',
       name:  $('sfName').value.trim(),
       phone: $('sfPhone').value.trim(),
       email: $('sfEmail').value.trim(),
       password: $('sfPass').value,
-      perms: stfSelectedPerms() });
+      role:  role,
+      perms: role === 'manager' ? [] : stfSelectedPerms() });
     closeModal(); toast('✅ انضاف الموظف'); pStaff();
   }catch(e){ m.className='msg err'; m.textContent = e.message; }
 }
@@ -1953,29 +2164,30 @@ async function stfEdit(id){
       '<div><label>الهاتف</label><input class="modal-input" id="sfPhone" dir="ltr" value="'+esc(s.phone||'')+'"></div>'+
     '</div>'+
     '<label><input type="checkbox" id="sfActive"'+(s.active?' checked':'')+'> الحساب فعّال (شيل العلامة توقفه بلا حذف)</label>'+
-    (isMgr
-      ? '<div class="hint" style="margin-top:10px">هذا مدير — عنده كل الصلاحيات تلقائياً.</div>'
-      : '<label style="margin-top:10px;display:block">الصلاحيات</label>'+
-        '<div style="max-height:230px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px 10px">'+
-        stfPermBoxes(s.perms||[])+'</div>')+
+    stfRoleBox(s.role)+
+    '<div id="sfPermsBox"'+(isMgr?' style="display:none"':'')+'>'+
+      '<div style="max-height:230px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:4px 10px">'+
+      stfPermBoxes(s.perms||[])+'</div></div>'+
     '<label style="margin-top:10px;display:block">كلمة سر جديدة (اتركها فارغة لو ما تريد تغييرها)</label>'+
     '<input class="modal-input" id="sfPass" dir="ltr" placeholder="٨ أحرف على الأقل">'+
     '<div class="msg" id="sfMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
-      '<button class="btn-solid green" style="flex:1" onclick="stfSave(\''+id+'\','+(isMgr?'true':'false')+')">حفظ</button>'+
+      '<button class="btn-solid green" style="flex:1" onclick="stfSave(\''+id+'\')">حفظ</button>'+
       '<button class="btn-solid gray" onclick="closeModal()">إلغاء</button></div>');
 }
 
-async function stfSave(id, isMgr){
+async function stfSave(id){
   var m = $('sfMsg');
   m.className='msg warn'; m.textContent='جاري الحفظ…';
   try{
+    var role = $('sfRole') ? $('sfRole').value : null;
     await rpc('web_staff_set', {
       p_id: id,
       p_name:  $('sfName').value.trim(),
       p_phone: $('sfPhone').value.trim(),
       p_active: $('sfActive').checked,
-      p_perms: isMgr ? null : stfSelectedPerms() });
+      p_role:  role,
+      p_perms: role === 'manager' ? null : stfSelectedPerms() });
 
     var pw = $('sfPass').value;
     if (pw) await fn('staff', { action:'password', id:id, password:pw });
