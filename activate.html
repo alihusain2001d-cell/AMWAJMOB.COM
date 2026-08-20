@@ -3538,20 +3538,6 @@ async function sbFn(fn, body){
 }
 
 // 👑 قائمة أرقام الأدمن (لإضافة أدمن جديد، أضف رقمه هنا)
-const ADMIN_PHONES = ['07717533595', '07725938474'];
-
-// دالة فحص هل الرقم أدمن (تدعم صيغ متعددة: +964, 964, بدون صفر...)
-function isAdminPhone(phone){
-  if (!phone) return false;
-  const clean = String(phone).replace(/\D/g,'');
-  return ADMIN_PHONES.some(function(p){
-    const adminClean = p.replace(/\D/g,'');
-    // طابق الرقم كامل، أو الأرقام العشرة الأخيرة، أو التطابق مع رقم بدون صفر البداية
-    return clean === adminClean 
-        || clean.endsWith(adminClean.slice(-9))
-        || adminClean.endsWith(clean.slice(-9));
-  });
-}
 
 
 function getCustomerToken(){ var u = JSON.parse(localStorage.getItem('amwaj_user')||'null'); return (u && u.customerToken) || ''; }
@@ -6888,20 +6874,8 @@ function handleNotifClick(id) {
   setTimeout(function() {
     // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
     if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
-      // ⚠️ تحقق: المستخدم الحالي أدمن؟
-      var currentUser = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-      if (!currentUser || !isAdminPhone(currentUser.phone)) {
-        // مو أدمن - وجهه لطلباته بدل لوحة التحكم
-        if (typeof openOrdersSheet === 'function') {
-          openOrdersSheet();
-          if (n.orderId && typeof scrollToOrderCard === 'function') {
-            setTimeout(function(){ scrollToOrderCard(n.orderId); }, 500);
-          }
-        }
-        return;
-      }
-      // 🛠️ لوحة التحكم صفحة مستقلة الآن — نفتحها وبس.
-      //    (اللوحة اللي كانت جوّا التطبيق انشالت)
+      /* ما نحتاج نفحص إذا هو أدمن: السيرفر ما يرسل هالنوع إلا
+         لأجهزة الإدارة أصلاً. فلو وصله، هو منهم. */
       if (typeof openAdminPanel === 'function') openAdminPanel();
     }
     // 📦 إشعارات الزبون عن حالة طلبه → افتح طلباتي + مرر للطلب
@@ -7775,7 +7749,6 @@ async function updateFcmTokenAfterLogin() {
   if (!user || !user.phone) return;
   
   const existingToken = localStorage.getItem('amwaj_fcm_token');
-  const isAdmin = isAdminPhone(user.phone);
   
   // 1. لو عندنا token محفوظ، حدثه بالسيرفر مع رقم الهاتف الجديد
   if (existingToken) {
@@ -7807,61 +7780,6 @@ async function updateFcmTokenAfterLogin() {
   }
 }
 
-// 🧪 اختبار الإشعارات - يعرض حالة الـ FCM
-async function showFcmTokenInfo() {
-  var msg = '';
-  msg += '📱 معلومات الإشعارات\n\n';
-
-  // 1. تحقق من Capacitor
-  if (!window.Capacitor) {
-    msg += '❌ Capacitor: غير متاح\n';
-    msg += '(أنت تستخدم المتصفح مو التطبيق)';
-    alert(msg);
-    return;
-  }
-  msg += '✅ Capacitor: متاح\n';
-
-  // 2. تحقق من Plugin
-  if (!window.Capacitor.Plugins.PushNotifications) {
-    msg += '❌ Push Plugin: غير مثبت\n';
-    alert(msg);
-    return;
-  }
-  msg += '✅ Push Plugin: مثبت\n';
-
-  // 3. تحقق من الصلاحية
-  try {
-    var perm = await window.Capacitor.Plugins.PushNotifications.checkPermissions();
-    msg += '🔐 الصلاحية: ' + perm.receive + '\n';
-  } catch(e) {
-    msg += '❌ فشل فحص الصلاحية\n';
-  }
-
-  // 4. الـ Token
-  var token = localStorage.getItem('amwaj_fcm_token');
-  if (token) {
-    msg += '\n✅ FCM Token موجود:\n';
-    msg += token.substring(0, 40) + '...\n';
-    msg += '(تم نسخه للحافظة)';
-    // نسخ للحافظة
-    try {
-      navigator.clipboard.writeText(token);
-    } catch(e) {}
-  } else {
-    msg += '\n❌ FCM Token: غير موجود\n';
-    msg += 'جرب إعادة تشغيل التطبيق';
-  }
-
-  alert(msg);
-
-  // إعادة محاولة التسجيل
-  if (!token) {
-    if (confirm('هل تريد إعادة محاولة التسجيل بـ FCM؟')) {
-      setupPushNotifications();
-    }
-  }
-}
-
 // renderAccountSheet — clean version
 function renderAccountSheet() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
@@ -7869,7 +7787,6 @@ function renderAccountSheet() {
   if (!div) return;
 
   if (user) {
-    const isAdmin = isAdminPhone(user.phone);
 
     // Get saved profile picture or first letter
     const savedPic = localStorage.getItem('amwaj_profile_pic_' + user.phone);
@@ -7919,19 +7836,6 @@ function renderAccountSheet() {
       </div>
 
       <div class="profile-menu">
-        ${isAdmin ? `
-        <div class="profile-menu-group">
-          <button class="profile-menu-item" onclick="openAdminPanel()">
-            <div class="profile-menu-icon pm-icon-admin">🛠️</div>
-            <div class="profile-menu-label">لوحة التحكم</div>
-            <span class="profile-menu-arrow">‹</span>
-          </button>
-          <button class="profile-menu-item" onclick="showFcmTokenInfo()">
-            <div class="profile-menu-icon" style="background:#FEF3C7;color:#92400E;">🔔</div>
-            <div class="profile-menu-label">اختبار الإشعارات</div>
-            <span class="profile-menu-arrow">‹</span>
-          </button>
-        </div>` : ''}
 
         <div class="profile-menu-group">
           <button class="profile-menu-item" onclick="openOrdersSheet();">
@@ -8034,18 +7938,12 @@ function handleAvatarChange(e) {
 function loadStatOrdersCount() {
   var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   if (!user || !user.phone) return;
-  var isAdmin = isAdminPhone(user.phone);
   var el = document.getElementById('statOrdersCount');
-  // 🗄️ من السيرفر الجديد — للزبون طلباته، وللأدمن عدّاد الكل
-  if (isAdmin) {
-    sbRpc('app_admin_order_count', { p_token: getCustomerToken() })
-      .then(function(res) { if (el && res && res.ok) el.textContent = res.count; })
-      .catch(function(){});
-  } else {
-    fetchMyOrders().then(function(ords) {
-      if (el) el.textContent = (ords || []).length;
-    }).catch(function(){});
-  }
+  /* 🗄️ عدد طلبات هذا الزبون. الإدارة صارت لوحة مستقلة،
+     فالتطبيق ما عاد يعرض أرقام كل المحل. */
+  fetchMyOrders().then(function(ords) {
+    if (el) el.textContent = (ords || []).length;
+  }).catch(function(){});
 }
 
 function confirmLogout() {
