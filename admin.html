@@ -1991,6 +1991,23 @@ async function pMsg(){
         '</div>'+
         '<div class="msg" id="msgContactMsg"></div>'+
         '<button class="btn-solid" style="width:100%;margin-top:10px" onclick="msgSaveContact()">💾 حفظ أرقام التواصل والروابط</button>'+
+      '</div></div>'+
+
+      /* مفاتيح واتساب الإدارة — تنطفي وتنشغّل بضغطة */
+      '<div class="section-card"><div class="section-head">'+
+        '<div class="section-title">📵 رسائل الواتساب للإدارة</div></div>'+
+      '<div style="padding:14px">'+
+        '<div class="hint" style="margin-bottom:10px">'+
+          'هذي الرسائل تجيك أنت (مو الزبون). لو تعتمد على إشعارات اللوحة تقدر تطفيها.'+
+          '<br>⚠️ رسائل الزبائن ما تتأثر إطلاقاً.</div>'+
+        '<label style="display:block;padding:9px 0;border-bottom:1px solid var(--border)">'+
+          '<input type="checkbox" id="waOrd"'+(r['واتساب_طلب']!==false?' checked':'')+'> '+
+          '🛒 «طلب جديد» — <b>ينصح تخليه شغّال</b> (شبكة أمان لو وقفت الإشعارات)</label>'+
+        '<label style="display:block;padding:9px 0">'+
+          '<input type="checkbox" id="waReg"'+(r['واتساب_تسجيل']!==false?' checked':'')+'> '+
+          '🆕 «تسجيل زبون جديد»</label>'+
+        '<div class="msg" id="msgWaMsg"></div>'+
+        '<button class="btn-solid" style="width:100%;margin-top:10px" onclick="msgSaveWa()">💾 حفظ</button>'+
       '</div></div>';
 
     var byCat = {whatsapp:[], push:[]};
@@ -2034,6 +2051,16 @@ async function msgSaveContact(){
     }
     if (m){ m.className='msg ok'; m.textContent='✅ انحفظ'; }
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
+}
+
+async function msgSaveWa(){
+  var m = $('msgWaMsg');
+  try{
+    await rpc('web_setting_set', {p_name:'wa_admin_order',    p_value: $('waOrd').checked});
+    await rpc('web_setting_set', {p_name:'wa_admin_register', p_value: $('waReg').checked});
+    m.className='msg ok'; m.textContent='✅ انحفظ';
+    toast('✅ انحفظت إعدادات الواتساب');
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
 
 async function msgSaveTpl(key){
