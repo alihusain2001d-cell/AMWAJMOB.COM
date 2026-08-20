@@ -575,6 +575,37 @@ function labelTables(root){
   });
 }
 
+/* ══════════ فتح الصفحة الصح عند الضغط على الإشعار ══════════
+   حالتين مختلفات:
+     • اللوحة مفتوحة (ولو بالخلفية) → عامل الخدمة يرسللنا رسالة
+     • اللوحة مسكّرة → تنفتح من جديد والصفحة تجي بالرابط (#ord)
+   لازم نعالج الاثنين، وإلا تنفتح اللوحة على الرئيسية وبس.      */
+var WANT_PAGE = '';
+
+function pageFromHash(){
+  var h = (location.hash || '').replace('#','').trim();
+  return PAGE_PERM.hasOwnProperty(h) ? h : '';
+}
+function goWantedPage(){
+  var p = WANT_PAGE || pageFromHash();
+  WANT_PAGE = '';
+  try{ if (location.hash) history.replaceState(null,'',location.pathname); }catch(e){}
+  if (p && can(PAGE_PERM[p])) { showPage(p); return true; }
+  return false;
+}
+
+/* نسمع لعامل الخدمة دائماً — مو داخل دالة التسجيل، حتى يشتغل
+   حتى لو ما سجّلنا إشعارات بهذي الجلسة */
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', function(ev){
+    var m = ev.data || {};
+    if (m.amwaj !== 'open' || !m.page) return;
+    WANT_PAGE = m.page;
+    /* اللوحة مفتوحة أصلاً؟ نروح فوراً. لسا بشاشة الدخول؟ ننتظر. */
+    if ($('adminApp') && $('adminApp').style.display === 'block') goWantedPage();
+  });
+}
+
 /* نقطة دخول واحدة للوحة — تخفي ما ما يستحقه الموظف */
 function enterPanel(){
   $('loginPage').style.display = 'none';
@@ -593,7 +624,8 @@ function enterPanel(){
     pulseAskPermission();
     document.removeEventListener('click', once);
   });
-  showPage(firstAllowedPage());
+  /* جاي من ضغطة إشعار؟ نفتح صفحته. وإلا أول صفحة مسموحة. */
+  if (!goWantedPage()) showPage(firstAllowedPage());
 }
 function forgetAll(){
   localStorage.removeItem('amwaj_sb');
@@ -810,11 +842,6 @@ async function pushRegister(){
       if (n.title) toast('🔔 ' + n.title + (n.body ? ' — ' + n.body : ''), 6000);
     });
 
-    /* ضغط على الإشعار واللوحة مفتوحة بالخلفية → نوديه للصفحة */
-    navigator.serviceWorker.addEventListener('message', function(ev){
-      var m = ev.data || {};
-      if (m.amwaj === 'open' && m.page) try{ showPage(m.page); }catch(e){}
-    });
   }catch(e){ console.warn('push:', e && e.message); }
 }
 

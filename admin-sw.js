@@ -120,10 +120,17 @@ try {
 }
 
 /* ضغط على الإشعار → نفتح اللوحة أو نرجّعها للواجهة لو مفتوحة */
+const PAGE_OF = {
+  admin_new_customer:   'cust',
+  admin_new_order:      'ord',
+  admin_order_cancelled:'ord',
+  test:                 'home',
+};
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const d = event.notification.data || {};
-  const page = (d.type === 'admin_new_customer') ? 'cust' : 'ord';
+  const page = PAGE_OF[d.type] || 'ord';
   const target = '/admin.html#' + page;
 
   event.waitUntil(
