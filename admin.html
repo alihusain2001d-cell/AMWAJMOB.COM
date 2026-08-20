@@ -640,18 +640,35 @@ function tick(){
    يمر بدالة محروسة — نفس الحماية بلا ما نفتح شي.               */
 var PULSE = { ord:null, cust:null, timer:null, muted:false };
 
-function pulseSound(){
+/* 🔊 تنبيه مسموع — ثلاث رنّات متتالية بنغمتين، عالي بحيث ينسمع
+   والتلفون بالجيب أو والمحل فيه ضجة. الاهتزاز يشتغل وياه. */
+function pulseSound(times){
   if (PULSE.muted) return;
   try{
     var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
-    var a = new C(), o = a.createOscillator(), g = a.createGain();
-    o.connect(g); g.connect(a.destination);
-    o.type = 'sine'; o.frequency.value = 880;
-    g.gain.setValueAtTime(0.0001, a.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.25, a.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.45);
-    o.start(); o.stop(a.currentTime + 0.5);
+    var a = PULSE.ac || (PULSE.ac = new C());
+    if (a.state === 'suspended') a.resume();          // بعض المتصفحات توقفه
+
+    var master = a.createGain();
+    master.gain.value = 0.9;                          // شبه أقصى صوت
+    master.connect(a.destination);
+
+    var n = times || 3, t0 = a.currentTime;
+    for (var i = 0; i < n; i++){
+      [1180, 880].forEach(function(freq, k){          // نغمتين: عالية ثم واطئة
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = 'square';                            // أنفذ من sine
+        o.frequency.value = freq;
+        o.connect(g); g.connect(master);
+        var s = t0 + i * 0.62 + k * 0.16;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.85, s + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.15);
+        o.start(s); o.stop(s + 0.17);
+      });
+    }
   }catch(e){}
+  try{ if (navigator.vibrate) navigator.vibrate([300,120,300,120,500]); }catch(e){}
 }
 
 function pulseNotify(title, body, page){
@@ -970,6 +987,7 @@ async function pHome(){
       '<div class="stats-grid">'+cards.map(function(c){
         return '<div class="stat-card"><div class="stat-num" style="color:var('+c[3]+')">'+nf(c[2])+
                '</div><div class="stat-lbl">'+c[0]+' '+c[1]+'</div></div>'; }).join('')+'</div>'+
+      (await pushCardHtml())+
       '<div class="grid2">'+
         tbl('🔥 أكثر المواد مبيعاً', r['أكثر_مبيعاً'], ['المادة','الكمية'])+
         tbl('⭐ أكثر الزبائن شراءً', r['أكثر_الزبائن'], ['المحل','طلبات','المجموع'])+
@@ -2040,6 +2058,77 @@ var PERM_LABELS = {
   staff:          '🔑 إدارة الموظفين'
 };
 
+/* 🔔 بطاقة حالة الإشعارات — تقولك وين الخلل بالضبط من نفس الجهاز */
+async function pushCardHtml(){
+  var perm = (window.Notification ? Notification.permission : 'غير مدعوم');
+  var https = location.protocol.indexOf('http') === 0;
+  var sw    = ('serviceWorker' in navigator);
+  var acct  = !!AUTH.token;
+  var devices = '؟', last = '—';
+  try{
+    var st = await rpcOpen('staff_push_status', {});
+    if (st && st.ok){ devices = st['أجهزتي']; last = st['آخر تسجيل'] || '—'; }
+  }catch(e){}
+
+  var rows = [
+    ['الاتصال آمن (https)', https, https ? 'نعم' : 'لا — افتحها من الموقع مو كملف'],
+    ['المتصفح يدعم الإشعارات', sw && window.Notification, sw ? 'نعم' : 'لا'],
+    ['داخل بحساب', acct, acct ? 'نعم' : 'لا — دخول بكلمة السر ما إله إشعارات'],
+    ['إذن الإشعارات', perm === 'granted', perm === 'granted' ? 'مسموح'
+        : (perm === 'denied' ? 'مرفوض — لازم تسمح من إعدادات المتصفح' : 'ما انطلب بعد')],
+    ['هذا الجهاز مسجّل', devices > 0, devices === '؟' ? 'ما كدرت أتأكد' : (devices + ' جهاز · آخر تسجيل ' + last)]
+  ];
+
+  return '<div class="section-card"><div class="section-head">'+
+      '<div class="section-title">🔔 الإشعارات على هذا الجهاز</div></div>'+
+    '<div class="section-body">'+
+      '<table class="tbl"><tbody>'+
+      rows.map(function(x){
+        return '<tr><td>'+(x[1]?'✅':'⚠️')+' '+esc(x[0])+'</td><td>'+esc(String(x[2]))+'</td></tr>';
+      }).join('')+
+      '</tbody></table>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
+        '<button class="btn-solid" onclick="pushFix()">🔄 فعّل / أعد التسجيل</button>'+
+        '<button class="btn-solid green" onclick="pushTest()">🧪 جرّب الإشعار</button>'+
+        '<button class="btn-solid gray" onclick="pulseSound()">🔊 جرّب الصوت</button>'+
+      '</div>'+
+      '<div class="msg" id="pushMsg"></div>'+
+      '<div class="hint" style="margin-top:8px">'+
+        'كل جهاز يحتاج تسجيل منفصل — لو فتحتها بالحاسبة والتلفون، سجّل بالاثنين.'+
+      '</div>'+
+    '</div></div>';
+}
+
+async function pushFix(){
+  var m = $('pushMsg'); m.className='msg warn'; m.textContent='جاري التفعيل…';
+  try{
+    if (!window.Notification) throw new Error('المتصفح ما يدعم الإشعارات');
+    var p = Notification.permission;
+    if (p === 'default') p = await Notification.requestPermission();
+    if (p !== 'granted') throw new Error('الإذن مرفوض — سمّحه من إعدادات المتصفح للموقع');
+    await pushRegister();
+    m.className='msg ok'; m.textContent='✅ انسجّل — جرّب الإشعار الآن';
+    showPage('stf');
+  }catch(e){ m.className='msg err'; m.textContent = e.message; }
+}
+
+async function pushTest(){
+  var m = $('pushMsg'); m.className='msg warn'; m.textContent='جاري الإرسال…';
+  try{
+    var r = await fn('sendpush', { target:'me', urgent:true,
+      title:'🔔 تجربة أمواج',
+      body:'إذا وصلك هذا، الإشعارات شغّالة تمام',
+      data:{ type:'test' } });
+    if (!r.sent){
+      m.className='msg err';
+      m.textContent = 'ما أكو جهاز مسجّل — اضغط «فعّل / أعد التسجيل» أول';
+      return;
+    }
+    m.className='msg ok';
+    m.textContent = '✅ انرسل لـ'+r.sent+' جهاز. سكّر اللوحة وشوف إذا وصلك.';
+  }catch(e){ m.className='msg err'; m.textContent = e.message; }
+}
+
 async function pStaff(){
   try{
     var r = await rpc('web_staff_list', {});
@@ -2063,6 +2152,7 @@ async function pStaff(){
     }).join('');
 
     $('content').innerHTML =
+      (await pushCardHtml())+
       '<div class="section-card"><div class="section-head">'+
         '<div class="section-title">👥 الموظفين ('+list.length+')</div>'+
         '<button class="btn-solid green" onclick="stfNew()">➕ موظف جديد</button></div>'+
