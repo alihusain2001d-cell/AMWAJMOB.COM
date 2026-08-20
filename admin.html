@@ -1002,16 +1002,39 @@ async function ordOpen(id){
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
+/* 🖨️ فتح ملصق برايم — بالموبايل خصوصاً.
+
+   المشكلة: المتصفح يحجب أي نافذة تنفتح **بعد** await، لأنها ما عادت
+   مربوطة بضغطة المستخدم. بالحاسبة تمر أحياناً، بالموبايل لا.
+
+   الحل: نفتح نافذة فاضية **بلحظة الضغط** (قبل ما ننتظر السيرفر)،
+   وبعد ما يوصل الرابط نوجّهها إله. ولو انحجبت رغم هذا، نعرض
+   رابط يضغطه بنفسه — وضغطته تفتحه أكيد. */
+function labelWindow(){
+  try{ return window.open('', '_blank'); }catch(e){ return null; }
+}
+function labelShow(w, url, msgEl){
+  if (w && !w.closed){
+    try{ w.location.href = url; return true; }catch(e){}
+  }
+  if (msgEl){
+    msgEl.className = 'msg ok';
+    msgEl.innerHTML = '✅ الملصق جاهز — <a href="'+esc(url)+'" target="_blank" rel="noopener" '+
+      'style="font-weight:900;text-decoration:underline">اضغط هنا لفتحه</a>';
+  }
+  return false;
+}
+
 // 🚚 إرسال لبرايم + طباعة الملصق بضغطة وحدة — وبعدها الصندوق يصير «جاهز للتسليم» تلقائياً
 async function prSendAndPrint(code){
   if (!confirm('إرسال '+code+' لبرايم؟ راح تنعمل شحنة حقيقية.')) return;
+  var w = labelWindow();                 // نحجز النافذة الآن، قبل أي انتظار
   var m = $('oMsg'); if (m){ m.className='msg'; m.textContent='⏳ جاري الإرسال لبرايم...'; }
   try{
     var r1 = await fn('prime', {action:'send', orderId:code});
     if (m){ m.className='msg'; m.textContent='⏳ رقم الشحنة '+r1.primeCaseId+' — جاري توليد الملصق...'; }
     var r2 = await fn('prime', {action:'label', orderId:code});
-    window.open(r2.url, '_blank');
-    if (m){ m.className='msg ok'; m.textContent='✅ انرسل وانطبع الملصق'; }
+    if (labelShow(w, r2.url, m) && m){ m.className='msg ok'; m.textContent='✅ انرسل وانفتح الملصق'; }
     toast('✅ جاهز للتسليم');
     ordOpen(_curOrderId); // نحدّث الصندوق يطلع «جاهز للتسليم»
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } else toast('⚠️ '+e.message, 5000); }
@@ -1019,12 +1042,12 @@ async function prSendAndPrint(code){
 
 // 🖨️ طباعة/إعادة طباعة الملصق بس — يستعمل لو الشحنة موجودة مسبقاً
 async function prLabel(code){
+  var w = labelWindow();                 // نحجز النافذة الآن، قبل أي انتظار
   var m = $('oMsg'); if (m){ m.className='msg'; m.textContent='⏳ جاري توليد الملصق...'; }
   try{
     var r = await fn('prime', {action:'label', orderId:code});
-    window.open(r.url, '_blank');
-    if (m){ m.className='msg ok'; m.textContent='✅ انطبع الملصق'; }
-    toast('🖨️ انطبع');
+    if (labelShow(w, r.url, m) && m){ m.className='msg ok'; m.textContent='✅ انفتح الملصق'; }
+    toast('🖨️ جاهز');
     ordOpen(_curOrderId); // نحدّث وقت آخر طباعة بالصندوق
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } else toast('⚠️ '+e.message, 5000); }
 }
