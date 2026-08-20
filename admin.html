@@ -1014,7 +1014,6 @@ async function pHome(){
       '<div class="stats-grid">'+cards.map(function(c){
         return '<div class="stat-card"><div class="stat-num" style="color:var('+c[3]+')">'+nf(c[2])+
                '</div><div class="stat-lbl">'+c[0]+' '+c[1]+'</div></div>'; }).join('')+'</div>'+
-      (await pushCardHtml())+
       '<div class="grid2">'+
         tbl('🔥 أكثر المواد مبيعاً', r['أكثر_مبيعاً'], ['المادة','الكمية'])+
         tbl('⭐ أكثر الزبائن شراءً', r['أكثر_الزبائن'], ['المحل','طلبات','المجموع'])+
@@ -1353,10 +1352,14 @@ async function ordSave(id){
   if (st === 'cancelled'){ reason = prompt('سبب الإلغاء؟') || 'إلغاء من الإدارة'; }
   var m = $('oMsg');
   try{
-    await rpc('web_order_set',{p_id:id,p_status:st,p_reason:reason});
+    /* 🔔 تمر بدالة السيرفر بدل نداء قاعدة البيانات مباشرة —
+       لأنها تغيّر الحالة **وتخبر الزبون** بإشعار. قاعدة البيانات
+       لحالها ما تكدر ترسل إشعار (ما تتصل بالإنترنت). */
+    var _res = await fn('orderstatus', {id:id, status:st, reason:reason});
     // 🚚 إلغاء الطلب من اللوحة يلغي شحنة برايم وياه — نفس أمان النظام القديم،
     //    حتى المندوب ما يوصل طلب انلغى
     var warn = '';
+    if (_res && _res.notified === false && _res.note) warn = ' — الزبون ما وصله إشعار ('+_res.note+')';
     if (st === 'cancelled' && _curPrimeActive){
       try{ await fn('prime', {action:'cancel', orderId:_curOrderCode}); }
       catch(e2){ warn = ' — ⚠️ تم الإلغاء عندنا، لكن تعذّر إلغاء الشحنة عند برايم: '+e2.message+' — اتصل بهم لإيقافها يدوياً'; }
@@ -2112,77 +2115,6 @@ var PERM_LABELS = {
   staff:          '🔑 إدارة الموظفين'
 };
 
-/* 🔔 بطاقة حالة الإشعارات — تقولك وين الخلل بالضبط من نفس الجهاز */
-async function pushCardHtml(){
-  var perm = (window.Notification ? Notification.permission : 'غير مدعوم');
-  var https = location.protocol.indexOf('http') === 0;
-  var sw    = ('serviceWorker' in navigator);
-  var acct  = !!AUTH.token;
-  var devices = '؟', last = '—';
-  try{
-    var st = await rpcOpen('staff_push_status', {});
-    if (st && st.ok){ devices = st['أجهزتي']; last = st['آخر تسجيل'] || '—'; }
-  }catch(e){}
-
-  var rows = [
-    ['الاتصال آمن (https)', https, https ? 'نعم' : 'لا — افتحها من الموقع مو كملف'],
-    ['المتصفح يدعم الإشعارات', sw && window.Notification, sw ? 'نعم' : 'لا'],
-    ['داخل بحساب', acct, acct ? 'نعم' : 'لا — دخول بكلمة السر ما إله إشعارات'],
-    ['إذن الإشعارات', perm === 'granted', perm === 'granted' ? 'مسموح'
-        : (perm === 'denied' ? 'مرفوض — لازم تسمح من إعدادات المتصفح' : 'ما انطلب بعد')],
-    ['هذا الجهاز مسجّل', devices > 0, devices === '؟' ? 'ما كدرت أتأكد' : (devices + ' جهاز · آخر تسجيل ' + last)]
-  ];
-
-  return '<div class="section-card"><div class="section-head">'+
-      '<div class="section-title">🔔 الإشعارات على هذا الجهاز</div></div>'+
-    '<div class="section-body">'+
-      '<table class="tbl"><tbody>'+
-      rows.map(function(x){
-        return '<tr><td>'+(x[1]?'✅':'⚠️')+' '+esc(x[0])+'</td><td>'+esc(String(x[2]))+'</td></tr>';
-      }).join('')+
-      '</tbody></table>'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'+
-        '<button class="btn-solid" onclick="pushFix()">🔄 فعّل / أعد التسجيل</button>'+
-        '<button class="btn-solid green" onclick="pushTest()">🧪 جرّب الإشعار</button>'+
-        '<button class="btn-solid gray" onclick="pulseSound()">🔊 جرّب الصوت</button>'+
-      '</div>'+
-      '<div class="msg" id="pushMsg"></div>'+
-      '<div class="hint" style="margin-top:8px">'+
-        'كل جهاز يحتاج تسجيل منفصل — لو فتحتها بالحاسبة والتلفون، سجّل بالاثنين.'+
-      '</div>'+
-    '</div></div>';
-}
-
-async function pushFix(){
-  var m = $('pushMsg'); m.className='msg warn'; m.textContent='جاري التفعيل…';
-  try{
-    if (!window.Notification) throw new Error('المتصفح ما يدعم الإشعارات');
-    var p = Notification.permission;
-    if (p === 'default') p = await Notification.requestPermission();
-    if (p !== 'granted') throw new Error('الإذن مرفوض — سمّحه من إعدادات المتصفح للموقع');
-    await pushRegister();
-    m.className='msg ok'; m.textContent='✅ انسجّل — جرّب الإشعار الآن';
-    showPage('stf');
-  }catch(e){ m.className='msg err'; m.textContent = e.message; }
-}
-
-async function pushTest(){
-  var m = $('pushMsg'); m.className='msg warn'; m.textContent='جاري الإرسال…';
-  try{
-    var r = await fn('sendpush', { target:'me', urgent:true,
-      title:'🔔 تجربة أمواج',
-      body:'إذا وصلك هذا، الإشعارات شغّالة تمام',
-      data:{ type:'test' } });
-    if (!r.sent){
-      m.className='msg err';
-      m.textContent = 'ما أكو جهاز مسجّل — اضغط «فعّل / أعد التسجيل» أول';
-      return;
-    }
-    m.className='msg ok';
-    m.textContent = '✅ انرسل لـ'+r.sent+' جهاز. سكّر اللوحة وشوف إذا وصلك.';
-  }catch(e){ m.className='msg err'; m.textContent = e.message; }
-}
-
 async function pStaff(){
   try{
     var r = await rpc('web_staff_list', {});
@@ -2206,7 +2138,6 @@ async function pStaff(){
     }).join('');
 
     $('content').innerHTML =
-      (await pushCardHtml())+
       '<div class="section-card"><div class="section-head">'+
         '<div class="section-title">👥 الموظفين ('+list.length+')</div>'+
         '<button class="btn-solid green" onclick="stfNew()">➕ موظف جديد</button></div>'+
