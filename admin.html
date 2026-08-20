@@ -768,8 +768,10 @@ async function pushRegister(){
   if (!AUTH.token) return;                     // الدخول بكلمة السر ما إله حساب
 
   try{
-    var reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {scope:'/'});
-    await navigator.serviceWorker.ready;
+    /* ⚠️ نستعمل عامل الخدمة مالتنا نفسه — ما نسجّل firebase-messaging-sw.js.
+       المتصفح يسمح بعامل واحد لكل نطاق، ولو سجّلنا الثاني يلغي الأول
+       فتضيع خاصية التنصيب (ذاك الملف ماكو عنده معالج fetch أصلاً). */
+    var reg = await navigator.serviceWorker.ready;
 
     if (!window.firebase || !firebase.messaging){
       await _loadJs('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
@@ -789,6 +791,12 @@ async function pushRegister(){
     firebase.messaging().onMessage(function(p){
       var n = (p && p.notification) || {};
       if (n.title) toast('🔔 ' + n.title + (n.body ? ' — ' + n.body : ''), 6000);
+    });
+
+    /* ضغط على الإشعار واللوحة مفتوحة بالخلفية → نوديه للصفحة */
+    navigator.serviceWorker.addEventListener('message', function(ev){
+      var m = ev.data || {};
+      if (m.amwaj === 'open' && m.page) try{ showPage(m.page); }catch(e){}
     });
   }catch(e){ console.warn('push:', e && e.message); }
 }
