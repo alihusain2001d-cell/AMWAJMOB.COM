@@ -107,7 +107,9 @@ try {
       badge: '/pwa-192.png',
       dir: 'rtl',
       lang: 'ar',
-      tag: 'amwaj-panel-' + (d.type || 'x'),
+      /* نفس وسم إشعار اللوحة (pulseNotify) — لو المساران اشتغلن
+         سوا، الثاني يستبدل الأول بدل ما يتكدّسن اثنين */
+      tag: 'amwaj-' + (PAGE_OF[d.type] || 'ord'),
       renotify: true,
       requireInteraction: true,
       vibrate: [300, 100, 300],

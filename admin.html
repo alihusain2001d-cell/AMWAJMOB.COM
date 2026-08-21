@@ -838,8 +838,10 @@ async function pushRegister(){
 
     /* واللوحة مفتوحة: نعرضه بأنفسنا حتى ما يتكرر مع التنبيه الحي */
     firebase.messaging().onMessage(function(p){
-      var n = (p && p.notification) || {};
-      if (n.title) toast('🔔 ' + n.title + (n.body ? ' — ' + n.body : ''), 6000);
+      /* رسائل المتصفح صارت «بيانات بس» — العنوان والنص يجن من data */
+      var n = (p && p.notification) || {}, d = (p && p.data) || {};
+      var t = n.title || d._title || '', b = n.body || d._body || '';
+      if (t) toast('🔔 ' + t + (b ? ' — ' + b : ''), 6000);
     });
 
   }catch(e){ console.warn('push:', e && e.message); }
