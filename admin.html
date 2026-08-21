@@ -988,6 +988,41 @@ function lightbox(url){
     ' <a class="btn-solid" style="text-decoration:none;display:inline-block" href="'+esc(url)+
     '" target="_blank">فتح بحجم كامل</a></div></div>');
 }
+/* 👁️ معاينة صورة **فوق** نافذة مفتوحة.
+   ليش مو lightbox: هذاك يستعمل نفس صندوق النافذة، فلو ناديته وأنت
+   جوّا نافذة تعديل مادة، ينمسح النموذج وتضيع تعديلاتك. هذي طبقة
+   مستقلة تنحط فوق كلشي وتنشال بضغطة أو Esc. */
+function imgPeek(url){
+  if (!url) return;
+  var old = document.getElementById('imgPeek'); if (old) old.remove();
+  var d = document.createElement('div');
+  d.id = 'imgPeek';
+  d.style.cssText = 'position:fixed;inset:0;z-index:1200;background:#0f172ae6;'+
+    'display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out';
+  d.innerHTML = '<img src="'+esc(url)+'" style="max-width:100%;max-height:100%;'+
+    'border-radius:12px;box-shadow:0 10px 40px #0009">';
+  function shut(){ d.remove(); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e){ if (e.key === 'Escape') shut(); }
+  d.onclick = shut;
+  document.addEventListener('keydown', onEsc);
+  document.body.appendChild(d);
+}
+
+/* 📍 يحفظ مكان التمرير قبل ما تنعاد بناء الصفحة ويرجّعه بعدها.
+   بدونه: تحفظ مادة وأنت بنص القائمة، فترجع للبداية وتنزل من جديد.
+   الجدول عنده تمرير داخلي (tbl-wrap) والصفحة عندها تمرير برّاني —
+   نحفظ الاثنين. */
+function keepScroll(rebuild){
+  var w = document.querySelector('.tbl-wrap');
+  var inner = w ? w.scrollTop : 0;
+  var outer = window.pageYOffset || document.documentElement.scrollTop || 0;
+  return Promise.resolve(rebuild()).then(function(){
+    var w2 = document.querySelector('.tbl-wrap');
+    if (w2 && inner) w2.scrollTop = inner;
+    if (outer) window.scrollTo(0, outer);
+  });
+}
+
 function refresh(){ showPage(PAGE); }
 function errBox(e){ return '<div class="msg err">صار خطأ: ' + esc(e.message) + '</div>'; }
 
@@ -1129,8 +1164,9 @@ function custEdit(c){
     '<label>صورة المحل</label>'+
     '<div style="display:flex;gap:9px;align-items:center">'+
       '<img id="fPrev" src="'+esc(c.shop_photo_url||'')+'"'+
-        ' style="width:74px;height:74px;border-radius:9px;object-fit:cover;'+
-        'border:1px solid var(--border)'+(c.shop_photo_url?'':';display:none')+'">'+
+        ' style="width:74px;height:74px;border-radius:9px;object-fit:cover;cursor:zoom-in;'+
+        'border:1px solid var(--border)'+(c.shop_photo_url?'':';display:none')+'"'+
+        ' title="اضغط للمعاينة" onclick="imgPeek(this.src)">'+
       '<button class="btn-solid" onclick="custPickImg('+c.id+')">📷 رفع صورة</button></div>'+
     '<input type="hidden" id="fPhoto" value="'+esc(c.shop_photo_url||'')+'">'+
     (c.needs_review ? '<div class="msg warn">🔴 '+esc(c.review_note||'يحتاج مراجعة')+
@@ -1725,8 +1761,9 @@ function catEdit(x, kind){
       /* ⚠️ الحجم والإخفاء لازم بنفس الـstyle — لو انكتبن وسمين منفصلين
          المتصفح يقرا الأول بس ويتجاهل الثاني، فتطلع الصورة بحجمها الكامل */
       '<img id="kPrev" src="'+esc(x.image_url||'')+'"'+
-        ' style="width:74px;height:74px;border-radius:9px;object-fit:cover;'+
-        'border:1px solid var(--border)'+(x.image_url?'':';display:none')+'">'+
+        ' style="width:74px;height:74px;border-radius:9px;object-fit:cover;cursor:zoom-in;'+
+        'border:1px solid var(--border)'+(x.image_url?'':';display:none')+'"'+
+        ' title="اضغط للمعاينة" onclick="imgPeek(this.src)">'+
       '<button class="btn-solid" onclick="catPickImg(\''+esc(x.code)+'\')">📷 رفع صورة</button>'+
       '<button class="btn-solid gray" onclick="$(\'kImg\').value=\'\';$(\'kPrev\').style.display=\'none\'">حذف</button>'+
     '</div>'+
@@ -1764,7 +1801,7 @@ async function catSave(code, kind){
       await rpc('web_catalog_set',{p_kind:kind,p_code:code,p_patch:p});
     }
     await rpc('web_image_set',{p_kind:kind,p_code:code,p_url:$('kImg').value.trim()});
-    closeModal(); toast('✅ انحفظ'); pCat();
+    closeModal(); toast('✅ انحفظ'); keepScroll(pCat);
   }catch(e){ var m=$('kMsg'); m.className='msg err'; m.textContent=e.message; }
 }
 
