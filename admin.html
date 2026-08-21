@@ -1674,7 +1674,8 @@ async function pCat(){
         ftab(F.cat,'out','⛔ منتهي',n['منتهي'],'setCatF')+
         ftab(F.cat,'hidden','🚫 مخفي',n['مخفي'],'setCatF')+
         ftab(F.cat,'review','🔴 مراجعة',n['مراجعة'],'setCatF')+
-        ftab(F.cat,'noimg','🖼️ بلا صورة',null,'setCatF')+'</div>'+
+        ftab(F.cat,'hasimg','🖼️ بصورة',n['بصورة'],'setCatF')+
+        ftab(F.cat,'noimg','⬜ بلا صورة',n['بلا صورة'],'setCatF')+'</div>'+
       (!isScr && cats.length ? '<div class="filters" style="border-top:0">'+
         '<button class="filter-tab'+(!F.catCat?' active':'')+'" onclick="setCatCat(\'\')">كل الأقسام</button>'+
         cats.map(function(c){ return '<button class="filter-tab'+(String(F.catCat)===String(c.id)?' active':'')+
