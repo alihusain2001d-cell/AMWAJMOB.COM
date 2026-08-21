@@ -5103,7 +5103,7 @@ function itemsBlock(list, extraNote){
   var head = availBar(all.length, shown.length);
   if (!shown.length){
     return head + '<div style="padding:24px;text-align:center;color:#64748B;">' +
-      (_availOnly ? '📭 ماكو مادة متوفرة هنا الحين — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
+      (_availOnly ? '📭 ماكو مادة متوفرة هنا الان — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
       '</div>';
   }
   return head + (extraNote || '') +
@@ -6530,7 +6530,7 @@ function _renderShopNoticeLegacy(){
     if (SYS_NOTICE.kind === 'closed'){ bg = '#FEF2F2'; fg = '#991B1B'; }
     else if (SYS_NOTICE.kind === 'holiday'){ bg = '#EFF6FF'; fg = '#1E40AF'; }
   } else if (SHOP_STATUS && SHOP_STATUS.open === false){
-    txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+    txt = '🔒 المحل مغلق لان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
           '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     bg = '#FEF2F2'; fg = '#991B1B';
   }
@@ -7447,7 +7447,7 @@ async function checkSystemNotice() {
               : SYS_NOTICE.kind === 'info'    ? 'ℹ️' : '⚠️';
       txt = ico + ' ' + SYS_NOTICE.message;
     } else if (SHOP_STATUS && SHOP_STATUS.open === false) {
-      txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+      txt = '🔒 المحل مغلق الان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
             '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     }
     if (txt) { textEl.textContent = txt; banner.style.display = 'block'; }
