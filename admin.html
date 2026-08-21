@@ -1045,8 +1045,8 @@ async function pCust(){
         ftab(F.cust,'rejected','❌ مرفوض',n['مرفوض'],'setCustF')+
         ftab(F.cust,'review','🔴 مراجعة',n['مراجعة'],'setCustF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>المحل</th><th>الاسم</th><th>الهاتف</th>'+
-        '<th>الحالة</th><th>القضاء</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody>'+
-      (d.length ? d.map(custRow).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody>'+
+      (d.length ? d.map(custRow).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
       '</tbody></table></div></div>';
     var el = $('cq');
     el.oninput = function(){ window._cq = el.value; clearTimeout(window._ct);
@@ -1062,7 +1062,8 @@ function custRow(c){
          : '<span class="badge badge-yellow">ينتظر</span>';
   if (c.needs_review) st += ' <span class="badge badge-red" title="'+esc(c.review_note||'')+'">🔴</span>';
   return '<tr><td><b>'+esc(c.shop_name||'—')+'</b></td><td>'+esc(c.name||'—')+'</td>'+
-    '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td><td>'+esc(c.district||'—')+'</td>'+
+    '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td>'+
+    '<td>'+esc(c.province||'—')+'</td><td>'+esc(c.district||'—')+'</td>'+
     '<td>'+nf(c.orders_count)+'</td><td>'+nf(c.warranties_count)+'</td>'+
     '<td>'+(c.shop_photo_url
         ? '<img class="thumb" src="'+esc(c.shop_photo_url)+'" loading="lazy" style="cursor:zoom-in" '+
