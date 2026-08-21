@@ -2052,7 +2052,7 @@ async function pMsg(){
             '<label>'+esc(t.label)+'</label>'+
             (t.placeholders && t.placeholders !== '—' ? '<div class="hint" style="margin-bottom:4px">المتغيّرات المتاحة: '+esc(t.placeholders)+'</div>' : '')+
             '<textarea class="modal-input" id="tplBox_'+esc(t.key)+'" rows="'+(t.category==='whatsapp'?7:2)+'" style="font-family:inherit">'+esc(t.template)+'</textarea>'+
-            '<button class="btn-solid gray" style="margin-top:6px" onclick="msgSaveTpl('+JSON.stringify(t.key)+')">💾 حفظ</button>'+
+            '<button class="btn-solid gray" style="margin-top:6px" onclick="msgSaveTpl(&quot;'+esc(t.key)+'&quot;)">💾 حفظ</button>'+
             '<span class="msg" id="tplMsg_'+esc(t.key)+'" style="display:inline-block;margin-right:8px"></span>'+
           '</div>';
         }).join('')+
