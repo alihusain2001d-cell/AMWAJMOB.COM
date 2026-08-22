@@ -2480,10 +2480,23 @@ async function upRun(dry){
   try{
     var body = {p_rows:UP.rows, p_source:UP.file, p_dry:dry};
     if (UP.kind==='parts') body.p_renames = rens;
-    if (UP.kind==='partsx') body.p_confirm_delete = !!UP.okDel;
+    if (UP.kind!=='parts') body.p_confirm_delete = !!UP.okDel;
     var res = await rpc(UP.kind==='partsx' ? 'web_import_parts_ext'
-                      : UP.kind==='screens' ? 'web_import_screens' : 'web_import_parts', body);
-    if (UP.kind==='partsx') renderUpX(res, dry); else renderUp(res, dry);
+                      : UP.kind==='screens' ? 'web_import_screens_ext' : 'web_import_parts', body);
+
+    if (UP.kind==='partsx') renderUpX(res, dry);
+    else {
+      renderUp(res, dry);
+      /* الشاشات: نلحق معلومة الحذف بعد الأرقام الأصلية */
+      if (UP.kind==='screens' && (res['راح_تنحذف']||0) > 0){
+        $('uRes').innerHTML +=
+          '<div class="msg '+((res['نسبة_الحذف']||0) > 10 ? 'err' : 'warn')+'">'+
+          '🗑️ <b>'+nf(res['راح_تنحذف'])+'</b> شاشة راح تنحذف ('+(res['نسبة_الحذف']||0)+'%) — مو موجودة بالشيت.'+
+          '<br>تنحفظ نسخة منهن، وزر «↩️ تراجع» يرجّعهن كاملات.</div>'+
+          xList('🗑️ شاشات راح تنحذف', res['قائمة_الحذف'], ['الاسم','الكود','الكمية'], res['راح_تنحذف']);
+        labelTables($('uRes'));
+      }
+    }
 
     /* 🛡️ الحارس رفض: حذف كبير بلا تأكيد — نوقف ونعرض التحذير */
     if (res['الحالة'] === 'يحتاج تأكيد'){
