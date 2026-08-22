@@ -2339,6 +2339,7 @@ function pUp(){
       '<div class="filters" style="border:0;padding:0 0 10px">'+
         '<button class="filter-tab'+(UP.kind==='parts'?' active':'')+'" onclick="upKind(\'parts\')">🔧 المواد</button>'+
         '<button class="filter-tab'+(UP.kind==='screens'?' active':'')+'" onclick="upKind(\'screens\')">🖥️ الشاشات</button>'+
+        '<button class="filter-tab'+(UP.kind==='partsx'?' active':'')+'" onclick="upKind(\'partsx\')">🔢 المواد بالرمز</button>'+
       '</div>'+
       '<div class="drop" id="drop"><div style="font-size:28px">📄</div>'+
         '<div style="font-weight:800;margin-top:5px">اسحب الملف هنا أو اضغط للاختيار</div>'+
@@ -2363,7 +2364,9 @@ function pUp(){
   $('file').onchange = function(e){ if (e.target.files[0]) upFile(e.target.files[0]); };
   upHist();
 }
-function upKind(k){ UP.kind=k; pUp(); }
+/* okDel = تأكيد الحذف الكبير. ينصفّر كل ما يتبدّل التبويب أو الملف،
+   حتى ما ينسحب تأكيد قديم على شيت جديد. */
+function upKind(k){ UP.kind=k; UP.okDel=false; pUp(); }
 var SKIP_TABS = ['fcm_tokens','_sync_snapshot'];
 function upFile(f){
   UP.file = f.name; UP.rows = null; UP.renames = [];
@@ -2407,7 +2410,39 @@ function buildRows(table){
   if (!table || table.length<2) throw new Error('الملف فارغ');
   var h = (table[0]||[]).map(function(x){ return String(x==null?'':x).trim().toLowerCase(); });
   var rows = [];
-  if (UP.kind==='parts'){
+
+  /* 🔢 شيت برنامج المحاسبة — المفتاح «الرقم» مو الاسم.
+     الشيت تقرير مطبوع، فسطر العناوين يتكرر كل صفحة — ندوّره مرة
+     ونتجاهل أي تكرار له بعدين. وصفوف LCD نشيلها (الشاشات بشيتها). */
+  if (UP.kind==='partsx'){
+    var hi = -1, cx = null;
+    for (var k=0; k<Math.min(table.length,40); k++){
+      var rr = (table[k]||[]).map(function(x){ return String(x==null?'':x).trim(); });
+      var iC = rr.indexOf('الرقم'), iN = rr.indexOf('الاسم');
+      if (iC>=0 && iN>=0){
+        hi = k; cx = {code:iC, name:iN, qty:rr.indexOf('الرصيد'), price:rr.indexOf('مفرد')};
+        break;
+      }
+    }
+    if (hi < 0) throw new Error('ما لقيت عمودي «الرقم» و«الاسم» — تأكد إنه الشيت الصحيح');
+    if (cx.qty   < 0) cx.qty   = cx.name + 1;
+    if (cx.price < 0) cx.price = cx.name + 2;
+
+    var nLcd = 0, nDup = 0, seenX = {};
+    for (var i=hi+1; i<table.length; i++){
+      var r = table[i]; if (!r) continue;
+      var ext = String(r[cx.code]==null?'':r[cx.code]).trim();
+      var nm  = String(r[cx.name]==null?'':r[cx.name]).trim();
+      if (!ext || !nm) continue;
+      if (ext === 'الرقم' || nm === 'الاسم') continue;
+      if (/^LCD/i.test(nm)) { nLcd++; continue; }
+      if (seenX[ext]) nDup++;
+      seenX[ext] = 1;
+      rows.push({ext:ext, name:nm, qty:num(r[cx.qty]), price:numN(r[cx.price])});
+    }
+    UP.nLcd = nLcd; UP.nDup = nDup;
+  }
+  else if (UP.kind==='parts'){
     var ci = {name:col(h,['name','الاسم'],0), qty:col(h,['qty','الرصيد','الكمية'],1),
               price:col(h,['price','مفرد','السعر'],2)};
     for (var i=1;i<table.length;i++){ var r=table[i]; if(!r) continue;
@@ -2425,9 +2460,11 @@ function buildRows(table){
         qty:num(s[cs.qty]), price:numN(s[cs.price])}); }
   }
   if (!rows.length) throw new Error('ما لقيت ولا صف فيه اسم');
-  UP.rows = rows;
+  UP.rows = rows; UP.okDel = false;
   var m = $('uFile'); m.className='msg ok';
-  m.textContent = '✅ ' + UP.file + ' — ' + rows.length.toLocaleString('en') + ' صف جاهز';
+  m.textContent = '✅ ' + UP.file + ' — ' + rows.length.toLocaleString('en') + ' صف جاهز'+
+    (UP.kind==='partsx' ? '  ·  شلنا ' + (UP.nLcd||0) + ' صف شاشات (LCD)'+
+       ((UP.nDup||0) ? '  ·  ⚠️ ' + UP.nDup + ' رمز مكرر' : '') : '');
   $('uBtns').style.display = 'flex';
 }
 async function upRun(dry){
@@ -2443,8 +2480,21 @@ async function upRun(dry){
   try{
     var body = {p_rows:UP.rows, p_source:UP.file, p_dry:dry};
     if (UP.kind==='parts') body.p_renames = rens;
-    var res = await rpc(UP.kind==='screens' ? 'web_import_screens' : 'web_import_parts', body);
-    renderUp(res, dry);
+    if (UP.kind==='partsx') body.p_confirm_delete = !!UP.okDel;
+    var res = await rpc(UP.kind==='partsx' ? 'web_import_parts_ext'
+                      : UP.kind==='screens' ? 'web_import_screens' : 'web_import_parts', body);
+    if (UP.kind==='partsx') renderUpX(res, dry); else renderUp(res, dry);
+
+    /* 🛡️ الحارس رفض: حذف كبير بلا تأكيد — نوقف ونعرض التحذير */
+    if (res['الحالة'] === 'يحتاج تأكيد'){
+      m.className='msg err';
+      m.innerHTML = esc(res['تحذير']) +
+        '<br><br><button class="btn-solid" onclick="UP.okDel=true;upRun(true)">' +
+        '✅ متأكد إن الشيت كامل — كمّل</button>';
+      $('bApply').style.display='none';
+      $('bPrev').disabled = false; $('bApply').disabled = false;
+      return;
+    }
     if (dry){ $('bApply').style.display='inline-block';
       m.className='msg warn'; m.textContent='⚠️ معاينة — ما انطبّق شي. راجع واضغط تطبيق.'; }
     else { m.className='msg ok'; m.textContent='✅ انطبّق — استلام رقم '+(res['رقم_الاستلام']||'?');
@@ -2453,6 +2503,56 @@ async function upRun(dry){
   $('bPrev').disabled = false; $('bApply').disabled = false;
 }
 var RC = [];
+/* ══════ عرض نتيجة الرفع بالرمز (ملف ٨٩) ══════
+   مختلفة عن renderUp لأن المفاتيح غير: ماكو «مرشحات تسمية»،
+   وأكو «راح تنحذف» و«بلا رمز». */
+function renderUpX(r, dry){
+  if (r['خطأ']){ $('uRes').innerHTML = errBox({message:r['خطأ']}); return; }
+  var cells = [
+    ['جديد',          r['جديد'],        '--green'],
+    ['تغيّر اسمها',   r['تغيّر_اسمها'], '--purple'],
+    ['رجعت متوفرة',   r['رجع_للتوفر'],  '--primary'],
+    ['تغيّرت كميتها', r['كمية'],        '--yellow'],
+    ['تغيّر سعرها',   r['سعر'],         '--muted'],
+    ['بدون تغيير',    r['بلا_تغيير'],   '--muted'],
+    ['راح تنحذف',     r['راح_تنحذف'],   '--red'],
+    ['بلا رمز',       r['بلا_رمز'],     '--muted']];
+
+  var h = '<div class="stats-grid" style="margin-top:12px">'+cells.map(function(c){
+    return '<div class="stat-card"><div class="stat-num" style="color:var('+c[2]+')">'+
+           nf(c[1]||0)+'</div><div class="stat-lbl">'+c[0]+'</div></div>'; }).join('')+'</div>';
+
+  if (r['بلا_رمز'] > 0)
+    h += '<div class="msg">🔒 <b>'+nf(r['بلا_رمز'])+'</b> مادة بالسيرفر ماكو عندها رمز — '+
+         '<b>ما تنلمس ولا تنحذف</b>. تنربط لحالها لما يجي رمزها بالشيت.</div>';
+
+  if (r['راح_تنحذف'] > 0)
+    h += '<div class="msg '+((r['نسبة_الحذف']||0) > 10 ? 'err' : 'warn')+'">'+
+         '🗑️ <b>'+nf(r['راح_تنحذف'])+'</b> مادة راح تنحذف ('+(r['نسبة_الحذف']||0)+'%) — مو موجودة بالشيت.'+
+         '<br>تنحفظ نسخة منهن، وزر «↩️ تراجع» يرجّعهن كاملات بصورهن وتاريخهن.</div>';
+
+  h += xList('🗑️ راح تنحذف',  r['قائمة_الحذف'],  ['الاسم','الرمز','الكود','الكمية'], r['راح_تنحذف'])
+     + xList('🆕 مواد جديدة',  r['قائمة_الجديد'], ['الاسم','الرمز','الكمية','السعر'], r['جديد'])
+     + xList('✏️ تغيّر اسمها', r['قائمة_الاسماء'],['كان','صار','الكود'],             r['تغيّر_اسمها']);
+
+  $('uRes').innerHTML = h;
+  labelTables($('uRes'));
+}
+
+/* جدول قابل للطي — يبيّن إذا القائمة انقصّت (السيرفر يرجّع ٤٠٠ كحد) */
+function xList(title, arr, cols, total){
+  if (!arr || !arr.length) return '';
+  var more = (total && total > arr.length)
+    ? '<div class="hint" style="padding:6px 10px">… معروض '+nf(arr.length)+' من '+nf(total)+'</div>' : '';
+  return '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:800;font-size:13.5px">'+
+    esc(title)+' ('+nf(total||arr.length)+')</summary>'+
+    '<div class="tbl-wrap" style="max-height:300px;border:1px solid var(--border);border-radius:9px;margin-top:6px">'+
+    '<table><thead><tr>'+cols.map(function(c){ return '<th>'+esc(c)+'</th>'; }).join('')+'</tr></thead><tbody>'+
+    arr.map(function(x){ return '<tr>'+cols.map(function(c){
+      var v = x[c]; return '<td>'+(v==null||v===''?'—':esc(String(v)))+'</td>'; }).join('')+'</tr>';
+    }).join('')+'</tbody></table></div>'+more+'</details>';
+}
+
 function renderUp(r, dry){
   var cells = [['جديد كلياً',r['جديد'],'--green'],
     [dry?'مرشح إعادة تسمية':'أعيدت تسميتها', r['إعادة_تسمية'],'--purple'],
@@ -2465,8 +2565,16 @@ function renderUp(r, dry){
            '</div><div class="stat-lbl">'+c[0]+'</div></div>'; }).join('')+'</div>';
   RC = r['مرشحات_التسمية'] || [];
   if (RC.length){
+    /* نفصل الرقم: المؤشّرة تتغيّر فعلاً، والحمراء لا. بدون هالتفصيل
+       الرقم الكبير يخوّف بلا سبب — أغلبه مواد جديدة مو تسميات. */
+    var nStrong = 0;
+    for (var ri=0; ri<RC.length; ri++) if (RC[ri]['قوي']) nStrong++;
+    var nWeak = RC.length - nStrong;
     h += '<div class="msg warn"><b>🔁 شكلهن نفس المواد بس تغيّر اسمهن ('+RC.length+')</b><br>'+
-      'المؤشّرة تتحدّث بنفس الكود — الصورة والتاريخ يبقون مربوطين.</div>'+
+      '✅ <b>'+nStrong+'</b> مؤشّرة — تتحدّث بنفس الكود، والصورة والتاريخ يبقون مربوطين.'+
+      (nWeak ? '<br>🔴 <b>'+nWeak+'</b> بالأحمر — <b>ما راح تتغيّر</b>، راح تنضاف مواد جديدة. '+
+               'لا تأشّرها إلا إذا متأكد إنها نفس المادة.' : '')+
+      '</div>'+
       '<div class="tbl-wrap" style="max-height:320px;border:1px solid var(--border);border-radius:9px">'+
       '<table><thead><tr><th><input type="checkbox" id="renAll" checked onchange="renToggle(this)"></th>'+
       '<th>الاسم الجديد</th><th>كان اسمه</th><th>الدليل</th></tr></thead><tbody>'+
