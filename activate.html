@@ -4617,7 +4617,7 @@ async function submitOrder() {
          ويرسل الواتساب والإشعارات بنفسه.
 
          ⚠️ قبل، لو فشل الحفظ كان يطلع «تم الإرسال بنجاح» والطلب يضيع.
-            الحين الفشل يبيّن للزبون ويگدر يعيد المحاولة. */
+            الان الفشل يبيّن للزبون ويگدر يعيد المحاولة. */
       try {
         var _ord = await sbFn('placeorder', {
           token: guest ? null : getCustomerToken(),
@@ -4657,7 +4657,7 @@ async function submitOrder() {
         document.getElementById('cartSummary').style.display = 'none';
         // 🌙 رسالة خارج الدوام — تجي من لوحة التحكم مو مكتوبة بالكود.
         //    كانت «الجمعة عطلة» و«9ص–10م» ثابتات، فلو فتحت جمعة تطلع رسالة غلط.
-        //    الحين تتبع الدوام الأسبوعي والاستثناءات اللي تحطها بنفسك.
+        //    الان تتبع الدوام الأسبوعي والاستثناءات اللي تحطها بنفسك.
         var _offHoursText = '';
         if (SHOP_STATUS && SHOP_STATUS.open === false) {
           if (SHOP_STATUS.source === 'weekly' && SHOP_STATUS.reason === 'عطلة أسبوعية') {
@@ -4901,7 +4901,7 @@ async function refreshDataInBackground(type) {
   try {
     /* ⚠️ كانت هاي تسحب من النظام القديم (Apps Script) وتدهس البيانات
        اللي جابها السيرفر الجديد — فتختلط البيانات بصمت.
-       الحين نداء واحد يحدّث الكاتلوك كله من نفس المصدر. */
+       الان نداء واحد يحدّث الكاتلوك كله من نفس المصدر. */
     await loadCatalogFromServer();
 
     if (sheetPriceType !== type) return;   // الزبون طلع من هالقسم، ما نلمس شاشته
@@ -5103,7 +5103,7 @@ function itemsBlock(list, extraNote){
   var head = availBar(all.length, shown.length);
   if (!shown.length){
     return head + '<div style="padding:24px;text-align:center;color:#64748B;">' +
-      (_availOnly ? '📭 ماكو مادة متوفرة هنا الحين — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
+      (_availOnly ? '📭 ماكو مادة متوفرة هنا الان — اضغط «الكل» لتشوف الباقي' : '📭 ماكو مواد') +
       '</div>';
   }
   return head + (extraNote || '') +
@@ -5285,7 +5285,7 @@ async function loadNewArrivals(){
 
    بدونه: يبان البانر البرتقالي «أحدث المنتجات»، وبعد ثانيتين ينختفي
    فجأة ويحل محله الشريط — قفزة بالصفحة ومنظر مو مرتب.
-   الحين نحجز المكان من أول لحظة، والمحتوى يتعبّى بمكانه بهدوء. */
+   الان نحجز المكان من أول لحظة، والمحتوى يتعبّى بمكانه بهدوء. */
 function showNaSkeleton(){
   var home = document.getElementById('homeScreen');
   if (!home) return;
@@ -5376,7 +5376,7 @@ function renderNewStrip(){
 
    كان العرض ثابت 118px، وعرض الشاشة نادراً ينقسم عليه — فتبقى بطاقة
    مقصوصة بالطرف دايماً ومنظرها مو حلو، حتى لو الشريط واقف بمكان صحيح.
-   الحين نحسب كم بطاقة تنطبق ونوزّع الفراغ عليهن. */
+   الان نحسب كم بطاقة تنطبق ونوزّع الفراغ عليهن. */
 var NA_GAP = 10;
 function fitNaCards(rail){
   if (!rail || !rail.clientWidth) return 0;
@@ -5420,7 +5420,7 @@ function startNaAuto(){
   /* ⚠️ mouseenter كان يوقف الشريط **بلا مؤقّت** — يعتمد على mouseleave يفكّه.
      بس بالتلفون ماكو ماوس: اللمسة تنده mouseenter مقلّد، و mouseleave
      ما يجي أبداً — فالشريط يتحرك مرة وبعدها يبقى واقف للأبد.
-     الحين الماوس ينشتغل بس بالأجهزة اللي عندها ماوس حقيقي. */
+     الان الماوس ينشتغل بس بالأجهزة اللي عندها ماوس حقيقي. */
   if (!window.matchMedia || window.matchMedia('(hover: hover)').matches) {
     rail.addEventListener('mouseenter', function(){ paused = true; clearTimeout(t); });
     rail.addEventListener('mouseleave', function(){ paused = false; });
@@ -6530,7 +6530,7 @@ function _renderShopNoticeLegacy(){
     if (SYS_NOTICE.kind === 'closed'){ bg = '#FEF2F2'; fg = '#991B1B'; }
     else if (SYS_NOTICE.kind === 'holiday'){ bg = '#EFF6FF'; fg = '#1E40AF'; }
   } else if (SHOP_STATUS && SHOP_STATUS.open === false){
-    txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+    txt = '🔒 المحل مغلق الان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
           '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     bg = '#FEF2F2'; fg = '#991B1B';
   }
@@ -7289,7 +7289,7 @@ function showNotificationOptInBanner() {
   // زر "نعم"
   document.getElementById('notifOptInYes').onclick = async function(){
     banner.remove();
-    // الحين نطلب الصلاحية من المتصفح
+    // الان نطلب الصلاحية من المتصفح
     await proceedWithWebPushSetup();
   };
   
@@ -7509,7 +7509,7 @@ async function checkSystemNotice() {
               : SYS_NOTICE.kind === 'info'    ? 'ℹ️' : '⚠️';
       txt = ico + ' ' + SYS_NOTICE.message;
     } else if (SHOP_STATUS && SHOP_STATUS.open === false) {
-      txt = '🔒 المحل مغلق الحين' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
+      txt = '🔒 المحل مغلق الان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
             '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
     }
     if (txt) { textEl.textContent = txt; banner.style.display = 'block'; }
