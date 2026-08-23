@@ -1235,12 +1235,11 @@ async function pOrd(){
         var rows = F.ordPrime ? d.filter(function(o){ return !!o.prime_case_id; }) : d;
         if (!rows.length) return '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>';
         return rows.map(function(o){
-          var s = OST[o.status] || ['—','badge-gray'];
           return '<tr><td><b>'+esc(o.order_code)+'</b></td><td>'+esc(o.cust_shop||o.cust_name||'—')+'</td>'+
             '<td dir="ltr">'+esc(o.cust_phone||'—')+'</td>'+
             '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
             '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
-            '<td><span class="badge '+s[1]+'">'+s[0]+'</span></td>'+
+            '<td>'+ordBadge(o)+'</td>'+
             '<td class="hint">'+dstr(o.placed_at)+'</td>'+
             '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
         }).join('');
@@ -1318,19 +1317,45 @@ var _curOrderId = null, _curOrderCode = '', _curPrimeActive = false;
    أول ما مندوب الاستلام ياخذها، تطلع من يدي ويتقفل التعديل.
    _curPrimeActive تبقى معناها «أكو شحنة» — تستعملها دالة الإلغاء. */
 var PRIME_STILL_MINE = { '': 1, READYTOPRINT: 1, READYTOPICKUP: 1 };
+
+/* 🚚 مرحلة الشحنة كما تظهر بقائمة الطلبات.
+   ليش نعرضها بدل حالة الطلب: المزامنة ما تلمس الطلب إلا لما تتغيّر
+   حالته عند برايم — فطلب قديم يبقى «ينتظر» بالقائمة رغم إن شحنته
+   ماشية. الجدول عنده prime_step دائماً، فنقراه منه مباشرة. */
+var PRIME_ROW = {
+  READYTOPRINT:        ['🖨️ جاهزة للطباعة',  'badge-yellow'],
+  READYTOPICKUP:       ['📦 جاهزة للتسليم',   'badge-yellow'],
+  NEW_ONWAY:           ['🚚 عند مندوب الاستلام', 'badge-blue'],
+  NEWINSTORE:          ['🚚 قيد الفرز والنقل', 'badge-blue'],
+  PRINTMANIFEST:       ['🚚 قيد الفرز والنقل', 'badge-blue'],
+  MANIFEST_BRANCHES:   ['🚚 قيد الفرز والنقل', 'badge-blue'],
+  LIAISONAGT_NEWONWAY: ['🚚 قيد الفرز والنقل', 'badge-blue'],
+  ONWAY:               ['🛵 عند مندوب التوصيل', 'badge-blue']
+};
+
+/* شارة الحالة بالقائمة — مرحلة برايم تغلب، إلا لو الطلب خلص */
+function ordBadge(o){
+  var s = OST[o.status] || ['—','badge-gray'];
+  if (o.status !== 'delivered' && o.status !== 'cancelled' &&
+      o.prime_status !== 'DELETED' && o.prime_status !== 'CNCL'){
+    var pr = PRIME_ROW[String(o.prime_step || '')];
+    if (pr) s = pr;
+  }
+  return '<span class="badge '+s[1]+'">'+esc(s[0])+'</span>';
+}
 var _curPrimeLeft = false;
 async function ordOpen(id){
   _curOrderId = id;
   try{
     var r = await rpc('web_order_detail',{p_id:id});
     var o = r['الطلب'], it = r['المواد'], pr = r['برايم'];
-    var s = OST[o.status] || ['—','badge-gray'];
+    /* نفس شارة القائمة — مرحلة برايم تغلب على حالة الطلب */
     // كربلاء توصيل داخلي، ما تروح لبرايم
     var isKerbala = /^كربلاء/.test(o.address || '');
     _curOrderCode = o.order_code;
     _curPrimeActive = !!(pr && pr.prime_case_id && pr.status !== 'DELETED' && pr.status !== 'CNCL');
     _curPrimeLeft   = _curPrimeActive && !PRIME_STILL_MINE[String((pr && pr.step_code) || '')];
-    modal('<h3>🧾 '+esc(o.order_code)+' <span class="badge '+s[1]+'">'+s[0]+'</span></h3>'+
+    modal('<h3>🧾 '+esc(o.order_code)+' '+ordBadge({status:o.status, prime_step:(pr&&pr.step_code)||'', prime_status:(pr&&pr.status)||''})+'</h3>'+
       '<div class="hint">'+esc(o.cust_shop||'')+' · <span dir="ltr">'+esc(o.cust_phone||'')+'</span></div>'+
       '<div class="hint" style="margin-bottom:10px">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
       '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">'+
