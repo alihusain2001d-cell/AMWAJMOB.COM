@@ -8262,8 +8262,16 @@ function closeInstallPrompt() {
   localStorage.setItem('amwaj_install_shown', '1');
 }
 
-// أظهر تلقائي مرة وحدة بعد 3 ثواني (للزوار الجدد فقط - إلا في التطبيق الأصلي)
-if (!_isNativeApp && !localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
+/* 📲 «إضافة للشاشة الرئيسية» — للآيفون بس.
+
+   الأندرويد عنده تطبيق حقيقي بگوگل بلاي، وبانر «حمّل التطبيق»
+   يوصله بدلها — فعرض تثبيت المتصفح صار إزعاج ومنافس لتطبيقنا.
+
+   الآيفون ماكو عنده تطبيق بعد، فتبقى أفضل شي عنده. شيل الشرط
+   يوم ما ينزل تطبيق الآيفون. */
+var _isAndroidBrowser = /Android/i.test(navigator.userAgent || '');
+
+if (!_isNativeApp && !_isAndroidBrowser && !localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
   setTimeout(function() {
     showInstallPrompt();
   }, 3000);
