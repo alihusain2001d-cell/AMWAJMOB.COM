@@ -1330,8 +1330,16 @@ var PRIME_ROW = {
   PRINTMANIFEST:       ['🚚 قيد الفرز والنقل', 'badge-blue'],
   MANIFEST_BRANCHES:   ['🚚 قيد الفرز والنقل', 'badge-blue'],
   LIAISONAGT_NEWONWAY: ['🚚 قيد الفرز والنقل', 'badge-blue'],
-  ONWAY:               ['🛵 عند مندوب التوصيل', 'badge-blue']
+  ONWAY:               ['🛵 عند مندوب التوصيل', 'badge-blue'],
+  /* أكواد الوصول — برايم يكتب DLEIVERD بهذا الإملاء فعلاً */
+  DLEIVERD:            ['✅ واصل', 'badge-green'],
+  PART_SUCC:           ['✅ واصل', 'badge-green'],
+  SUCC_CHANGEPRICE:    ['✅ واصل', 'badge-green'],
+  FORCE_DLV:           ['✅ واصل', 'badge-green']
 };
+
+/* انتهت الشحنة = ماكو شي ينلغى، فما نعرض حتى ملاحظة الإلغاء */
+var PRIME_DONE = { DLEIVERD:1, PART_SUCC:1, SUCC_CHANGEPRICE:1, FORCE_DLV:1 };
 
 /* شارة الحالة بالقائمة — مرحلة برايم تغلب، إلا لو الطلب خلص */
 function ordBadge(o){
@@ -1380,15 +1388,24 @@ async function ordOpen(id){
       (isKerbala ? '' :
       (function(){
         var active = pr && pr.prime_case_id && pr.status !== 'DELETED' && pr.status !== 'CNCL';
-        var cancelBtn = active
-          ? '<button class="btn-solid red" style="margin-top:6px" onclick="prCancel(\''+esc(o.order_code)+'\')">❌ إلغاء الشحنة عند برايم</button>'
-          : '';
+
+        /* 🔒 طلعت من المحل؟ ماكو زر إلغاء — برايم نفسه ما يسمح بعد ما
+           مندوب الاستلام ياخذها، فعرض الزر يوعد بشي ما يصير. */
+        var cancelBtn = !active ? ''
+          : (!_curPrimeLeft
+            ? '<button class="btn-solid red" style="margin-top:6px" onclick="prCancel(\''+esc(o.order_code)+'\')">❌ إلغاء الشحنة عند برايم</button>'
+            : (PRIME_DONE[String((pr && pr.step_code) || '')] ? ''
+              : '<div class="hint" style="margin-top:8px">🔒 الشحنة طلعت من المحل — الإلغاء ما يصير من هنا، راجع برايم مباشرة</div>'));
+
+        /* المرحلة الحقيقية بدل نص ثابت مربوط بالطباعة — حتى ما يتناقض
+           الصندوق مع شارة الحالة فوق. */
+        var stepTxt = (PRIME_ROW[String((pr && pr.step_code) || '')] || [''])[0];
         return '<div style="border-top:2px solid var(--border);margin-top:14px;padding-top:12px">'+
           '<div style="font-weight:800;font-size:13px;color:var(--muted);margin-bottom:8px">🚚 برايم</div>'+
           (!active
             ? '<button class="btn-solid" onclick="prSendAndPrint(\''+esc(o.order_code)+'\')">🚚 إرسال لبرايم وطباعة الملصق</button>'
           : pr.label_printed_at
-            ? ('<div class="msg ok">✅ جاهز للتسليم — شحنة '+esc(pr.prime_case_id)+
+            ? ('<div class="msg ok">'+(stepTxt || '✅ جاهز للتسليم')+' — شحنة '+esc(pr.prime_case_id)+
                '<div class="hint" style="margin-top:2px">آخر طباعة: '+dstr(pr.label_printed_at)+'</div></div>'+
                '<button class="btn-solid gray" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ إعادة الطباعة</button>'+cancelBtn)
           : ('<div class="msg warn">📦 مرسل لبرايم — شحنة '+esc(pr.prime_case_id)+'، ما انطبع الملصق بعد</div>'+
