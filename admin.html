@@ -951,7 +951,7 @@ function shrink(file, maxPx, quality){
    يكشف أسماء المجلدات — ومجلدنا اسمه هو مفتاح الرفع السري نفسه.
    يعني الحماية كانت تفضح نفسها.
 
-   الحين الدالة تشتغل بصلاحية السيرفر (ما يشوفها أحد)، والمتصفح
+   الان الدالة تشتغل بصلاحية السيرفر (ما يشوفها أحد)، والمتصفح
    ما عنده ولا صلاحية على التخزين. نفس طريقة صور المحلات. */
 function blobToBase64(blob){
   return new Promise(function(res, rej){
@@ -1138,7 +1138,7 @@ async function custSet(id, patch, phone, name){
       try{
         await fn('sendpush', {target:'phone', phone:phone,
           title: _render(_tpl.push_approval_title, {}, '✅ تمت الموافقة على طلبك'),
-          body: _render(_tpl.push_approval_body, {name:name||''}, 'مرحباً '+(name||'')+'! سجّل دخولك الحين للوصول للأسعار والضمان'),
+          body: _render(_tpl.push_approval_body, {name:name||''}, 'مرحباً '+(name||'')+'! سجّل دخولك الان للوصول للأسعار والضمان'),
           data:{type:'account_approved'}});
       }catch(e2){ /* ثانوي — الموافقة صارت بغض النظر */ }
     }
@@ -1252,7 +1252,36 @@ async function pOrd(){
     if (q){ el.focus(); el.setSelectionRange(q.length,q.length); }
     if (n['ينتظر']>0){ $('bgOrd').style.display='inline-block'; $('bgOrd').textContent=n['ينتظر']; }
     else $('bgOrd').style.display='none';
+
+    primeSyncSoft();          // 🚚 نسأل برايم بالخلفية — الصفحة ما تنتظره
   }catch(e){ $('content').innerHTML = errBox(e); }
+}
+
+/* ══════ 🚚 مزامنة برايم الفورية ══════
+
+   المؤقّت بالسيرفر يشتغل كل ١٥ دقيقة — طويلة لما تكون واقف تنتظر.
+   فنسأل برايم أول ما تفتح الطلبات، وبس لو تغيّر شي نعيد العرض.
+
+   • بالخلفية: الصفحة تنعرض فوراً وما تنتظر رد برايم
+   • مخنوقة بـ٤٥ ثانية: تتنقل بين التبويبات ما يقصف API برايم
+   • فشلها ما يبيّن للمستخدم — المؤقّت راح يمسكها بعدين */
+var _primeSyncAt = 0, _primeSyncing = false;
+
+async function primeSyncSoft(){
+  if (_primeSyncing) return;
+  if (Date.now() - _primeSyncAt < 45000) return;
+  _primeSyncing = true;
+  _primeSyncAt  = Date.now();
+  try{
+    var r = await fn('prime', { action:'sync' });
+    /* تغيّر شي؟ نعيد العرض — بس لو المستخدم بعده بصفحة الطلبات */
+    if (r && r.changed > 0 && PAGE === 'ord'){
+      toast('🚚 تحدّثت ' + nf(r.changed) + ' شحنة');
+      _primeSyncAt = Date.now();
+      pOrd();
+    }
+  }catch(e){ /* برايم ما رد؟ المؤقّت يكمّلها */ }
+  _primeSyncing = false;
 }
 /* 🧾 نفس شكل تفاصيل المادة اللي بالتطبيق — حتى اللي تشوفه انت هو نفسه
    اللي يشوفه الزبون.
@@ -1284,6 +1313,12 @@ function orderItemHtml(i){
 }
 
 var _curOrderId = null, _curOrderCode = '', _curPrimeActive = false;
+
+/* 🔒 الشحنة عند برايم بس لسّه بالمحل = أگدر أعدّل وألغي.
+   أول ما مندوب الاستلام ياخذها، تطلع من يدي ويتقفل التعديل.
+   _curPrimeActive تبقى معناها «أكو شحنة» — تستعملها دالة الإلغاء. */
+var PRIME_STILL_MINE = { '': 1, READYTOPRINT: 1, READYTOPICKUP: 1 };
+var _curPrimeLeft = false;
 async function ordOpen(id){
   _curOrderId = id;
   try{
@@ -1294,6 +1329,7 @@ async function ordOpen(id){
     var isKerbala = /^كربلاء/.test(o.address || '');
     _curOrderCode = o.order_code;
     _curPrimeActive = !!(pr && pr.prime_case_id && pr.status !== 'DELETED' && pr.status !== 'CNCL');
+    _curPrimeLeft   = _curPrimeActive && !PRIME_STILL_MINE[String((pr && pr.step_code) || '')];
     modal('<h3>🧾 '+esc(o.order_code)+' <span class="badge '+s[1]+'">'+s[0]+'</span></h3>'+
       '<div class="hint">'+esc(o.cust_shop||'')+' · <span dir="ltr">'+esc(o.cust_phone||'')+'</span></div>'+
       '<div class="hint" style="margin-bottom:10px">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
@@ -1311,7 +1347,7 @@ async function ordOpen(id){
         '<button class="btn-solid" onclick="ordSave('+o.id+')">حفظ</button>'+
         '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
       // ✏️ تعديل المواد — بس لو الطلب لسه ينتظر/بالطريق وماكو شحنة برايم فعّالة عليه
-      ((o.status==='pending'||o.status==='picked') && !_curPrimeActive
+      ((o.status==='pending'||o.status==='picked') && !_curPrimeLeft
         ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordEditItems('+o.id+')">✏️ تعديل المواد (إضافة/حذف)</button>'
         : '')+
       /* 🚚 برايم — صندوق منفصل بمكانه، مو مخلوط مع باقي الأزرار.
@@ -1771,7 +1807,7 @@ function catEdit(x, kind){
     '<div class="hint">تنرفع على سيرفرك وتنصغّر تلقائياً — تفتح فوراً عند الزبون. '+
       'ومربوطة بالكود الثابت، فما تتأثر لو تغيّر الاسم.</div>'+
     '<div class="msg warn" id="kLockHint" style="display:none">'+
-      '🔒 السعر والكمية مقفولين عندك — تقدر تضيف صورة بس.</div>'+
+      '🔒 السعر والكمية مقفولين عندك — تكدر تضيف صورة بس.</div>'+
     '<div class="msg" id="kMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
       '<button class="btn-solid" onclick="catSave(\''+esc(x.code)+'\',\''+kind+'\')">حفظ</button>'+
@@ -1860,7 +1896,7 @@ async function bcSave(){
     var _t = $('bTitle').value.trim(), _b = $('bBody').value.trim();
     await rpc('web_broadcast_add',{p_data:{title:_t, body:_b,
       target:$('bTarget').value, url:$('bUrl').value.trim()}});
-    /* 📢 الحفظ صار، الحين ندز الإشعار لكل الأجهزة */
+    /* 📢 الحفظ صار، الان ندز الإشعار لكل الأجهزة */
     m.className='msg'; m.textContent='⏳ انحفظ — جاري إرسال الإشعار...';
     try{
       var _p = await fn('sendpush', {target:'all', urgent:true, title:_t, body:_b,
@@ -1892,7 +1928,7 @@ async function pSet(){
     /* ── تنبيه عام ── */
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">🚨 تنبيه عام — يظهر بأعلى التطبيق</div>'+
-      (sn.enabled ? '<span class="badge badge-green">مفعّل الحين</span>'
+      (sn.enabled ? '<span class="badge badge-green">مفعّل الان</span>'
                   : '<span class="badge badge-gray">مطفي</span>')+'</div>'+
     '<div class="section-body">'+
       '<label><input type="checkbox" id="snOn"'+(sn.enabled?' checked':'')+'> مفعّل</label>'+
@@ -1973,8 +2009,8 @@ async function pSet(){
     try{
       var st = await rpc2('shop_status');
       $('shopNow').innerHTML = st.open
-        ? '<span class="badge badge-green">مفتوح الحين</span> '+(st.from?esc(st.from)+' - '+esc(st.to):'')
-        : '<span class="badge badge-red">مغلق الحين</span> '+esc(st.reason||'');
+        ? '<span class="badge badge-green">مفتوح الان</span> '+(st.from?esc(st.from)+' - '+esc(st.to):'')
+        : '<span class="badge badge-red">مغلق الان</span> '+esc(st.reason||'');
     }catch(e){ $('shopNow').textContent = ''; }
   }catch(e){ $('content').innerHTML = errBox(e); }
 }
@@ -2069,7 +2105,7 @@ async function pMsg(){
         '<div class="section-title">📵 رسائل الواتساب للإدارة</div></div>'+
       '<div style="padding:14px">'+
         '<div class="hint" style="margin-bottom:10px">'+
-          'هذي الرسائل تجيك أنت (مو الزبون). لو تعتمد على إشعارات اللوحة تقدر تطفيها.'+
+          'هذي الرسائل تجيك أنت (مو الزبون). لو تعتمد على إشعارات اللوحة تكدر تطفيها.'+
           '<br>⚠️ رسائل الزبائن ما تتأثر إطلاقاً.</div>'+
         '<label style="display:block;padding:9px 0;border-bottom:1px solid var(--border)">'+
           '<input type="checkbox" id="waOrd"'+(r['واتساب_طلب']!==false?' checked':'')+'> '+
@@ -2218,7 +2254,7 @@ function stfRoleBox(role){
     '</select>'+
     '<div class="hint" id="sfRoleHint" style="margin:5px 0 8px">'+
       (mgr ? '👑 عنده كل شي — حتى أي ميزة نضيفها مستقبلاً.'
-           : 'أشّر اللي تريده يسوي. تقدر تبدّلها بأي وقت.')+'</div>';
+           : 'أشّر اللي تريده يسوي. تكدر تبدّلها بأي وقت.')+'</div>';
 }
 function stfRoleChanged(){
   var mgr = $('sfRole') && $('sfRole').value === 'manager';
@@ -2226,7 +2262,7 @@ function stfRoleChanged(){
   if (box) box.style.display = mgr ? 'none' : '';
   if (h) h.textContent = mgr
     ? '👑 عنده كل شي — حتى أي ميزة نضيفها مستقبلاً.'
-    : 'أشّر اللي تريده يسوي. تقدر تبدّلها بأي وقت.';
+    : 'أشّر اللي تريده يسوي. تكدر تبدّلها بأي وقت.';
 }
 
 function stfNew(){

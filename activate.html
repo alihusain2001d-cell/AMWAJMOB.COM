@@ -5745,11 +5745,32 @@ function filterOrdersDate(range) {
   renderOrdersList();
 }
 
+/* 🚚 مراحل برايم بنص يفهمه الزبون.
+   ما نعرضله «جاهزة للطباعة» ولا «قيد الفرز» — هذي شغلنا الداخلي.
+   يهمه شي واحد: وين طلبه الان. */
+var PRIME_STEP_TEXT = {
+  READYTOPRINT:        { text: 'قيد التجهيز',          icon: '📦' },
+  READYTOPICKUP:       { text: 'قيد التجهيز',          icon: '📦' },
+  NEW_ONWAY:           { text: 'تسلّمها المندوب',       icon: '🚚' },
+  NEWINSTORE:          { text: 'بالطريق إلك',           icon: '🚚' },
+  PRINTMANIFEST:       { text: 'بالطريق إلك',           icon: '🚚' },
+  MANIFEST_BRANCHES:   { text: 'بالطريق إلك',           icon: '🚚' },
+  LIAISONAGT_NEWONWAY: { text: 'بالطريق إلك',           icon: '🚚' },
+  ONWAY:               { text: 'المندوب بالطريق إلك',   icon: '🛵' }
+};
+
 function _orderStatusMeta(o) {
   var m = { text: 'تم استلام طلبك', cls: 'pill-pending', icon: '✅' };
   if (o.status === 'picked')         m = { text: 'قيد التجهيز', cls: 'pill-picked',    icon: '📦' };
   else if (o.status === 'delivered') m = { text: 'تم التسليم',  cls: 'pill-delivered', icon: '✅' };
   else if (o.status === 'cancelled') m = { text: 'ملغي',        cls: 'pill-cancelled', icon: '❌' };
+
+  /* الطلب لسه شغّال وعنده شحنة؟ نعرض المرحلة الحقيقية بدل النص العام.
+     المُسلَّم والملغي ما نلمسهن — حالتهن أوضح من أي مرحلة. */
+  if (o.status !== 'delivered' && o.status !== 'cancelled' && o.primeStep) {
+    var st = PRIME_STEP_TEXT[String(o.primeStep)];
+    if (st) { m.text = st.text; m.icon = st.icon; m.cls = 'pill-picked'; }
+  }
   return m;
 }
 
@@ -6531,7 +6552,7 @@ function _renderShopNoticeLegacy(){
     else if (SYS_NOTICE.kind === 'holiday'){ bg = '#EFF6FF'; fg = '#1E40AF'; }
   } else if (SHOP_STATUS && SHOP_STATUS.open === false){
     txt = '🔒 المحل مغلق الان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
-          '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
+          '. تكدر تطلب وراح نجهّزه أول ما نفتح.';
     bg = '#FEF2F2'; fg = '#991B1B';
   }
   if (!txt){ el.style.display = 'none'; return; }
@@ -7510,7 +7531,7 @@ async function checkSystemNotice() {
       txt = ico + ' ' + SYS_NOTICE.message;
     } else if (SHOP_STATUS && SHOP_STATUS.open === false) {
       txt = '🔒 المحل مغلق الان' + (SHOP_STATUS.reason ? ' — ' + SHOP_STATUS.reason : '') +
-            '. تقدر تطلب وراح نجهّزه أول ما نفتح.';
+            '. تكدر تطلب وراح نجهّزه أول ما نفتح.';
     }
     if (txt) { textEl.textContent = txt; banner.style.display = 'block'; }
     else banner.style.display = 'none';
