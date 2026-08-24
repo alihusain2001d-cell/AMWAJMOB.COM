@@ -1080,8 +1080,8 @@ async function pCust(){
         ftab(F.cust,'rejected','❌ مرفوض',n['مرفوض'],'setCustF')+
         ftab(F.cust,'review','🔴 مراجعة',n['مراجعة'],'setCustF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>المحل</th><th>الاسم</th><th>الهاتف</th>'+
-        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody>'+
-      (d.length ? d.map(custRow).join('') : '<tr><td colspan="10" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody>'+
+      (d.length ? d.map(custRow).join('') : '<tr><td colspan="11" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
       '</tbody></table></div></div>';
     var el = $('cq');
     el.oninput = function(){ window._cq = el.value; clearTimeout(window._ct);
@@ -1099,6 +1099,9 @@ function custRow(c){
   return '<tr><td><b>'+esc(c.shop_name||'—')+'</b></td><td>'+esc(c.name||'—')+'</td>'+
     '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td>'+
     '<td>'+esc(c.province||'—')+'</td><td>'+esc(c.district||'—')+'</td>'+
+    /* النقطة الدالة نص حر يطول — نقصّه بالعرض والكامل يبيّن بالتلميح */
+    '<td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"'+
+      (c.address ? ' title="'+esc(c.address)+'"' : '')+'>'+esc(c.address||'—')+'</td>'+
     '<td>'+nf(c.orders_count)+'</td><td>'+nf(c.warranties_count)+'</td>'+
     '<td>'+(c.shop_photo_url
         ? '<img class="thumb" src="'+esc(c.shop_photo_url)+'" loading="lazy" style="cursor:zoom-in" '+
@@ -1158,7 +1161,7 @@ function custEdit(c){
     '<div><label>اسم المحل</label><input class="modal-input" id="fShop" value="'+esc(c.shop_name||'')+'"></div></div>'+
     '<label>رقم الهاتف</label><input class="modal-input" id="fPhone" dir="ltr" value="'+esc(c.phone||'')+'">'+
     '<div class="hint">لو غيّرته، ينتحدّث بضماناته وطلباته كمان.</div>'+
-    '<label>العنوان</label><input class="modal-input" id="fAddr" value="'+esc(c.address||'')+'">'+
+    '<label>اقرب نقطة دالة</label><input class="modal-input" id="fAddr" value="'+esc(c.address||'')+'">'+
     '<div class="grid2"><div><label>المحافظة</label><input class="modal-input" id="fProv" value="'+esc(c.province||'')+'"></div>'+
     '<div><label>القضاء</label><input class="modal-input" id="fDist" value="'+esc(c.district||'')+'"></div></div>'+
     '<label>صورة المحل</label>'+
