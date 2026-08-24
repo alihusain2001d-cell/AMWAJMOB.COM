@@ -2408,16 +2408,17 @@ async function stfDel(id, name){
 
 
 /* ══════════════════════ رفع المخزن ══════════════════════ */
-var UP = {kind:'parts', rows:null, file:'', renames:[]};
+/* الافتراضي صار الرفع بالرمز — تبويب المواد القديم (المطابقة بالاسم)
+   انشال من الواجهة. دالته web_import_parts بعدها بالسيرفر لو احتجناها. */
+var UP = {kind:'partsx', rows:null, file:'', renames:[]};
 function pUp(){
   $('content').innerHTML =
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">📤 رفع المخزن من الإكسل</div></div>'+
     '<div class="section-body">'+
       '<div class="filters" style="border:0;padding:0 0 10px">'+
-        '<button class="filter-tab'+(UP.kind==='parts'?' active':'')+'" onclick="upKind(\'parts\')">🔧 المواد</button>'+
+        '<button class="filter-tab'+(UP.kind==='partsx'?' active':'')+'" onclick="upKind(\'partsx\')">🔧 المواد</button>'+
         '<button class="filter-tab'+(UP.kind==='screens'?' active':'')+'" onclick="upKind(\'screens\')">🖥️ الشاشات</button>'+
-        '<button class="filter-tab'+(UP.kind==='partsx'?' active':'')+'" onclick="upKind(\'partsx\')">🔢 المواد بالرمز</button>'+
       '</div>'+
       '<div class="drop" id="drop"><div style="font-size:28px">📄</div>'+
         '<div style="font-weight:800;margin-top:5px">اسحب الملف هنا أو اضغط للاختيار</div>'+
