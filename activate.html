@@ -6608,6 +6608,81 @@ function ensureProductsLoaded() {
       showCatalogError(e && e.message ? e.message : e);
     });
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   🔄 التحديث التلقائي — كل ٥ دقائق
+
+   المشكلة: يتعدّل سعر باللوحة، والزبون اللي فاتح التطبيق يبقى شايف
+   السعر القديم لحد ما يطلع ويدخل.
+
+   ليش ما ننزّل الكاتلوك كل ٥ دقائق: حجمه ٩٢٠ ك.ب. زبون فاتح التطبيق
+   ساعة يصرف ~١.٥ ميكا بلا فائدة، وأغلب الوقت ماكو ولا تغيير أصلاً.
+
+   بدالها: ننده «بصمة» — ٣٢ حرف، أقل من ١٠٠ بايت — وما ننزّل الكاتلوك
+   إلا إذا تغيّرت فعلاً. يعني بالوضع الطبيعي التكلفة صفر تقريباً.
+
+   وما نشتغل إلا إذا:
+     • التطبيق قدّام الزبون — بالخلفية ما نصرف نتّه
+     • ماكو طلب دا ينرسل — ما نغيّر الأسعار تحت إيده بنص الإرسال
+   ══════════════════════════════════════════════════════════════════ */
+var AUTO_REFRESH_MS = 5 * 60 * 1000;
+var _autoStamp = null;      // آخر بصمة نعرفها
+var _autoBusy  = false;
+
+async function autoRefreshTick(){
+  if (_autoBusy) return;
+  if (document.visibilityState !== 'visible') return;
+  if (!_productsLoadStarted) return;              // الكاتلوك ما تحمّل أصلاً
+  var sb = document.querySelector('#orderForm button[onclick="submitOrder()"]');
+  if (sb && sb.disabled) return;                  // طلب دا ينرسل — ما نقاطعه
+  _autoBusy = true;
+  try{
+    var r = await sbRpc('app_catalog_stamp');
+    var v = r && r.v;
+    if (!v) return;
+    if (_autoStamp === null){ _autoStamp = v; return; }   // أول ندّة: نسجّل بس
+    if (v === _autoStamp) return;                         // ماكو تغيير — خلصنا
+    _autoStamp = v;
+    await applyFreshCatalog();
+  }catch(e){
+    /* ماكو نت أو السيرفر مشغول — نسكت ونجرّب بالدورة الجاية */
+  }finally{ _autoBusy = false; }
+}
+
+/* ينزّل الكاتلوك ويعيد رسم الي قدّام الزبون بالضبط — بلا ما يطيّره
+   من مكانه. نفس منطق زر التحديث اليدوي. */
+async function applyFreshCatalog(){
+  var sheet = document.getElementById('productsSheet');
+  var open  = !!(sheet && sheet.classList.contains('open'));
+
+  if (open && sheetPriceType === 'tools'){
+    await loadCatalogFromServer();
+    try{ renderToolsList(); }catch(e){}
+  } else if (open && sheetPriceType){
+    await refreshDataInBackground(sheetPriceType);   // ينزّل ويرجّعه لمكانه
+  } else {
+    await loadCatalogFromServer();
+  }
+
+  /* السلة محفوظة بسعر مجمّد — نراجعها بالكود الثابت، وإذا تغيّر شي
+     نعيد رسمها حتى يشوف التنبيه فوراً مو وقت الإرسال بس. */
+  try{
+    var ch = syncCartWithCatalog();
+    var cs = document.getElementById('cartSheet');
+    if (ch && ch.length && cs && cs.classList.contains('open')){
+      _skipCartSync = true;   // للتو راجعنا — ما نخلي العرض يعيدها
+      renderCart();
+    }
+  }catch(e){}
+}
+
+/* الرجوع للتطبيق بعد ما كان بالخلفية = أهم لحظة نفحص بيها،
+   لأن هاي بالضبط اللحظة اللي كان الزبون يشوف بيها سعر قديم. */
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible') autoRefreshTick();
+});
+setInterval(autoRefreshTick, AUTO_REFRESH_MS);
+
 loadCart();
 appBoot();
 // (snapshot system removed — now using date_added from sheet)
