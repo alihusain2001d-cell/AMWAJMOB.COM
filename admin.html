@@ -1067,8 +1067,11 @@ function ftab(active, val, label, n, fn){
 function setCustF(v){ F.cust=v; pCust(); }
 async function pCust(){
   try{
-    var q = (window._cq||''), r = await rpc('web_customers',{p_q:q,p_status:F.cust,p_limit:300});
+    var q = (window._cq||''), a = PGDEF.cust.args();
+    a.p_limit = pgSize('cust'); a.p_offset = 0;
+    var r = await rpc('web_customers', a);
     var n = r['العدد'], d = r['البيانات'];
+    pgStart('cust', d, q ? null : (n[CUSTKEY[F.cust||'']] || null));
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">👥 الزبائن</div>'+
@@ -1080,9 +1083,11 @@ async function pCust(){
         ftab(F.cust,'rejected','❌ مرفوض',n['مرفوض'],'setCustF')+
         ftab(F.cust,'review','🔴 مراجعة',n['مراجعة'],'setCustF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>المحل</th><th>الاسم</th><th>الهاتف</th>'+
-        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody>'+
-      (d.length ? d.map(custRow).join('') : '<tr><td colspan="11" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
-      '</tbody></table></div></div>';
+        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody id="custBody">'+
+      (d.length ? d.map(function(c){ return custRow(c); }).join('')
+                : '<tr><td colspan="11" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+      '</tbody></table></div>'+pgBar('cust')+'</div>';
+    pgFoot('cust');
     var el = $('cq');
     el.oninput = function(){ window._cq = el.value; clearTimeout(window._ct);
       window._ct = setTimeout(pCust, 400); };
@@ -1212,8 +1217,13 @@ function setOrdPrime(v){ F.ordPrime = v; pOrd(); }
 async function pOrd(){
   try{
     var q = (window._oq||'');
-    var r = await rpc('web_orders',{p_q:q,p_status:F.ord,p_range:F.ordRange,p_limit:300});
+    var a = PGDEF.ord.args();
+    a.p_limit = pgSize('ord'); a.p_offset = 0;
+    var r = await rpc('web_orders', a);
     var n = r['العدد'], d = r['البيانات'];
+    /* المجموع صحيح بس لو ماكو بحث ولا مدة ولا مرشّح برايم */
+    pgStart('ord', d, (!q && F.ordRange==='all' && !F.ordPrime)
+                        ? (n[ORDKEY[F.ord||'']] || null) : null);
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">📦 الطلبات</div>'+
@@ -1233,21 +1243,14 @@ async function pOrd(){
         (F.ordPrime?' ✓':'')+'</button></div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>رقم الطلب</th><th>المحل</th><th>الهاتف</th>'+
         '<th>العنوان</th><th>المجموع</th><th>مواد</th><th>الحالة</th><th>التاريخ</th><th></th>'+
-        '</tr></thead><tbody>'+
+        '</tr></thead><tbody id="ordBody">'+
       (function(){
-        var rows = F.ordPrime ? d.filter(function(o){ return !!o.prime_case_id; }) : d;
+        var rows = ordFilter(d);
         if (!rows.length) return '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو طلبات بهذي الفترة</td></tr>';
-        return rows.map(function(o){
-          return '<tr><td><b>'+esc(o.order_code)+'</b></td><td>'+esc(o.cust_shop||o.cust_name||'—')+'</td>'+
-            '<td dir="ltr">'+esc(o.cust_phone||'—')+'</td>'+
-            '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
-            '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
-            '<td>'+ordBadge(o)+'</td>'+
-            '<td class="hint">'+dstr(o.placed_at)+'</td>'+
-            '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
-        }).join('');
+        return rows.map(function(o){ return ordRow(o); }).join('');
       })()+
-      '</tbody></table></div></div>';
+      '</tbody></table></div>'+pgBar('ord')+'</div>';
+    pgFoot('ord');
     var el = $('oq');
     el.oninput = function(){ window._oq = el.value; clearTimeout(window._ot);
       window._ot = setTimeout(pOrd, 400); };
@@ -1650,8 +1653,11 @@ async function pPrime(){
 function setWarF(v){ F.war=v; pWar(); }
 async function pWar(){
   try{
-    var q = (window._wq||''), r = await rpc('web_warranties',{p_q:q,p_filter:F.war,p_limit:300});
+    var q = (window._wq||''), a = PGDEF.war.args();
+    a.p_limit = pgSize('war'); a.p_offset = 0;
+    var r = await rpc('web_warranties', a);
     var n = r['العدد'], d = r['البيانات'];
+    pgStart('war', d, q ? null : (n[WARKEY[F.war||'']] || null));
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">🛡️ الضمانات</div>'+
@@ -1663,23 +1669,11 @@ async function pWar(){
         ftab(F.war,'soon','⏳ تخلص خلال أسبوع',n['قريبة'],'setWarF')+
         ftab(F.war,'expired','❌ منتهية',n['منتهية'],'setWarF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>كود القطعة</th><th>الفاتورة</th><th>المحل / الزبون</th>'+
-        '<th>الهاتف</th><th>النوع</th><th>من</th><th>إلى</th><th>الحالة</th><th></th></tr></thead><tbody>'+
-      (d.length ? d.map(function(w){
-        var st = !w.is_active ? '<span class="badge badge-red">منتهي</span>'
-               : (w.days_left <= 7 ? '<span class="badge badge-yellow">باقي '+w.days_left+' يوم</span>'
-                                   : '<span class="badge badge-green">باقي '+w.days_left+' يوم</span>');
-        return '<tr><td><b dir="ltr">'+esc(w.screen_code||'—')+'</b></td>'+
-          '<td dir="ltr">'+esc(w.invoice_no||'—')+'</td>'+
-          '<td>'+esc(w.shop_name||w.cust_name||'—')+
-            (w.customer_id ? '' : ' <span class="badge badge-yellow" title="'+esc(w.note||'')+'">غير مربوط</span>')+'</td>'+
-          '<td dir="ltr">'+esc(w.cust_phone||'—')+'</td>'+
-          '<td>'+(w.item_kind==='battery'?'🔋 بطارية':(w.item_kind==='screen'?'🖥️ شاشة':'📦 أخرى'))+
-            (w.item_name?'<div class="hint">'+esc(w.item_name)+'</div>':'')+'</td>'+
-          '<td dir="ltr" class="hint">'+esc(w.start_date)+'</td>'+
-          '<td dir="ltr" class="hint">'+esc(w.end_date)+'</td><td>'+st+'</td>'+
-          '<td><button class="action-btn btn-delete" onclick="warDel('+w.id+')">🗑️</button></td></tr>';
-      }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو ضمانات</td></tr>')+
-      '</tbody></table></div></div>';
+        '<th>الهاتف</th><th>النوع</th><th>من</th><th>إلى</th><th>الحالة</th><th></th></tr></thead><tbody id="warBody">'+
+      (d.length ? d.map(function(w){ return warRow(w); }).join('')
+                : '<tr><td colspan="9" style="text-align:center;color:var(--muted)">ماكو ضمانات</td></tr>')+
+      '</tbody></table></div>'+pgBar('war')+'</div>';
+    pgFoot('war');
     var el = $('wq');
     el.oninput = function(){ window._wq = el.value; clearTimeout(window._wt);
       window._wt = setTimeout(pWar, 400); };
@@ -1774,9 +1768,11 @@ function setCatCat(v){ F.catCat=v; pCat(); }
 async function pCat(){
   try{
     var q = (window._pq||'');
-    var r = await rpc('web_catalog',{p_kind:F.catKind, p_q:q,
-              p_cat:(F.catCat?Number(F.catCat):null), p_filter:F.cat, p_limit:300});
+    var a = PGDEF.cat.args();
+    a.p_limit = pgSize('cat'); a.p_offset = 0;
+    var r = await rpc('web_catalog', a);
     var n = r['العدد'], d = r['البيانات'], isScr = (F.catKind==='screen');
+    pgStart('cat', d, (!q && !F.catCat) ? (n[CATKEY[F.cat||'']] || null) : null);
     var cats = r['الأقسام'] || [];
     $('content').innerHTML =
       '<div class="section-card">'+
@@ -1800,25 +1796,13 @@ async function pCat(){
         }).join('')+'</div>' : '')+
       '<div class="tbl-wrap"><table><thead><tr><th>صورة</th><th>الكود</th>'+
         (isScr?'<th>الماركة</th>':'<th>القسم</th>')+'<th>الاسم</th><th>الكمية</th><th>السعر</th>'+
-        '<th>الحالة</th><th></th></tr></thead><tbody>'+
-      (d.length ? d.map(function(x){
-        var flags = '';
-        if (!x.is_active)   flags += '<span class="badge badge-gray">مخفي</span> ';
-        if (x.needs_review) flags += '<span class="badge badge-red" title="'+esc(x.review_note||'')+'">🔴</span> ';
-        if (x.qty > 0)      flags += '<span class="badge badge-green">متوفر</span>';
-        else                flags += '<span class="badge badge-yellow">منتهي</span>';
-        return '<tr><td>'+(x.image_url
-            ? '<img class="thumb" src="'+esc(x.image_url)+'" loading="lazy">'
-            : '<span class="hint">—</span>')+'</td>'+
-          '<td class="hint" dir="ltr">'+esc(x.code)+'</td>'+
-          '<td>'+esc(isScr ? (x.brand||'—') : (x.category||'—'))+'</td>'+
-          '<td><b>'+esc(x.name)+'</b>'+
-            (isScr ? '<div class="hint">'+esc([x.type,x.notes].filter(Boolean).join(' · '))+'</div>' : '')+'</td>'+
-          '<td dir="ltr">'+nf(x.qty)+'</td><td dir="ltr">'+(x.price==null?'—':nf(x.price))+'</td>'+
-          '<td>'+flags+'</td>'+
-          '<td><button class="action-btn btn-edit" onclick=\'catEdit('+JSON.stringify(x)+',"'+F.catKind+'")\'>✏️</button></td></tr>';
-      }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
-      '</tbody></table></div></div>';
+                '<th>الحالة</th><th></th></tr></thead><tbody id="catBody">'+
+      (d.length ? d.map(function(x){ return catRow(x, isScr); }).join('')
+                : '<tr><td colspan="8" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+      '</tbody></table></div>'+
+      /* سطر «معروض N من M» وزر «عرض المزيد» — ينتحدّث لحاله بلا ما نعيد بناء الصفحة */
+      pgBar('cat')+'</div>';
+    pgFoot('cat');
     var el = $('pq');
     el.oninput = function(){ window._pq = el.value; clearTimeout(window._pt);
       window._pt = setTimeout(pCat, 400); };
@@ -1827,6 +1811,150 @@ async function pCat(){
     else $('bgCat').style.display='none';
   }catch(e){ $('content').innerHTML = errBox(e); }
 }
+/* ── صفحات الجداول ──────────────────────────────────────────
+   الجداول بيها آلاف الصفوف. نفتح على ٢٠٠ صف — خفيفة على الجهاز —
+   والمستخدم يختار شكد يعرض، واختياره ينحفظ بالمتصفح.
+   الباقي يجي بزر «عرض المزيد» **ينضاف** للجدول بلا ما نعيد بناء
+   الصفحة — حتى ما يضيع مكانك بالقائمة ولا الصور تعيد التحميل. */
+var PGSIZES = [100, 200, 500, 1000];
+var PGDEF = {};   // تعريف كل جدول: من وين يجيب وشلون يبني الصف
+var PG    = {};   // حالة كل جدول: الحجم · وين وصلنا · خلصنا لو لا
+
+function pgGet(k){
+  if (!PG[k]){
+    var sv = parseInt(localStorage.getItem('pgsize_'+k), 10);
+    PG[k] = {size:(PGSIZES.indexOf(sv)>=0 ? sv : 200),
+             off:0, done:false, total:null, busy:false};
+  }
+  return PG[k];
+}
+function pgSize(k){ return pgGet(k).size; }
+
+/* تنندى بعد أول تحميل — total نمرّره بس لو نعرفه أكيد.
+   تحت البحث أو المرشّحات المركّبة العدّادات محسوبة على الجدول
+   كله فتطلع رقم غلط، وبهاي الحالة نمرّر null وما نعرض مجموع. */
+function pgStart(k, d, total){
+  var g = pgGet(k);
+  g.off = d.length; g.done = (d.length < g.size);
+  g.total = total || null; g.busy = false;
+}
+function pgBar(k){ return '<div id="pgFoot_'+k+'" style="padding:14px;text-align:center"></div>'; }
+
+function pgFoot(k){
+  var g = pgGet(k), el = $('pgFoot_'+k);
+  if (!el) return;
+  el.innerHTML =
+    '<div class="hint" style="margin-bottom:9px">معروض '+nf(g.off)+
+      (g.total ? ' من ' + nf(g.total) : '')+'</div>'+
+    '<div style="display:flex;gap:9px;justify-content:center;align-items:center;flex-wrap:wrap">'+
+      (g.done ? '' : '<button class="btn-solid" id="pgMore_'+k+'" onclick="pgMore(\''+k+'\')">⬇️ عرض المزيد</button>')+
+      '<select class="modal-input" style="width:auto;margin:0;padding:8px 11px"'+
+        ' onchange="pgPick(\''+k+'\', this.value)">'+
+        PGSIZES.map(function(x){
+          return '<option value="'+x+'"'+(x===g.size?' selected':'')+'>'+x+' صف</option>';
+        }).join('')+
+      '</select></div>';
+}
+
+function pgPick(k, v){
+  var g = pgGet(k);
+  g.size = Number(v);
+  try{ localStorage.setItem('pgsize_'+k, g.size); }catch(e){}
+  if (PGDEF[k]) PGDEF[k].reload();   // نعيد من البداية بالحجم الجديد
+}
+
+async function pgMore(k){
+  var g = pgGet(k), D = PGDEF[k];
+  if (!D || g.busy || g.done) return;
+  g.busy = true;
+  var b = $('pgMore_'+k);
+  if (b){ b.disabled = true; b.textContent = '… دا يحمّل'; }
+  try{
+    var args = D.args();
+    args.p_limit = g.size; args.p_offset = g.off;
+    var r = await rpc(D.fn, args), d = r['البيانات'] || [];
+    g.off += d.length;                        // نتقدّم بالخام مو بالمصفّى
+    if (d.length < g.size) g.done = true;
+    if (D.filter) d = D.filter(d);
+    var tb = $(D.body);
+    if (tb && d.length) tb.insertAdjacentHTML('beforeend',
+        d.map(function(x){ return D.row(x); }).join(''));
+    pgFoot(k);
+  }catch(e){
+    toast('⚠️ '+e.message, 4000);
+    if (b){ b.disabled = false; b.textContent = '⬇️ عرض المزيد'; }
+  }finally{ g.busy = false; }
+}
+
+/* مرشّح «برايم بس» يشتغل على الصفوف اللي وصلت — نطبّقه هم على
+   الصفوف الجديدة وقت «عرض المزيد» حتى ما ينكسر. */
+function ordFilter(d){ return F.ordPrime ? d.filter(function(o){ return !!o.prime_case_id; }) : d; }
+function ordRow(o){
+          return '<tr><td><b>'+esc(o.order_code)+'</b></td><td>'+esc(o.cust_shop||o.cust_name||'—')+'</td>'+
+            '<td dir="ltr">'+esc(o.cust_phone||'—')+'</td>'+
+            '<td style="max-width:180px">'+esc((o.address||'—')+(o.district?' / '+o.district:''))+'</td>'+
+            '<td dir="ltr"><b>'+nf(o.total)+'</b></td><td>'+nf(o.items_count)+'</td>'+
+            '<td>'+ordBadge(o)+'</td>'+
+            '<td class="hint">'+dstr(o.placed_at)+'</td>'+
+            '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
+}
+PGDEF.ord = {fn:'web_orders', body:'ordBody', reload:function(){ pOrd(); },
+  filter:ordFilter,
+  args:function(){ return {p_q:(window._oq||''), p_status:F.ord, p_range:F.ordRange}; },
+  row:function(o){ return ordRow(o); }};
+
+function warRow(w){
+        var st = !w.is_active ? '<span class="badge badge-red">منتهي</span>'
+               : (w.days_left <= 7 ? '<span class="badge badge-yellow">باقي '+w.days_left+' يوم</span>'
+                                   : '<span class="badge badge-green">باقي '+w.days_left+' يوم</span>');
+        return '<tr><td><b dir="ltr">'+esc(w.screen_code||'—')+'</b></td>'+
+          '<td dir="ltr">'+esc(w.invoice_no||'—')+'</td>'+
+          '<td>'+esc(w.shop_name||w.cust_name||'—')+
+            (w.customer_id ? '' : ' <span class="badge badge-yellow" title="'+esc(w.note||'')+'">غير مربوط</span>')+'</td>'+
+          '<td dir="ltr">'+esc(w.cust_phone||'—')+'</td>'+
+          '<td>'+(w.item_kind==='battery'?'🔋 بطارية':(w.item_kind==='screen'?'🖥️ شاشة':'📦 أخرى'))+
+            (w.item_name?'<div class="hint">'+esc(w.item_name)+'</div>':'')+'</td>'+
+          '<td dir="ltr" class="hint">'+esc(w.start_date)+'</td>'+
+          '<td dir="ltr" class="hint">'+esc(w.end_date)+'</td><td>'+st+'</td>'+
+          '<td><button class="action-btn btn-delete" onclick="warDel('+w.id+')">🗑️</button></td></tr>';
+}
+var WARKEY = {'':'الكل', active:'سارية', soon:'قريبة', expired:'منتهية'};
+PGDEF.war = {fn:'web_warranties', body:'warBody', reload:function(){ pWar(); },
+  args:function(){ return {p_q:(window._wq||''), p_filter:F.war}; },
+  row:function(w){ return warRow(w); }};
+
+var ORDKEY = {'':'الكل', pending:'ينتظر', picked:'بالطريق',
+              delivered:'مسلّم', cancelled:'ملغي'};
+var CUSTKEY = {'':'الكل', pending:'ينتظر', approved:'موافق',
+               rejected:'مرفوض', review:'مراجعة'};
+PGDEF.cust = {fn:'web_customers', body:'custBody', reload:function(){ pCust(); },
+  args:function(){ return {p_q:(window._cq||''), p_status:F.cust}; },
+  row:function(c){ return custRow(c); }};
+
+var CATKEY = {'':'الكل', available:'متوفر', out:'منتهي', hidden:'مخفي',
+              review:'مراجعة', hasimg:'بصورة', noimg:'بلا صورة'};
+PGDEF.cat = {fn:'web_catalog', body:'catBody', reload:function(){ pCat(); },
+  args:function(){ return {p_kind:F.catKind, p_q:(window._pq||''),
+           p_cat:(F.catCat?Number(F.catCat):null), p_filter:F.cat}; },
+  row:function(x){ return catRow(x, F.catKind==='screen'); }};
+function catRow(x, isScr){
+  var flags = '';
+  if (!x.is_active)   flags += '<span class="badge badge-gray">مخفي</span> ';
+  if (x.needs_review) flags += '<span class="badge badge-red" title="'+esc(x.review_note||'')+'">🔴</span> ';
+  if (x.qty > 0)      flags += '<span class="badge badge-green">متوفر</span>';
+  else                flags += '<span class="badge badge-yellow">منتهي</span>';
+  return '<tr><td>'+(x.image_url
+      ? '<img class="thumb" src="'+esc(x.image_url)+'" loading="lazy">'
+      : '<span class="hint">—</span>')+'</td>'+
+    '<td class="hint" dir="ltr">'+esc(x.code)+'</td>'+
+    '<td>'+esc(isScr ? (x.brand||'—') : (x.category||'—'))+'</td>'+
+    '<td><b>'+esc(x.name)+'</b>'+
+      (isScr ? '<div class="hint">'+esc([x.type,x.notes].filter(Boolean).join(' · '))+'</div>' : '')+'</td>'+
+    '<td dir="ltr">'+nf(x.qty)+'</td><td dir="ltr">'+(x.price==null?'—':nf(x.price))+'</td>'+
+    '<td>'+flags+'</td>'+
+    '<td><button class="action-btn btn-edit" onclick=\'catEdit('+JSON.stringify(x)+',"'+F.catKind+'")\'>✏️</button></td></tr>';
+}
+
 function catEdit(x, kind){
   modal('<h3>✏️ '+esc(x.name)+'</h3>'+
     '<div class="hint" dir="ltr" style="margin-bottom:8px">'+esc(x.code)+'</div>'+
