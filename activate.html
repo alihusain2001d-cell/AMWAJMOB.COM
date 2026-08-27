@@ -7084,30 +7084,40 @@ async function setupPushNotifications() {
     
     // 2.1 أنشئ قنوات الإشعارات (Android)
     try {
-      // قناة عادية للإشعارات
+      /* 🔇 ليش v3 وليش بلا sound:
+         كان مكتوب sound:'default'، وكابستور يترجمها ملف صوت اسمه
+         «default» جوّه التطبيق:
+             android.resource://com.amwajmob.app/raw/default
+         وهذا الملف **ما موجود** — فالقناة تاخذ صوت فاضي وتطلع صامتة،
+         والاهتزاز يشتغل لأنه إعداد منفصل. (اهتزاز بلا صوت)
+         لما نحذف الحقل، أندرويد ينطيها صوت الإشعارات الافتراضي.
+
+         وليش معرّف جديد: أندرويد **يجمّد** إعدادات القناة بعد ما
+         تنبني — تعديل الصوت أو الأهمية بعدها ينتجاهل بصمت. فالطريقة
+         الوحيدة قناة جديدة، والقديمات ننحذفهن تحت. */
       await PushNotifications.createChannel({
-        id: 'amwaj_notifications',
+        id: 'amwaj_notifications_v3',
         name: 'إشعارات أمواج',
         description: 'إشعارات عامة من أمواج للإلكترونيات',
         importance: 4, // HIGH
         visibility: 1,
-        sound: 'default',
         vibration: true
       });
       // قناة عاجلة (للأدمن - طلبات جديدة + إلغاء الطلبات)
       await PushNotifications.createChannel({
-        id: 'amwaj_urgent_v2',
+        id: 'amwaj_urgent_v3',
         name: '🚨 إشعارات عاجلة',
         description: 'إشعارات عاجلة جداً للطلبات الجديدة والإلغاءات',
         importance: 5, // MAX
         visibility: 1,
-        sound: 'default',
         vibration: true,
         lights: true,
         lightColor: '#FF0000'
       });
-      // حذف القناة القديمة (لو موجودة)
-      try { await PushNotifications.deleteChannel({ id: 'amwaj_urgent' }); } catch(e) {}
+      // القنوات القديمة كلهن صامتات — ننظّفهن حتى ما تتكدّس بإعدادات الجهاز
+      for (const _old of ['amwaj_urgent', 'amwaj_notifications', 'amwaj_urgent_v2']) {
+        try { await PushNotifications.deleteChannel({ id: _old }); } catch(e) {}
+      }
       console.log('✅ Notification channels created');
     } catch(channelErr) {
       console.error('Channel creation failed:', channelErr);
