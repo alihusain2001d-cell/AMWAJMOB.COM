@@ -69,6 +69,15 @@ body{margin:0;font-family:'Tajawal','Segoe UI',Tahoma,sans-serif;background:var(
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px}
 .stat-num{font-size:24px;font-weight:900;line-height:1.15}
 .stat-lbl{font-size:12px;color:var(--muted)}
+.group-lbl{font-size:12.5px;font-weight:800;color:var(--muted);margin:2px 2px 8px}
+.home-alert{border-radius:var(--radius);padding:15px 18px;margin-bottom:18px;
+  background:#FEF3C7;border:1.5px solid var(--yellow);cursor:pointer;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.home-alert:active{filter:brightness(.97)}
+.home-alert-num{font-size:20px;font-weight:900;color:#92400E}
+.home-alert-lbl{font-size:13.5px;font-weight:700;color:#92400E}
+.home-alert.ok{background:var(--surface);border:1px solid var(--border);cursor:default;
+  color:var(--muted);font-size:13.5px;font-weight:700}
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
   margin-bottom:16px;overflow:hidden}
 .section-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;
@@ -1035,10 +1044,16 @@ function badges(counts){
 async function pHome(){
   try{
     var r = await rpc('web_stats', {}), s = r['ملخص'];
-    var cards = [['📦','مواد',s['مواد'],'--primary'],['✅','متوفر',s['متوفر'],'--green'],
-      ['🖥️','شاشات',s['شاشات'],'--purple'],['👥','زبائن',s['زبائن'],'--primary'],
-      ['⏳','ينتظرون موافقة',s['ينتظرون'],'--yellow'],['🧾','طلبات',s['طلبات'],'--primary'],
+    var pending = s['ينتظرون'] || 0;
+    var stock = [['📦','مواد',s['مواد'],'--primary'],['✅','متوفر',s['متوفر'],'--green'],
+      ['🖥️','شاشات',s['شاشات'],'--purple']];
+    var biz = [['👥','زبائن',s['زبائن'],'--primary'],['🧾','طلبات',s['طلبات'],'--primary'],
       ['🛡️','ضمان ساري',s['ضمانات_سارية'],'--green']];
+    function grp(t, arr){
+      return '<div class="group-lbl">'+t+'</div><div class="stats-grid">'+arr.map(function(c){
+        return '<div class="stat-card"><div class="stat-num" style="color:var('+c[3]+')">'+nf(c[2])+
+               '</div><div class="stat-lbl">'+c[0]+' '+c[1]+'</div></div>'; }).join('')+'</div>';
+    }
     function tbl(t, arr, cols){
       if (!arr || !arr.length) return '';
       return '<div class="section-card"><div class="section-head"><div class="section-title">'+t+'</div></div>'+
@@ -1047,15 +1062,24 @@ async function pHome(){
           var v=x[c]; return '<td>'+(typeof v==='number'?nf(v):esc(v))+'</td>'; }).join('')+'</tr>';
         }).join('')+'</tbody></table></div></div>';
     }
+    /* 🔔 كارت الانتباه فوق الكل — العدد يحتاج مراجعة (زبائن ينتظرون
+       موافقة) كان مدفون بنفس صف باقي الأرقام العادية، صعب يلفت النظر.
+       هسه فوق، ملون، وبضغطة وحدة يودّيك لصفحة الزبائن مفلترة. */
+    var alertCard = pending > 0
+      ? '<div class="home-alert" onclick="F.cust=\'pending\';showPage(\'cust\')">'+
+          '<div class="home-alert-num">⏳ '+nf(pending)+'</div>'+
+          '<div class="home-alert-lbl">زبون ينتظرون موافقة — اضغط للمراجعة ‹</div>'+
+        '</div>'
+      : '<div class="home-alert ok">✅ ماكو زبائن ينتظرون موافقة حالياً</div>';
     $('content').innerHTML =
-      '<div class="stats-grid">'+cards.map(function(c){
-        return '<div class="stat-card"><div class="stat-num" style="color:var('+c[3]+')">'+nf(c[2])+
-               '</div><div class="stat-lbl">'+c[0]+' '+c[1]+'</div></div>'; }).join('')+'</div>'+
+      alertCard +
+      grp('📦 المخزون', stock) +
+      grp('🧾 الزبائن والطلبات', biz) +
       '<div class="grid2">'+
         tbl('🔥 أكثر المواد مبيعاً', r['أكثر_مبيعاً'], ['المادة','الكمية'])+
         tbl('⭐ أكثر الزبائن شراءً', r['أكثر_الزبائن'], ['المحل','طلبات','المجموع'])+
       '</div>';
-    if (s['ينتظرون']>0){ $('bgCust').style.display='inline-block'; $('bgCust').textContent=s['ينتظرون']; }
+    if (pending>0){ $('bgCust').style.display='inline-block'; $('bgCust').textContent=pending; }
   }catch(e){ $('content').innerHTML = errBox(e); }
 }
 
@@ -1071,7 +1095,7 @@ async function pCust(){
     a.p_limit = pgSize('cust'); a.p_offset = 0;
     var r = await rpc('web_customers', a);
     var n = r['العدد'], d = r['البيانات'];
-    pgStart('cust', d, q ? null : (n[CUSTKEY[F.cust||'']] || null));
+    pgStart('cust', d, PGDEF.cust.total(r));
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">👥 الزبائن</div>'+
@@ -1090,8 +1114,7 @@ async function pCust(){
     pgFoot('cust');
     var el = $('cq');
     el.oninput = function(){ window._cq = el.value; clearTimeout(window._ct);
-      window._ct = setTimeout(pCust, 400); };
-    if (q){ el.focus(); el.setSelectionRange(q.length,q.length); }
+      window._ct = setTimeout(function(){ pgSearch('cust'); }, 400); };
     if (n['ينتظر']>0){ $('bgCust').style.display='inline-block'; $('bgCust').textContent=n['ينتظر']; }
     else $('bgCust').style.display='none';
   }catch(e){ $('content').innerHTML = errBox(e); }
@@ -1221,9 +1244,7 @@ async function pOrd(){
     a.p_limit = pgSize('ord'); a.p_offset = 0;
     var r = await rpc('web_orders', a);
     var n = r['العدد'], d = r['البيانات'];
-    /* المجموع صحيح بس لو ماكو بحث ولا مدة ولا مرشّح برايم */
-    pgStart('ord', d, (!q && F.ordRange==='all' && !F.ordPrime)
-                        ? (n[ORDKEY[F.ord||'']] || null) : null);
+    pgStart('ord', d, PGDEF.ord.total(r));
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">📦 الطلبات</div>'+
@@ -1253,8 +1274,7 @@ async function pOrd(){
     pgFoot('ord');
     var el = $('oq');
     el.oninput = function(){ window._oq = el.value; clearTimeout(window._ot);
-      window._ot = setTimeout(pOrd, 400); };
-    if (q){ el.focus(); el.setSelectionRange(q.length,q.length); }
+      window._ot = setTimeout(function(){ pgSearch('ord'); }, 400); };
     if (n['ينتظر']>0){ $('bgOrd').style.display='inline-block'; $('bgOrd').textContent=n['ينتظر']; }
     else $('bgOrd').style.display='none';
 
@@ -1657,7 +1677,7 @@ async function pWar(){
     a.p_limit = pgSize('war'); a.p_offset = 0;
     var r = await rpc('web_warranties', a);
     var n = r['العدد'], d = r['البيانات'];
-    pgStart('war', d, q ? null : (n[WARKEY[F.war||'']] || null));
+    pgStart('war', d, PGDEF.war.total(r));
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">🛡️ الضمانات</div>'+
@@ -1676,8 +1696,7 @@ async function pWar(){
     pgFoot('war');
     var el = $('wq');
     el.oninput = function(){ window._wq = el.value; clearTimeout(window._wt);
-      window._wt = setTimeout(pWar, 400); };
-    if (q){ el.focus(); el.setSelectionRange(q.length,q.length); }
+      window._wt = setTimeout(function(){ pgSearch('war'); }, 400); };
   }catch(e){ $('content').innerHTML = errBox(e); }
 }
 async function warDel(id){
@@ -1772,7 +1791,7 @@ async function pCat(){
     a.p_limit = pgSize('cat'); a.p_offset = 0;
     var r = await rpc('web_catalog', a);
     var n = r['العدد'], d = r['البيانات'], isScr = (F.catKind==='screen');
-    pgStart('cat', d, (!q && !F.catCat) ? (n[CATKEY[F.cat||'']] || null) : null);
+    pgStart('cat', d, PGDEF.cat.total(r));
     var cats = r['الأقسام'] || [];
     $('content').innerHTML =
       '<div class="section-card">'+
@@ -1805,8 +1824,7 @@ async function pCat(){
     pgFoot('cat');
     var el = $('pq');
     el.oninput = function(){ window._pq = el.value; clearTimeout(window._pt);
-      window._pt = setTimeout(pCat, 400); };
-    if (q){ el.focus(); el.setSelectionRange(q.length,q.length); }
+      window._pt = setTimeout(function(){ pgSearch('cat'); }, 400); };
     if (n['مراجعة']>0){ $('bgCat').style.display='inline-block'; $('bgCat').textContent=n['مراجعة']; }
     else $('bgCat').style.display='none';
   }catch(e){ $('content').innerHTML = errBox(e); }
@@ -1863,6 +1881,37 @@ function pgPick(k, v){
   if (PGDEF[k]) PGDEF[k].reload();   // نعيد من البداية بالحجم الجديد
 }
 
+/* 🔍 البحث كان ينده pXxx() — وهاي تعيد بناء $('content') كله،
+   يعني مربع البحث نفسه ينمسح وينبني من جديد بعد كل حرف.
+   بالحاسبة ما تلاحظ، بس بالموبايل الكيبورد يطيح والحروف اللي
+   انكتبت بنص الـ٤٠٠ مللي تضيع مع العنصر القديم.
+
+   الحل: البحث ما يلمس القشرة أبداً — يبدّل جسم الجدول والشريط بس.
+   (عدّادات المرشّحات محسوبة على الجدول كله، فما تتأثر بالبحث أصلاً) */
+async function pgSearch(k){
+  var D = PGDEF[k], g = pgGet(k);
+  if (!D) return;
+  var tb = $(D.body);
+  if (!tb){ D.reload(); return; }        // الصفحة انبدّلت — نرجع للبناء الكامل
+  var seq = (g.seq = (g.seq||0) + 1);    // نتيجة قديمة ما تدهس نتيجة أحدث
+  tb.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:20px">… دا يدوّر</td></tr>';
+  try{
+    var a = D.args();
+    a.p_limit = g.size; a.p_offset = 0;
+    var r = await rpc(D.fn, a), d = r['البيانات'] || [];
+    if (seq !== g.seq) return;           // وصلت متأخرة — نتجاهلها
+    pgStart(k, d, D.total ? D.total(r) : null);
+    if (D.filter) d = D.filter(d);
+    tb.innerHTML = d.length
+      ? d.map(function(x){ return D.row(x); }).join('')
+      : '<tr><td colspan="12" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>';
+    pgFoot(k);
+  }catch(e){
+    if (seq !== g.seq) return;
+    tb.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#EF4444;padding:20px">⚠️ '+esc(e.message)+'</td></tr>';
+  }
+}
+
 async function pgMore(k){
   var g = pgGet(k), D = PGDEF[k];
   if (!D || g.busy || g.done) return;
@@ -1898,7 +1947,12 @@ function ordRow(o){
             '<td class="hint">'+dstr(o.placed_at)+'</td>'+
             '<td><button class="action-btn btn-view" onclick="ordOpen('+o.id+')">عرض</button></td></tr>';
 }
+/* المجموع صحيح بس إذا ماكو بحث ولا مرشّح إضافي — العدّادات محسوبة
+   على الجدول كله، فتحت البحث تطلع رقم غلط ونخليها فاضية. */
 PGDEF.ord = {fn:'web_orders', body:'ordBody', reload:function(){ pOrd(); },
+  total:function(r){ var n=r['العدد']||{};
+    return (!(window._oq||'') && F.ordRange==='all' && !F.ordPrime)
+             ? (n[ORDKEY[F.ord||'']] || null) : null; },
   filter:ordFilter,
   args:function(){ return {p_q:(window._oq||''), p_status:F.ord, p_range:F.ordRange}; },
   row:function(o){ return ordRow(o); }};
@@ -1920,6 +1974,8 @@ function warRow(w){
 }
 var WARKEY = {'':'الكل', active:'سارية', soon:'قريبة', expired:'منتهية'};
 PGDEF.war = {fn:'web_warranties', body:'warBody', reload:function(){ pWar(); },
+  total:function(r){ var n=r['العدد']||{};
+    return (window._wq||'') ? null : (n[WARKEY[F.war||'']] || null); },
   args:function(){ return {p_q:(window._wq||''), p_filter:F.war}; },
   row:function(w){ return warRow(w); }};
 
@@ -1928,12 +1984,16 @@ var ORDKEY = {'':'الكل', pending:'ينتظر', picked:'بالطريق',
 var CUSTKEY = {'':'الكل', pending:'ينتظر', approved:'موافق',
                rejected:'مرفوض', review:'مراجعة'};
 PGDEF.cust = {fn:'web_customers', body:'custBody', reload:function(){ pCust(); },
+  total:function(r){ var n=r['العدد']||{};
+    return (window._cq||'') ? null : (n[CUSTKEY[F.cust||'']] || null); },
   args:function(){ return {p_q:(window._cq||''), p_status:F.cust}; },
   row:function(c){ return custRow(c); }};
 
 var CATKEY = {'':'الكل', available:'متوفر', out:'منتهي', hidden:'مخفي',
               review:'مراجعة', hasimg:'بصورة', noimg:'بلا صورة'};
 PGDEF.cat = {fn:'web_catalog', body:'catBody', reload:function(){ pCat(); },
+  total:function(r){ var n=r['العدد']||{};
+    return (!(window._pq||'') && !F.catCat) ? (n[CATKEY[F.cat||'']] || null) : null; },
   args:function(){ return {p_kind:F.catKind, p_q:(window._pq||''),
            p_cat:(F.catCat?Number(F.catCat):null), p_filter:F.cat}; },
   row:function(x){ return catRow(x, F.catKind==='screen'); }};
