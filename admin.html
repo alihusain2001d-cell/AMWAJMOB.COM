@@ -2237,6 +2237,20 @@ async function pSet(){
       '<input class="modal-input" id="avUrl" dir="ltr" value="'+esc(av.store_url||'')+'">'+
       '<button class="btn-solid green" style="margin-top:10px" onclick="setSaveVer()">💾 حفظ</button>'+
       '<div class="msg" id="avRes"></div>'+
+    '</div></div>'+
+
+    /* 💾 النسخة الاحتياطية — الخطة المجانية بسوپابيس ماكو بيها نسخ
+       تلقائية. لو انحذف شي أو انقفل الحساب ماكو من وين نرجّع. */
+    '<div class="section-card"><div class="section-head">'+
+      '<div class="section-title">💾 نسخة احتياطية</div></div>'+
+    '<div class="section-body">'+
+      '<div class="hint" style="margin-bottom:10px">'+
+        'ينزّل ملف واحد بيه <b>كل شي</b>: الزبائن، الطلبات، الأسعار، الضمانات،'+
+        ' الصور المربوطة، والإعدادات.<br>'+
+        'احفظه بمجلد الباك اب. سوّيه <b>كل أسبوع</b> — أو قبل أي تعديل كبير.'+
+      '</div>'+
+      '<button class="btn-solid green" id="bkBtn" onclick="setBackup()">💾 نزّل نسخة الان</button>'+
+      '<div class="msg" id="bkRes"></div>'+
     '</div></div>';
 
     try{
@@ -2310,6 +2324,45 @@ async function setSaveVer(){
       store_url: $('avUrl').value.trim()}});
     toast('✅ انحفظت النسخة'); pSet();
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
+}
+
+/* 💾 نسخة احتياطية — نجيب كلشي بنداء واحد وننزّله ملف JSON.
+   ولا مفتاح يمر بأي مكان: أنت مسجّل دخول أصلاً، والسيرفر يفحص
+   صلاحيتك بنفسه. الدالة محصورة بصلاحية «الموظفين» — يعني أنت. */
+async function setBackup(){
+  var b = $('bkBtn'), m = $('bkRes');
+  b.disabled = true; b.textContent = '… دا يجمع البيانات';
+  m.className = 'msg'; m.textContent = 'ممكن تاخذ شوية — البيانات كثيرة.';
+  try{
+    var r = await rpc('web_backup', {});
+    var txt  = JSON.stringify(r, null, 1);
+    var blob = new Blob([txt], {type:'application/json'});
+    var d = new Date(), z = function(x){ return (x<10?'0':'')+x; };
+    var name = 'أمواج-نسخة-' + d.getFullYear() + '-' + z(d.getMonth()+1) + '-' + z(d.getDate()) + '.json';
+
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+
+    /* نعرضله شنو نزل بالضبط — حتى يعرف إن النسخة كاملة مو فاضية */
+    var n = r['العدد'] || {}, rows = 0, li = '';
+    Object.keys(n).forEach(function(k){ rows += (n[k]||0); });
+    ['products','screens','customers','orders','order_items','warranties','images']
+      .forEach(function(k){ if (n[k] != null) li += '<div>' + k + ': <b>' + nf(n[k]) + '</b></div>'; });
+
+    m.className = 'msg ok';
+    m.innerHTML = '✅ انحفظت — ' + nf(rows) + ' صف · ' +
+      (blob.size/1048576).toFixed(1) + ' ميكا<br>' +
+      '<div style="margin-top:6px;font-size:12.5px;opacity:.85">' + li + '</div>' +
+      '<div style="margin-top:6px">انقلها لمجلد الباك اب.</div>';
+  }catch(e){
+    m.className = 'msg err';
+    m.textContent = '⚠️ ' + e.message;
+  }finally{
+    b.disabled = false; b.textContent = '💾 نزّل نسخة الان';
+  }
 }
 
 /* ══════════════════════ إعدادات الرسائل ══════════════════════ */
