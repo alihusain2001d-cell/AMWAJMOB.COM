@@ -6683,6 +6683,57 @@ document.addEventListener('visibilitychange', function(){
 });
 setInterval(autoRefreshTick, AUTO_REFRESH_MS);
 
+
+/* ══════════════════════════════════════════════════════════════════
+   🔙 زر الرجوع بالأندرويد
+
+   كابستور ٨ **ما عنده ولا سطر** يتعامل مع زر الرجوع — لا بـBridge.java
+   ولا بـBridgeActivity.java. فالضغطة تروح للنظام مباشرة والنظام يسكّر
+   التطبيق فوراً، مهما كان مفتوح عند الزبون.
+
+   وكود popstate اللي عندنا يشتغل بالآيفون بس — لأن سحبة الرجوع هناك
+   رجوع متصفح حقيقي. بالأندرويد ما ينندى أصلاً.
+
+   الحل: إضافة @capacitor/app الرسمية تنطينا حدث backButton، فنسكّر
+   مستوى واحد بس — نفس تصرّف سحبة الآيفون بالضبط.
+
+   وما نطلع من التطبيق إلا بضغطتين — الضغطة الوحيدة كانت تطلّع الزبون
+   وهو ما ينوي. ══════════════════════════════════════════════════════ */
+(function(){
+  var P = window.Capacitor && window.Capacitor.Plugins;
+  if (!P || !P.App || !P.App.addListener) return;   // موقع ويب — ماكو زر
+
+  var _exitAt = 0;
+
+  function exitHint(){
+    var old = document.getElementById('backHint');
+    if (old) old.remove();
+    var t = document.createElement('div');
+    t.id = 'backHint';
+    t.textContent = 'اضغط رجوع مرة ثانية للخروج';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);'+
+      'background:#0F172A;color:#fff;padding:11px 20px;border-radius:26px;'+
+      'font-size:14px;font-weight:700;z-index:99999;box-shadow:0 8px 24px #0006;'+
+      'opacity:0;transition:opacity .2s';
+    document.body.appendChild(t);
+    requestAnimationFrame(function(){ t.style.opacity = '1'; });
+    setTimeout(function(){
+      t.style.opacity = '0';
+      setTimeout(function(){ if (t.parentNode) t.remove(); }, 250);
+    }, 1800);
+  }
+
+  P.App.addListener('backButton', function(){
+    /* closeTopSheet يرجّع true إذا سكّر شي — نفس الدالة اللي
+       تستعملها سحبة الآيفون، فالاثنين يتصرفون سوا */
+    try { if (closeTopSheet()) return; } catch(e){}
+
+    if (Date.now() - _exitAt < 2000){ P.App.exitApp(); return; }
+    _exitAt = Date.now();
+    exitHint();
+  });
+})();
+
 loadCart();
 appBoot();
 // (snapshot system removed — now using date_added from sheet)
@@ -8120,14 +8171,113 @@ function confirmLogout() {
   }
 }
 
-function openEditProfile() {
-  var user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
-  if (!user) return;
-  var newName = prompt('اسم العرض:', user.name || '');
-  if (newName !== null && newName.trim() && newName !== user.name) {
-    user.name = newName.trim();
-    localStorage.setItem('amwaj_user', JSON.stringify(user));
-    renderAccountSheet();
+/* ✏️ تعديل الملف — الزبون ينتقل لمحل جديد ولازم يگدر يحدّث عنوانه
+   بنفسه بدل ما يتصل بينا. كانت هاي الدالة تغيّر الاسم بجهازه بس
+   ولا توصل السيرفر أصلاً.
+
+   الهاتف مو هنا عمداً — هو مفتاح الدخول ويربط الطلبات والضمانات. */
+var PROVINCES = ['كربلاء','بغداد','النجف','بابل','واسط','ديالى','الأنبار',
+  'صلاح الدين','كركوك','نينوى','أربيل','دهوك','السليمانية','البصرة',
+  'ميسان','ذي قار','المثنى','القادسية'];
+
+async function openEditProfile() {
+  var div = document.getElementById('accountContent');
+  if (!div) return;
+  div.innerHTML = '<div style="padding:50px 20px;text-align:center;color:var(--muted)">… جاري التحميل</div>';
+  openSheet('accountSheet');
+
+  /* نجيب الأحدث من السيرفر — نسخة الجهاز ممكن تكون قديمة
+     لو عدّلت أنت العنوان من اللوحة */
+  var u = JSON.parse(localStorage.getItem('amwaj_user') || 'null') || {};
+  try {
+    var me = await sbRpc('app_me', { p_token: getCustomerToken() });
+    if (me && me.ok) u = Object.assign({}, u, me);
+  } catch (e) {}
+
+  div.innerHTML =
+    '<div class="bsheet-head" style="padding-top:0;">' +
+      '<button class="profile-top-icon-btn" style="background:var(--surface-2);border:1px solid var(--border-light);color:var(--text);" onclick="renderAccountSheet()">→</button>' +
+      '<span class="bsheet-title">تعديل معلوماتي</span>' +
+      '<button class="bsheet-close" onclick="closeSheet(&quot;accountSheet&quot;)">✕</button>' +
+    '</div>' +
+    '<div style="padding:4px 16px 26px;">' +
+      '<div class="form-group"><label class="form-label">الاسم</label>' +
+        '<input class="form-input" type="text" id="edName" value="' + sanitize(u.name || '') + '"></div>' +
+      '<div class="form-group"><label class="form-label">اسم المحل</label>' +
+        '<input class="form-input" type="text" id="edShop" value="' + sanitize(u.shop || '') + '"></div>' +
+
+      '<div class="form-group"><label class="form-label">المحافظة</label>' +
+        '<select class="form-input" id="edProvince" onchange="_loadDistrictsInto(&quot;ed&quot;, this.value)">' +
+          '<option value="">اختر المحافظة</option>' +
+          PROVINCES.map(function(p){
+            return '<option value="' + p + '"' + (u.province === p ? ' selected' : '') + '>' + p + '</option>';
+          }).join('') +
+        '</select></div>' +
+
+      '<div class="form-group" style="position:relative"><label class="form-label">القضاء</label>' +
+        '<input class="form-input" type="text" id="edDistrictSearch" autocomplete="off"' +
+          ' placeholder="اختر المحافظة أولاً"' +
+          ' oninput="_filterDistrictOptions(&quot;ed&quot;)" onfocus="_filterDistrictOptions(&quot;ed&quot;)">' +
+        '<input type="hidden" id="edDistrict">' +
+        '<div id="edDistrictList" class="district-dropdown-list" style="display:none;"></div></div>' +
+
+      '<div class="form-group"><label class="form-label">أقرب نقطة دالة</label>' +
+        '<input class="form-input" type="text" id="edAddress"' +
+          ' placeholder="مثال: قرب جامع الحسين، مقابل مدرسة..."' +
+          ' value="' + sanitize(u.address || '') + '"></div>' +
+
+      '<div class="hint" style="font-size:12.5px;color:var(--muted);margin:-4px 0 14px">' +
+        'رقم الهاتف ما ينتغيّر من هنا — هو مفتاح دخولك. لو بدّلت رقمك تواصل وينا.' +
+      '</div>' +
+
+      '<div id="edMsg" style="margin-bottom:10px"></div>' +
+      '<button class="form-btn success-btn" style="width:100%" id="edSave" onclick="saveEditProfile()">💾 حفظ التعديلات</button>' +
+    '</div>';
+
+  /* نعبّي القضاء بعد ما ينبني الحقل — الدالة تمسح المكتوب وقت
+     التحميل، فنرجّع قيمة الزبون بعد ما تخلص */
+  if (u.province) {
+    try {
+      await _loadDistrictsInto('ed', u.province);
+      var ds = document.getElementById('edDistrictSearch');
+      var dh = document.getElementById('edDistrict');
+      if (ds && u.district) ds.value = u.district;
+      if (dh && u.districtId) dh.value = u.districtId;
+    } catch (e) {}
+  }
+}
+
+async function saveEditProfile() {
+  var b = document.getElementById('edSave');
+  var m = document.getElementById('edMsg');
+  var v = function(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+
+  var prov = v('edProvince'), dist = v('edDistrictSearch');
+  if ((prov && !dist) || (!prov && dist)) {
+    m.innerHTML = '<div class="result error">❌ اختر المحافظة والقضاء سوا</div>';
+    return;
+  }
+
+  b.disabled = true; b.textContent = '… دا يحفظ';
+  m.innerHTML = '';
+  try {
+    var r = await sbRpc('app_update_profile', {
+      p_token: getCustomerToken(),
+      p_name: v('edName'), p_shop: v('edShop'), p_address: v('edAddress'),
+      p_province: prov, p_district: dist, p_district_id: v('edDistrict')
+    });
+    if (!r || r.ok !== true) throw new Error((r && r.error) || 'ما انحفظ');
+
+    /* نحدّث نسخة الجهاز حتى الطلب الجاي ياخذ العنوان الجديد */
+    var u = JSON.parse(localStorage.getItem('amwaj_user') || 'null') || {};
+    localStorage.setItem('amwaj_user', JSON.stringify(Object.assign(u, r)));
+    try { localStorage.setItem('amwaj_address', r.address || ''); } catch (e) {}
+
+    m.innerHTML = '<div class="result success">✅ انحفظت معلوماتك</div>';
+    setTimeout(renderAccountSheet, 900);
+  } catch (e) {
+    m.innerHTML = '<div class="result error">❌ ' + sanitize(e.message || 'صار خطأ') + '</div>';
+    b.disabled = false; b.textContent = '💾 حفظ التعديلات';
   }
 }
 
