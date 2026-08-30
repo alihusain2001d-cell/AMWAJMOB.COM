@@ -2662,8 +2662,7 @@ function pUp(){
     '<div class="section-body">'+
       '<div class="filters" style="border:0;padding:0 0 10px">'+
         '<button class="filter-tab'+(UP.kind==='partsx'?' active':'')+'" onclick="upKind(\'partsx\')">🔧 المواد</button>'+
-        '<button class="filter-tab'+(UP.kind==='screensx'?' active':'')+'" onclick="upKind(\'screensx\')">🖥️ الشاشات</button>'+
-        '<button class="filter-tab'+(UP.kind==='screens'?' active':'')+'" onclick="upKind(\'screens\')">🖥️ الشاشات (الطريقة القديمة)</button>'+
+        '<button class="filter-tab'+(UP.kind==='screens'?' active':'')+'" onclick="upKind(\'screens\')">🖥️ الشاشات</button>'+
       '</div>'+
       '<div class="drop" id="drop"><div style="font-size:28px">📄</div>'+
         '<div style="font-weight:800;margin-top:5px">اسحب الملف هنا أو اضغط للاختيار</div>'+
@@ -2690,11 +2689,7 @@ function pUp(){
 }
 /* okDel = تأكيد الحذف الكبير. ينصفّر كل ما يتبدّل التبويب أو الملف،
    حتى ما ينسحب تأكيد قديم على شيت جديد. */
-function upKind(k){
-  UP.kind=k; UP.okDel=false;
-  SCX.items=[]; SCX.gone=[]; SCX.upd=0; SCX.base=0;   /* حالة المحطة تخص رفعة وحدة */
-  pUp();
-}
+function upKind(k){ UP.kind=k; UP.okDel=false; pUp(); }
 var SKIP_TABS = ['fcm_tokens','_sync_snapshot'];
 function upFile(f){
   UP.file = f.name; UP.rows = null; UP.renames = [];
@@ -2742,7 +2737,7 @@ function buildRows(table){
   /* 🔢 شيت برنامج المحاسبة — المفتاح «الرقم» مو الاسم.
      الشيت تقرير مطبوع، فسطر العناوين يتكرر كل صفحة — ندوّره مرة
      ونتجاهل أي تكرار له بعدين. وصفوف LCD نشيلها (الشاشات بشيتها). */
-  if (UP.kind==='partsx' || UP.kind==='screensx'){
+  if (UP.kind==='partsx'){
     var hi = -1, cx = null;
     for (var k=0; k<Math.min(table.length,40); k++){
       var rr = (table[k]||[]).map(function(x){ return String(x==null?'':x).trim(); });
@@ -2763,9 +2758,7 @@ function buildRows(table){
       var nm  = String(r[cx.name]==null?'':r[cx.name]).trim();
       if (!ext || !nm) continue;
       if (ext === 'الرقم' || nm === 'الاسم') continue;
-      /* الشاشات لها تبويبها الخاص — نشيلها من المواد، ونبقيها بس بها */
-      var isLcd = /^LCD/i.test(nm);
-      if (UP.kind==='screensx' ? !isLcd : isLcd) { nLcd++; continue; }
+      if (/^LCD/i.test(nm)) { nLcd++; continue; }
       if (seenX[ext]) nDup++;
       seenX[ext] = 1;
       rows.push({ext:ext, name:nm, qty:num(r[cx.qty]), price:numN(r[cx.price])});
@@ -2811,39 +2804,10 @@ async function upRun(dry){
     var body = {p_rows:UP.rows, p_source:UP.file, p_dry:dry};
     if (UP.kind==='parts') body.p_renames = rens;
     if (UP.kind!=='parts') body.p_confirm_delete = !!UP.okDel;
-    /* 🖥️ الشاشات بالرمز: نمرّر قرارات علي من المحطة */
-    if (UP.kind==='screensx'){
-      body.p_new = dry ? [] : Object.keys(SCX.done)
-        .map(function(k){ return SCX.done[k]; })
-        .filter(function(d){ return d && d.act !== 'skip'; });
-    }
-    var res = await rpc(UP.kind==='screensx' ? 'web_import_screens_x'
-                      : UP.kind==='partsx'   ? 'web_import_parts_ext'
-                      : UP.kind==='screens'  ? 'web_import_screens_ext' : 'web_import_parts', body);
+    var res = await rpc(UP.kind==='partsx' ? 'web_import_parts_ext'
+                      : UP.kind==='screens' ? 'web_import_screens_ext' : 'web_import_parts', body);
 
-    if (UP.kind==='screensx'){
-      if (dry){
-        /* نوحّد المتغيّرة والجديدة بقائمة وحدة — الزر يقفل لحد ما
-           يخلّصهن كلهن، فالعدّ لازم يشملهن سوا. */
-        SCX.items = (res['متغيرة']||[]).map(function(x){ x.kind='chg'; return x; })
-             .concat((res['جديدة']||[]).map(function(x){ x.kind='new'; return x; }));
-        SCX.gone = res['راح_تنحذف'] || [];
-        SCX.upd  = res['انتحدثت'] || 0;
-        SCX.base = res['أول_مرة'] || 0;
-        scxLoad();                    /* نرجّع شغله المحفوظ */
-        var live = {}; SCX.items.forEach(function(x){ live[x.ext]=1; });
-        Object.keys(SCX.done).forEach(function(k){ if (!live[k]) delete SCX.done[k]; });
-        scxSave();
-        scxRender();
-      } else {
-        scxClear();
-        $('uRes').innerHTML =
-          '<div class="msg ok">✅ انتحدثت <b>'+nf(res['انتحدثت']||0)+'</b>'+
-          ' · عولجت <b>'+nf(res['عولجت']||0)+'</b>'+
-          ' · انحذفت <b>'+nf(res['انحذفت']||0)+'</b></div>';
-      }
-    }
-    else if (UP.kind==='partsx') renderUpX(res, dry);
+    if (UP.kind==='partsx') renderUpX(res, dry);
     else {
       renderUp(res, dry);
       /* الشاشات: نلحق معلومة الحذف بعد الأرقام الأصلية */
@@ -2867,217 +2831,13 @@ async function upRun(dry){
       $('bPrev').disabled = false; $('bApply').disabled = false;
       return;
     }
-    if (dry){
-      if (UP.kind==='screensx'){
-        scxBtns();                    /* الزر مقفل لحد ما يخلّصهن كلهن */
-        m.className='msg warn';
-        m.textContent = scxLeft() ? '⚠️ معاينة — كمّل المواد تحت وبعدين طبّق.'
-                                  : '⚠️ معاينة — ما انطبّق شي. اضغط تطبيق.';
-      } else {
-        $('bApply').style.display='inline-block';
-        m.className='msg warn'; m.textContent='⚠️ معاينة — ما انطبّق شي. راجع واضغط تطبيق.';
-      }
-    }
-    else {
-      m.className='msg ok';
-      m.textContent = res['رقم_الاستلام'] ? ('✅ انطبّق — استلام رقم '+res['رقم_الاستلام'])
-                                          : '✅ انطبّق';
-      $('bApply').style.display='none'; upHist();
-    }
+    if (dry){ $('bApply').style.display='inline-block';
+      m.className='msg warn'; m.textContent='⚠️ معاينة — ما انطبّق شي. راجع واضغط تطبيق.'; }
+    else { m.className='msg ok'; m.textContent='✅ انطبّق — استلام رقم '+(res['رقم_الاستلام']||'?');
+      $('bApply').style.display='none'; upHist(); }
   }catch(e){ m.className='msg err'; m.textContent = e.message; }
   $('bPrev').disabled = false; $('bApply').disabled = false;
 }
-/* ══════════════════════ محطة الشاشات ══════════════════════
-
-   شيت برنامج المحاسبة يجيب الاسم **كتلة وحدة**:
-       LCD HONOR 200 OR NEW FRAME BLACK
-   والموقع يحتاجه مفصّل: ماركة · اسم · نوع · لون.
-
-   الرمز يربطهم، فالرفع يحدّث الكمية والسعر لحاله. ويطلّع لعلي
-   شغلتين بس — والاثنين يعالجهن مرة وحدة بالعمر لكل مادة:
-
-     ✏️ متغيّرة — نفس الرمز بس اسمه أو لونه تبدّل ببرنامجه
-     🆕 جديدة   — رمز ما شفناه قبل
-
-   قرارات علي:
-     • «اقبل الكل» — ما يأكد وحدة وحدة، الرفعة الأولى بيها مئات
-     • النوع كتابة حرة — «مرات ايصير تغيير»
-     • ما يطبّق إلا لما يخلّصهن كلهن — «ما اريد يتخربط شي»
-
-   ولأن الرفعة الأولى ممكن تاخذ وقت، نحفظ شغله بالمتصفح أول بأول.
-   لو انسكّرت الصفحة أو انطفت الكهرباء يرجع ويلگي كلشي مكانه. */
-
-var SCX = {items:[], gone:[], done:{}, upd:0, base:0};
-var SCX_KEY = 'amwaj_scx_draft';
-
-var SCX_COLOR = {BLACK:'اسود', BLUE:'ازرق', GREEN:'اخضر', WHITE:'ابيض',
-  SILVER:'سلفر', GOLD:'ذهبي', PURPLE:'بنفسجي', VIOLET:'بنفسجي', RED:'احمر',
-  PINK:'وردي', GRAY:'رمادي', GREY:'رمادي', YELLOW:'اصفر', ORANGE:'برتقالي'};
-var SCX_STRIP = ['OR NEW','OR','ONLY','FRAME','VAMERA','CAMERA','NEW','FULL',
-  'COMPLETE','CHANGE','INCELL','COPY'];
-
-/* نستخرج الاسم واللون من اسم البرنامج — نعبّي بيهن الحقول مسبقاً
-   حتى علي يصلّح مو يكتب من الصفر. النوع ما نخمّنه: الفرق بين
-   «وكالة» و«صيني» مو مكتوب باسم البرنامج أصلاً. */
-function scxGuess(raw){
-  var t = ' ' + String(raw||'').toUpperCase() + ' ', col = '', box = '';
-  Object.keys(SCX_COLOR).forEach(function(k){
-    if (!col && new RegExp('(?:^|[^A-Z0-9])'+k+'(?:[^A-Z0-9]|$)').test(t)) col = SCX_COLOR[k];
-  });
-  if (/(?:^|[^A-Z0-9])FRAME(?:[^A-Z0-9]|$)/.test(t)) box = 'فريم';
-  else if (/(?:^|[^A-Z0-9])ONLY(?:[^A-Z0-9]|$)/.test(t)) box = 'فارغة';
-  var m = t;
-  SCX_STRIP.concat(Object.keys(SCX_COLOR)).forEach(function(w){
-    m = m.replace(new RegExp('(?:^|[^A-Z0-9])'+w+'(?:[^A-Z0-9]|$)', 'g'), ' ');
-  });
-  m = m.replace(/^\s*LCD\b/, '').replace(/\s{2,}/g, ' ').replace(/^[\s-]+|[\s-]+$/g, '');
-  return {name:m, notes:(box && col) ? (box+' '+col) : (box || col || '')};
-}
-
-function scxLoad(){ try{ SCX.done = JSON.parse(localStorage.getItem(SCX_KEY)||'{}') || {}; }catch(e){ SCX.done = {}; } }
-function scxSave(){ try{ localStorage.setItem(SCX_KEY, JSON.stringify(SCX.done)); }catch(e){} }
-function scxClear(){ SCX.done = {}; try{ localStorage.removeItem(SCX_KEY); }catch(e){} }
-function scxLeft(){ return SCX.items.filter(function(x){ return !SCX.done[x.ext]; }).length; }
-
-function scxAcceptAll(){
-  var n = 0;
-  SCX.items.forEach(function(x){
-    if (SCX.done[x.ext]) return;
-    if (x.kind === 'new' && x.suggest && x.suggest.code){
-      SCX.done[x.ext] = {ext:x.ext, code:x.suggest.code, qty:x.qty, price:x.price}; n++;
-    }
-  });
-  scxSave(); scxRender();
-  toast(n ? ('✅ انقبلت ' + nf(n) + ' اقتراح') : 'ماكو اقتراحات معلّقة');
-}
-function scxAccept(i){
-  var x = SCX.items[i];
-  SCX.done[x.ext] = {ext:x.ext, code:x.suggest.code, qty:x.qty, price:x.price};
-  scxSave(); scxRender();
-}
-function scxReject(i){ SCX.items[i].suggest = null; scxRender(); }
-
-/* «خله مثل ما هو» — ما نرسل شي للسيرفر. خط أساس الاسم ينتحدّث
-   لحاله وقت التطبيق، فالمادة ما ترجع تطلع بالرفعة الجاية. */
-function scxKeep(i){
-  var x = SCX.items[i];
-  SCX.done[x.ext] = {ext:x.ext, act:'skip'};
-  scxSave(); scxRender();
-}
-
-function scxFill(i){
-  var x = SCX.items[i], g = function(f){ var e=$('scx_'+f+'_'+i); return e ? e.value.trim() : ''; };
-  var nm = g('name');
-  if (!nm){ toast('⚠️ الاسم مطلوب'); return; }
-  SCX.done[x.ext] = {ext:x.ext, act:(x.kind==='chg' ? 'edit' : ''), brand:g('brand'),
-                     name:nm, type:g('type'), notes:g('notes'), qty:x.qty, price:x.price};
-  scxSave(); scxRender();
-}
-function scxUndo(ext){ delete SCX.done[ext]; scxSave(); scxRender(); }
-
-function scxFields(i, v){
-  return '<div class="grid2">' +
-      '<div><label>الماركة</label><input class="modal-input" id="scx_brand_' + i + '" value="' + esc(v.brand||'') + '"></div>' +
-      '<div><label>الاسم</label><input class="modal-input" id="scx_name_' + i + '" dir="ltr" value="' + esc(v.name||'') + '"></div></div>' +
-    '<div class="grid2">' +
-      '<div><label>النوع</label><input class="modal-input" id="scx_type_' + i + '" list="scxTypes" value="' + esc(v.type||'') + '" placeholder="اصلي وكالة"></div>' +
-      '<div><label>اللون / الملاحظة</label><input class="modal-input" id="scx_notes_' + i + '" value="' + esc(v.notes||'') + '"></div></div>';
-}
-
-function scxRender(){
-  var el = $('uRes'); if (!el) return;
-  var left = scxLeft(), tot = SCX.items.length;
-  var nSug = SCX.items.filter(function(x){
-    return !SCX.done[x.ext] && x.kind === 'new' && x.suggest && x.suggest.code; }).length;
-
-  var h = '<div class="msg ok">✅ <b>' + nf(SCX.upd||0) + '</b> شاشة كميتها وسعرها ينتحدثون تلقائياً.</div>';
-
-  if (SCX.base) h += '<div class="msg">📌 <b>' + nf(SCX.base) + '</b> شاشة راح ينتسجّل اسمها بالبرنامج لأول مرة —' +
-    ' من الرفعة الجاية أي تغيير بأسمائهن يطلعلك هنا.</div>';
-
-  if (SCX.gone && SCX.gone.length){
-    h += '<div class="msg warn">🗑️ <b>' + nf(SCX.gone.length) + '</b> شاشة مربوطة اختفت من شيتك.' +
-      '<label style="display:block;margin-top:6px"><input type="checkbox"' +
-      (UP.okDel ? ' checked' : '') + ' onchange="UP.okDel=this.checked"> أأكد حذفهن</label></div>';
-  }
-
-  if (!tot){
-    h += '<div class="msg ok">🎉 ماكو شي يحتاج تعديل — كل الرموز معروفة وأسماؤها مثل ما هي.</div>';
-    el.innerHTML = h; scxBtns(); return;
-  }
-
-  h += '<div class="msg ' + (left ? 'warn' : 'ok') + '" style="position:sticky;top:0;z-index:5">' +
-    (left ? '✏️ باقي <b>' + nf(left) + '</b> من ' + nf(tot) + ' — لازم تخلّصهن كلهن قبل التطبيق'
-          : '✅ خلّصت ' + nf(tot) + ' — جاهز للتطبيق') +
-    (nSug ? ' <button class="btn-solid" style="margin-right:8px;padding:5px 12px" onclick="scxAcceptAll()">✅ اقبل كل الاقتراحات (' + nf(nSug) + ')</button>' : '') +
-    '</div>';
-
-  SCX.items.forEach(function(x, i){
-    var d = SCX.done[x.ext];
-    if (d){
-      h += '<div class="section-card" style="margin:6px 0;opacity:.62"><div class="section-body" style="padding:9px 12px">' +
-        '<span class="hint" dir="ltr">' + esc(x.ext) + '</span> — ' +
-        (d.act === 'skip' ? '⏭️ خليتها مثل ما هي'
-          : d.code ? '🔗 انربطت بـ<b>' + esc(d.code) + '</b>'
-          : '✏️ <b>' + esc(d.name) + '</b> · ' + esc(d.type || '—') + ' · ' + esc(d.notes || '—')) +
-        ' <button class="action-btn btn-edit" onclick="scxUndo(&quot;' + esc(x.ext) + '&quot;)">تراجع</button>' +
-        '</div></div>';
-      return;
-    }
-
-    h += '<div class="section-card" style="margin:8px 0"><div class="section-body">' +
-      '<div class="hint" style="margin-bottom:7px">' +
-        (x.kind === 'chg' ? '✏️ تغيّر ببرنامجك' : '🆕 جديدة') +
-        ' · <span dir="ltr">' + esc(x.ext) + '</span> · كمية ' + nf(x.qty) +
-        (x.price ? ' · سعر ' + nf(x.price) : '') + '</div>';
-
-    if (x.kind === 'chg'){
-      h += '<div style="background:var(--surface-2);border-radius:10px;padding:10px;margin-bottom:9px">' +
-        '<div class="hint">قبل</div><div dir="ltr" style="opacity:.65">' + esc(x['قبل'] || '') + '</div>' +
-        '<div class="hint" style="margin-top:6px">صار</div><div dir="ltr" style="font-weight:800">' + esc(x['صار'] || '') + '</div>' +
-        '</div>' +
-        scxFields(i, x['الحالي'] || {}) +
-        '<div style="display:flex;gap:7px;margin-top:9px">' +
-          '<button class="btn-solid green" onclick="scxFill(' + i + ')">💾 احفظ</button>' +
-          '<button class="btn-solid gray" onclick="scxKeep(' + i + ')">خله مثل ما هو</button>' +
-        '</div>';
-    }
-    else if (x.suggest && x.suggest.code){
-      h += '<div dir="ltr" style="font-weight:800;margin-bottom:9px">' + esc(x.raw) + '</div>' +
-        '<div style="background:var(--surface-2);border-radius:10px;padding:10px">' +
-        '🔗 نقترح ربطها بـ: <b>' + esc(x.suggest.name || '') + '</b>' +
-        '<div class="hint">' + esc(x.suggest.brand || '—') + ' · ' + esc(x.suggest.type || '—') + ' · ' + esc(x.suggest.notes || '—') + '</div>' +
-        '<div style="margin-top:8px;display:flex;gap:7px">' +
-          '<button class="btn-solid green" onclick="scxAccept(' + i + ')">✓ اربط</button>' +
-          '<button class="btn-solid gray" onclick="scxReject(' + i + ')">✗ مو هيه — أقسّمها بيدي</button>' +
-        '</div></div>';
-    }
-    else {
-      var g = scxGuess(x.raw);
-      h += '<div dir="ltr" style="font-weight:800;margin-bottom:9px">' + esc(x.raw) + '</div>' +
-        scxFields(i, g) +
-        '<button class="btn-solid green" style="margin-top:9px" onclick="scxFill(' + i + ')">💾 احفظ</button>';
-    }
-    h += '</div></div>';
-  });
-
-  /* اقتراحات النوع — والكتابة تبقى حرة */
-  h += '<datalist id="scxTypes">' +
-    ['اصلي وكالة','اصلي صيني','اصلي وكالة فاميرا','اصلي صيني فاميرا','QX','TFT','AA','OLED','OR NEW']
-      .map(function(t){ return '<option value="' + t + '">'; }).join('') + '</datalist>';
-
-  el.innerHTML = h;
-  scxBtns();
-}
-
-function scxBtns(){
-  var b = $('bApply'); if (!b) return;
-  var left = scxLeft();
-  b.style.display = 'inline-block';
-  b.disabled = left > 0;
-  b.textContent = left ? ('باقي ' + nf(left) + ' مادة') : '✅ طبّق';
-}
-
 var RC = [];
 /* ══════ عرض نتيجة الرفع بالرمز (ملف ٨٩) ══════
    مختلفة عن renderUp لأن المفاتيح غير: ماكو «مرشحات تسمية»،
