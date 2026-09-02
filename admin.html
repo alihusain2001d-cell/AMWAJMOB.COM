@@ -335,6 +335,13 @@ function toast(t, ms){ var e=$('toast'); e.textContent=t; e.style.display='block
 function dstr(v){ if(!v) return '—';
   try{ var d=new Date(v); return d.toLocaleDateString('ar-IQ',{year:'numeric',month:'short',day:'numeric'}); }
   catch(e){ return String(v).slice(0,10); } }
+/* التاريخ مع الوقت — dstr تنطي التاريخ بس، وبنافذة الطلب
+   نحتاج الساعة حتى نعرف متى انطلب بالضبط. */
+function dtstr(v){ if(!v) return '—';
+  try{ var d=new Date(v);
+    return d.toLocaleDateString('ar-IQ',{year:'numeric',month:'short',day:'numeric'})
+         + ' · ' + d.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return String(v).slice(0,16).replace('T',' '); } }
 function closeModal(){ $('mov').classList.remove('on'); $('mbox').innerHTML=''; }
 function modal(html){ $('mbox').innerHTML = html; $('mov').classList.add('on'); }
 
@@ -1391,7 +1398,8 @@ async function ordOpen(id){
     _curPrimeLeft   = _curPrimeActive && !PRIME_STILL_MINE[String((pr && pr.step_code) || '')];
     modal('<h3>🧾 '+esc(o.order_code)+' '+ordBadge({status:o.status, prime_step:(pr&&pr.step_code)||'', prime_status:(pr&&pr.status)||''})+'</h3>'+
       '<div class="hint">'+esc(o.cust_shop||'')+' · <span dir="ltr">'+esc(o.cust_phone||'')+'</span></div>'+
-      '<div class="hint" style="margin-bottom:10px">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
+      '<div class="hint">📍 '+esc((o.address||'')+(o.district?' / '+o.district:''))+'</div>'+
+      '<div class="hint" style="margin-bottom:10px">🕐 '+dtstr(o.placed_at)+'</div>'+
       '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">'+
       it.map(orderItemHtml).join('')+'</div>'+
       '<div style="text-align:left;font-size:17px;font-weight:900;margin:10px 0" dir="ltr">'+nf(o.total)+' د.ع</div>'+
