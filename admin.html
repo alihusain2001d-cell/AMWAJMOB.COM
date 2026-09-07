@@ -2011,7 +2011,7 @@ function catRow(x, isScr){
   if (x.needs_review) flags += '<span class="badge badge-red" title="'+esc(x.review_note||'')+'">🔴</span> ';
   if (x.qty > 0)      flags += '<span class="badge badge-green">متوفر</span>';
   else                flags += '<span class="badge badge-yellow">منتهي</span>';
-  return '<tr><td>'+(x.image_url
+  return '<tr data-code="'+esc(x.code)+'"><td>'+(x.image_url
       ? '<img class="thumb" src="'+esc(x.image_url)+'" loading="lazy">'
       : '<span class="hint">—</span>')+'</td>'+
     '<td class="hint" dir="ltr">'+esc(x.code)+'</td>'+
@@ -2024,6 +2024,7 @@ function catRow(x, isScr){
 }
 
 function catEdit(x, kind){
+  _catEd = x;            /* نحتفظ بيها حتى نحدّث صفها بلا إعادة تحميل */
   modal('<h3>✏️ '+esc(x.name)+'</h3>'+
     '<div class="hint" dir="ltr" style="margin-bottom:8px">'+esc(x.code)+'</div>'+
     (x.needs_review ? '<div class="msg warn">🔴 '+esc(x.review_note||'يحتاج مراجعة')+
@@ -2078,7 +2079,27 @@ async function catSave(code, kind){
       await rpc('web_catalog_set',{p_kind:kind,p_code:code,p_patch:p});
     }
     await rpc('web_image_set',{p_kind:kind,p_code:code,p_url:$('kImg').value.trim()});
-    closeModal(); toast('✅ انحفظ'); keepScroll(pCat);
+    /* 🔁 نبدّل الصف بمكانه بدل ما نعيد تحميل الكاتلوك.
+       كان ينده pCat() — وهاي ترجّع الجدول لأول صفحة، فتضيع كل
+       الصفحات اللي حمّلها بـ«عرض المزيد» ويرجع لفوق. */
+    closeModal(); toast('✅ انحفظ');
+    try{
+      var x = _catEd;
+      if (x){
+        if (can('products_edit')){
+          x.qty = Number($('kQty') ? $('kQty').value : x.qty) || 0;
+          x.is_active = $('kActive') ? $('kActive').checked : x.is_active;
+          var _p = $('kPrice') ? $('kPrice').value.trim() : '';
+          if (_p !== '') x.price = Number(_p);
+          if ($('kClear') && $('kClear').checked){ x.needs_review = false; x.review_note = ''; }
+        }
+        x.image_url = $('kImg') ? $('kImg').value.trim() : x.image_url;
+        var tb = $('catBody');
+        var tr = tb && tb.querySelector('tr[data-code="'+x.code+'"]');
+        if (tr) tr.outerHTML = catRow(x, kind==='screen');
+        else keepScroll(pCat);      /* الصف مو معروض — نرجع للطريقة القديمة */
+      } else keepScroll(pCat);
+    }catch(e){ keepScroll(pCat); }
   }catch(e){ var m=$('kMsg'); m.className='msg err'; m.textContent=e.message; }
 }
 
@@ -2846,6 +2867,7 @@ async function upRun(dry){
   }catch(e){ m.className='msg err'; m.textContent = e.message; }
   $('bPrev').disabled = false; $('bApply').disabled = false;
 }
+var _catEd = null;   /* المادة المفتوحة بنافذة التعديل */
 var RC = [];
 /* ══════ عرض نتيجة الرفع بالرمز (ملف ٨٩) ══════
    مختلفة عن renderUp لأن المفاتيح غير: ماكو «مرشحات تسمية»،
