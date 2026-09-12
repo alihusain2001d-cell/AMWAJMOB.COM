@@ -1188,6 +1188,17 @@ body {
   position:absolute; inset:0; background-size:100% 100%; background-repeat:no-repeat;
   pointer-events:none;
 }
+/* 📐 نحشر صورة المنتج جوّه فراغ الإطار بدل ما تمتد تحته.
+   قبل: الصورة والإطار الاثنين يملون نفس المساحة، فالشعار من فوق
+   وأرقام الهاتف من تحت والحواف كانت تغطي أطراف المنتج.
+
+   الأرقام مقيسة من frame-transparent.png نفسها (1280×1280):
+   الفراغ يبدي بعد ٤.٨٪ من فوق · ٣.٤٪ من تحت · ٤.٤٪ من الجنبين.
+   زدناها شوي هامش أمان. لو انبدّل الإطار، أعد القياس. */
+.pi-img-wrap img, .na-img img {
+  padding:6.5% 5.5% 5.5%;
+  box-sizing:border-box;
+}
 .pi-info { width:100%; }
 .pi-name {
   font-weight:700; font-size:15px; line-height:1.35; color:var(--text);
