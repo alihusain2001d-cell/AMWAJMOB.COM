@@ -1188,17 +1188,12 @@ body {
   position:absolute; inset:0; background-size:100% 100%; background-repeat:no-repeat;
   pointer-events:none;
 }
-/* 📐 نحشر صورة المنتج جوّه فراغ الإطار بدل ما تمتد تحته.
-   قبل: الصورة والإطار الاثنين يملون نفس المساحة، فالشعار من فوق
-   وأرقام الهاتف من تحت والحواف كانت تغطي أطراف المنتج.
+/* الإطار المرسوم بالكود (SVG) — نفس المكان، بلا تحميل صورة */
+.amwaj-frame { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
 
-   الأرقام مقيسة من frame-transparent.png نفسها (1280×1280):
-   الفراغ يبدي بعد ٤.٨٪ من فوق · ٣.٤٪ من تحت · ٤.٤٪ من الجنبين.
-   زدناها شوي هامش أمان. لو انبدّل الإطار، أعد القياس. */
-.pi-img-wrap img, .na-img img {
-  padding:6.5% 5.5% 5.5%;
-  box-sizing:border-box;
-}
+/* 📐 نحشر صورة المنتج جوّه فراغ الإطار بدل ما تمتد تحته — وإلا
+   الشعار من فوق والاسم من تحت والزوايا تغطي أطراف المنتج. */
+.pi-img-wrap img, .na-img img { padding:9% 7%; box-sizing:border-box; }
 .pi-info { width:100%; }
 .pi-name {
   font-weight:700; font-size:15px; line-height:1.35; color:var(--text);
@@ -5365,7 +5360,8 @@ function renderNewStrip(){
     var tag = '<span class="na-tag ' + (isNew ? 'na-new' : 'na-back') + '">' +
               (isNew ? '🆕 جديد' : '🔄 رجع اتوفر') + '</span>';
     /* 🖼️ الشريط يخلط أقسام مختلفة، فنحطله الإطار الافتراضي بس (مو المخصص لكل قسم) */
-    var naFrame = FIXED_FRAME_URL ? '<div class="na-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;') + '&quot;)"></div>' : '';
+    /* نفس إطار البطاقات — مرسوم بالكود */
+    var naFrame = FRAME_ON ? amwajFrameSvg() : '';
     var inner = img
       ? '<img src="' + img + '" loading="lazy" onerror="naImgFail(this)">' + naFrame + tag
       : '<span class="na-ph">📷</span>' + tag;
@@ -6398,19 +6394,86 @@ function applyContactInfo(contact){
   }
 }
 
-/* 🖼️ إطار الصور — صورة وحدة ثابتة، تتحط فوق صورة المنتج بـCSS بلا
-   ما تلمس الصورة نفسها.
+/* 🖼️ إطار أمواج — مرسوم بالكود، مو صورة.
 
-   🚫 مطفي حالياً (٢٠٢٦/٠٨/١٩) — الرابط فاضي، فالطبقة ما تنبني
-      ولا ينطلب أي ملف من السيرفر. الكود كله باقي مكانه.
+   القديم كان صورة PNG برابط `FIXED_FRAME_URL`، والرابط ظلّ فاضي
+   وما انكتبت إله قيمة أبداً — يعني الإطار ما ظهر ولا مرة على الزبون.
 
-   🔁 لترجيعه: حط الرابط بين القوسين بالسطر الجاي وخلص.
-      ⚠️ شرط وحيد: PNG وسطه شفاف فعلاً (RGBA). لو انسطّح على
-         أبيض أو أسود راح يغطي كل صور المنتجات. */
-var FIXED_FRAME_URL = '';
+   SVG أحسن هنا:
+     • ولا تحميل — ينكتب داخل الصفحة (~٨٠٠ بايت)
+     • حاد بأي قياس، ما يتبيكسل بالتكبير
+     • ماكو قناة شفافية تضيع (مشكلة الإطار القديم المتكررة)
+     • تبديل لون أو نص = سطر واحد
+
+   viewBox ثابت 100×100 والرسم بالنِسب، فيتمدد لأي بطاقة.
+   خليه false لو تريد توقفه كله. */
+var FRAME_ON   = true;
+var FRAME_NAVY = '#16265C';
+var FRAME_TEAL = '#17808E';
+
+function amwajFrameSvg(opts){
+  opts = opts || {};
+  var navy  = opts.navy  || FRAME_NAVY;
+  var teal  = opts.teal  || FRAME_TEAL;
+  var title = opts.title === undefined ? 'امواج للالكترونيات' : opts.title;
+  var foot  = opts.foot  === undefined ? 'amwaj.mob'          : opts.foot;
+
+  /* زاوية وحدة نرسمها مرة ونكررها بالدوران — تعديل وحدة يعدّل الأربع */
+  function corner(){
+    return (
+      '<path d="M3,14 L3,6.5 L6.5,3 L14,3" fill="none" stroke="' + navy + '" stroke-width="1.1" stroke-linecap="square"/>' +
+      '<path d="M6,15 L6,8.2 L8.2,6 L15,6" fill="none" stroke="' + navy + '" stroke-width=".7" opacity=".55"/>' +
+      '<g stroke="' + navy + '" stroke-width="1.5">' +
+        '<line x1="10.5" y1="12.6" x2="13.1" y2="10"/>' +
+        '<line x1="13.2" y1="12.6" x2="15.8" y2="10"/>' +
+        '<line x1="15.9" y1="12.6" x2="18.5" y2="10"/>' +
+      '</g>' +
+      '<path d="M20,10 L26,10 L23.4,12.6 L17.4,12.6 Z" fill="' + navy + '"/>'
+    );
+  }
+
+  /* 📏 الفجوات مقيسة بـgetBBox مو تخمين:
+        العنوان بحجم 3.5 يمتد ٣٦→٦٤  → الخطوط توقف ٣٤ وترجع ٦٦
+        التذييل بحجم 3   يمتد ٤٠→٦٠  → الخطوط توقف ٣٨ وترجع ٦٢ */
+  var lines =
+    '<g stroke="' + navy + '" stroke-width=".9" stroke-linecap="round">' +
+      '<line x1="28" y1="3"  x2="' + (title ? 34 : 72) + '" y2="3"/>' +
+      (title ? '<line x1="66" y1="3" x2="72" y2="3"/>' : '') +
+      '<line x1="28" y1="97" x2="' + (foot ? 38 : 72) + '" y2="97"/>' +
+      (foot ? '<line x1="62" y1="97" x2="72" y2="97"/>' : '') +
+      '<line x1="3"  y1="28" x2="3"  y2="72"/>' +
+      '<line x1="97" y1="28" x2="97" y2="72"/>' +
+    '</g>';
+
+  var txt =
+    (title
+      ? '<text x="50" y="4.4" text-anchor="middle" fill="' + teal + '" ' +
+             'font-size="3.5" font-weight="700" font-family="Tahoma,Arial" ' +
+             'direction="rtl">' + title + '</text>'
+      : '') +
+    (foot
+      ? '<text x="50" y="98.2" text-anchor="middle" fill="' + navy + '" ' +
+             'font-size="3" font-weight="700" font-family="Tahoma,Arial" ' +
+             'letter-spacing=".3">' + foot + '</text>'
+      : '');
+
+  return (
+    '<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" ' +
+         'class="amwaj-frame">' +
+      '<g vector-effect="non-scaling-stroke">' +
+        lines +
+        corner() +
+        '<g transform="rotate(90 50 50)">'  + corner() + '</g>' +
+        '<g transform="rotate(180 50 50)">' + corner() + '</g>' +
+        '<g transform="rotate(270 50 50)">' + corner() + '</g>' +
+        txt +
+      '</g>' +
+    '</svg>'
+  );
+}
+
 function _frameLayerHtml(p, isScreen){
-  if (!FIXED_FRAME_URL) return '';
-  return '<div class="pi-frame-layer" style="background-image:url(&quot;' + FIXED_FRAME_URL.replace(/"/g,'&quot;').replace(/'/g,'%27') + '&quot;)"></div>';
+  return FRAME_ON ? amwajFrameSvg() : '';
 }
 
 async function loadCatalogFromServer(){
