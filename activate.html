@@ -6423,18 +6423,17 @@ function amwajFrameSvg(opts){
     return (
       '<path d="M3,14 L3,6.5 L6.5,3 L14,3" fill="none" stroke="' + navy + '" stroke-width="1.1" stroke-linecap="square"/>' +
       '<path d="M6,15 L6,8.2 L8.2,6 L15,6" fill="none" stroke="' + navy + '" stroke-width=".7" opacity=".55"/>' +
-      '<g stroke="' + navy + '" stroke-width="1.5">' +
-        '<line x1="10.5" y1="12.6" x2="13.1" y2="10"/>' +
-        '<line x1="13.2" y1="12.6" x2="15.8" y2="10"/>' +
-        '<line x1="15.9" y1="12.6" x2="18.5" y2="10"/>' +
-      '</g>' +
-      '<path d="M20,10 L26,10 L23.4,12.6 L17.4,12.6 Z" fill="' + navy + '"/>'
+      /* الشرطات المائلة والمتوازي انشالوا بطلب علي — الزوايا
+         صارت أنظف والانتباه يروح للمنتج مو للزخرفة */
+      ''
     );
   }
 
   /* 📏 الفجوات مقيسة بـgetBBox مو تخمين:
         العنوان بحجم 3.5 يمتد ٣٦→٦٤  → الخطوط توقف ٣٤ وترجع ٦٦
         التذييل بحجم 3   يمتد ٤٠→٦٠  → الخطوط توقف ٣٨ وترجع ٦٢ */
+  var dot = '<circle r=".85" fill="' + navy + '"/>';
+
   var lines =
     '<g stroke="' + navy + '" stroke-width=".9" stroke-linecap="round">' +
       '<line x1="28" y1="3"  x2="' + (title ? 34 : 72) + '" y2="3"/>' +
@@ -6462,6 +6461,9 @@ function amwajFrameSvg(opts){
          'class="amwaj-frame">' +
       '<g vector-effect="non-scaling-stroke">' +
         lines +
+        /* نقطتان على الخطوط الجانبية — بعيد عن صورة المنتج */
+        '<g transform="translate(3,24)">'  + dot + '</g>' +
+        '<g transform="translate(97,76)">' + dot + '</g>' +
         corner() +
         '<g transform="rotate(90 50 50)">'  + corner() + '</g>' +
         '<g transform="rotate(180 50 50)">' + corner() + '</g>' +
