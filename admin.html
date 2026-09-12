@@ -2078,27 +2078,36 @@ async function catSave(code, kind){
       if ($('kClear') && $('kClear').checked) p.clear_review = true;
       await rpc('web_catalog_set',{p_kind:kind,p_code:code,p_patch:p});
     }
-    await rpc('web_image_set',{p_kind:kind,p_code:code,p_url:$('kImg').value.trim()});
-    /* 🔁 نبدّل الصف بمكانه بدل ما نعيد تحميل الكاتلوك.
-       كان ينده pCat() — وهاي ترجّع الجدول لأول صفحة، فتضيع كل
-       الصفحات اللي حمّلها بـ«عرض المزيد» ويرجع لفوق. */
+    var _img = $('kImg').value.trim();
+    await rpc('web_image_set',{p_kind:kind,p_code:code,p_url:_img});
+
+    /* 🔁 نبدّل الصف بمكانه بدل ما نعيد تحميل الكاتلوك — إعادة التحميل
+       ترجّع الجدول لأول صفحة فتضيع الصفحات اللي حمّلها بـ«عرض المزيد».
+
+       ⚠️ نقرا القيم **قبل** closeModal — هي تمسح محتوى النافذة،
+       فبعدها $('kImg') وإخوانها يرجعون null والصف ينرسم بالقديم.
+       (هاي بالضبط علة «الصورة ما تطلع إلا بتحديث الصفحة») */
+    var x = _catEd, fresh = null;
+    if (x){
+      fresh = {image_url:_img};
+      if (can('products_edit')){
+        fresh.qty       = Number($('kQty').value) || 0;
+        fresh.is_active = $('kActive').checked;
+        var _p = $('kPrice').value.trim();
+        if (_p !== '') fresh.price = Number(_p);
+        if ($('kClear') && $('kClear').checked){ fresh.needs_review = false; fresh.review_note = ''; }
+      }
+    }
+
     closeModal(); toast('✅ انحفظ');
+
     try{
-      var x = _catEd;
-      if (x){
-        if (can('products_edit')){
-          x.qty = Number($('kQty') ? $('kQty').value : x.qty) || 0;
-          x.is_active = $('kActive') ? $('kActive').checked : x.is_active;
-          var _p = $('kPrice') ? $('kPrice').value.trim() : '';
-          if (_p !== '') x.price = Number(_p);
-          if ($('kClear') && $('kClear').checked){ x.needs_review = false; x.review_note = ''; }
-        }
-        x.image_url = $('kImg') ? $('kImg').value.trim() : x.image_url;
-        var tb = $('catBody');
-        var tr = tb && tb.querySelector('tr[data-code="'+x.code+'"]');
-        if (tr) tr.outerHTML = catRow(x, kind==='screen');
-        else keepScroll(pCat);      /* الصف مو معروض — نرجع للطريقة القديمة */
-      } else keepScroll(pCat);
+      if (!x) { keepScroll(pCat); return; }
+      Object.keys(fresh).forEach(function(k){ x[k] = fresh[k]; });
+      var tb = $('catBody');
+      var tr = tb && tb.querySelector('tr[data-code="'+x.code+'"]');
+      if (tr) tr.outerHTML = catRow(x, kind==='screen');
+      else keepScroll(pCat);      /* الصف مو معروض — نرجع للطريقة القديمة */
     }catch(e){ keepScroll(pCat); }
   }catch(e){ var m=$('kMsg'); m.className='msg err'; m.textContent=e.message; }
 }
