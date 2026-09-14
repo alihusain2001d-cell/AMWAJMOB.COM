@@ -2695,6 +2695,10 @@ async function stfDel(id, name){
 var UP = {kind:'partsx', rows:null, file:'', renames:[]};
 function pUp(){
   $('content').innerHTML =
+    '<div class="section-card" id="syncCard"><div class="section-head">'+
+      '<div class="section-title">🔄 مزامنة بيان</div>'+
+      '<button class="btn-solid gray" onclick="syncLoad()">تحديث</button></div>'+
+      '<div class="section-body" id="syncBody"><div class="loading">…</div></div></div>'+
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">📤 رفع المخزن من الإكسل</div></div>'+
     '<div class="section-body">'+
@@ -2724,9 +2728,89 @@ function pUp(){
     if (e.dataTransfer.files[0]) upFile(e.dataTransfer.files[0]); };
   $('file').onchange = function(e){ if (e.target.files[0]) upFile(e.target.files[0]); };
   upHist();
+  syncLoad();
 }
 /* okDel = تأكيد الحذف الكبير. ينصفّر كل ما يتبدّل التبويب أو الملف،
    حتى ما ينسحب تأكيد قديم على شيت جديد. */
+/* 🔄 مزامنة بيان — بطاقة الحالة وزر التشغيل.
+
+   البرنامج اللي يقرا نسخة بيان يشتغل **بجهاز المحل** (يحتاج SQL
+   Server والنسخة نفسها)، فالمتصفح ما يكدر يشغّله. الحل صندوق بريد:
+   الزر يكتب طلب بالسيرفر، والبرنامج المحلي يفحصه كل ١٠ دقائق.
+
+   وأهم شي بالبطاقة: **عمر نسخة بيان**. مرة وقفت النسخة يومين
+   والموقع ظل يعرض أرصدة قديمة بصمت. هسه يبيّن بالأحمر. */
+function fmtWhen(t){
+  if (!t) return '—';
+  var d = new Date(t), n = new Date(), m = Math.round((n - d) / 60000);
+  var s = d.toLocaleString('ar-IQ', {month:'numeric', day:'numeric',
+                                     hour:'numeric', minute:'2-digit'});
+  if (m < 60)   return s + '  (قبل ' + m + ' دقيقة)';
+  if (m < 1440) return s + '  (قبل ' + Math.round(m/60) + ' ساعة)';
+  return s + '  (قبل ' + Math.round(m/1440) + ' يوم)';
+}
+
+async function syncLoad(){
+  var b = $('syncBody');
+  if (!b) return;
+  b.innerHTML = '<div class="loading">…</div>';
+  var d;
+  try { d = await rpc('web_sync_status', {}); }
+  catch(e){
+    b.innerHTML = '<div class="msg warn">ما كدرت أقرا الحالة — '+esc(e.message)+'</div>';
+    return;
+  }
+
+  var age  = d['عمر_النسخة_ساعة'];
+  var live = d['البرنامج_شغّال'];
+  var pend = d['طلب_معلّق'];
+
+  /* النسخة تنعمل كل ليلة ٩:٥٥، فـ٣٦ ساعة معناها فاتت ليلة كاملة */
+  var stale = (age === null || age === undefined) ? true : age > 36;
+
+  var h = '';
+  if (stale){
+    h += '<div class="msg err"><b>⚠️ نسخة بيان قديمة</b><br>'+
+         'آخر نسخة: ' + fmtWhen(d['تاريخ_النسخة']) + '<br>'+
+         'الأرصدة والأسعار بالموقع تبقى على هذي النسخة لحد ما تنعمل وحدة جديدة. '+
+         'افحص برنامج النسخ بجهاز المحل و OneDrive.</div>';
+  } else {
+    h += '<div class="msg ok">✅ نسخة بيان: ' + fmtWhen(d['تاريخ_النسخة']) + '</div>';
+  }
+
+  if (!live){
+    h += '<div class="msg warn">🔌 برنامج المزامنة بجهاز المحل ما رد من ٣٠ دقيقة. '+
+         'لو الجهاز مطفي، الزر راح ينتظر لحد ما يشتغل.</div>';
+  }
+
+  h += '<div class="hint" style="margin-top:8px;font-size:13px">'+
+       '<b>آخر مزامنة:</b> ' + fmtWhen(d['آخر_مزامنة']) +
+       (d['الملاحظة'] ? '  —  ' + esc(d['الملاحظة']) : '') + '</div>';
+
+  if (pend){
+    h += '<div class="msg warn">⏳ أكو طلب مزامنة من ' + esc(d['طالبها']||'الإدارة') +
+         ' — ' + fmtWhen(d['وقت_الطلب']) + '. ينفّذ خلال ١٠ دقائق.</div>';
+  }
+
+  h += '<div style="margin-top:10px">'+
+       '<button class="btn-solid green" id="bSync" onclick="syncNow()"'+
+       (pend ? ' disabled' : '') + '>🔄 زامن الآن</button>'+
+       '<span class="hint" style="margin-right:10px">'+
+       'ياخذ ٣ دقائق — يقرا النسخة ويحدّث المواد والشاشات</span></div>';
+
+  b.innerHTML = h;
+}
+
+async function syncNow(){
+  var btn = $('bSync');
+  if (btn){ btn.disabled = true; btn.textContent = '…'; }
+  try {
+    await rpc('web_sync_request', {});
+    toast('✅ انطلبت — تنفّذ خلال ١٠ دقائق');
+  } catch(e){ toast('❌ ' + e.message); }
+  syncLoad();
+}
+
 function upKind(k){ UP.kind=k; UP.okDel=false; pUp(); }
 var SKIP_TABS = ['fcm_tokens','_sync_snapshot'];
 function upFile(f){
