@@ -4994,6 +4994,7 @@ function renderSheetBrands(type) {
     'ZTE':     '<span style="font-size:12px;font-weight:900;color:#005BAC;">ZTE</span>',
     'TCL':     '<span style="font-size:12px;font-weight:900;color:#E4002B;">TCL</span>',
     'Motorola':'<span style="font-size:11px;font-weight:900;color:#5A31F4;">MOTOROLA</span>',
+    'Nokia':   '<span style="font-size:12px;font-weight:900;color:#124191;">NOKIA</span>',
   };
 
   function getBrandLogos(brandsStr) {
@@ -5022,6 +5023,7 @@ function renderSheetBrands(type) {
     {label:'ازوز / كوكل',              brands:'Asus,Google'},
     {label:'ZTE / TCL / Alcatel',      brands:'ZTE,TCL,Alcatel,Blackview'},
     {label:'موتورولا',                 brands:'Motorola'},
+    {label:'نوكيا',                    brands:'Nokia'},
   ];
 
   const commonBrands = [
@@ -5074,7 +5076,29 @@ function renderSheetBrands(type) {
     return;
   }
 
-  const list = type === 'screens' ? screenBrands : commonBrands;
+  var list = type === 'screens' ? screenBrands : commonBrands;
+
+  /* 🆕 بطاقة «ماركات ثانية» — تتبني من الكاتلوك نفسه.
+
+     قائمة البطاقات فوق مكتوبة بيد. أي ماركة تجي من بيان وما تكون
+     بالقائمة، شاشاتها ما توصل الزبون — صار هيچ بـ٧٠ شاشة (نوكيا،
+     RedMagic، Lenovo…). فبدل ما نعدّل القائمة كل مرة، نجمع أي
+     ماركة غير مغطّاة ونعرضها ببطاقة وحدة. */
+  var covered = {};
+  list.forEach(function(b){
+    b.brands.split(',').forEach(function(x){ covered[x.trim().toLowerCase()] = 1; });
+  });
+  var rest = {};
+  (getDataForType(type === 'screens' ? 'screens' : sheetPriceType) || [])
+    .forEach(function(p){
+      var b = (p.brand || '').trim();
+      if (b && !covered[b.toLowerCase()]) rest[b] = 1;
+    });
+  var restNames = Object.keys(rest);
+  if (restNames.length){
+    list = list.concat([{label:'ماركات ثانية', brands:restNames.join(',')}]);
+  }
+
   grid.style.display = 'grid';
   grid.innerHTML = list.map(brandCard).join('');
 }

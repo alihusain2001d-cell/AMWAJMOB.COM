@@ -2789,7 +2789,7 @@ async function syncLoad(){
 
   if (pend){
     h += '<div class="msg warn">⏳ أكو طلب مزامنة من ' + esc(d['طالبها']||'الإدارة') +
-         ' — ' + fmtWhen(d['وقت_الطلب']) + '. ينفّذ خلال ١٠ دقائق.</div>';
+         ' — ' + fmtWhen(d['وقت_الطلب']) + '. ينفّذ خلال ثواني…</div>';
   }
 
   h += '<div style="margin-top:10px">'+
@@ -2806,7 +2806,8 @@ async function syncNow(){
   if (btn){ btn.disabled = true; btn.textContent = '…'; }
   try {
     await rpc('web_sync_request', {});
-    toast('✅ انطلبت — تنفّذ خلال ١٠ دقائق');
+    toast('✅ انطلبت — تبدي خلال ثواني');
+    setTimeout(syncLoad, 8000);   /* نعيد القراءة حتى يشوف إنها بدت */
   } catch(e){ toast('❌ ' + e.message); }
   syncLoad();
 }
