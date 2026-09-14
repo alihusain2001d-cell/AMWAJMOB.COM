@@ -4995,6 +4995,7 @@ function renderSheetBrands(type) {
     'TCL':     '<span style="font-size:12px;font-weight:900;color:#E4002B;">TCL</span>',
     'Motorola':'<span style="font-size:11px;font-weight:900;color:#5A31F4;">MOTOROLA</span>',
     'Nokia':   '<span style="font-size:12px;font-weight:900;color:#124191;">NOKIA</span>',
+    'RedMagic':'<span style="font-size:11px;font-weight:900;color:#E4002B;">RED MAGIC</span>',
   };
 
   function getBrandLogos(brandsStr) {
@@ -5024,6 +5025,7 @@ function renderSheetBrands(type) {
     {label:'ZTE / TCL / Alcatel',      brands:'ZTE,TCL,Alcatel,Blackview'},
     {label:'موتورولا',                 brands:'Motorola'},
     {label:'نوكيا',                    brands:'Nokia'},
+    {label:'ريد ماجيك',                brands:'RedMagic'},
   ];
 
   const commonBrands = [
@@ -5094,10 +5096,11 @@ function renderSheetBrands(type) {
       var b = (p.brand || '').trim();
       if (b && !covered[b.toLowerCase()]) rest[b] = 1;
     });
-  var restNames = Object.keys(rest);
-  if (restNames.length){
-    list = list.concat([{label:'ماركات ثانية', brands:restNames.join(',')}]);
-  }
+  /* بطاقة لكل ماركة باسمها — مو مكوّمة بوحدة، حتى الزبون يعرف
+     شنو موجود قبل ما يفتح. */
+  Object.keys(rest).sort().forEach(function(b){
+    list = list.concat([{label:b, brands:b}]);
+  });
 
   grid.style.display = 'grid';
   grid.innerHTML = list.map(brandCard).join('');
