@@ -1632,7 +1632,7 @@ function wlDraw(d, z){
 
 
 /* ── الشاشة داخل اللوحة ── */
-var _wlSet = { items: [], shop: '', title: '', files: [], urls: [] };
+var _wlSet = { items: [], shop: '', title: '', urls: [] };
 var _wlRun = 0;
 
 function wlRevoke(){
@@ -1647,15 +1647,14 @@ function wlPanel(L, shop, title){
       var c = String(x['الكود'] || '');
       return { c: c, n: String(x['المادة'] || ''), m: wlQrRows(WL_URL + c) };
     }),
-    shop: shop || '', title: title || '', files: [], urls: [] };
+    shop: shop || '', title: title || '', urls: [] };
 
   var z = wlSize();
   modal('<h3>🏷️ ملصقات الضمان — ' + esc(title || '') + '</h3>' +
     '<div class="hint" style="margin-bottom:10px">' + L.length + ' ملصق · ' +
-      'اضغط <b>اطبع</b> ← اختار طابعة الملصقات ← ومن «حجم الورق» اختار مقاس اللصقة</div>' +
+      'اضغط <b>اطبع</b> ← اختار طابعة الملصقات. الصفحة تسكّر نفسها وترجع لهنا.</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">' +
-      '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ اطبع الكل</button>' +
-      (L.length > 1 ? '<button class="btn-solid gray" onclick="wlSendAll()">📤 أرسل</button>' : '') +
+      (L.length > 1 ? '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ اطبع الكل (' + L.length + ')</button>' : '') +
       '<button class="btn-solid gray" onclick="closeModal()">✕ إغلاق</button>' +
     '</div>' +
     '<div id="wlList"></div>' +
@@ -1681,7 +1680,7 @@ async function wlRedraw(){
 
   box.innerHTML = '<div class="hint">⏳ جاري التجهيز...</div>';
   wlRevoke();
-  var files = [], urls = [], html = '';
+  var urls = [], html = '';
 
   for (var i = 0; i < _wlSet.items.length; i++){
     var d  = _wlSet.items[i];
@@ -1689,8 +1688,6 @@ async function wlRedraw(){
     /* eslint-disable no-loop-func */
     var blob = await new Promise(function(res){ cv.toBlob(res, 'image/png'); });
     if (run !== _wlRun) return;       // بدّل المقاس وإحنا نشتغل — نترك هذي الجولة
-    var nm = (_wlSet.title ? String(_wlSet.title).replace(/[^\w؀-ۿ-]+/g, '_') + '_' : '') + d.c + '.png';
-    try{ files.push(new File([blob], nm, { type: 'image/png' })); }catch(e){ files.push(blob); }
     var u = URL.createObjectURL(blob); urls.push(u);
 
     html += '<div style="display:flex;gap:11px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">' +
@@ -1699,53 +1696,12 @@ async function wlRedraw(){
       '<div style="flex:1;min-width:0">' +
         '<div dir="ltr" style="font-family:monospace;font-weight:900;font-size:15px">' + esc(d.c) + '</div>' +
         '<div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">' +
-          '<button class="action-btn btn-view" onclick="wlPrintDoc(' + i + ')">🖨️ اطبع</button>' +
-          '<button class="action-btn" onclick="wlSend(' + i + ')">📤 أرسل</button>' +
-          '<button class="action-btn" onclick="wlSave(' + i + ')">⬇️ حفظ</button>' +
+          '<button class="action-btn btn-view" onclick="wlPrintDoc(' + i + ')">🖨️ اطبع هذا</button>' +
         '</div></div></div>';
   }
   if (run !== _wlRun) return;
-  _wlSet.files = files; _wlSet.urls = urls;
+  _wlSet.urls = urls;
   box.innerHTML = html;
-}
-
-/* المشاركة لازم تنندى من ضغطة المستخدم مباشرة — فالصور تنجهّز
-   وقت الرسم مو وقت الضغط، وإلا آيفون يرفضها. */
-function wlCanShare(fs){
-  try{ return !!(navigator.share && navigator.canShare && navigator.canShare({ files: fs })); }
-  catch(e){ return false; }
-}
-
-function wlSave(i){
-  var u = _wlSet.urls[i], f = _wlSet.files[i];
-  if (!u) return;
-  var a = document.createElement('a');
-  a.href = u; a.download = (f && f.name) || ('label_' + i + '.png');
-  document.body.appendChild(a); a.click(); a.remove();
-}
-
-function wlSend(i){
-  var f = _wlSet.files[i];
-  if (!f) return;
-  if (wlCanShare([f])){
-    /* الإلغاء من الزبون يرجع رفض — مو خطأ، ما نعرض شي */
-    navigator.share({ files: [f], title: 'ملصق ضمان ' + _wlSet.items[i].c }).catch(function(){});
-    return;
-  }
-  wlSave(i);
-  toast('⬇️ انحفظت — افتح تطبيق الطابعة واختارها من المعرض', 5000);
-}
-
-function wlSendAll(){
-  var fs = _wlSet.files;
-  if (!fs.length) return;
-  if (fs.length === 1) return wlSend(0);
-  if (wlCanShare(fs)){
-    navigator.share({ files: fs, title: 'ملصقات الضمان' }).catch(function(){});
-    return;
-  }
-  for (var i = 0; i < fs.length; i++) wlSave(i);
-  toast('⬇️ انحفظن كلهن — افتح تطبيق الطابعة واختارهن', 5000);
 }
 
 /* 🖨️ الطباعة — صفحة لكل ملصق.
@@ -1764,7 +1720,12 @@ function wlPrintDoc(one){
     return '<div class="p"><img src="' + wlDraw(d, z).toDataURL('image/png') + '"></div>';
   }).join('');
 
+  /* ⚠️ الصفحة تسكّر نفسها بعد الطباعة (onafterprint) — بدونها يظل
+        علي واقف بصفحة فاضية ويضطر يدوّر طريقه للوحة.
+        التأخير نص ثانية حتى الطباعة تنسلّم للنظام قبل السكّر.
+        وزر «رجوع» احتياط لو المتصفح رفض يسكّرها. */
   var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>' + esc(_wlSet.title || 'ملصقات الضمان') + '</title><style>' +
       'html,body{margin:0;padding:0}' +
       /* الحاسبة تحترم هذا السطر، الموبايل لا — والنِسَب تحت تغطّي الاثنين */
@@ -1772,11 +1733,20 @@ function wlPrintDoc(one){
       '.p{width:100%;height:100vh;overflow:hidden}' +
       '.p img{width:100%;height:100%;object-fit:contain;display:block}' +
       '.p+.p{page-break-before:always;break-before:page}' +
-      '@media screen{body{background:#e2e8f0;padding:14px}' +
-        '.p{height:auto;margin-bottom:10px}' +
-        '.p img{width:' + z.w + 'mm;height:' + z.h + 'mm;' +
+      '#x{display:none}' +
+      '@media screen{body{background:#e2e8f0;font-family:Tahoma,Arial,sans-serif;' +
+          'padding:14px;text-align:center}' +
+        '#x{display:block;width:100%;padding:15px;margin-bottom:14px;border:0;' +
+          'border-radius:11px;background:#0F172A;color:#fff;font-size:17px;' +
+          'font-weight:800;font-family:inherit;cursor:pointer}' +
+        '.p{height:auto;margin-bottom:12px}' +
+        '.p img{width:90vw;max-width:360px;height:auto;background:#fff;' +
           'box-shadow:0 2px 10px rgba(0,0,0,.2)}}' +
-    '</style></head><body onload="window.print()">' + body + '</body></html>';
+      '@media print{#x{display:none!important}}' +
+    '</style></head>' +
+    '<body onload="window.print()" onafterprint="setTimeout(window.close,500)">' +
+    '<button id="x" onclick="window.close()">✕ رجوع للوحة التحكم</button>' +
+    body + '</body></html>';
 
   var w = window.open('', '_blank');
   if (w && !w.closed){
