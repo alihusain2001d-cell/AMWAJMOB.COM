@@ -4129,7 +4129,11 @@ async function sendData() {
     let screenCode = normalizeNumber(document.getElementById("screenCode").value).trim().toUpperCase();
     let type = document.getElementById("type").value;
     let start = document.getElementById("start").value;
-    if (!name || !phone || !invoice || !screenCode) { alert("أكمل جميع الحقول"); throw "stop"; }
+    if (!name || !phone || !screenCode) { alert("أكمل الاسم والهاتف وكود الشاشة"); throw "stop"; }
+    /* 🏷️ رقم الفاتورة مطلوب بس لو الكود انكتب باليد.
+       ملصق البيع المباشر ماكو إله رقم طلب، والملصق نفسه مسجّل
+       عدنا — فما نحتاج رقم يربطه بشي. */
+    if (!invoice && !(_wLabel && _wLabel.found)) { alert("أكمل جميع الحقول"); throw "stop"; }
     if (usedInvoices.has(screenCode)) { dupMsg.innerText = "⚠️ كود الشاشة مستخدم مسبقاً"; dupMsg.style.display = "block"; throw "stop"; }
 
     /* 🗄️ الضمان كله على السيرفر الجديد — الحفظ ورسالة الواتساب سوا.
@@ -8787,8 +8791,10 @@ async function openWarrantyFromLabel(code){
 
     if (box){
       box.style.background = '#ECFDF5'; box.style.borderColor = '#A7F3D0'; box.style.color = '#065F46';
+      var sub = r.invoice ? ('طلب ' + r.invoice) : 'بيع مباشر';
+      if (r.shop) sub = _wEsc(r.shop) + ' · ' + _wEsc(sub); else sub = _wEsc(sub);
       box.innerHTML = '🏷️ ' + _wEsc(r.itemName || 'قطعة') +
-        (r.shop ? '<br><span style="font-weight:600;font-size:15px">' + _wEsc(r.shop) + '</span>' : '');
+        '<br><span style="font-weight:600;font-size:15px">' + sub + '</span>';
     }
   }catch(e){
     if (fCode) fCode.readOnly = false;
