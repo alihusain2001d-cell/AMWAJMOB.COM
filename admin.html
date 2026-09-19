@@ -1634,7 +1634,9 @@ function wlDoc(labels, shop, orderCode){
     return { c: code, n: String(L['المادة'] || ''), m: wlQrRows(WL_URL + code) };
   });
 
-  /* نمنع أي «</script>» جوّه الأسماء من كسر الصفحة */
+  /* نمنع أي وسم إغلاق سكربت جوّه الأسماء من كسر الصفحة.
+     ⚠️ ولا تكتب الوسم نفسه هنا — المتصفح ما يميّز تعليق من كود،
+        يشوف الوسم ويسكّر السكربت من عنده وينكسر كلشي بعده. */
   var json = JSON.stringify({ items: data, shop: String(shop || ''), ord: String(orderCode || '') })
                .replace(/</g, '\\u003c');
 
