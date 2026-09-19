@@ -70,6 +70,8 @@
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">✅ تفعيل الضمان</span><button class="bsheet-close" onclick="closeSheet('warrantySheet')">✕</button></div>
     <div class="bsheet-body">
+      <!-- 🏷️ يطلع بس لما الزبون يجي من قراءة ملصق الضمان -->
+      <div id="wLabelBox" style="display:none;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:11px 13px;border-radius:10px;margin-bottom:12px;font-size:16px;font-weight:700;"></div>
       <div class="form-group"><label class="form-label">اسم الزبون</label><input class="form-input" id="name" placeholder="مثال: أحمد محمد"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
       <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
@@ -4042,6 +4044,8 @@ async function verifyOtpCode() {
       if (user.adminToken) { localStorage.setItem('amwaj_admin_token', user.adminToken); } else { localStorage.removeItem('amwaj_admin_token'); }
       const _sw = document.getElementById('homeWelcome'); if (_sw) _sw.textContent = 'مرحباً ' + user.name.split(' ')[0];
       showScreen('homeScreen');
+      /* 🏷️ جاي من ملصق ضمان وما كان داخل؟ نكمّلها الآن */
+      setTimeout(function(){ try { warrantyFromUrl(); } catch(e){} }, 700);
       setTimeout(function(){ try { updateFcmTokenAfterLogin(); } catch(e){} }, 1500);
       setTimeout(function(){ try { checkAndShowBroadcast(); } catch(e){} }, 2500);
     }
@@ -4133,6 +4137,7 @@ async function sendData() {
       document.getElementById("invoice").value = ""; document.getElementById("screenCode").value = "";
       document.getElementById("screenName").value = ""; document.getElementById("start").value = "";
       result.innerHTML = ""; btn.innerText = "تفعيل الضمان"; btn.disabled = false;
+      _wResetLabel();   // الملصق انستهلك — نفك القفل عن خانة الكود
     }, 30000);
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
@@ -4419,8 +4424,11 @@ function renderCart() {
   let html = cartChangesBanner();  // شريط يشرح شنو تغيّر (يطلع بس إذا أكو تغيير)
 
   cart.forEach((item, index) => {
-    const price = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
+    const basePrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
     const quantity = item.quantity || 1;
+    /* 🛡️ سعر الضمان — نفس حساب السيرفر بالضبط */
+    const price = (item.itemType === 'screens' && item.hasWarranty)
+      ? priceWithWarranty(basePrice, true) : basePrice;
     const itemTotal = price * quantity;
     const gone = !!item.unavailable;      // نفذت أو انسحبت من المخزن
     if (!gone) total += itemTotal;        // ما ندخّلها بالمجموع
@@ -4452,11 +4460,11 @@ function renderCart() {
               🛡️ <span>${warrantyChecked ? 'مع ضمان ✓' : 'إضافة ضمان'}</span>
             </div>
             <div style="font-size:11px;color:${warrantyChecked ? '#047857' : 'var(--muted)'};margin-top:2px;font-weight:700;">
-              ${warrantyChecked ? 'تم اختيار الضمان لهذا المنتج' : 'اضغط لإضافة ضمان للشاشة'}
+              ${warrantyChecked ? ('السعر مع الضمان' + (warrantyPct() ? ' (+' + warrantyPct() + '%)' : '')) : (warrantyPct() ? ('يزيد ' + warrantyPct() + '% على السعر') : 'اضغط لإضافة ضمان للشاشة')}
             </div>
           </div>
         </label>
-        ${warrantyChecked ? '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:10px 14px;border-radius:10px;font-size:13px;color:#92400E;margin-top:8px;border-right:4px solid #F59E0B;font-weight:800;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">⚠️</span><span>علماً أن السعر يتغير مع الضمان</span></div>' : ''}
+        ${(warrantyChecked && !warrantyPct()) ? '<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);padding:10px 14px;border-radius:10px;font-size:13px;color:#92400E;margin-top:8px;border-right:4px solid #F59E0B;font-weight:800;display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">⚠️</span><span>علماً أن السعر يتغير مع الضمان</span></div>' : ''}
       </div>` : '';
 
     html += `
@@ -4519,6 +4527,35 @@ function changeQuantity(index, change) {
   if (newQty < 1) { if (confirm('هل تريد حذف هذا المنتج؟')) { removeFromCart(index); } return; }
   if (newQty > 99) { alert('الحد الأقصى 99 قطعة'); return; }
   cart[index].quantity = newQty; saveCart(); renderCart();
+}
+
+/* 🛡️ نسبة الضمان — تجي من app_catalog (المفتاح warranty_pct).
+
+   الزبون يأشّر «مع ضمان» ← السعر يزيد بالنسبة. علي يتحكم بيها من
+   لوحة التحكم، وبصمة الكاتلوك تتغيّر أول ما يبدّلها فالتطبيق
+   يعيد التحميل لحاله.
+
+   ⚠️ هذا حساب **عرض بس**. السيرفر يعيد حسابه بنفسه ويتجاهل السعر
+      اللي نرسله (حماية من التلاعب). فأي تعديل هنا لازم ينعمل
+      نفسه بدالة with_warranty بالسيرفر — وإلا الزبون يشوف رقم
+      والفاتورة تطلع رقم ثاني. */
+var WARRANTY_PCT = (function(){
+  /* نقراها من التخزين المحلي أول ما تفتح الصفحة، حتى السلة تعرض
+     السعر الصحيح قبل ما يوصل الكاتلوك. */
+  try { return Number(localStorage.getItem('amwaj_warr_pct')) || 0; }
+  catch(e){ return 0; }
+})();
+
+function warrantyPct(){
+  return (isFinite(WARRANTY_PCT) && WARRANTY_PCT > 0) ? WARRANTY_PCT : 0;
+}
+
+/* بلا تقريب — طلب علي. floor حتى ما نزيد فلس على الزبون،
+   ونفس ما تسوي with_warranty بالسيرفر. */
+function priceWithWarranty(price, hasWarranty){
+  var p = Number(price) || 0;
+  if (!hasWarranty) return p;
+  return Math.floor(p * (1 + warrantyPct() / 100));
 }
 
 function toggleWarranty(index) {
@@ -6511,6 +6548,11 @@ async function loadCatalogFromServer(){
   var r = await sbRpc('app_catalog');
   var parts = r.parts || {};
 
+  /* 🛡️ نسبة الضمان — تجي مع الكاتلوك، فتتحدّث لحالها أول ما
+     يبدّلها علي باللوحة (بصمة الكاتلوك تتغيّر). */
+  WARRANTY_PCT = Number(r.warranty_pct) || 0;
+  try { localStorage.setItem('amwaj_warr_pct', String(WARRANTY_PCT)); } catch(e){}
+
   pricesData = (r.screens || []).map(function(s){
     return { code:s.code, brand:s.brand||'', name:s.name||'-', type:s.type||'',
              notes:s.notes||'', price:Number(s.price)||0, qty:Number(s.qty)||0,
@@ -6841,6 +6883,10 @@ setInterval(autoRefreshTick, AUTO_REFRESH_MS);
 
 loadCart();
 appBoot();
+
+/* 🏷️ جاي من قراءة QR ملصق ضمان؟ ننتظر appBoot يستقر بالشاشة
+   الصحيحة أول، وبعدها نفتح شاشة الضمان منمليّة */
+setTimeout(function(){ try { warrantyFromUrl(); } catch(e){} }, 900);
 // (snapshot system removed — now using date_added from sheet)
 
 // ── منع النسخ والتصوير ──
@@ -8422,7 +8468,142 @@ function openAboutSheet() {
   `;
   openSheet('accountSheet');
 }
+/* ══════════════ 🏷️ ملصق الضمان (QR) ══════════════
+
+   كل شاشة تنباع «مع ضمان» يطلع لها ملصق ٣٨×٢٥ ملم من لوحة
+   التحكم، بيه QR يفتح هذي الصفحة على: ?w=كود_الملصق
+
+   من ينقرا الزبون الـQR، الكود واسم الشاشة ورقم الطلب ينملّون
+   لحالهم — ما يبقى إلا يضغط «تفعيل الضمان».
+
+   ⚠️ لازم حساب: تفعيل الضمان نفسه يحتاج تسجيل دخول من زمان.
+      فلو ما كان داخل، نخزّن الكود ونرجعله بعد الدخول — بدل ما
+      يضيع ويضطر يقرا الـQR من جديد. */
+var _wLabel = null;
+
+function _wEsc(x){
+  return String(x == null ? '' : x)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _wPending(v){
+  try{
+    if (v === undefined) return localStorage.getItem('amwaj_w_pending') || '';
+    if (v) localStorage.setItem('amwaj_w_pending', v);
+    else   localStorage.removeItem('amwaj_w_pending');
+  }catch(e){}
+  return '';
+}
+
+/* ينندى أول ما تفتح الصفحة، وبعد تسجيل الدخول */
+function warrantyFromUrl(){
+  var code = '';
+  try{
+    var p = new URLSearchParams(window.location.search);
+    code = String(p.get('w') || '').trim().toUpperCase();
+    if (code && window.history && window.history.replaceState){
+      /* ننظّف الرابط: بدونها أي تحديث للصفحة يعيد فتح نفس الملصق،
+         حتى بعد ما ينفعّل */
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }catch(e){}
+  if (!code) code = _wPending();
+  if (!code) return;
+
+  if (!getCustomerToken()){
+    _wPending(code);
+    var el = document.getElementById('loginResult');
+    if (el) el.innerHTML = '<div class="result pending">🏷️ سجّل دخولك وراح نكمّل تفعيل ضمان الملصق <b dir="ltr">' +
+      _wEsc(code) + '</b></div>';
+    return;
+  }
+
+  _wPending('');
+  openWarrantyFromLabel(code);
+}
+
+async function openWarrantyFromLabel(code){
+  openSheet('warrantySheet');
+
+  var box   = document.getElementById('wLabelBox');
+  var dup   = document.getElementById('dupMsg');
+  var res   = document.getElementById('result');
+  var fCode = document.getElementById('screenCode');
+  if (dup) dup.style.display = 'none';
+  if (res) res.innerHTML = '';
+  if (box){ box.style.display = 'block'; box.textContent = '⏳ جاري قراءة الملصق...'; }
+
+  /* الاسم والهاتف من الحساب — ما نخلّيه يكتبهن */
+  var u = null; try{ u = JSON.parse(localStorage.getItem('amwaj_user') || 'null'); }catch(e){}
+  if (u){
+    var fn = document.getElementById('name'), fp = document.getElementById('phone');
+    if (fn && !fn.value.trim()) fn.value = u.name  || '';
+    if (fp && !fp.value.trim()) fp.value = u.phone || '';
+  }
+  var fs = document.getElementById('start');
+  if (fs) fs.value = formatDate(new Date());
+
+  /* الكود مقفول: جاي من الملصق، وأي تعديل عليه يعني ضمان لقطعة ثانية */
+  if (fCode){ fCode.value = code; fCode.readOnly = true; }
+  _wLabel = { code: code };
+
+  try{
+    var r = await sbRpc('app_warranty_label', { p_token: getCustomerToken(), p_code: code });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'تعذّر قراءة الملصق');
+
+    if (!r.found){
+      /* ملصق مو مالنا أو انحذف طلبه — نخلّيه يكمّل بيده بدل ما نوقفه */
+      if (fCode) fCode.readOnly = false;
+      if (box){
+        box.style.background = '#FFFBEB'; box.style.borderColor = '#FDE68A'; box.style.color = '#92400E';
+        box.textContent = '⚠️ ما لگينا هذا الملصق عدنا — أكمل الخانات بيدك';
+      }
+      return;
+    }
+
+    _wLabel = r;
+    var fN = document.getElementById('screenName'), fI = document.getElementById('invoice'),
+        fT = document.getElementById('type');
+    if (fN) fN.value = r.itemName || '';
+    if (fI) fI.value = r.invoice  || '';
+    if (fT) fT.value = (r.kind === 'battery') ? 'battery' : 'screen';
+
+    if (r.used){
+      if (box){
+        box.style.background = '#FEF2F2'; box.style.borderColor = '#FECACA'; box.style.color = '#991B1B';
+        box.innerHTML = '⛔ هذا الملصق ضمانه مفعّل من قبل<br>' +
+          '<span style="font-weight:600;font-size:15px">تكدر تشوف تفاصيله من «التحقق من الضمان»</span>';
+      }
+      return;
+    }
+
+    if (box){
+      box.style.background = '#ECFDF5'; box.style.borderColor = '#A7F3D0'; box.style.color = '#065F46';
+      box.innerHTML = '🏷️ ' + _wEsc(r.itemName || 'قطعة') +
+        (r.shop ? '<br><span style="font-weight:600;font-size:15px">' + _wEsc(r.shop) + '</span>' : '');
+    }
+  }catch(e){
+    if (fCode) fCode.readOnly = false;
+    if (box){
+      box.style.background = '#FFFBEB'; box.style.borderColor = '#FDE68A'; box.style.color = '#92400E';
+      box.textContent = '⚠️ ' + (e.message || 'تعذّر قراءة الملصق') + ' — أكمل الخانات بيدك';
+    }
+  }
+}
+
+/* نرجّع شاشة الضمان لحالتها العادية — مهم، لأن الكود يبقى مقفول
+   لو انفتحت من ملصق قبلها */
+function _wResetLabel(){
+  _wLabel = null;
+  var box = document.getElementById('wLabelBox');
+  if (box) box.style.display = 'none';
+  var f = document.getElementById('screenCode');
+  if (f) f.readOnly = false;
+}
+
 function openWarrantyFromAccount() {
+  _wResetLabel();            // ممكن تكون انفتحت من ملصق قبل شوي
   openSheet('warrantySheet');
   const s = document.getElementById('start');
   if (s) s.value = formatDate(new Date());
