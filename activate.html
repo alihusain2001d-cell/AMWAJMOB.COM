@@ -72,6 +72,7 @@
     <div class="bsheet-body">
       <!-- 🏷️ يطلع بس لما الزبون يجي من قراءة ملصق الضمان -->
       <div id="wLabelBox" style="display:none;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:11px 13px;border-radius:10px;margin-bottom:12px;font-size:16px;font-weight:700;"></div>
+      <button class="form-btn" style="margin-bottom:14px" onclick="openQrScan('activate')">📷 امسح الـQR من الملصق</button>
       <div class="form-group"><label class="form-label">اسم الزبون</label><input class="form-input" id="name" placeholder="مثال: أحمد محمد"></div>
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
       <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
@@ -91,9 +92,28 @@
     <div class="bsheet-handle"></div>
     <div class="bsheet-head"><span class="bsheet-title">🔍 التحقق من الضمان</span><button class="bsheet-close" onclick="closeSheet('checkSheet')">✕</button></div>
     <div class="bsheet-body">
-      <div class="form-group"><label class="form-label">أدخل كود الشاشة</label><input class="form-input" id="inv" placeholder="كود الشاشة..."></div>
+      <div class="form-group"><label class="form-label">اسم الزبون أو رقم هاتفه أو كود الشاشة</label><input class="form-input" id="inv" placeholder="مثال: أحمد محمد  ·  07701234567" onkeydown="if(event.key==='Enter')checkWarranty()"></div>
       <button class="form-btn" onclick="checkWarranty()">🔍 بحث</button>
+      <button class="form-btn gray" style="margin-top:8px" onclick="checkWarranty(true)">📋 كل ضماناتي</button>
+      <button class="form-btn gray" style="margin-top:8px" onclick="openQrScan('check')">📷 امسح الـQR من الملصق</button>
       <div id="out"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 📷 قارئ الـQR — داخل الموقع، مو كاميرا الجهاز.
+     كاميرا الجهاز تفتح الرابط بسفاري/كروم وتطلع الزبون برّه، وبعدين
+     يرجع يدوّر على الصفحة من جديد. هنا يمسح ويكمّل بنفس المكان. -->
+<div id="qrSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head"><span class="bsheet-title">📷 امسح ملصق الضمان</span><button class="bsheet-close" onclick="closeSheet('qrSheet')">✕</button></div>
+    <div class="bsheet-body">
+      <div style="position:relative;background:#000;border-radius:14px;overflow:hidden;width:100%;aspect-ratio:1/1;max-height:62vh;margin:0 auto">
+        <video id="qrVid" playsinline muted autoplay style="width:100%;height:100%;object-fit:cover"></video>
+        <div style="position:absolute;inset:15%;border:3px solid rgba(255,255,255,.9);border-radius:18px;pointer-events:none"></div>
+      </div>
+      <div id="qrMsg" style="margin-top:14px;text-align:center;font-size:17px;font-weight:700;color:#64748B;line-height:1.7">صوّب الكاميرا على الـQR الي بالملصق</div>
     </div>
   </div>
 </div>
@@ -3328,6 +3348,10 @@ function openSheet(id) {
 function closeSheet(id) {
   const el = document.getElementById(id);
   if (!el) return;
+  /* 📷 الكاميرا تنطفّي هنا مو بزر الـ✕ — لأن الشاشة تنسكّر بعد
+     بسحبة الرجوع وبزر الأندرويد، ولو علّقناها بالزر بس تضل
+     الكاميرا شغّالة والضوء مضوّي. */
+  if (id === 'qrSheet') { try { qrStop(); } catch(e) {} }
   el.classList.remove('open');
   // Remove from stack
   var idx = _sheetStack.lastIndexOf(id);
@@ -4142,11 +4166,70 @@ async function sendData() {
   } catch (e) { if (e !== "stop") console.error(e); btn.innerText = "تفعيل الضمان"; btn.disabled = false; }
 }
 
-async function checkWarranty() {
-  let v = normalizeNumber(document.getElementById("inv").value).trim().toUpperCase();
+/* 🔍 التحقق من الضمان — بالاسم أو الرقم أو الكود.
+
+   قبل: بالكود بس. والمحل ما يحفظ أكواد، وزبونه يجي يسأل باسمه.
+
+   ترتيب البحث مقصود:
+     ١) ضمانات المحل نفسه (بالاسم/الرقم/الكود) — هذا ٩٩٪ من الحالات
+     ٢) ما لگى شي وكتب كود؟ ندوّر بالكود بكل الضمانات — لأن شاشة
+        ممكن تجيه من محل ثاني ويريد يتأكد منها */
+
+/* نحوّل الأرقام العربية بس — ما نشيل الفراغات، لأن الاسم بيه فراغ */
+function _wsDigits(s){
+  return String(s || '')
+    .replace(/[٠-٩]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); })
+    .replace(/[۰-۹]/g, function(d){ return '۰۱۲۳۴۵۶۷۸۹'.indexOf(d); });
+}
+
+function _wsCard(x){
+  var alive = !!x.active;
+  var days  = Number(x.daysLeft);
+  return '<div style="background:' + (alive ? '#F0FDF4' : '#FEF2F2') + ';border:1px solid ' +
+      (alive ? '#BBF7D0' : '#FECACA') + ';border-radius:12px;padding:12px 14px;margin-bottom:10px">' +
+    '<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:6px">' +
+      '<div style="font-weight:900;font-size:17px;flex:1">' + (alive ? '✅ ' : '⛔ ') +
+        _wEsc(x.itemName || (x.kind === 'battery' ? 'بطارية' : 'شاشة')) + '</div>' +
+      '<span dir="ltr" style="font-family:monospace;font-weight:900;font-size:15px;' +
+        'background:#fff;border-radius:6px;padding:2px 7px">' + _wEsc(x.code || '') + '</span>' +
+    '</div>' +
+    '<div style="font-size:16px;color:#334155">' + _wEsc(x.name || '-') +
+      (x.phone ? ' · <span dir="ltr">' + _wEsc(x.phone) + '</span>' : '') + '</div>' +
+    '<div style="font-size:15px;color:#64748B;margin-top:4px" dir="rtl">' +
+      'من ' + _wEsc(x.start || '-') + ' إلى ' + _wEsc(x.end || '-') + '</div>' +
+    '<div style="font-size:16px;font-weight:800;margin-top:5px;color:' +
+      (alive ? '#15803D' : '#B91C1C') + '">' +
+      (alive ? ('⏳ باقي ' + days + ' يوم') : '⛔ منتهي') + '</div>' +
+  '</div>';
+}
+
+async function checkWarranty(showAll) {
   let out = document.getElementById("out");
-  if (!v) { alert("أدخل كود الشاشة"); return; }
+  let v = showAll ? '' : _wsDigits(document.getElementById("inv").value).trim();
   out.innerHTML = '<div class="result pending">جاري البحث...</div>';
+  try {
+    var s = await sbRpc('app_warranty_search', { p_token: getCustomerToken(), p_q: v });
+    if (!s || !s.ok) { out.innerHTML = '<div class="result error">❌ ' + ((s && s.error) || 'تعذّر البحث') + '</div>'; return; }
+
+    var items = s.items || [];
+    if (items.length) {
+      var live = items.filter(function(x){ return !!x.active; }).length;
+      out.innerHTML =
+        '<div class="result success" style="margin-bottom:10px">' +
+          (v ? ('🔍 ' + items.length + ' نتيجة') : ('📋 عندك ' + s.all + ' ضمان')) +
+          ' — <b>' + (v ? live : s.live) + '</b> ساري' +
+        '</div>' + items.map(_wsCard).join('');
+      return;
+    }
+
+    /* ما لگينا بضماناتنا — يمكن كود شاشة جايه من محل ثاني */
+    if (v) { await _wsByCode(v, out); return; }
+    out.innerHTML = '<div class="result pending">ماكو ضمانات مسجّلة بحسابك بعد</div>';
+  } catch (e) { console.error(e); out.innerHTML = '<div class="result error">❌ حدث خطأ: ' + e.message + '</div>'; }
+}
+
+async function _wsByCode(v, out) {
+  v = v.replace(/\s/g, '').toUpperCase();
   try {
     /* 🗄️ من السيرفر الجديد — يرجّع ضمان واحد بس، اللي كوده مطابق.
        (قبل: كان ينزّل كل الضمانات بأسماء وأرقام أصحابها) */
@@ -4158,7 +4241,7 @@ async function checkWarranty() {
       const kindText = r.kind === 'battery' ? 'بطارية' : 'شاشة';
       out.innerHTML = `<div class="result ${alive ? 'success' : 'error'}">${alive ? '✔️ الضمان موجود ' : '❌ الضمان منتهي'}<br>الاسم: ${r.name||"-"}<br>الهاتف: ${r.phone||"-"}<br>اسم الشاشة: ${r.itemName||"-"}<br>النوع: ${kindText}<br>تاريخ البدء: ${r.start||"-"}<br>تاريخ الانتهاء: ${r.end||"-"}<br>${alive ? `⏳ الأيام المتبقية: <b>${remaining}</b> يوم` : '⛔ انتهى الضمان ولا يمكن تجديده'}</div>`;
     } else {
-      out.innerHTML = '<div class="result error">❌ لم يتم العثور على كود الشاشة</div>';
+      out.innerHTML = '<div class="result error">❌ ما لگينا ولا ضمان بهذا الاسم أو الرقم أو الكود</div>';
     }
   } catch (e) { console.error(e); out.innerHTML = '<div class="result error">❌ حدث خطأ: ' + e.message + '</div>'; }
 }
@@ -8468,6 +8551,130 @@ function openAboutSheet() {
   `;
   openSheet('accountSheet');
 }
+/* ══════════════ 📷 قارئ الـQR ══════════════
+
+   يشتغل داخل الصفحة: الكاميرا تنعرض بشاشة، وكل ~ثُمن ثانية ناخذ
+   لقطة ونحاول نقراها.
+
+   ⚠️ لازم HTTPS — بدونه المتصفح ما ينطي كاميرا أصلاً. موقعنا
+      HTTPS، بس لو جرّبته من ملف محلي ما راح يشتغل.
+
+   ⚠️ التطبيق المثبّت (أندرويد) يحتاج إذن الكاميرا بالـmanifest
+      وإصدار جديد بـPlay. بالموقع يشتغل هسه. */
+var _qr = { stream: null, timer: null, purpose: 'activate', busy: false, cv: null };
+
+function qrStop(){
+  if (_qr.timer){ clearTimeout(_qr.timer); _qr.timer = null; }
+  try{
+    if (_qr.stream) _qr.stream.getTracks().forEach(function(t){ t.stop(); });
+  }catch(e){}
+  _qr.stream = null;
+  var v = document.getElementById('qrVid');
+  if (v){ try{ v.pause(); v.srcObject = null; }catch(e){} }
+}
+
+/* مكتبة القراءة تنحمّل أول ما تنطلب — مو بكل فتحة للموقع (١٣٠ كيلو).
+   من موقعنا أول، ولو ما وصلت من CDN. */
+function qrLib(){
+  if (window.jsQR) return Promise.resolve(true);
+  var urls = ['jsqr.js',
+              'https://www.amwajmob.com/jsqr.js',
+              'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'];
+  return new Promise(function(res, rej){
+    (function next(i){
+      if (i >= urls.length){ rej(new Error('ما گدرنا نحمّل قارئ الـQR')); return; }
+      var s = document.createElement('script');
+      s.src = urls[i];
+      s.onload  = function(){ if (window.jsQR) res(true); else next(i + 1); };
+      s.onerror = function(){ next(i + 1); };
+      document.head.appendChild(s);
+    })(0);
+  });
+}
+
+async function openQrScan(purpose){
+  _qr.purpose = purpose || 'activate';
+  _qr.busy = false;
+  openSheet('qrSheet');
+  var msg = document.getElementById('qrMsg');
+  if (msg) msg.textContent = '⏳ جاري تشغيل الكاميرا...';
+  try{
+    await qrLib();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error('هذا المتصفح ما يدعم الكاميرا');
+    }
+    /* environment = الكاميرا الخلفية */
+    var st = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }, audio: false });
+    _qr.stream = st;
+    var v = document.getElementById('qrVid');
+    v.srcObject = st;
+    v.setAttribute('playsinline', '');   // بدونها الآيفون يفتحها ملء الشاشة
+    await v.play();
+    if (msg) msg.textContent = 'صوّب الكاميرا على الـQR الي بالملصق';
+    qrTick();
+  }catch(e){
+    var why = (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError'))
+      ? 'ما انطيت إذن الكاميرا — اسمحله من إعدادات المتصفح وجرّب مرة ثانية'
+      : ((e && e.message) || 'تعذّر تشغيل الكاميرا');
+    if (msg) msg.innerHTML = '❌ ' + _wEsc(why) +
+      '<br><span style="font-weight:600;font-size:15px">تكدر تسكّر وتكتب الكود بيدك</span>';
+  }
+}
+
+function qrTick(){
+  var sheet = document.getElementById('qrSheet');
+  /* الشاشة انسكّرت؟ نوقف — حماية زيادة فوق hook الـcloseSheet */
+  if (!sheet || !sheet.classList.contains('open') || !_qr.stream){ qrStop(); return; }
+
+  var v = document.getElementById('qrVid');
+  if (v && v.readyState >= 2 && v.videoWidth && !_qr.busy){
+    /* نصغّر اللقطة لـ٤٨٠ عرض: القراءة تصير أسرع بمرات والدقة تكفي */
+    var w = 480, h = Math.round(v.videoHeight / v.videoWidth * 480) || 480;
+    var cv = _qr.cv || (_qr.cv = document.createElement('canvas'));
+    if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+    try{
+      var g = cv.getContext('2d', { willReadFrequently: true });
+      g.drawImage(v, 0, 0, w, h);
+      var r = window.jsQR(g.getImageData(0, 0, w, h).data, w, h,
+                          { inversionAttempts: 'dontInvert' });
+      if (r && r.data){ qrGot(r.data); return; }
+    }catch(e){}
+  }
+  _qr.timer = setTimeout(qrTick, 120);
+}
+
+/* الـQR ممكن يجي رابط كامل (ملصقاتنا) أو الكود لحاله */
+function qrCodeFrom(text){
+  var t = String(text || '').trim();
+  var m = t.match(/[?&]w=([0-9A-Za-z]{4,20})/);
+  if (m) return m[1].toUpperCase();
+  if (/^[0-9A-Za-z]{6,12}$/.test(t)) return t.toUpperCase();
+  return '';
+}
+
+function qrGot(text){
+  var code = qrCodeFrom(text);
+  var msg = document.getElementById('qrMsg');
+  if (!code){
+    /* شي ثاني انقرا — نكمّل مسح بدل ما نوقف */
+    if (msg) msg.textContent = '⚠️ هذا مو ملصق ضمان أمواج — جرّب ملصق ثاني';
+    _qr.timer = setTimeout(qrTick, 800);
+    return;
+  }
+  _qr.busy = true;
+  try{ if (navigator.vibrate) navigator.vibrate(60); }catch(e){}
+  closeSheet('qrSheet');          // وهاي تطفّي الكاميرا
+
+  if (_qr.purpose === 'check'){
+    var el = document.getElementById('inv');
+    if (el) el.value = code;
+    checkWarranty();
+  } else {
+    openWarrantyFromLabel(code);
+  }
+}
+
 /* ══════════════ 🏷️ ملصق الضمان (QR) ══════════════
 
    كل شاشة تنباع «مع ضمان» يطلع لها ملصق ٣٨×٢٥ ملم من لوحة

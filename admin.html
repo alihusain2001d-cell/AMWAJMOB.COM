@@ -1484,6 +1484,102 @@ function labelShow(w, url, msgEl){
   return false;
 }
 
+/* نكتب صفحة الملصقات بالنافذة المحجوزة، ولو انحجبت ننطي رابط */
+function wlShow(w, L, shop, title, m){
+  var html = wlDoc(L, shop, title);
+  if (w && !w.closed){
+    try{ w.document.open(); w.document.write(html); w.document.close(); return true; }catch(e){}
+  }
+  var url = URL.createObjectURL(new Blob([html], {type:'text/html;charset=utf-8'}));
+  if (m){
+    m.className = 'msg ok';
+    m.innerHTML = '✅ ' + L.length + ' ملصق جاهز — <a href="' + url + '" target="_blank" ' +
+      'rel="noopener" style="font-weight:900;text-decoration:underline">اضغط هنا لفتحهن</a>';
+  }
+  return false;
+}
+
+/* ══════ 🏷️ ملصقات سريعة — البيع المباشر بالمحل ══════
+
+   أكثر البيع يصير وجهاً لوجه بلا طلب بالموقع. هنا تختار الشاشة
+   من الكاتلوك، تكتب العدد، وتطلع الملصقات — نفس الأكواد ونفس
+   الـQR ونفس التفعيل. */
+var _wlPick = null, _wlHits = [];
+
+function wlQuick(){
+  _wlPick = null; _wlHits = [];
+  modal('<h3>🏷️ ملصقات سريعة</h3>'+
+    '<div class="hint" style="margin-bottom:10px">للبيع المباشر بالمحل — بلا طلب.</div>'+
+    '<label>الشاشة</label>'+
+    '<input class="modal-input" id="wlq" placeholder="اكتب اسم الشاشة ثم اختارها" oninput="wlFind()">'+
+    '<div id="wlHits" style="margin-top:6px"></div>'+
+    '<div class="msg" id="wlChosen" style="display:none"></div>'+
+    '<label>العدد</label>'+
+    '<input class="modal-input" id="wlQty" type="number" min="1" max="50" value="1">'+
+    '<label>اسم المحل / الزبون (اختياري)</label>'+
+    '<input class="modal-input" id="wlShop" placeholder="ينطبع على الملصق">'+
+    '<div class="msg" id="wlMsg"></div>'+
+    '<div style="display:flex;gap:8px;margin-top:12px">'+
+      '<button class="btn-solid" onclick="wlQuickGo()">🏷️ ولّد واطبع</button>'+
+      '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>');
+}
+
+async function wlFind(){
+  var q = ($('wlq').value || '').trim(), box = $('wlHits');
+  _wlPick = null; $('wlChosen').style.display = 'none';
+  if (q.length < 2){ box.innerHTML = ''; _wlHits = []; return; }
+  box.innerHTML = '<div class="hint">⏳ جاري البحث...</div>';
+  try{
+    var r = await rpc('web_catalog', {p_kind:'screen', p_q:q, p_limit:8});
+    _wlHits = r['البيانات'] || [];
+    box.innerHTML = _wlHits.length ? _wlHits.map(function(x, i){
+      return '<button type="button" class="action-btn btn-view" style="display:block;width:100%;'+
+        'text-align:right;margin:3px 0" onclick="wlPick('+i+')">'+
+        esc(x['name'])+' '+esc(x['type']||'')+
+        ' <span class="hint" dir="ltr">'+esc(x['code'])+'</span></button>';
+    }).join('') : '<div class="hint">ماكو نتائج</div>';
+  }catch(e){ box.innerHTML = '<div class="msg err">'+esc(e.message)+'</div>'; }
+}
+
+function wlPick(i){
+  var x = _wlHits[i]; if (!x) return;
+  _wlPick = x;
+  $('wlq').value = '';
+  $('wlHits').innerHTML = '';
+  var c = $('wlChosen');
+  c.style.display = 'block'; c.className = 'msg ok';
+  c.textContent = '✅ ' + (x['name']||'') + ' ' + (x['type']||'');
+}
+
+async function wlQuickGo(){
+  var m = $('wlMsg');
+  var typed = ($('wlq').value || '').trim();
+  var qty   = Math.max(1, Math.min(50, Number($('wlQty').value) || 1));
+  if (!_wlPick && !typed){
+    m.className = 'msg err'; m.textContent = 'اختار الشاشة من القائمة أو اكتب اسمها'; return;
+  }
+  var w = labelWindow();              // نحجز النافذة بلحظة الضغطة
+  m.className = 'msg'; m.textContent = '⏳ جاري توليد ' + qty + ' ملصق...';
+  try{
+    if (typeof qrcode === 'undefined') throw new Error('مكتبة الـQR ما انحمّلت — حدّث الصفحة');
+    var r = await rpc('web_warranty_labels_new', {
+      p_code: _wlPick ? _wlPick['code'] : null,
+      p_name: _wlPick ? null : typed,
+      p_qty:  qty,
+      p_shop: ($('wlShop').value || '').trim() || null });
+    var L = r['الملصقات'] || [];
+    if (!L.length) throw new Error('ما انولّد ولا ملصق');
+
+    wlShow(w, L, r['المحل'] || '', 'بيع مباشر', m);
+    try{ await rpc('web_warranty_labels_mark', {p_codes: L.map(function(x){ return x['الكود']; })}); }catch(e){}
+    m.className = 'msg ok'; m.textContent = '✅ ' + L.length + ' ملصق جاهز';
+    toast('🏷️ ' + L.length + ' ملصق');
+  }catch(e){
+    if (w && !w.closed){ try{ w.close(); }catch(e2){} }
+    m.className = 'msg err'; m.textContent = e.message;
+  }
+}
+
 /* ══════════════════ 🛡️ ملصقات الضمان ══════════════════
 
    كل قطعة اتباعت «مع ضمان» تاخذ ملصق ٣٨×٢٥ ملم فيه QR + اسم
@@ -1498,117 +1594,190 @@ function labelShow(w, url, msgEl){
       وخلّي المسار القديم يشتغل. */
 var WL_URL = 'https://www.amwajmob.com/activate.html?w=';
 
-/* 🔳 QR كـSVG — مو صورة.
-   السطر الواحد بالـSVG ينطبع بحدود حادة بأي دقة طابعة، والصورة
-   لا: الطابعة الحرارية تكبّرها وتطلع مهبّبة وما تنقرا. */
-function wlQr(text, modules){
+/* 🔳 مصفوفة الـQR — مو صورة ولا SVG.
+
+   نطلّع الشبكة نفسها (مربّع أسود/أبيض) وننقلها لنافذة الطباعة،
+   وهناك ترتسم بالمقاس المطلوب. هيج المقاس يتغيّر بلا ما نحتاج
+   مكتبة الـQR بالنافذة الثانية.
+
+   الهامش الأبيض ٢ وحدة داخل المصفوفة — «منطقة الهدوء» اللي
+   يحتاجها القارئ حتى يلگي حدود الكود. */
+function wlQrRows(text){
   var q = qrcode(0, 'M');          // M = يتحمّل خدش ١٥٪ من الملصق
   q.addData(text);
   q.make();
-  var n = q.getModuleCount();
-  var m = 1;                       // هامش أبيض جوّه الـSVG (منطقة هدوء)
-  var d = '';
-  for (var r = 0; r < n; r++){
-    for (var c = 0; c < n; c++){
-      if (q.isDark(r, c)) d += 'M' + (c + m) + ' ' + (r + m) + 'h1v1h-1z';
+  var n = q.getModuleCount(), m = 2, t = n + m * 2, rows = [], r, c, s;
+  for (r = 0; r < t; r++){
+    s = '';
+    for (c = 0; c < t; c++){
+      s += (r >= m && r < m + n && c >= m && c < m + n && q.isDark(r - m, c - m)) ? '1' : '0';
     }
+    rows.push(s);
   }
-  var t = n + m * 2;
-  if (modules) modules.n = t;
-  return '<svg viewBox="0 0 ' + t + ' ' + t + '" shape-rendering="crispEdges" ' +
-         'xmlns="http://www.w3.org/2000/svg">' +
-         '<rect width="' + t + '" height="' + t + '" fill="#fff"/>' +
-         '<path d="' + d + '" fill="#000"/></svg>';
+  return rows;
 }
 
-/* صفحة الطباعة كاملة — كل ملصق صفحة لحالها بمقاس الرول بالضبط */
+/* صفحة الملصقات.
+
+   ⚠️ كل ملصق **صورة** مو HTML — وهذا مقصود.
+
+   علي يطبع من الموبايل على طابعة بلوتوث: يفتح الصفحة بالمتصفح
+   ويرسلها لتطبيق الطابعة. المتصفح بالموبايل ما يعرف مقاس ٣٨×٢٥،
+   فيطبع صفحة كاملة والتطبيق يصغّرها — فيطلع الملصق ذرّة بزاوية
+   الورقة (هذا اللي صار أول مرة).
+
+   الصورة تحل الموضوع: مقاسها بالبكسل = مقاس اللصقة بالضبط، فتطبيق
+   الطابعة يطبعها ١:١ بلا تصغير. ويشتغل بعد بالطباعة من الحاسبة. */
 function wlDoc(labels, shop, orderCode){
-  var body = labels.map(function(L){
+  var data = labels.map(function(L){
     var code = String(L['الكود'] || '');
-    return '<div class="lbl">' +
-             '<div class="top">' +
-               '<div class="txt">' +
-                 '<div class="nm">' + esc(L['المادة'] || '') + '</div>' +
-                 '<div class="sh">' + esc(shop || '') + '</div>' +
-               '</div>' +
-               '<div class="qr">' + wlQr(WL_URL + code) + '</div>' +
-             '</div>' +
-             '<div class="bot">' +
-               '<span class="br">أمواج · ضمان</span>' +
-               '<span class="cd">' + esc(code) + '</span>' +
-             '</div>' +
-           '</div>';
-  }).join('');
+    return { c: code, n: String(L['المادة'] || ''), m: wlQrRows(WL_URL + code) };
+  });
+
+  /* نمنع أي «</script>» جوّه الأسماء من كسر الصفحة */
+  var json = JSON.stringify({ items: data, shop: String(shop || ''), ord: String(orderCode || '') })
+               .replace(/</g, '\\u003c');
 
   return '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
     '<title>ملصقات الضمان ' + esc(orderCode || '') + '</title>' +
     '<style>' +
       '*{margin:0;padding:0;box-sizing:border-box}' +
-      'body{font-family:Tajawal,"Segoe UI",Tahoma,Arial,sans-serif;background:#E2E8F0}' +
-
-      /* شريط الضبط — يظهر بالشاشة بس، ما ينطبع */
-      '#bar{position:sticky;top:0;z-index:9;background:#0F172A;color:#fff;' +
-        'padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}' +
-      '#bar input{width:62px;padding:6px;border-radius:7px;border:0;text-align:center;' +
+      'body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:#E2E8F0;color:#0F172A}' +
+      '#bar{position:sticky;top:0;z-index:9;background:#0F172A;color:#fff;padding:10px 14px;' +
+        'display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}' +
+      '#bar input{width:60px;padding:6px;border-radius:7px;border:0;text-align:center;' +
         'font-weight:800;font-size:15px;font-family:inherit}' +
-      '#bar button{padding:8px 18px;border:0;border-radius:8px;background:#0284C7;color:#fff;' +
+      '#bar button{padding:8px 16px;border:0;border-radius:8px;background:#0284C7;color:#fff;' +
         'font-weight:800;font-size:15px;font-family:inherit;cursor:pointer}' +
-      '#bar .tip{opacity:.75;font-size:12.5px;flex-basis:100%}' +
-      '#wrap{padding:14px;display:flex;flex-direction:column;gap:10px;align-items:center}' +
-
-      /* الملصق — المقاس ينتحدّد بـJS من خانات الشريط */
-      '.lbl{background:#fff;overflow:hidden;display:flex;flex-direction:column;' +
-        'padding:1mm;color:#000}' +
-      '.lbl .top{flex:1;min-height:0;display:flex;gap:1.2mm;align-items:flex-start}' +
-      '.lbl .txt{flex:1;min-width:0;overflow:hidden}' +
-      '.lbl .nm{font-size:2.5mm;line-height:2.9mm;font-weight:800;' +
-        'display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}' +
-      /* سطرين للمحل: أسماء المحلات هنا طويلة (محل ... للموبايلات)
-         وعمود النص ١٧ ملم بس — سطر واحد يقص نص الاسم */
-      '.lbl .sh{font-size:2.1mm;line-height:2.5mm;margin-top:.8mm;' +
-        'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}' +
-      '.lbl .qr{flex:none;line-height:0}' +
-      '.lbl .bot{flex:none;display:flex;justify-content:space-between;align-items:baseline;' +
-        'border-top:.2mm solid #000;margin-top:.6mm;padding-top:.6mm}' +
-      '.lbl .br{font-size:1.9mm}' +
-      '.lbl .cd{font-size:3.1mm;font-weight:900;letter-spacing:.4mm;direction:ltr;' +
-        'font-family:Consolas,"Courier New",monospace}' +
-
-      /* كل ملصق صفحة — بلا صفحة فاضية بالآخر */
-      '.lbl+.lbl{page-break-before:always;break-before:page}' +
-      /* بالطباعة #wrap يصير block مو flex: كروم ما يحترم فواصل
-         الصفحات جوّه حاوية flex، فتطلع الملصقات مكدّسة بصفحة وحدة */
-      '@media print{body{background:#fff}#bar{display:none}' +
-        '#wrap{display:block;padding:0;gap:0}.lbl{box-shadow:none}}' +
-      '@media screen{.lbl{box-shadow:0 2px 10px rgba(0,0,0,.18);border-radius:2px}}' +
+      '#tip{background:#FEF3C7;color:#92400E;padding:10px 14px;font-size:13.5px;line-height:1.7;font-weight:700}' +
+      '#wrap{padding:14px;display:flex;flex-direction:column;gap:14px;align-items:center}' +
+      '.one{background:#fff;border-radius:6px;padding:8px;box-shadow:0 2px 10px rgba(0,0,0,.15);' +
+        'display:flex;flex-direction:column;align-items:center;gap:6px}' +
+      '.one img{display:block;border:1px solid #CBD5E1}' +
+      '.cap{font-size:13px;font-weight:800;display:flex;gap:10px;align-items:center}' +
+      '.cap a{color:#0284C7}' +
+      /* بالطباعة: الصورة بس، بمقاس اللصقة، وكل وحدة صفحة */
+      '@media print{body{background:#fff}#bar,#tip,.cap{display:none}' +
+        '#wrap{display:block;padding:0;gap:0}' +
+        '.one{box-shadow:none;border-radius:0;padding:0;display:block}' +
+        '.one img{border:0}' +
+        '.one+.one{page-break-before:always;break-before:page}}' +
     '</style><style id="pg"></style></head><body>' +
 
     '<div id="bar">' +
-      '<span>📐 المقاس (ملم)</span>' +
+      '<span>📐 مقاس اللصقة (ملم)</span>' +
       '<span>عرض <input id="w" type="number" min="15" max="120" step="1"></span>' +
       '<span>ارتفاع <input id="h" type="number" min="10" max="120" step="1"></span>' +
-      '<span>حجم QR <input id="q" type="number" min="8" max="60" step="0.5"></span>' +
+      '<span>QR <input id="q" type="number" min="8" max="60" step="0.5"></span>' +
+      '<span>دقة <input id="d" type="number" min="100" max="600" step="1"></span>' +
       '<button id="go">🖨️ طباعة</button>' +
-      '<span class="tip">بنافذة الطباعة: اختار طابعة الملصقات، والهوامش ← ' +
-        '«بلا / None»، والمقياس ← ١٠٠٪. ' + labels.length + ' ملصق · ' + esc(orderCode || '') + '</span>' +
-    '</div><div id="wrap">' + body + '</div>' +
+    '</div>' +
+    '<div id="tip">📱 <b>من الموبايل:</b> اضغط ضغطة طويلة على الصورة ← «حفظ الصورة»، ' +
+      'وبعدها افتح تطبيق الطابعة واختار الصورة من المعرض. ' +
+      'أو اضغط «⬇️ حفظ» تحت كل ملصق.<br>' +
+      '🖥️ <b>من الحاسبة:</b> زر الطباعة — واختار الهوامش «بلا / None» والمقياس ١٠٠٪.<br>' +
+      '🔢 ' + labels.length + ' ملصق · ' + esc(orderCode || '') + '</div>' +
+    '<div id="wrap"></div>' +
 
     '<script>(function(){' +
-      'var W=document.getElementById("w"),H=document.getElementById("h"),Q=document.getElementById("q");' +
-      /* نتذكّر آخر مقاس — الرول ما يتغيّر كل يوم، بس لو تغيّر ما نريده
-         يرجع للافتراضي كل مرة */
-      'function get(k,d){try{var v=parseFloat(localStorage.getItem(k));return isFinite(v)&&v>0?v:d;}catch(e){return d;}}' +
-      'W.value=get("amwaj_lbl_w",38);H.value=get("amwaj_lbl_h",25);Q.value=get("amwaj_lbl_q",18);' +
-      'function apply(){' +
-        'var w=parseFloat(W.value)||38,h=parseFloat(H.value)||25,q=parseFloat(Q.value)||18;' +
+      'var D=' + json + ';' +
+      'var W=document.getElementById("w"),H=document.getElementById("h"),' +
+          'Q=document.getElementById("q"),R=document.getElementById("d"),' +
+          'wrap=document.getElementById("wrap");' +
+
+      'function get(k,v){try{var x=parseFloat(localStorage.getItem(k));return isFinite(x)&&x>0?x:v;}catch(e){return v;}}' +
+      'W.value=get("amwaj_lbl_w",38);H.value=get("amwaj_lbl_h",25);' +
+      'Q.value=get("amwaj_lbl_q",18);R.value=get("amwaj_lbl_d",203);' +
+
+      /* نص عربي مع لاتيني بنفس السطر — الكانفس يرتّبه صح بـdirection */
+      'function wrapTxt(g,t,maxW,maxLines){' +
+        'var ws=String(t||"").split(/\\s+/).filter(Boolean),out=[],cur="";' +
+        'for(var i=0;i<ws.length;i++){var j=cur?cur+" "+ws[i]:ws[i];' +
+          'if(!cur||g.measureText(j).width<=maxW){cur=j;}' +
+          'else{out.push(cur);cur=ws[i];if(out.length>=maxLines)break;}}' +
+        'if(out.length<maxLines&&cur)out.push(cur);' +
+        'return out;}' +
+
+      /* ↔️ اتجاه كل سطر حسب محتواه.
+         بدونها اسم مثل «TECNO CAMON 40 PRO 4G ORG» ينكتب داخل فقرة
+         عربية، فخوارزمية الاتجاهات تشيل الرقم من محلّه ويطلع
+         «PRO 4G ORG 40» — اسم غلط على ملصق ملصوق على شاشة. */
+      'var AR=/[؀-ۿ]/;' +
+      'function put(g,l,rx,y){g.direction=AR.test(l)?"rtl":"ltr";g.fillText(l,rx,y);}' +
+
+      /* الكود لازم يدخل بعرض اللصقة — نصغّر الخط لين يدخل */
+      'function fit(g,t,maxW,start,mk){var s=start;' +
+        'for(var i=0;i<24;i++){g.font=mk(s);if(g.measureText(t).width<=maxW)break;s-=1;if(s<6)break;}' +
+        'return s;}' +
+
+      'function draw(d,w,h,qmm,dpi){' +
+        'var px=function(mm){return Math.round(mm/25.4*dpi);};' +
+        'var cw=px(w),ch=px(h);' +
+        'var cv=document.createElement("canvas");cv.width=cw;cv.height=ch;' +
+        'var g=cv.getContext("2d");' +
+        'g.fillStyle="#fff";g.fillRect(0,0,cw,ch);g.fillStyle="#000";' +
+        'var pad=px(1),iw=cw-pad*2,ih=ch-pad*2;' +
+        'var strip=px(4.6),topH=ih-strip,land=(w>=h);' +
+
+        /* ── الـQR: وحدة بمقاس بكسلات صحيح، حتى تطلع حوافها حادة ── */
+        'var t=d.m.length,want=px(qmm);' +
+        'var maxQ=land?Math.min(topH,Math.floor(iw*0.62)):Math.min(iw,Math.floor(topH*0.74));' +
+        'var cell=Math.max(1,Math.round(Math.min(want,maxQ)/t));' +
+        'if(cell*t>maxQ)cell=Math.max(1,Math.floor(maxQ/t));' +
+        'var qs=cell*t,gap=px(1.2),qx,qy,tx,tw,ty,th;' +
+        'if(land){qx=pad;qy=pad+Math.floor((topH-qs)/2);' +
+          'tx=pad+qs+gap;tw=iw-qs-gap;ty=pad;th=topH;}' +
+        'else{qx=pad+Math.floor((iw-qs)/2);qy=pad;' +
+          'tx=pad;tw=iw;ty=pad+qs+gap;th=topH-qs-gap;}' +
+        'for(var r=0;r<t;r++){var row=d.m[r];' +
+          'for(var c=0;c<t;c++){if(row.charCodeAt(c)===49)g.fillRect(qx+c*cell,qy+r*cell,cell,cell);}}' +
+
+        /* ── النص: من اليمين، والكانفس يسوي ترتيب العربي لحاله ── */
+        'g.textBaseline="top";g.textAlign="right";' +
+        'var rx=tx+tw,y=ty;' +
+        'var f1=px(2.5),h1=px(2.95);' +
+        'g.font="700 "+f1+"px \\"Segoe UI\\",Tahoma,Arial,sans-serif";' +
+        'wrapTxt(g,d.n,tw,3).forEach(function(l){if(y+h1<=ty+th){put(g,l,rx,y);y+=h1;}});' +
+        'y+=px(0.8);' +
+        'var f2=px(2.1),h2=px(2.5);' +
+        'g.font="600 "+f2+"px \\"Segoe UI\\",Tahoma,Arial,sans-serif";' +
+        'wrapTxt(g,D.shop,tw,2).forEach(function(l){if(y+h2<=ty+th){put(g,l,rx,y);y+=h2;}});' +
+
+        /* ── شريط الكود تحت، بعرض اللصقة كلها ── */
+        'var by=pad+ih-strip;' +
+        'g.fillRect(pad,by,iw,Math.max(1,px(0.2)));' +
+        'g.direction="ltr";g.textAlign="left";' +
+        'var mk=function(s){return "900 "+s+"px Consolas,\\"Courier New\\",monospace";};' +
+        'try{g.letterSpacing=px(0.45)+"px";}catch(e){}' +
+        'var cs=fit(g,d.c,Math.floor(iw*0.66),px(3.2),mk);g.font=mk(cs);' +
+        'g.fillText(d.c,pad,by+px(0.9));' +
+        'try{g.letterSpacing="0px";}catch(e){}' +
+        'g.direction="rtl";g.textAlign="right";' +
+        'g.font="600 "+px(1.9)+"px \\"Segoe UI\\",Tahoma,Arial,sans-serif";' +
+        'g.fillText("أمواج · ضمان",pad+iw,by+px(1.5));' +
+        'return cv;}' +
+
+      'function redraw(){' +
+        'var w=parseFloat(W.value)||38,h=parseFloat(H.value)||25,' +
+            'q=parseFloat(Q.value)||18,dpi=parseFloat(R.value)||203;' +
         'try{localStorage.setItem("amwaj_lbl_w",w);localStorage.setItem("amwaj_lbl_h",h);' +
-            'localStorage.setItem("amwaj_lbl_q",q);}catch(e){}' +
-        'document.getElementById("pg").textContent=' +
-          '"@page{size:"+w+"mm "+h+"mm;margin:0}"+' +
-          '".lbl{width:"+w+"mm;height:"+h+"mm}"+' +
-          '".lbl .qr svg{width:"+q+"mm;height:"+q+"mm}";' +
-      '}' +
-      'W.oninput=H.oninput=Q.oninput=apply;apply();' +
+            'localStorage.setItem("amwaj_lbl_q",q);localStorage.setItem("amwaj_lbl_d",dpi);}catch(e){}' +
+        'document.getElementById("pg").textContent="@page{size:"+w+"mm "+h+"mm;margin:0}";' +
+        'wrap.innerHTML="";' +
+        'D.items.forEach(function(d){' +
+          'var cv=draw(d,w,h,q,dpi),url=cv.toDataURL("image/png");' +
+          'var f=document.createElement("div");f.className="one";' +
+          'var im=document.createElement("img");im.src=url;' +
+          'im.style.width=w+"mm";im.style.height=h+"mm";' +
+          'var cap=document.createElement("div");cap.className="cap";' +
+          'var sp=document.createElement("span");sp.textContent=d.c;' +
+          'var a=document.createElement("a");a.href=url;a.textContent="⬇️ حفظ";' +
+          'a.setAttribute("download",(D.ord?D.ord+"_":"")+d.c+".png");' +
+          'cap.appendChild(sp);cap.appendChild(a);' +
+          'f.appendChild(im);f.appendChild(cap);wrap.appendChild(f);});}' +
+
+      'W.oninput=H.oninput=Q.oninput=R.oninput=redraw;redraw();' +
       'document.getElementById("go").onclick=function(){window.print();};' +
     '})();<\/script></body></html>';
 }
@@ -1628,23 +1797,11 @@ async function wlPrint(id){
     var L = r['الملصقات'] || [];
     if (!L.length) throw new Error('ماكو شاشة بضمان بهذا الطلب');
 
-    var html = wlDoc(L, r['المحل'] || '', r['الطلب'] || '');
-    var opened = false;
-    if (w && !w.closed){
-      try{ w.document.open(); w.document.write(html); w.document.close(); opened = true; }catch(e){}
-    }
-    if (!opened){
-      /* انحجبت النافذة — ننطيه رابط يضغطه بنفسه، وضغطته تفتحه أكيد */
-      var url = URL.createObjectURL(new Blob([html], {type:'text/html;charset=utf-8'}));
-      if (m){
-        m.className = 'msg ok';
-        m.innerHTML = '✅ ' + L.length + ' ملصق جاهز — <a href="' + url + '" target="_blank" ' +
-          'rel="noopener" style="font-weight:900;text-decoration:underline">اضغط هنا لفتحهن</a>';
-      }
-    }
+    var opened = wlShow(w, L, r['المحل'] || '', r['الطلب'] || '', m);
 
-    /* نعلّمهن «انطبعن» حتى ما ينحذفن لو انقصّت الكمية بتعديل الطلب */
-    try{ await rpc('web_warranty_labels_printed', {p_id: id}); }catch(e){}
+    /* نعلّمهن «انطبعن» حتى ما ينحذفن لو انقصّت الكمية بتعديل الطلب.
+       بالأكواد مو برقم الطلب — لأن ملصقات البيع المباشر ماكو إلها طلب. */
+    try{ await rpc('web_warranty_labels_mark', {p_codes: L.map(function(x){ return x['الكود']; })}); }catch(e){}
 
     if (opened && m){ m.className = 'msg ok'; m.textContent = '✅ ' + L.length + ' ملصق انفتحن بنافذة الطباعة'; }
     toast('🏷️ ' + L.length + ' ملصق');
@@ -1874,7 +2031,8 @@ async function pWar(){
       '<div class="section-head"><div class="section-title">🛡️ الضمانات</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
         '<input class="search-input" id="wq" value="'+esc(q)+'" placeholder="هاتف · فاتورة · كود القطعة">'+
-        '<button class="btn-solid green" onclick="warAdd()">➕ تسجيل ضمان</button></div></div>'+
+        '<button class="btn-solid green" onclick="warAdd()">➕ تسجيل ضمان</button>'+
+        '<button class="btn-solid" onclick="wlQuick()">🏷️ ملصقات سريعة</button></div></div>'+
       '<div class="filters">'+ftab(F.war,'','الكل',n['الكل'],'setWarF')+
         ftab(F.war,'active','✅ سارية',n['سارية'],'setWarF')+
         ftab(F.war,'soon','⏳ تخلص خلال أسبوع',n['قريبة'],'setWarF')+
