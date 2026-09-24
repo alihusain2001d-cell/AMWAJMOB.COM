@@ -1012,6 +1012,9 @@ body {
   padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
   background: var(--card); border-top: 1px solid var(--border-light);
 }
+/* 🍎 الآيفون: الموقع ما يعرف حجم الحافة الي تحت (خط الرجوع للرئيسية والزوايا
+   المدوّرة)، فالخانة كانت تنلزگ بالحافة والزاوية تقص زر الإرسال. نرفعها بيدنا. */
+.chat-bar.ios { padding: 8px 16px calc(10px + max(env(safe-area-inset-bottom, 0px), 22px)); }
 #chatSheet.kb .chat-bar { padding-bottom: 8px; }   /* الكيبورد طالع — ما نحتاج فراغ الحافة */
 .chat-input {
   flex: 1; min-width: 0; height: 44px; max-height: 124px; resize: none;
@@ -7198,7 +7201,9 @@ function openChat(){
   if (el) el.style.zIndex = '650';     // فوق شريط التنقل (600) — حتى خانة الكتابة تبين
   CHAT.open = true;
   var tok = _chatTok();
-  document.getElementById('chatBar').style.display = tok ? '' : 'none';
+  var bar = document.getElementById('chatBar');
+  bar.style.display = tok ? '' : 'none';
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) bar.classList.add('ios');
   if (!tok) { _chatRenderGuest(); return; }
   if (CHAT.tok !== tok) _chatReset(tok);        // حساب ثاني دخل على نفس الجهاز
   if (!CHAT.items.length) {
