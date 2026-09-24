@@ -3103,8 +3103,9 @@ function chRenderThreads(){
     return;
   }
   el.innerHTML = CH.threads.map(function(t){
-    var title = t.shop || t.name || t.phone;
-    var sub = [t.shop && t.name ? t.name : '', t.province, t.gone ? 'حذف حسابه' : ''].filter(Boolean).join(' · ');
+    /* اسم الزبون أول — اسم المحل ممكن يتكرر (مثلاً كم واحد كاتب «امواج») */
+    var title = t.name || t.shop || t.phone;
+    var sub = [t.name && t.shop ? '🏪 ' + t.shop : '', t.province, t.gone ? 'حذف حسابه' : ''].filter(Boolean).join(' · ');
     return '<div class="ch-th' + (t.phone === CH.phone ? ' on' : '') + (t.unread ? ' unread' : '') +
              '" onclick="chOpen(\'' + esc(t.phone) + '\')">' +
       '<div class="ch-av">' + esc(String(title).trim().charAt(0) || '?') + '</div>' +
@@ -3182,8 +3183,8 @@ async function chPoll(scroll){
 }
 
 function chRenderHead(){
-  var c = CH.cust || {}, title = c.shop || c.name || CH.phone;
-  var sub = [c.shop && c.name ? c.name : '', c.province, CH.phone].filter(Boolean).join(' · ');
+  var c = CH.cust || {}, title = c.name || c.shop || CH.phone;
+  var sub = [c.name && c.shop ? '🏪 ' + c.shop : '', c.province, CH.phone].filter(Boolean).join(' · ');
   $('chWho').innerHTML = '<b>' + esc(title) + '</b><span>' + esc(sub) + '</span>';
   var wa = '964' + CH.phone.replace(/^0/, '');
   $('chActs').innerHTML =
