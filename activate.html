@@ -3000,7 +3000,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
       </div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
-        <a href="tel:7696" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
+        <a href="tel:07801372000" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 07801372000</a> &nbsp;
         <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
     </div>
@@ -3040,7 +3040,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <button onclick="enterAsGuest()" style="width:100%;background:none;border:1.5px dashed #CBD5E1;border-radius:10px;padding:11px;color:#64748B;font-size:18px;font-weight:600;font-family:Tajawal,sans-serif;cursor:pointer;">👁️ تصفح كضيف بدون تسجيل</button>
       </div>
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
-        <a href="tel:7696" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 7696</a> &nbsp;
+        <a href="tel:07801372000" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 07801372000</a> &nbsp;
         <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
     </div>
@@ -3241,7 +3241,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <a href="https://wa.me/9647709000160" target="_blank" class="whatsapp-btn" style="font-size:21px;padding:18px;">🟢 واتساب</a>
       <div class="contact-strip" style="margin-top:8px;">
         <a href="tel:07709000160" class="contact-btn contact-phone2">📱 07709000160</a>
-        <a href="tel:7696" class="contact-btn contact-phone1">📱 7696</a>
+        <a href="tel:07801372000" class="contact-btn contact-phone1">📱 07801372000</a>
       </div>
 </div>
       <div style="height:16px;"></div>
@@ -7333,6 +7333,16 @@ function clearAllNotifications() {
 // ════════════════════════════════════════════
 // 📱 يرجع رقم الهاتف المعروف حالياً — يفضّل amwaj_user (بعد تسجيل الدخول)، وإلا amwaj_phone (زبون قيد المراجعة لسا ما سجل دخول)
 // حتى تتربط التوكن برقمه من وقت التسجيل، مو بس بعد الموافقة — عشان إشعار "تمت الموافقة" يوصله فعلياً
+/* 📱 نوع الجهاز للسيرفر — ios / android / web.
+   السيرفر يدز للآيفون مباشرة لأبل، وللأندرويد والمتصفح عن طريق فايربيس،
+   فلازم يعرف الفرق. كان مكتوب 'android' ثابت بثلاث أماكن. */
+function _pushPlatform() {
+  try {
+    var p = window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform();
+    if (p === 'ios' || p === 'android') return p;
+  } catch (e) {}
+  return window.Capacitor ? 'android' : 'web';
+}
 function _getKnownPhone() {
   const user = JSON.parse(localStorage.getItem('amwaj_user') || 'null');
   return (user && user.phone) || localStorage.getItem('amwaj_phone') || '';
@@ -7343,7 +7353,7 @@ async function _syncFcmTokenToPhone(phone) {
   const existingToken = localStorage.getItem('amwaj_fcm_token');
   if (!existingToken) return;
   try {
-    await sbRpc('app_register_token', { p_token: existingToken, p_customer_token: getCustomerToken(), p_platform: 'android' });
+    await sbRpc('app_register_token', { p_token: existingToken, p_customer_token: getCustomerToken(), p_platform: _pushPlatform() });
     console.log('✅ FCM Token linked to phone:', phone);
   } catch(e) { console.error('❌ FCM token link failed:', e); }
 }
@@ -7422,7 +7432,7 @@ async function setupPushNotifications() {
         await sbRpc('app_register_token', {
           p_token: token.value,
           p_customer_token: getCustomerToken(),
-          p_platform: 'android'
+          p_platform: _pushPlatform()
         });
         console.log('✅ FCM Token sent to server');
       } catch(e) {
@@ -8213,7 +8223,7 @@ async function updateFcmTokenAfterLogin() {
       await sbRpc('app_register_token', {
         p_token: existingToken,
         p_customer_token: getCustomerToken(),
-        p_platform: (window.Capacitor ? 'android' : 'web')
+        p_platform: _pushPlatform()
       });
       console.log('✅ FCM Token updated with phone:', user.phone);
     } catch(e) {
@@ -8331,6 +8341,11 @@ function renderAccountSheet() {
             <div class="profile-menu-label" style="color:var(--red);">تسجيل الخروج</div>
             <span class="profile-menu-arrow">‹</span>
           </button>
+          <button class="profile-menu-item" onclick="confirmDeleteAccount()">
+            <div class="profile-menu-icon pm-icon-logout">🗑️</div>
+            <div class="profile-menu-label" style="color:var(--red);">حذف الحساب</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
         </div>
       </div>
     `;
@@ -8406,6 +8421,31 @@ function loadStatOrdersCount() {
 function confirmLogout() {
   if (confirm('هل تريد تسجيل الخروج؟')) {
     logout();
+  }
+}
+
+/* 🗑️ حذف الحساب — أبل (القاعدة 5.1.1) وكوكل بلي يفرضون إن الزبون
+   يحذف حسابه من داخل التطبيق، وبدونها أبل ترفض التطبيق.
+   السيرفر (app_delete_me، ملف ١١١) يحذف الحساب وأجهزته. الطلبات
+   والضمانات تبقى بسجلاتنا بدون ربط بالحساب — نفس الحذف من اللوحة،
+   ومكتوب بسياسة الخصوصية. */
+async function confirmDeleteAccount() {
+  var msg = 'حذف حسابك نهائياً؟\n\n' +
+            '• ينحذف حسابك: الاسم والمحل والعنوان ورقم الهاتف\n' +
+            '• ما توصلك إشعارات بعدها\n' +
+            '• طلباتك وضماناتك السابقة تبقى بسجلاتنا للمحاسبة والضمان، بدون ربط بحسابك\n\n' +
+            'الحذف ما ينرجع. وتكدر تسجّل من جديد بأي وقت.';
+  if (!confirm(msg)) return;
+  try {
+    var r = await sbRpc('app_delete_me', { p_token: getCustomerToken() });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'تعذّر الحذف');
+    alert('✅ انحذف حسابك');
+    logout();
+  } catch (e) {
+    // أخطاء الشبكة تجي إنكليزي (Failed to fetch) — نبدّلها بعربي مثل باقي التطبيق
+    var m = (e && e.message) || '';
+    if (!/[؀-ۿ]/.test(m)) m = 'تعذّر الاتصال بالسيرفر';
+    alert('❌ ' + m + ' — حاول مرة ثانية أو تواصل ويانا');
   }
 }
 
@@ -8903,6 +8943,18 @@ function _isNewerVersion(latest, current) {
 // 📲 نسخة التطبيق — من لوحة التحكم الجديدة (تبويب التنبيهات والدوام)
 async function checkAppUpdate() {
   if (!_isNativeApp) return; // الموقع دايماً آخر نسخة، هذا للتطبيق المثبّت بس
+
+  /* 🍎 الآيفون ما يشوف التحديث الإجباري.
+     رقم النسخة باللوحة واحد للنظامين، ورابطه لبلي ستور. لو اشتغل
+     هنا، أول ما تطلع نسخة أندرويد وينرفع الرقم، زبون الآيفون يطلعله
+     تحديث إجباري **بلا زر لاحقاً** يودّيه لمتجر ما يفتح بجهازه —
+     ينقفل برّا التطبيق لين تعدّي نسخة الآيفون مراجعة أبل.
+     الآيفون يتحدّث من الآب ستور لحاله.
+     لو احتجناه بالمستقبل: رقم ورابط منفصلين للآيفون باللوحة. */
+  var _plat = (window.Capacitor && window.Capacitor.getPlatform)
+                ? window.Capacitor.getPlatform() : '';
+  if (_plat === 'ios' || (!_plat && _isIos)) return;
+
   try {
     var v = APP_VER_INFO;
     if (!v) { var r = await sbRpc('app_catalog'); v = APP_VER_INFO = (r && r.ver) || null; }
