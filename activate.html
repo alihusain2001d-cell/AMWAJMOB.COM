@@ -27,6 +27,11 @@
 <!-- Cart floating btn -->
 <div id="cartBadge" onclick="openCartSheet()">🛒<span id="cartCount" class="cart-count">0</span></div>
 <button id="scrollTopBtn" onclick="scrollSheetToTop()" title="رجوع للأعلى">↑</button>
+<!-- 💬 دائرة «للتواصل» — تفتح الدردشة من أي صفحة -->
+<button id="chatFab" onclick="openChat()" aria-label="للتواصل">
+  <span class="fab-label">للتواصل</span>
+  <span class="fab-circle">💬<span class="chat-badge" id="chatFabBadge" style="display:none">0</span></span>
+</button>
 
 <!-- flatpower modal -->
 <div id="flatpowerModal" onclick="closeFlatpowerModal(event)">
@@ -213,7 +218,7 @@
     <div id="chatPreview" class="chat-preview"></div>
     <div id="chatBar" class="chat-bar">
       <button class="chat-attach" onclick="chatPickImage()" onmousedown="event.preventDefault()" aria-label="صورة">📷</button>
-      <textarea id="chatInput" class="chat-input" rows="1" placeholder="اكتب رسالتك…" oninput="chatAutoGrow(this)" onkeydown="chatKey(event)"></textarea>
+      <textarea id="chatInput" class="chat-input" rows="1" placeholder="اكتب رسالتك…" oninput="chatAutoGrow(this)" onkeydown="chatKey(event)" onfocus="chatFitSoon()" onblur="chatFitSoon()"></textarea>
       <button id="chatSendBtn" class="chat-send" onclick="chatSend()" onmousedown="event.preventDefault()" aria-label="إرسال">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
@@ -951,6 +956,31 @@ body {
   box-shadow: 0 2px 8px rgba(37,211,102,0.3);
 }
 
+/* ═══ 💬 دائرة «للتواصل» — تطلع بكل الصفحات، يسار تحت ═══
+   (زر «للأعلى» يمين تحت، فما يتزاحمون). تختفي وقت الكتابة بأي خانة
+   حتى ما تغطي الكيبورد، وتنغطى تلقائياً لما الدردشة نفسها مفتوحة. */
+#chatFab {
+  position: fixed; z-index: 610;
+  bottom: calc(var(--footer-h) + 12px + env(safe-area-inset-bottom, 0px));
+  left: max(14px, calc(50vw - 226px));
+  border: none; background: none; padding: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent;
+}
+#chatFab .fab-label {
+  background: #fff; color: var(--primary-dark); font-size: 11.5px; font-weight: 800;
+  padding: 1px 9px; border-radius: 10px; line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(15,23,42,.18);
+}
+#chatFab .fab-circle {
+  position: relative; width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  box-shadow: 0 6px 18px rgba(2,132,199,.45); transition: transform .15s;
+}
+#chatFab:active .fab-circle { transform: scale(.92); }
+body.has-cart #chatFab { bottom: calc(var(--footer-h) + 76px + env(safe-area-inset-bottom, 0px)); }
+body:has(input:focus, textarea:focus, select:focus) #chatFab { display: none; }
 /* ═══ 💬 الدردشة ويا امواج ═══ */
 #chatSheet .bsheet { background: #EAF2F8; }
 .chat-list {
@@ -4504,6 +4534,8 @@ function updateCartBadge() {
   // Floating btn
   var cb = document.getElementById('cartBadge');
   if (cb) cb.style.display = n > 0 ? 'flex' : 'none';
+  // 💬 دائرة «للتواصل» تصعد فوق زر السلة الأخضر حتى ما يتغطّون
+  try { document.body.classList.toggle('has-cart', n > 0); } catch(e) {}
   var cc = document.getElementById('cartCount');
   if (cc) cc.textContent = n;
 
@@ -7424,11 +7456,13 @@ function chatFitViewport(){
   var vv = window.visualViewport;
   if (!s) return;
   if (!CHAT.open || !vv) { s.style.height = ''; s.style.transform = ''; return; }
-  s.style.height = vv.height + 'px';
-  s.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+  s.style.height = Math.round(vv.height) + 'px';
+  s.style.transform = vv.offsetTop > 1 ? 'translateY(' + Math.round(vv.offsetTop) + 'px)' : '';
   el.classList.toggle('kb', vv.height < window.innerHeight - 120);
   if (CHAT.stick) { var b = document.getElementById('chatList'); if (b) b.scrollTop = b.scrollHeight; }
 }
+// الكيبورد ياخذ لحظة حتى يطلع أو ينزل — نعيد القياس كم مرة بعد ما تضغط الخانة أو تطلع منها
+function chatFitSoon(){ [60, 300, 650].forEach(function(ms){ setTimeout(chatFitViewport, ms); }); }
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', chatFitViewport);
   window.visualViewport.addEventListener('scroll', chatFitViewport);
@@ -7440,7 +7474,7 @@ function _chatBadgeHtml(id){
          (CHAT.unread > 9 ? '9+' : CHAT.unread) + '</span>';
 }
 function chatPaintBadge(){
-  ['chatHomeBadge', 'acctChatBadge'].forEach(function(id){
+  ['chatHomeBadge', 'acctChatBadge', 'chatFabBadge'].forEach(function(id){
     var b = document.getElementById(id);
     if (!b) return;
     b.textContent = CHAT.unread > 9 ? '9+' : String(CHAT.unread);

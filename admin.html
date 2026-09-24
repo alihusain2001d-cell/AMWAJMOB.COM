@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#0EA5E9">
 <title>لوحة تحكم أمواج</title>
 <!-- إعدادات الاتصال — نفس الملف اللي يستعمله الموقع.
@@ -3024,7 +3024,7 @@ async function msgSaveTpl(key){
    (الجداول مقفولة عن المتصفح، فنسأل دالة محروسة بدل البث المباشر).
    الرد يمر بدالة السيرفر «chat»: ترفع الصورة وترن على تلفون الزبون،
    وتكتب اسم الموظف الي رد (يبين هنا بس، الزبون يشوف «امواج»).     */
-var CH = { phone:'', items:[], lastId:0, seenUpTo:0, cust:null, threads:[], q:'',
+var CH = { phone:'', items:[], pending:[], chain:null, lastId:0, seenUpTo:0, cust:null, threads:[], q:'',
            timer:null, tick:0, busy:false, sending:false, img:null, stick:true };
 var CH_WANT = '';     // جاي من ضغطة إشعار؟ نفتح محادثته
 
@@ -3126,6 +3126,7 @@ async function chOpen(phone){
   chRenderThreads();
   $('chWrap').classList.add('open');
   document.body.classList.add('ch-full');
+  try{ window.scrollTo(0, 0); }catch(e){}   // الصفحة وراها ما تكون نازلة — وإلا المحادثة تنزاح
   $('chMain').innerHTML =
     '<div class="ch-head">' +
       '<button class="ch-back" onclick="chBack()" title="رجوع">→</button>' +
@@ -3137,7 +3138,7 @@ async function chOpen(phone){
     '<div class="ch-prev" id="chPrev"></div>' +
     '<div class="ch-bar" id="chBar">' +
       '<button class="ch-att" onclick="chPick()" onmousedown="event.preventDefault()" title="صورة">📷</button>' +
-      '<textarea id="chInput" rows="1" placeholder="اكتب ردّك…" oninput="chGrow(this)" onkeydown="chKey(event)"></textarea>' +
+      '<textarea id="chInput" rows="1" placeholder="اكتب ردّك…" oninput="chGrow(this)" onkeydown="chKey(event)" onfocus="chFitSoon()" onblur="chFitSoon()"></textarea>' +
       '<button class="btn-solid ch-send" id="chSendBtn" onclick="chSend()" onmousedown="event.preventDefault()">إرسال</button>' +
       '<input type="file" id="chFile" accept="image/*" style="display:none" onchange="chFileChosen(this)">' +
     '</div>';
@@ -3194,14 +3195,15 @@ function chRenderHead(){
 function chRenderMsgs(scroll){
   var box = $('chList'); if (!box) return;
   var h = '', lastDay = '';
-  CH.items.forEach(function(m){
+  var list = CH.items.concat(CH.pending.filter(function(p){ return p.phone === CH.phone; }));
+  list.forEach(function(m){
     var d = new Date(m.at), day = chDay(d);
     if (day !== lastDay){ h += '<div class="ch-day">' + esc(day) + '</div>'; lastDay = day; }
-    h += '<div class="ch-msg ' + (m.me ? 'me' : 'them') + '">';
+    h += '<div class="ch-msg ' + (m.me ? 'me' : 'them') + '"' + (m.tmp ? ' style="opacity:.6"' : '') + '>';
     if (m.img)  h += '<img class="ch-img" src="' + esc(m.img) + '" alt="" onclick="window.open(this.src,\'_blank\')" onload="chImgLoaded()">';
     if (m.text) h += '<div class="ch-text">' + chLinkify(esc(m.text)) + '</div>';
     var time = d.toLocaleTimeString('ar-IQ', { hour:'numeric', minute:'2-digit' });
-    h += '<div class="ch-meta">' + (m.me
+    h += '<div class="ch-meta">' + (m.tmp ? time + ' 🕓' : m.me
       ? esc(m.staff || '') + ' · ' + time + (m.id <= CH.seenUpTo ? ' <span class="seen" title="قراها">✓✓</span>' : ' ✓')
       : time) + '</div></div>';
   });
@@ -3241,13 +3243,25 @@ function chClearImg(){
   var p = $('chPrev'); if (p){ p.innerHTML = ''; p.style.display = 'none'; }
 }
 
-async function chSend(){
-  if (CH.sending || !CH.phone) return;
+/* ⚡ الإرسال: الرسالة تبين فوراً (باهتة 🕓) والخانة تفرغ — تكمل كتابة
+   الرسالة الجاية بدون ما تنتظر السيرفر. الرسائل تروح بالدور حتى
+   ترتيبها ما يتلخبط لو دزيت ثنتين ورا بعض. */
+function chSend(){
+  if (!CH.phone) return;
   var t = $('chInput'), text = t.value.trim(), img = CH.img;
   if (!text && !img){ t.focus(); return; }
-  CH.sending = true; $('chSendBtn').disabled = true;
-  var body = { action:'reply', phone: CH.phone, text: text };
+  var phone = CH.phone;
+  var tmp = { tmp:true, me:true, phone:phone, text:text,
+              img: img ? 'data:image/jpeg;base64,' + img.b64 : null, at:new Date().toISOString() };
+  CH.pending.push(tmp);
+  t.value = ''; chGrow(t); chClearImg();
+  CH.stick = true; chRenderMsgs(true);
+  var body = { action:'reply', phone: phone, text: text };
   if (img){ body.imageBase64 = img.b64; body.mimeType = 'image/jpeg'; }
+  CH.chain = (CH.chain || Promise.resolve()).then(function(){ return chSendOne(tmp, body); });
+}
+async function chSendOne(tmp, body){
+  var failed = null;
   try{
     try{ await fn('chat', body); }
     catch(e){
@@ -3255,26 +3269,31 @@ async function chSend(){
       if (/صلاحية/.test(e.message) && AUTH.refresh && await authRefresh()) await fn('chat', body);
       else throw e;
     }
-    t.value = ''; chGrow(t); chClearImg();
-    CH.stick = true;
-    while (CH.busy) await new Promise(function(r){ setTimeout(r, 120); });
-    await chPoll(true);
-    chThreads();
-  }catch(e){ toast('❌ ما انرسل: ' + e.message, 5000); }
-  finally{
-    CH.sending = false;
-    var b = $('chSendBtn'); if (b) b.disabled = false;
+  }catch(e){ failed = e; }
+  if (!failed && tmp.phone === CH.phone){
+    while (CH.busy) await new Promise(function(r){ setTimeout(r, 80); });
+    await chPoll();
   }
+  var i = CH.pending.indexOf(tmp); if (i > -1) CH.pending.splice(i, 1);
+  if (tmp.phone === CH.phone) chRenderMsgs(false);
+  if (failed){
+    toast('❌ ما انرسل: ' + failed.message, 5000);
+    var t = $('chInput');
+    if (t && !t.value && tmp.phone === CH.phone){ t.value = tmp.text; chGrow(t); }
+  } else chThreads();
 }
 
-/* ⌨️ بالموبايل: المحادثة بحجم الجزء الي يبين فوق الكيبورد بالضبط */
+/* ⌨️ بالموبايل: المحادثة بحجم الجزء الي يبين فوق الكيبورد بالضبط.
+   الكيبورد ياخذ لحظة حتى يطلع أو ينزل، والجهاز أحياناً ما يبلّغ بالحجم
+   الأخير — فنعيد القياس كم مرة بعد ما تضغط الخانة أو تطلع منها. */
+function chFitSoon(){ [60, 300, 650].forEach(function(ms){ setTimeout(chFit, ms); }); }
 function chFit(){
   var m = $('chMain'), vv = window.visualViewport;
   if (!m) return;
   var full = document.body.classList.contains('ch-full') && window.innerWidth <= 820;
   if (!full || !vv){ m.style.height = ''; m.style.transform = ''; document.body.classList.remove('ch-kb'); return; }
-  m.style.height = vv.height + 'px';
-  m.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+  m.style.height = Math.round(vv.height) + 'px';
+  m.style.transform = vv.offsetTop > 1 ? 'translateY(' + Math.round(vv.offsetTop) + 'px)' : '';
   document.body.classList.toggle('ch-kb', vv.height < window.innerHeight - 120);
   if (CH.stick){ var b = $('chList'); if (b) b.scrollTop = b.scrollHeight; }
 }
