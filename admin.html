@@ -2879,15 +2879,33 @@ async function setSaveVer(){
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
 
-/* 💾 نسخة احتياطية — نجيب كلشي بنداء واحد وننزّله ملف JSON.
+/* 💾 نسخة احتياطية — جدول جدول وعلى دفعات (ملف ١١٤)، وبالآخر
+   ننزّلها ملف JSON واحد بنفس شكل النسخة القديمة بالضبط.
+   ليش دفعات: البيانات كثرت، ونداء واحد صار يتجاوز حد الوقت
+   بالسيرفر («statement timeout»). كل دفعة ٢٠٠٠ صف — سريعة.
    ولا مفتاح يمر بأي مكان: أنت مسجّل دخول أصلاً، والسيرفر يفحص
-   صلاحيتك بنفسه. الدالة محصورة بصلاحية «الموظفين» — يعني أنت. */
+   صلاحيتك بنفسه. الدوال محصورة بصلاحية «الموظفين» — يعني أنت. */
 async function setBackup(){
   var b = $('bkBtn'), m = $('bkRes');
   b.disabled = true; b.textContent = '… دا يجمع البيانات';
   m.className = 'msg'; m.textContent = 'ممكن تاخذ شوية — البيانات كثيرة.';
   try{
-    var r = await rpc('web_backup', {});
+    var list = await rpc('web_backup_list', {});
+    var tabs = list.tables || [], body = {}, cnt = {}, STEP = 2000;
+    for (var i = 0; i < tabs.length; i++){
+      var t = tabs[i], rows = [];
+      for (var off = 0; ; off += STEP){
+        m.textContent = '⏳ ' + (i + 1) + ' من ' + tabs.length + ' — ' + t.name +
+                        (t.rows > STEP ? ' (' + nf(Math.min(off + STEP, t.rows)) + ' / ' + nf(t.rows) + ')' : '');
+        var part = await rpc('web_backup_part', { p_table: t.name, p_offset: off, p_limit: STEP });
+        var got = part.rows || [];
+        rows = rows.concat(got);
+        if (got.length < STEP) break;
+      }
+      body[t.name] = rows; cnt[t.name] = rows.length;
+    }
+    var r = { 'نسخة_احتياطية': 'أمواج للإلكترونيات', 'إصدار': 1,
+              'وقت': list['وقت'] || new Date().toISOString(), 'العدد': cnt, 'الجداول': body };
     var txt  = JSON.stringify(r, null, 1);
     var blob = new Blob([txt], {type:'application/json'});
     var d = new Date(), z = function(x){ return (x<10?'0':'')+x; };
