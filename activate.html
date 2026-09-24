@@ -3003,6 +3003,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <a href="tel:07801372000" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 07801372000</a> &nbsp;
         <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
       </div>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="openPrivacyPolicy();return false;" style="color:#64748B;font-size:15px;text-decoration:underline;">🔒 سياسة الخصوصية</a>
+      </div>
     </div>
 
     <!-- Register — الخطوة 2: البيانات (بعد ما ينتحقق الرقم) -->
@@ -3042,6 +3045,9 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       <div class="info-box" style="margin-top:16px;">📞 للاستفسار:<br>
         <a href="tel:07801372000" class="contact-phone1" style="font-weight:bold;color:var(--primary);">📱 07801372000</a> &nbsp;
         <a href="tel:07709000160" class="contact-phone2" style="font-weight:bold;color:var(--primary);">📱 07709000160</a>
+      </div>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="openPrivacyPolicy();return false;" style="color:#64748B;font-size:15px;text-decoration:underline;">🔒 سياسة الخصوصية</a>
       </div>
     </div>
 
@@ -8333,6 +8339,11 @@ function renderAccountSheet() {
             <div class="profile-menu-label">عن المتجر</div>
             <span class="profile-menu-arrow">‹</span>
           </button>
+          <button class="profile-menu-item" onclick="openPrivacyPolicy()">
+            <div class="profile-menu-icon pm-icon-about">🔒</div>
+            <div class="profile-menu-label">سياسة الخصوصية</div>
+            <span class="profile-menu-arrow">‹</span>
+          </button>
         </div>
 
         <div class="profile-menu-group">
@@ -8416,6 +8427,16 @@ function loadStatOrdersCount() {
   fetchMyOrders().then(function(ords) {
     if (el) el.textContent = (ords || []).length;
   }).catch(function(){});
+}
+
+/* 🔒 سياسة الخصوصية — أبل (القاعدة 5.1.1) تطلب رابطها داخل التطبيق،
+   مو بس بصفحة المتجر. تنفتح بالمتصفح (بالآيفون كاباسيتور يحوّل أي
+   window.open لسفاري؛ بالأندرويد نفس الطريقة الي يستعملها رابط بلي).
+   ⚠️ إذا انضافت ميزة تجمع بيانات جديدة، حدّث privacy.html بالموقع. */
+var PRIVACY_URL = 'https://www.amwajmob.com/privacy.html';
+function openPrivacyPolicy() {
+  try { window.open(PRIVACY_URL, '_system'); }
+  catch (e) { location.href = PRIVACY_URL; }
 }
 
 function confirmLogout() {
