@@ -200,6 +200,28 @@
   </div>
 </div>
 
+<!-- ═══ 💬 الدردشة ويا امواج ═══ -->
+<div id="chatSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('chatSheet')"></button>
+      <span class="bsheet-title">💬 دردشة ويا امواج</span>
+      <button onclick="openWhatsApp('السلام عليكم')" title="واتساب" class="header-wa-btn">📞</button>
+    </div>
+    <div id="chatList" class="chat-list"></div>
+    <div id="chatPreview" class="chat-preview"></div>
+    <div id="chatBar" class="chat-bar">
+      <button class="chat-attach" onclick="chatPickImage()" onmousedown="event.preventDefault()" aria-label="صورة">📷</button>
+      <textarea id="chatInput" class="chat-input" rows="1" placeholder="اكتب رسالتك…" oninput="chatAutoGrow(this)" onkeydown="chatKey(event)"></textarea>
+      <button id="chatSendBtn" class="chat-send" onclick="chatSend()" onmousedown="event.preventDefault()" aria-label="إرسال">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+      <input type="file" id="chatFile" accept="image/*" style="display:none" onchange="chatFileChosen(this)">
+    </div>
+  </div>
+</div>
+
 <!-- ═══ صفحة تواصل معنا ═══ -->
 <div id="contactSheet" class="bsheet-overlay">
   <div class="bsheet">
@@ -217,6 +239,16 @@
         <div style="font-size:18px;font-weight:800;margin-bottom:4px;position:relative;letter-spacing:-0.3px;">نسعد بخدمتكم</div>
         <div style="font-size:13px;opacity:0.92;position:relative;">اختر طريقة التواصل المناسبة</div>
       </div>
+
+      <!-- 💬 الدردشة داخل التطبيق — أسرع من واتساب لأن الرسالة توصل للوحة مباشرة -->
+      <button class="contact-chat-card" onclick="openChat()">
+        <div class="ccc-icon">💬</div>
+        <div class="ccc-text">
+          <div class="ccc-title">دردشة مباشرة ويا امواج</div>
+          <div class="ccc-sub">اكتبلنا أو دز صورة القطعة — من هنا بدون واتساب</div>
+        </div>
+        <div class="ccc-arrow">‹</div>
+      </button>
 
       <!-- قسم واتساب الرئيسي -->
       <div class="contact-section-title">💬 واتساب للطلبات والاستفسار</div>
@@ -918,6 +950,100 @@ body {
   transform: scale(0.98);
   box-shadow: 0 2px 8px rgba(37,211,102,0.3);
 }
+
+/* ═══ 💬 الدردشة ويا امواج ═══ */
+#chatSheet .bsheet { background: #EAF2F8; }
+.chat-list {
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.chat-hello {
+  align-self: center; max-width: 92%; background: var(--card);
+  border: 1px solid var(--primary-light); color: var(--text-2);
+  font-size: 14.5px; line-height: 1.75; padding: 10px 14px; border-radius: 14px;
+  text-align: center; margin: 2px 0 8px;
+}
+.chat-day { align-self: center; margin: 8px 0 2px; }
+.chat-day span {
+  background: rgba(15,23,42,.07); color: var(--muted); font-size: 12.5px;
+  font-weight: 700; padding: 3px 12px; border-radius: 20px;
+}
+/* بالعربي: رسائل امواج يمين، ورسائلك يسار — نفس واتساب */
+.chat-msg {
+  max-width: 82%; padding: 7px 11px 4px; border-radius: 16px;
+  font-size: 16px; line-height: 1.6; overflow-wrap: anywhere;
+  box-shadow: 0 1px 2px rgba(15,23,42,.08); color: var(--text);
+}
+.chat-msg.them { align-self: flex-start; background: var(--card); border-top-right-radius: 5px; }
+.chat-msg.me   { align-self: flex-end;   background: #D3EEFF;     border-top-left-radius: 5px; }
+.chat-msg.tmp  { opacity: .6; }
+.chat-text { white-space: pre-wrap; }
+.chat-text a { color: var(--primary-dark); text-decoration: underline; }
+.chat-img {
+  display: block; width: 240px; max-width: 100%; max-height: 320px; object-fit: cover;
+  border-radius: 12px; margin: 3px 0 4px; background: #E2E8F0; cursor: zoom-in;
+}
+.chat-meta { font-size: 11.5px; color: var(--muted); text-align: left; margin-top: 1px; }
+.chat-tick { font-weight: 800; letter-spacing: -2px; }
+.chat-tick.seen { color: var(--primary); }
+.chat-preview {
+  display: none; align-items: center; gap: 10px; padding: 8px 12px; flex-shrink: 0;
+  background: var(--card); border-top: 1px solid var(--border-light);
+  font-size: 13.5px; color: var(--muted);
+}
+.chat-preview img { width: 54px; height: 54px; object-fit: cover; border-radius: 10px; }
+.chat-preview button {
+  width: 32px; height: 32px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: var(--surface-2); font-size: 15px; cursor: pointer;
+}
+.chat-bar {
+  display: flex; align-items: flex-end; gap: 8px; flex-shrink: 0;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  background: var(--card); border-top: 1px solid var(--border-light);
+}
+#chatSheet.kb .chat-bar { padding-bottom: 8px; }   /* الكيبورد طالع — ما نحتاج فراغ الحافة */
+.chat-input {
+  flex: 1; min-width: 0; height: 44px; max-height: 124px; resize: none;
+  border: 1px solid var(--border); border-radius: 22px; padding: 10px 16px;
+  font-family: 'Tajawal', sans-serif; font-size: 16px; line-height: 1.45;
+  background: var(--surface); color: var(--text); outline: none;
+}
+.chat-input:focus { border-color: var(--primary); background: #fff; }
+.chat-attach, .chat-send {
+  width: 44px; height: 44px; border-radius: 50%; border: none; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px;
+}
+.chat-attach { background: var(--surface-2); }
+.chat-send { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+.chat-send svg { transform: scaleX(-1); }   /* السهم يأشر يسار — اتجاه الكتابة بالعربي */
+.chat-send:disabled { opacity: .5; }
+.chat-empty { text-align: center; padding: 40px 10px; color: var(--muted); font-size: 15px; }
+.chat-guest { text-align: center; padding: 36px 18px; margin: auto 0; }
+.chat-guest .t { font-size: 19px; font-weight: 800; color: var(--text); margin: 8px 0 6px; }
+.chat-guest .s { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; }
+.chat-guest .form-btn { margin-bottom: 10px; }
+.chat-badge {
+  position: absolute; top: -5px; left: -5px; min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 800;
+  line-height: 16px; text-align: center; border: 2px solid #fff; box-sizing: border-box;
+}
+.chat-badge.inline { position: static; border: none; line-height: 20px; margin-inline-end: 6px; }
+.contact-chat-card {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: right;
+  background: var(--card); border: 2px solid var(--primary); border-radius: 18px;
+  padding: 14px; margin-bottom: 20px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  box-shadow: 0 6px 18px rgba(14,165,233,.15);
+}
+.contact-chat-card:active { transform: scale(.98); }
+.contact-chat-card .ccc-icon {
+  width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0; font-size: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+.contact-chat-card .ccc-text { flex: 1; min-width: 0; }
+.contact-chat-card .ccc-title { font-size: 17px; font-weight: 800; color: var(--text); }
+.contact-chat-card .ccc-sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+.contact-chat-card .ccc-arrow { font-size: 22px; color: var(--primary); font-weight: 800; }
 
 /* ═══ BOTTOM SHEETS ═══ */
 .bsheet-overlay {
@@ -3089,6 +3215,10 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <div class="home-store-sub" id="homeWelcome">قطع غيار موبايل · كربلاء</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
+          <button class="home-icon-btn" onclick="openChat()" title="دردشة ويا امواج" style="position:relative;">
+            <span style="font-size:20px;">💬</span>
+            <span class="chat-badge" id="chatHomeBadge" style="display:none">0</span>
+          </button>
           <button class="home-icon-btn" onclick="openNotificationsSheet()" title="الإشعارات" id="bellBtn" style="position:relative;">
             <span class="bell-icon" style="font-size:20px;">🔔</span>
             <span class="bell-badge" id="bellBadge">0</span>
@@ -3358,6 +3488,7 @@ function closeSheet(id) {
      بسحبة الرجوع وبزر الأندرويد، ولو علّقناها بالزر بس تضل
      الكاميرا شغّالة والضوء مضوّي. */
   if (id === 'qrSheet') { try { qrStop(); } catch(e) {} }
+  if (id === 'chatSheet') { try { chatStop(); } catch(e) {} }   // 💬 نوقف السؤال المتكرر
   el.classList.remove('open');
   // Remove from stack
   var idx = _sheetStack.lastIndexOf(id);
@@ -7034,6 +7165,310 @@ window.scrollSheetToTop = function(){
   if (btn && btn._sc) btn._sc.scrollTo({top:0, behavior:'smooth'});
 };
 
+// ═══════════════════════════════════════════════════════════════
+// 💬 الدردشة ويا امواج
+//
+//   القراءة: app_chat_list مباشرة من قاعدة البيانات — كل ٤ ثواني
+//   والصفحة مفتوحة، وتوقف لما تنسكّر أو التطبيق يروح للخلفية.
+//   الإرسال: دالة السيرفر «chat» — ترفع الصورة وترن على اللوحة.
+//   والصفحة مسكّرة، رد امواج يوصل كإشعار + علامة حمرة على 💬.
+//
+//   الزبون لازم يكون مسجّل دخول (التوكن يثبت منو هو). الضيف
+//   يشوف زر تسجيل وزر واتساب.
+// ═══════════════════════════════════════════════════════════════
+var CHAT = { open:false, tok:'', items:[], pending:[], lastId:0, seenUpTo:0,
+             timer:null, busy:null, sending:false, img:null, unread:0, stick:true };
+
+function _chatTok(){ try { return getCustomerToken(); } catch(e) { return ''; } }
+
+function openChat(){
+  openSheet('chatSheet');
+  var el = document.getElementById('chatSheet');
+  if (el) el.style.zIndex = '650';     // فوق شريط التنقل (600) — حتى خانة الكتابة تبين
+  CHAT.open = true;
+  var tok = _chatTok();
+  document.getElementById('chatBar').style.display = tok ? '' : 'none';
+  if (!tok) { _chatRenderGuest(); return; }
+  if (CHAT.tok !== tok) _chatReset(tok);        // حساب ثاني دخل على نفس الجهاز
+  if (!CHAT.items.length) {
+    document.getElementById('chatList').innerHTML =
+      '<div class="chat-empty"><div class="loading-spinner"></div></div>';
+  }
+  CHAT.stick = true;
+  chatFitViewport();
+  chatPoll(true);
+  clearInterval(CHAT.timer);
+  CHAT.timer = setInterval(function(){ if (!document.hidden) chatPoll(); }, 4000);
+}
+
+// تنده من closeSheet — بأي طريقة انسكّرت (زر، سحبة، زر الأندرويد)
+function chatStop(){
+  CHAT.open = false;
+  clearInterval(CHAT.timer); CHAT.timer = null;
+  var s = document.querySelector('#chatSheet .bsheet');
+  if (s) { s.style.height = ''; s.style.transform = ''; }
+  var el = document.getElementById('chatSheet');
+  if (el) el.classList.remove('kb');
+  try { document.getElementById('chatInput').blur(); } catch(e) {}
+  chatRefreshBadge();
+}
+
+function _chatReset(tok){
+  CHAT.tok = tok; CHAT.items = []; CHAT.pending = []; CHAT.lastId = 0; CHAT.seenUpTo = 0;
+}
+
+function chatPoll(scrollDown){
+  if (CHAT.busy) return CHAT.busy;
+  var tok = _chatTok();
+  if (!tok) return Promise.resolve();
+  if (CHAT.tok !== tok) _chatReset(tok);
+  CHAT.busy = sbRpc('app_chat_list', { p_token: tok, p_after: CHAT.lastId })
+    .then(function(r){
+      if (!r || r.ok !== true) {
+        _chatNotice((r && r.error) === 'يجب تسجيل الدخول'
+          ? 'انتهت جلستك — اطلع وسجّل دخول من جديد حتى تكمل الدردشة.'
+          : ((r && r.error) || 'تعذّر التحميل'));
+        return;
+      }
+      var fresh = (r.items || []).filter(function(m){ return m.id > CHAT.lastId; });
+      var ticks = (r.seenUpTo || 0) !== CHAT.seenUpTo;
+      CHAT.seenUpTo = r.seenUpTo || 0;
+      if (fresh.length) {
+        CHAT.items = CHAT.items.concat(fresh);
+        CHAT.lastId = fresh[fresh.length - 1].id;
+      }
+      if (fresh.length || ticks || scrollDown || !CHAT.rendered) chatRender(!!scrollDown || fresh.length > 0);
+      CHAT.unread = 0; chatPaintBadge();
+    })
+    .catch(function(){
+      if (!CHAT.items.length) _chatNotice('تعذّر التحميل — تأكد من النت وارجع افتحها');
+    })
+    .then(function(){ CHAT.busy = null; });
+  return CHAT.busy;
+}
+
+function _chatNotice(msg){
+  var box = document.getElementById('chatList');
+  if (box) box.innerHTML = '<div class="chat-empty">' + sanitize(msg) + '</div>';
+  CHAT.rendered = false;
+}
+
+function _chatDay(d){
+  var t = new Date(); t.setHours(0,0,0,0);
+  var x = new Date(d.getTime()); x.setHours(0,0,0,0);
+  var diff = Math.round((t - x) / 86400000);
+  if (diff === 0) return 'اليوم';
+  if (diff === 1) return 'أمس';
+  return d.toLocaleDateString('ar-IQ', { day:'numeric', month:'long' });
+}
+
+function _chatLinkify(safe){
+  return safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+function _chatBubble(m){
+  var h = '<div class="chat-msg ' + (m.me ? 'me' : 'them') + (m.tmp ? ' tmp' : '') + '">';
+  if (m.img)  h += '<img class="chat-img" src="' + sanitize(m.img) + '" alt="" onclick="openImgLightbox(this.src)" onload="_chatImgLoaded()">';
+  if (m.text) h += '<div class="chat-text">' + _chatLinkify(sanitize(m.text)) + '</div>';
+  var t = m.at ? new Date(m.at) : new Date();
+  var tick = '';
+  if (m.me) tick = m.tmp ? ' 🕓'
+    : (m.id <= CHAT.seenUpTo ? ' <span class="chat-tick seen">✓✓</span>' : ' <span class="chat-tick">✓</span>');
+  h += '<div class="chat-meta">' + t.toLocaleTimeString('ar-IQ', { hour:'numeric', minute:'2-digit' }) + tick + '</div>';
+  return h + '</div>';
+}
+
+function chatRender(scroll){
+  var box = document.getElementById('chatList');
+  if (!box) return;
+  var h = '<div class="chat-hello">👋 هلا بيك! اكتب سؤالك أو <b>صوّر القطعة</b> الي تحتاجها، ونرد عليك بأسرع وقت خلال الدوام.</div>';
+  var lastDay = '';
+  CHAT.items.concat(CHAT.pending).forEach(function(m){
+    var day = _chatDay(m.at ? new Date(m.at) : new Date());
+    if (day !== lastDay) { h += '<div class="chat-day"><span>' + day + '</span></div>'; lastDay = day; }
+    h += _chatBubble(m);
+  });
+  box.innerHTML = h;
+  CHAT.rendered = true;
+  if (scroll || CHAT.stick) { box.scrollTop = box.scrollHeight; CHAT.stick = true; }
+  if (!box._chatScroll) {
+    box._chatScroll = true;
+    // الزبون صعد يقرا رسائل قديمة؟ ما نسحبه لتحت كل ما تجي رسالة
+    box.addEventListener('scroll', function(){
+      CHAT.stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+    }, { passive: true });
+  }
+}
+
+// الصورة تحمّل بعد ما ترسمت الرسائل — ننزل لتحت مرة ثانية حتى ما تنگص
+function _chatImgLoaded(){
+  if (!CHAT.stick) return;
+  var box = document.getElementById('chatList');
+  if (box) box.scrollTop = box.scrollHeight;
+}
+
+function _chatRenderGuest(){
+  document.getElementById('chatList').innerHTML =
+    '<div class="chat-guest"><div style="font-size:46px">💬</div>' +
+    '<div class="t">الدردشة تحتاج حساب</div>' +
+    '<div class="s">سجّل برقم هاتفك حتى تراسلنا من هنا وتوصلك الردود كإشعار — أو راسلنا واتساب هسه.</div>' +
+    '<button class="form-btn" onclick="closeSheet(\'chatSheet\');showScreen(\'loginScreen\')">تسجيل الدخول</button>' +
+    '<button class="form-btn" style="background:linear-gradient(135deg,#25D366,#128C7E)" onclick="openWhatsApp(\'السلام عليكم\')">💬 واتساب</button>' +
+    '</div>';
+  CHAT.rendered = false;
+}
+
+function chatAutoGrow(t){
+  t.style.height = 'auto';
+  t.style.height = Math.min(Math.max(t.scrollHeight, 44), 124) + 'px';
+}
+
+// بالكمبيوتر: Enter يرسل و Shift+Enter سطر جديد. بالموبايل Enter سطر جديد عادي.
+function chatKey(e){
+  if (e.key !== 'Enter' || e.shiftKey) return;
+  var fine = false;
+  try { fine = window.matchMedia('(pointer:fine)').matches; } catch(err) {}
+  if (fine) { e.preventDefault(); chatSend(); }
+}
+
+function chatPickImage(){
+  var f = document.getElementById('chatFile');
+  if (!f) return;
+  f.value = '';
+  f.click();
+}
+
+// 🖼️ نصغّر الصورة بالجهاز قبل الرفع (~200 كيلو بدل ٤ ميجا) — ترسل أسرع وتفتح أسرع
+function _chatShrink(file, max, q){
+  return new Promise(function(res, rej){
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (w > max || h > max) { var s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+      var c = document.createElement('canvas'); c.width = w; c.height = h;
+      var x = c.getContext('2d');
+      x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+      x.drawImage(img, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', q));
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+
+function chatFileChosen(inp){
+  var file = inp.files && inp.files[0];
+  if (!file) return;
+  if (file.type && !/^image\//.test(file.type)) { alert('اختار صورة'); return; }
+  _chatShrink(file, 1280, 0.8).then(function(dataUrl){
+    _chatSetImg({ url: dataUrl, b64: dataUrl.split(',')[1] });
+  }).catch(function(){ alert('ما گدرت أفتح الصورة — جرّب وحدة ثانية'); });
+}
+
+function _chatSetImg(o){
+  CHAT.img = o;
+  var p = document.getElementById('chatPreview');
+  p.innerHTML = '<img src="' + o.url + '" alt=""><span style="flex:1">الصورة جاهزة — اكتب شي وياها أو دزها</span>' +
+                '<button onclick="_chatClearImg()" aria-label="شيل الصورة">✕</button>';
+  p.style.display = 'flex';
+}
+function _chatClearImg(){
+  CHAT.img = null;
+  var p = document.getElementById('chatPreview');
+  if (p) { p.innerHTML = ''; p.style.display = 'none'; }
+}
+
+async function chatSend(){
+  if (CHAT.sending) return;
+  var inp = document.getElementById('chatInput');
+  var text = (inp.value || '').trim();
+  var img = CHAT.img;
+  if (!text && !img) { inp.focus(); return; }
+  if (text.length > 2000) { alert('الرسالة طويلة — قسّمها لرسالتين'); return; }
+
+  CHAT.sending = true;
+  document.getElementById('chatSendBtn').disabled = true;
+  // تبين فوراً باهتة 🕓 — وتتبدل بالحقيقية أول ما توصل
+  var tmp = { tmp: true, me: true, text: text, img: img ? img.url : null, at: new Date().toISOString() };
+  CHAT.pending.push(tmp);
+  inp.value = ''; chatAutoGrow(inp); _chatClearImg();
+  chatRender(true);
+  try {
+    var body = { action: 'send', token: _chatTok(), text: text };
+    if (img) { body.imageBase64 = img.b64; body.mimeType = 'image/jpeg'; }
+    await sbFn('chat', body);
+    if (CHAT.busy) { try { await CHAT.busy; } catch(e) {} }
+    await chatPoll(true);
+    CHAT.pending.splice(CHAT.pending.indexOf(tmp), 1);
+    chatRender(true);
+  } catch(e) {
+    CHAT.pending.splice(CHAT.pending.indexOf(tmp), 1);
+    chatRender(false);
+    // نرجّع الكلام والصورة حتى ما يعيد يكتبهن
+    if (!inp.value) { inp.value = text; chatAutoGrow(inp); }
+    if (img && !CHAT.img) _chatSetImg(img);
+    alert('❌ ما انرسلت: ' + ((e && e.message) || 'تأكد من النت'));
+  } finally {
+    CHAT.sending = false;
+    document.getElementById('chatSendBtn').disabled = false;
+  }
+}
+
+/* ⌨️ الكيبورد: بالآيفون ما يصغّر الصفحة، يغطيها. فنقيس الجزء الي
+   يبين فعلاً (visualViewport) ونخلي الدردشة بحجمه بالضبط — حتى
+   خانة الكتابة تبقى فوق الكيبورد والرسائل ما تختفي وراه. */
+function chatFitViewport(){
+  var el = document.getElementById('chatSheet');
+  var s = el && el.querySelector('.bsheet');
+  var vv = window.visualViewport;
+  if (!s) return;
+  if (!CHAT.open || !vv) { s.style.height = ''; s.style.transform = ''; return; }
+  s.style.height = vv.height + 'px';
+  s.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+  el.classList.toggle('kb', vv.height < window.innerHeight - 120);
+  if (CHAT.stick) { var b = document.getElementById('chatList'); if (b) b.scrollTop = b.scrollHeight; }
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', chatFitViewport);
+  window.visualViewport.addEventListener('scroll', chatFitViewport);
+}
+
+// 🔴 العلامة الحمرة — رسائل من امواج ما انقرت
+function _chatBadgeHtml(id){
+  return '<span class="chat-badge inline" id="' + id + '" style="display:' + (CHAT.unread > 0 ? '' : 'none') + '">' +
+         (CHAT.unread > 9 ? '9+' : CHAT.unread) + '</span>';
+}
+function chatPaintBadge(){
+  ['chatHomeBadge', 'acctChatBadge'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.textContent = CHAT.unread > 9 ? '9+' : String(CHAT.unread);
+    b.style.display = CHAT.unread > 0 ? '' : 'none';
+  });
+}
+function chatRefreshBadge(){
+  var tok = _chatTok();
+  if (!tok || CHAT.open) { if (!tok) CHAT.unread = 0; chatPaintBadge(); return; }
+  sbRpc('app_chat_unread', { p_token: tok }).then(function(r){
+    if (r && r.ok) { CHAT.unread = r.n || 0; chatPaintBadge(); }
+  }).catch(function(){});
+}
+
+// 🔔 وصل إشعار «رد من امواج» والتطبيق مفتوح
+function _chatOnPush(title, body){
+  if (CHAT.open) { chatPoll(true); return; }
+  CHAT.unread++; chatPaintBadge();
+  showPushToast(sanitize(title), sanitize(body), openChat);
+}
+
+setTimeout(chatRefreshBadge, 3500);
+setInterval(function(){ if (!document.hidden && !CHAT.open) chatRefreshBadge(); }, 90000);
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) return;
+  if (CHAT.open) chatPoll(); else chatRefreshBadge();
+});
+
 // ═══ Contact System (WhatsApp + Phone) ═══
 // Primary WhatsApp number for direct contextual messages
 var AMWAJ_PRIMARY_WA = '9647709000160';
@@ -7459,6 +7894,8 @@ async function setupPushNotifications() {
         const d = notification.data || {};
         const title = notification.title || d._title || 'إشعار جديد';
         const body  = notification.body  || d._body  || '';
+        // 💬 رد بالدردشة: ما ينحفظ بمركز الإشعارات — المحادثة نفسها هي السجل
+        if (d.type === 'chat') { _chatOnPush(title, body); return; }
         addNotification({
           title: title,
           body:  body,
@@ -7476,6 +7913,7 @@ async function setupPushNotifications() {
     PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
       console.log('🖱️ Notification clicked:', action);
       const data = action.notification.data || {};
+      if (data.type === 'chat') { setTimeout(function(){ openChat(); }, 400); return; }   // 💬
       // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
       try {
         addNotification({
@@ -7516,7 +7954,7 @@ async function setupPushNotifications() {
 }
 
 // Toast لإشعار داخل التطبيق
-function showPushToast(title, body) {
+function showPushToast(title, body, onTap) {
   const t = document.createElement('div');
   t.style.cssText = 'position:fixed;top:20px;left:12px;right:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;padding:14px 18px;border-radius:14px;font-family:Tajawal,sans-serif;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.3);animation:slideDown 0.3s;cursor:pointer;';
   t.innerHTML =
@@ -7528,7 +7966,7 @@ function showPushToast(title, body) {
       '</div>' +
       '<div style="font-size:18px;opacity:0.8;cursor:pointer;" onclick="event.stopPropagation();this.parentElement.parentElement.remove();">✕</div>' +
     '</div>';
-  t.onclick = function() { t.remove(); };
+  t.onclick = function() { t.remove(); if (onTap) onTap(); };
   document.body.appendChild(t);
   setTimeout(() => { if (t.parentElement) t.remove(); }, 6000);
 }
@@ -7787,6 +8225,7 @@ async function proceedWithWebPushSetup() {
       const notif = (payload && payload.notification) || {};
       const title = notif.title || d._title || 'إشعار جديد';
       const body  = notif.body  || d._body  || '';
+      if (d.type === 'chat') { _chatOnPush(title, body); return; }   // 💬
       
       // احفظ في مركز الإشعارات
       try {
@@ -7824,6 +8263,7 @@ function handleNotificationClickData(data) {
   try {
     const type = data.type || 'general';
     const orderId = data.orderId || '';
+    if (type === 'chat') { if (typeof openChat === 'function') openChat(); return; }   // 💬
     
     if (type === 'admin_new_order' || type === 'admin_order_cancelled') {
       // للأدمن: افتح لوحة التحكم (صفحة مستقلة)
@@ -8329,6 +8769,12 @@ function renderAccountSheet() {
         </div>
 
         <div class="profile-menu-group">
+          <button class="profile-menu-item" onclick="openChat()">
+            <div class="profile-menu-icon pm-icon-contact">💬</div>
+            <div class="profile-menu-label">دردشة ويا امواج</div>
+            ${_chatBadgeHtml('acctChatBadge')}
+            <span class="profile-menu-arrow">‹</span>
+          </button>
           <button class="profile-menu-item" onclick="openContactSheet();">
             <div class="profile-menu-icon pm-icon-contact">📞</div>
             <div class="profile-menu-label">تواصل معنا</div>

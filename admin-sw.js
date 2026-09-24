@@ -126,6 +126,7 @@ const PAGE_OF = {
   admin_new_customer:   'cust',
   admin_new_order:      'ord',
   admin_order_cancelled:'ord',
+  admin_chat:           'chat',
   test:                 'home',
 };
 
@@ -139,7 +140,7 @@ self.addEventListener('notificationclick', (event) => {
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const c of list) {
         if (c.url.indexOf('/admin.html') !== -1 && 'focus' in c) {
-          c.postMessage({ amwaj: 'open', page: page });
+          c.postMessage({ amwaj: 'open', page: page, phone: d.phone || '' });
           return c.focus();
         }
       }

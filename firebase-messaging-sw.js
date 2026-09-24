@@ -93,7 +93,8 @@ messaging.onBackgroundMessage(function(payload) {
   // احفظ في IndexedDB بالتوازي مع عرض الإشعار
   return Promise.all([
     self.registration.showNotification(title, options),
-    saveNotifToDB(notifData)
+    // 💬 رد الدردشة: المحادثة نفسها هي السجل — ما نكرره بمركز الإشعارات
+    data.type === 'chat' ? Promise.resolve() : saveNotifToDB(notifData)
   ]).then(function(){
     console.log('[SW] ✅ Notification shown + saved to DB');
   }).catch(function(err){

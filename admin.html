@@ -208,6 +208,77 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
   .section-body{padding:13px 14px}
 }
 
+/* ══ 💬 الدردشة ══
+   كمبيوتر: القائمة جنب المحادثة. موبايل: القائمة، وتضغط تنفتح المحادثة
+   بكامل الشاشة (فوق الشريط السفلي) مثل واتساب. */
+.ch-wrap{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 100px);min-height:420px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.ch-side{border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.ch-search{padding:10px;border-bottom:1px solid var(--border)}
+.ch-search .search-input{width:100%;min-width:0}
+.ch-threads{flex:1;overflow-y:auto;min-height:0}
+.ch-th{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer}
+.ch-th:hover{background:var(--card)}
+.ch-th.on{background:#0EA5E914}
+.ch-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;flex-shrink:0}
+.ch-th-mid{flex:1;min-width:0}
+.ch-th-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.ch-th-top b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-th-top span{font-size:11.5px;color:var(--muted);flex-shrink:0}
+.ch-th-last{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-th.unread .ch-th-last{color:var(--text);font-weight:800}
+.ch-th-sub{font-size:11.5px;color:var(--muted)}
+.ch-unread{background:var(--green);color:#fff;border-radius:20px;font-size:12px;font-weight:800;padding:1px 8px;flex-shrink:0}
+.ch-main{display:flex;flex-direction:column;min-height:0;background:#EAF2F8}
+.ch-none{margin:auto;text-align:center;color:var(--muted);font-size:15px;line-height:2;padding:20px}
+.ch-head{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0}
+.ch-back{display:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--card);
+  font-size:20px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit}
+.ch-who{flex:1;min-width:0}
+.ch-who b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-who span{display:block;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch-acts{display:flex;gap:4px;flex-shrink:0}
+.ch-acts a{text-decoration:none}
+.ch-gone{background:#FEF3C7;color:#92400E;font-size:13px;font-weight:700;padding:8px 14px;text-align:center}
+.ch-list{flex:1;overflow-y:auto;min-height:0;padding:12px;display:flex;flex-direction:column;gap:6px}
+.ch-day{align-self:center;background:#0f172a12;color:var(--muted);font-size:12px;font-weight:700;
+  padding:2px 12px;border-radius:20px;margin:6px 0 2px}
+.ch-msg{max-width:75%;padding:7px 11px 4px;border-radius:14px;font-size:14.5px;line-height:1.6;
+  overflow-wrap:anywhere;box-shadow:0 1px 2px #0f172a14}
+.ch-msg.them{align-self:flex-start;background:var(--surface);border-top-right-radius:4px}
+.ch-msg.me{align-self:flex-end;background:#D3EEFF;border-top-left-radius:4px}
+.ch-text{white-space:pre-wrap}
+.ch-text a{color:var(--primary-dark)}
+.ch-img{display:block;width:230px;max-width:100%;max-height:300px;object-fit:cover;border-radius:10px;
+  margin:3px 0 4px;cursor:zoom-in;background:#e2e8f0}
+.ch-meta{font-size:11px;color:var(--muted);text-align:left}
+.ch-meta .seen{color:var(--primary);font-weight:800}
+.ch-prev{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--surface);
+  border-top:1px solid var(--border);font-size:13px;color:var(--muted)}
+.ch-prev img{width:50px;height:50px;object-fit:cover;border-radius:9px}
+.ch-prev button{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--card);cursor:pointer}
+.ch-bar{display:flex;gap:8px;align-items:flex-end;padding:9px 10px;background:var(--surface);
+  border-top:1px solid var(--border);flex-shrink:0}
+.ch-bar textarea{flex:1;min-width:0;width:auto;height:42px;max-height:130px;resize:none;border-radius:21px;
+  padding:9px 15px;line-height:1.45;font-size:15px}
+.ch-att{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--border);background:var(--card);
+  font-size:18px;cursor:pointer;flex-shrink:0}
+.ch-send{height:42px;border-radius:21px;padding:0 18px;flex-shrink:0}
+@media(max-width:820px){
+  .ch-wrap{grid-template-columns:1fr;height:calc(100dvh - 150px - env(safe-area-inset-bottom));border-radius:12px}
+  .ch-side{border-left:none}
+  .ch-main{display:none}
+  body.ch-full .ch-main{display:flex;position:fixed;top:0;left:0;right:0;height:100dvh;z-index:300;
+    padding-top:env(safe-area-inset-top)}
+  body.ch-full .ch-bar{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
+  body.ch-full.ch-kb .ch-bar{padding-bottom:9px}
+  .ch-back{display:flex}
+  .ch-msg{max-width:84%;font-size:15.5px}
+  .ch-bar textarea{font-size:16px}
+}
+
 /* شاشات صغيرة جداً */
 @media(max-width:380px){
   .nav-item{min-width:62px;font-size:10px;padding:8px 8px 6px}
@@ -289,6 +360,7 @@ label{display:block;font-size:12.5px;font-weight:700;margin:9px 0 4px;color:var(
     <div class="nav-item active" id="nav-home"  onclick="showPage('home')"><span class="nav-icon">📊</span><span>الرئيسية</span></div>
     <div class="nav-item" id="nav-cust"  onclick="showPage('cust')"><span class="nav-icon">👥</span><span>الزبائن</span><span class="nav-badge" id="bgCust" style="display:none">0</span></div>
     <div class="nav-item" id="nav-ord"   onclick="showPage('ord')"><span class="nav-icon">📦</span><span>الطلبات</span><span class="nav-badge" id="bgOrd" style="display:none">0</span></div>
+    <div class="nav-item" id="nav-chat"  onclick="showPage('chat')"><span class="nav-icon">💬</span><span>الدردشة</span><span class="nav-badge" id="bgChat" style="display:none">0</span></div>
     <div class="nav-item" id="nav-prime" onclick="showPage('prime')"><span class="nav-icon">🚚</span><span>برايم</span></div>
     <div class="nav-item" id="nav-war"   onclick="showPage('war')"><span class="nav-icon">🛡️</span><span>الضمانات</span></div>
     <div class="nav-item" id="nav-cat"   onclick="showPage('cat')"><span class="nav-icon">🗂️</span><span>المواد</span><span class="nav-badge" id="bgCat" style="display:none">0</span></div>
@@ -619,6 +691,7 @@ if ('serviceWorker' in navigator){
     var m = ev.data || {};
     if (m.amwaj !== 'open' || !m.page) return;
     WANT_PAGE = m.page;
+    CH_WANT = m.phone || '';                 // 💬 محادثة الزبون الي كتب
     /* اللوحة مفتوحة أصلاً؟ نروح فوراً. لسا بشاشة الدخول؟ ننتظر. */
     if ($('adminApp') && $('adminApp').style.display === 'block') goWantedPage();
   });
@@ -688,7 +761,7 @@ function tick(){
    ليش سؤال متكرر مو بث مباشر: جداول الطلبات والزبائن مقفّلة عن
    المتصفح عمداً، والبث المباشر يحتاج نفتحها. السؤال المتكرر
    يمر بدالة محروسة — نفس الحماية بلا ما نفتح شي.               */
-var PULSE = { ord:null, cust:null, timer:null, muted:false };
+var PULSE = { ord:null, cust:null, chat:null, timer:null, muted:false };
 
 /* 🔊 تنبيه مسموع — ثلاث رنّات متتالية بنغمتين، عالي بحيث ينسمع
    والتلفون بالجيب أو والمحل فيه ضجة. الاهتزاز يشتغل وياه. */
@@ -741,6 +814,7 @@ function pulseBadge(id, n){
 
 async function pulse(){
   if (document.hidden) return;               // مخفية؟ ما نتعب السيرفر
+  pulseChat();                               // 💬 مستقل — حتى الموظف الي عنده الدردشة بس يوصله
   try{
     var p = await rpc('web_pulse', {});
     if (!p || p['خطأ']) return;
@@ -859,6 +933,8 @@ async function pushRegister(){
       /* رسائل المتصفح صارت «بيانات بس» — العنوان والنص يجن من data */
       var n = (p && p.notification) || {}, d = (p && p.data) || {};
       var t = n.title || d._title || '', b = n.body || d._body || '';
+      /* 💬 رسالة دردشة: النبض يرن ويحدّث العلامة فوراً — بدون توست ثاني */
+      if (d.type === 'admin_chat'){ pulseChat(); return; }
       if (t) toast('🔔 ' + t + (b ? ' — ' + b : ''), 6000);
     });
 
@@ -877,13 +953,13 @@ async function pushForget(){
 /* ══════════════════════ التنقّل ══════════════════════ */
 var TITLES = {home:'الرئيسية',cust:'الزبائن',ord:'الطلبات',prime:'شحنات برايم',
               war:'الضمانات',cat:'المواد والشاشات',up:'رفع المخزن',bc:'الإعلانات',
-              set:'التنبيهات والدوام',msg:'إعدادات الرسائل',stf:'الموظفين'};
+              set:'التنبيهات والدوام',msg:'إعدادات الرسائل',stf:'الموظفين',chat:'الدردشة'};
 
 /* أي صلاحية تفتح أي صفحة */
 var PAGE_PERM = {home:'orders', cust:'customers', ord:'orders', prime:'orders',
                  war:'warranties', cat:'products_image', up:'import',
-                 bc:'broadcasts', set:'settings', msg:'settings', stf:'staff'};
-var PAGE_ORDER = ['home','cust','ord','prime','war','cat','up','bc','set','msg','stf'];
+                 bc:'broadcasts', set:'settings', msg:'settings', stf:'staff', chat:'chat'};
+var PAGE_ORDER = ['home','cust','ord','chat','prime','war','cat','up','bc','set','msg','stf'];
 
 /* نخفي صفحات ما يستحقها الموظف.
    ⚠️ الإخفاء للراحة بس — المنع الحقيقي بالسيرفر، وهو شغّال أصلاً. */
@@ -907,6 +983,7 @@ function showPage(p){
     $('content').innerHTML = '<div class="empty">🔒 ما عندك صلاحية لهذي الصفحة</div>';
     return;
   }
+  if (PAGE === 'chat' && p !== 'chat') chStop();   // 💬
   PAGE = p;
   PAGE_ORDER.forEach(function(k){
     var el = $('nav-'+k); if (el) el.className = 'nav-item' + (k===p ? ' active' : '');
@@ -914,7 +991,7 @@ function showPage(p){
   $('pageTitle').textContent = TITLES[p] || '';
   $('content').innerHTML = '<div class="loading">جاري التحميل…</div>';
   ({home:pHome,cust:pCust,ord:pOrd,prime:pPrime,war:pWar,cat:pCat,up:pUp,bc:pBc,
-    set:pSet,msg:pMsg,stf:pStaff})[p]();
+    set:pSet,msg:pMsg,stf:pStaff,chat:pChat})[p]();
 }
 
 /* ══════════════════════ رفع الصور للسيرفر ══════════════════════ */
@@ -1157,11 +1234,11 @@ async function custSet(id, patch, phone, name){
     // 🔔 واتساب + إشعار — نفس نصوص النظام القديم.
     //    الواتساب هو الأهم: يوصل بغض النظر عن نسخة التطبيق المثبّتة عند الزبون.
     if (patch.status === 'approved' && phone){
-      var _tpl = {}, _phone1 = '7696';
+      var _tpl = {}, _phone1 = '07801372000';
       try{
         var _cfg = await rpc('web_msg_settings', {});
         (_cfg['القوالب']||[]).forEach(function(t){ _tpl[t.key] = t.template; });
-        _phone1 = (_cfg['التواصل']||{}).contact_phone_1 || '7696';
+        _phone1 = (_cfg['التواصل']||{}).contact_phone_1 || '07801372000';
       }catch(e0){ /* نكمل بالنصوص الافتراضية */ }
       function _render(t, vars, fb){
         var s = t || fb;
@@ -1172,7 +1249,7 @@ async function custSet(id, patch, phone, name){
         var _msg = _render(_tpl.wa_approval, {name:name||'', phone:phone, phone1:_phone1},
           '🌊 أمواج للإلكترونيات\n\n✅ تمت الموافقة على تسجيلك!\n\n'+
           'مرحباً بك '+(name||'')+'\n\nيمكنك الآن\n• تفعيل الضمان\n• التحقق من الضمان\n• الاطلاع على الأسعار\n\n'+
-          'للدخول للنظام:\n🌐 www.amwajmob.com\n📱 رقمك: '+phone+'\n\n📞 للمساعدة: 7696');
+          'للدخول للنظام:\n🌐 www.amwajmob.com\n📱 رقمك: '+phone+'\n\n📞 للمساعدة: 07801372000');
         await fn('sendwhatsapp', {phone:phone, text:_msg});
       }catch(e3){ /* ثانوي */ }
       try{
@@ -2941,6 +3018,289 @@ async function msgSaveTpl(key){
 }
 
 
+/* ══════════════════════ 💬 الدردشة ══════════════════════
+   القائمة: المحادثات الي بيها رسائل ما انقرت فوق، وبعدها الأحدث.
+   المحادثة: تتحدث كل ٤ ثواني والصفحة مفتوحة — نفس فكرة النبض
+   (الجداول مقفولة عن المتصفح، فنسأل دالة محروسة بدل البث المباشر).
+   الرد يمر بدالة السيرفر «chat»: ترفع الصورة وترن على تلفون الزبون،
+   وتكتب اسم الموظف الي رد (يبين هنا بس، الزبون يشوف «امواج»).     */
+var CH = { phone:'', items:[], lastId:0, seenUpTo:0, cust:null, threads:[], q:'',
+           timer:null, tick:0, busy:false, sending:false, img:null, stick:true };
+var CH_WANT = '';     // جاي من ضغطة إشعار؟ نفتح محادثته
+
+async function pChat(){
+  $('content').innerHTML =
+    '<div class="ch-wrap" id="chWrap">' +
+      '<div class="ch-side">' +
+        '<div class="ch-search"><input class="search-input" id="chQ" placeholder="🔍 اسم، محل، أو رقم" ' +
+          'oninput="chSearch(this.value)" value="' + esc(CH.q) + '"></div>' +
+        '<div class="ch-threads" id="chThreads"><div class="loading">جاري التحميل…</div></div>' +
+      '</div>' +
+      '<div class="ch-main" id="chMain">' + chNoneHtml() + '</div>' +
+    '</div>';
+  CH.phone = '';
+  document.body.classList.remove('ch-full');
+  clearInterval(CH.timer);
+  CH.timer = setInterval(chTick, 4000);
+  await chThreads();
+  var want = CH_WANT; CH_WANT = '';
+  if (want) chOpen(want);
+}
+function chNoneHtml(){ return '<div class="ch-none">💬<br>اختار محادثة من القائمة</div>'; }
+
+// نطلع من الصفحة — نوقف السؤال المتكرر
+function chStop(){
+  clearInterval(CH.timer); CH.timer = null;
+  CH.phone = '';
+  document.body.classList.remove('ch-full', 'ch-kb');
+}
+
+function chTick(){
+  if (document.hidden || PAGE !== 'chat') return;
+  if (CH.phone) chPoll();
+  if (++CH.tick % 3 === 0) chThreads();
+}
+
+function chSearch(v){
+  CH.q = String(v || '').trim();
+  clearTimeout(CH._qt);
+  CH._qt = setTimeout(chThreads, 350);
+}
+
+function chDay(d){
+  var t = new Date(); t.setHours(0,0,0,0);
+  var x = new Date(d.getTime()); x.setHours(0,0,0,0);
+  var n = Math.round((t - x) / 86400000);
+  if (n === 0) return 'اليوم';
+  if (n === 1) return 'أمس';
+  return d.toLocaleDateString('ar-IQ', { day:'numeric', month:'long' });
+}
+function chWhen(v){
+  if (!v) return '';
+  var d = new Date(v), day = chDay(d);
+  return day === 'اليوم' ? d.toLocaleTimeString('ar-IQ', { hour:'numeric', minute:'2-digit' }) : day;
+}
+function chLinkify(safe){
+  return safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+async function chThreads(){
+  try{
+    var r = await rpc('web_chat_threads', { p_q: CH.q || null });
+    CH.threads = r.threads || [];
+    chRenderThreads();
+  }catch(e){
+    var el = $('chThreads');
+    if (el && !CH.threads.length) el.innerHTML = '<div class="empty">' + esc(e.message) + '</div>';
+  }
+}
+
+function chRenderThreads(){
+  var el = $('chThreads'); if (!el) return;
+  if (!CH.threads.length){
+    el.innerHTML = '<div class="ch-none">' + (CH.q ? 'ماكو نتيجة'
+      : 'ماكو محادثات بعد.<br>أول ما يكتب زبون من التطبيق أو الموقع، تطلع هنا.') + '</div>';
+    return;
+  }
+  el.innerHTML = CH.threads.map(function(t){
+    var title = t.shop || t.name || t.phone;
+    var sub = [t.shop && t.name ? t.name : '', t.province, t.gone ? 'حذف حسابه' : ''].filter(Boolean).join(' · ');
+    return '<div class="ch-th' + (t.phone === CH.phone ? ' on' : '') + (t.unread ? ' unread' : '') +
+             '" onclick="chOpen(\'' + esc(t.phone) + '\')">' +
+      '<div class="ch-av">' + esc(String(title).trim().charAt(0) || '?') + '</div>' +
+      '<div class="ch-th-mid">' +
+        '<div class="ch-th-top"><b>' + esc(title) + '</b><span>' + esc(chWhen(t.at)) + '</span></div>' +
+        '<div class="ch-th-last">' + (t.lastFrom === 'staff' ? '↩️ ' : '') + esc(t.last) + '</div>' +
+        (sub ? '<div class="ch-th-sub">' + esc(sub) + '</div>' : '') +
+      '</div>' +
+      (t.unread ? '<span class="ch-unread">' + t.unread + '</span>' : '') +
+    '</div>';
+  }).join('');
+}
+
+async function chOpen(phone){
+  if (!$('chMain')) return;
+  CH.phone = String(phone); CH.items = []; CH.lastId = 0; CH.seenUpTo = 0; CH.cust = null; CH.stick = true;
+  CH.img = null;
+  CH.threads.forEach(function(t){ if (t.phone === CH.phone) t.unread = 0; });
+  chRenderThreads();
+  $('chWrap').classList.add('open');
+  document.body.classList.add('ch-full');
+  $('chMain').innerHTML =
+    '<div class="ch-head">' +
+      '<button class="ch-back" onclick="chBack()" title="رجوع">→</button>' +
+      '<div class="ch-who" id="chWho"><b>…</b></div>' +
+      '<div class="ch-acts" id="chActs"></div>' +
+    '</div>' +
+    '<div class="ch-gone" id="chGone" style="display:none">هذا الزبون حذف حسابه — ما توصله ردود من هنا. راسله واتساب.</div>' +
+    '<div class="ch-list" id="chList"><div class="loading">جاري التحميل…</div></div>' +
+    '<div class="ch-prev" id="chPrev"></div>' +
+    '<div class="ch-bar" id="chBar">' +
+      '<button class="ch-att" onclick="chPick()" onmousedown="event.preventDefault()" title="صورة">📷</button>' +
+      '<textarea id="chInput" rows="1" placeholder="اكتب ردّك…" oninput="chGrow(this)" onkeydown="chKey(event)"></textarea>' +
+      '<button class="btn-solid ch-send" id="chSendBtn" onclick="chSend()" onmousedown="event.preventDefault()">إرسال</button>' +
+      '<input type="file" id="chFile" accept="image/*" style="display:none" onchange="chFileChosen(this)">' +
+    '</div>';
+  var box = $('chList');
+  box.addEventListener('scroll', function(){
+    CH.stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  }, { passive:true });
+  chFit();
+  await chPoll(true);
+  pulseChat();                       // العلامة الحمرة تنزل فوراً
+}
+
+function chBack(){
+  CH.phone = '';
+  document.body.classList.remove('ch-full', 'ch-kb');
+  var w = $('chWrap'); if (w) w.classList.remove('open');
+  var m = $('chMain'); if (m){ m.style.height = ''; m.style.transform = ''; m.innerHTML = chNoneHtml(); }
+  chRenderThreads();
+  chThreads();
+}
+
+async function chPoll(scroll){
+  if (!CH.phone || CH.busy) return;
+  CH.busy = true;
+  var phone = CH.phone;
+  try{
+    var r = await rpc('web_chat_messages', { p_phone: phone, p_after: CH.lastId });
+    if (phone !== CH.phone) return;                       // بدّل المحادثة بالنص
+    var fresh = (r.items || []).filter(function(m){ return m.id > CH.lastId; });
+    var ticks = (r.seenUpTo || 0) !== CH.seenUpTo;
+    CH.seenUpTo = r.seenUpTo || 0;
+    var first = !CH.cust;
+    CH.cust = r.customer || CH.cust || {};
+    if (first) chRenderHead();
+    if (fresh.length){ CH.items = CH.items.concat(fresh); CH.lastId = fresh[fresh.length - 1].id; }
+    if (first || fresh.length || ticks) chRenderMsgs(first || !!scroll || fresh.length > 0);
+  }catch(e){
+    var b = $('chList');
+    if (b && !CH.items.length) b.innerHTML = '<div class="ch-none">' + esc(e.message) + '</div>';
+  }finally{ CH.busy = false; }
+}
+
+function chRenderHead(){
+  var c = CH.cust || {}, title = c.shop || c.name || CH.phone;
+  var sub = [c.shop && c.name ? c.name : '', c.province, CH.phone].filter(Boolean).join(' · ');
+  $('chWho').innerHTML = '<b>' + esc(title) + '</b><span>' + esc(sub) + '</span>';
+  var wa = '964' + CH.phone.replace(/^0/, '');
+  $('chActs').innerHTML =
+    '<a class="action-btn btn-view" href="tel:' + esc(CH.phone) + '" title="اتصال">📞</a>' +
+    '<a class="action-btn btn-approve" target="_blank" rel="noopener" href="https://wa.me/' + esc(wa) + '">واتساب</a>';
+  if (c.gone){ $('chGone').style.display = ''; $('chBar').style.display = 'none'; }
+}
+
+function chRenderMsgs(scroll){
+  var box = $('chList'); if (!box) return;
+  var h = '', lastDay = '';
+  CH.items.forEach(function(m){
+    var d = new Date(m.at), day = chDay(d);
+    if (day !== lastDay){ h += '<div class="ch-day">' + esc(day) + '</div>'; lastDay = day; }
+    h += '<div class="ch-msg ' + (m.me ? 'me' : 'them') + '">';
+    if (m.img)  h += '<img class="ch-img" src="' + esc(m.img) + '" alt="" onclick="window.open(this.src,\'_blank\')" onload="chImgLoaded()">';
+    if (m.text) h += '<div class="ch-text">' + chLinkify(esc(m.text)) + '</div>';
+    var time = d.toLocaleTimeString('ar-IQ', { hour:'numeric', minute:'2-digit' });
+    h += '<div class="ch-meta">' + (m.me
+      ? esc(m.staff || '') + ' · ' + time + (m.id <= CH.seenUpTo ? ' <span class="seen" title="قراها">✓✓</span>' : ' ✓')
+      : time) + '</div></div>';
+  });
+  box.innerHTML = h || '<div class="ch-none">ماكو رسائل</div>';
+  if (scroll || CH.stick){ box.scrollTop = box.scrollHeight; CH.stick = true; }
+}
+function chImgLoaded(){
+  if (!CH.stick) return;
+  var b = $('chList'); if (b) b.scrollTop = b.scrollHeight;
+}
+
+function chGrow(t){ t.style.height = 'auto'; t.style.height = Math.min(Math.max(t.scrollHeight, 42), 130) + 'px'; }
+// بالكمبيوتر Enter يرسل و Shift+Enter سطر جديد. بالموبايل Enter سطر جديد.
+function chKey(e){
+  if (e.key !== 'Enter' || e.shiftKey) return;
+  var fine = false;
+  try{ fine = window.matchMedia('(pointer:fine)').matches; }catch(err){}
+  if (fine){ e.preventDefault(); chSend(); }
+}
+
+function chPick(){ var f = $('chFile'); if (f){ f.value = ''; f.click(); } }
+async function chFileChosen(inp){
+  var f = inp.files && inp.files[0]; if (!f) return;
+  if (f.type && !/^image\//.test(f.type)){ toast('اختار صورة'); return; }
+  try{
+    var blob = await shrink(f, 1280, 0.8);
+    CH.img = { url: URL.createObjectURL(blob), b64: await blobToBase64(blob) };
+    var p = $('chPrev');
+    p.innerHTML = '<img src="' + CH.img.url + '" alt=""><span style="flex:1">الصورة جاهزة — اكتب وياها أو دز</span>' +
+                  '<button onclick="chClearImg()" title="شيل الصورة">✕</button>';
+    p.style.display = 'flex';
+  }catch(e){ toast('ما گدرت أفتح الصورة'); }
+}
+function chClearImg(){
+  if (CH.img && CH.img.url){ try{ URL.revokeObjectURL(CH.img.url); }catch(e){} }
+  CH.img = null;
+  var p = $('chPrev'); if (p){ p.innerHTML = ''; p.style.display = 'none'; }
+}
+
+async function chSend(){
+  if (CH.sending || !CH.phone) return;
+  var t = $('chInput'), text = t.value.trim(), img = CH.img;
+  if (!text && !img){ t.focus(); return; }
+  CH.sending = true; $('chSendBtn').disabled = true;
+  var body = { action:'reply', phone: CH.phone, text: text };
+  if (img){ body.imageBase64 = img.b64; body.mimeType = 'image/jpeg'; }
+  try{
+    try{ await fn('chat', body); }
+    catch(e){
+      /* جلسة الموظف تنتهي كل ساعة — نجددها بالخفاء ونعيد مرة وحدة */
+      if (/صلاحية/.test(e.message) && AUTH.refresh && await authRefresh()) await fn('chat', body);
+      else throw e;
+    }
+    t.value = ''; chGrow(t); chClearImg();
+    CH.stick = true;
+    while (CH.busy) await new Promise(function(r){ setTimeout(r, 120); });
+    await chPoll(true);
+    chThreads();
+  }catch(e){ toast('❌ ما انرسل: ' + e.message, 5000); }
+  finally{
+    CH.sending = false;
+    var b = $('chSendBtn'); if (b) b.disabled = false;
+  }
+}
+
+/* ⌨️ بالموبايل: المحادثة بحجم الجزء الي يبين فوق الكيبورد بالضبط */
+function chFit(){
+  var m = $('chMain'), vv = window.visualViewport;
+  if (!m) return;
+  var full = document.body.classList.contains('ch-full') && window.innerWidth <= 820;
+  if (!full || !vv){ m.style.height = ''; m.style.transform = ''; document.body.classList.remove('ch-kb'); return; }
+  m.style.height = vv.height + 'px';
+  m.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+  document.body.classList.toggle('ch-kb', vv.height < window.innerHeight - 120);
+  if (CH.stick){ var b = $('chList'); if (b) b.scrollTop = b.scrollHeight; }
+}
+if (window.visualViewport){
+  window.visualViewport.addEventListener('resize', chFit);
+  window.visualViewport.addEventListener('scroll', chFit);
+}
+
+/* 🔔 نبض الدردشة — علامة حمرة + رنة لما يكتب زبون.
+   ما نرن إذا انت فاتح نفس المحادثة وتشوفها. */
+async function pulseChat(){
+  if (!can('chat')) return;
+  try{
+    var cu = await rpc('web_chat_unread', {});
+    pulseBadge('bgChat', cu.n || 0);
+    var last = cu.lastId || 0;
+    var watching = PAGE === 'chat' && CH.phone === cu.phone && !document.hidden;
+    if (PULSE.chat !== null && last > PULSE.chat && !watching){
+      pulseNotify('💬 ' + (cu.who || 'زبون'), cu.text || '', 'chat');
+      if (PAGE === 'chat') chThreads();
+    }
+    PULSE.chat = last;
+  }catch(e){ /* نحاول بالدورة الجاية */ }
+}
+
+
 /* ══════════════════════ الموظفين ══════════════════════ */
 var PERM_LABELS = {
   orders:         '📦 الطلبات — يشوف · يجهّز · برايم · يلغي',
@@ -2951,7 +3311,8 @@ var PERM_LABELS = {
   broadcasts:     '📢 الإعلانات',
   settings:       '⚙️ الإعدادات والرسائل والدوام',
   import:         '📤 رفع المخزن (اكسل)',
-  staff:          '🔑 إدارة الموظفين'
+  staff:          '🔑 إدارة الموظفين',
+  chat:           '💬 الدردشة — يقرا ويرد على الزبائن'
 };
 
 async function pStaff(){
