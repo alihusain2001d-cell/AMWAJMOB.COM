@@ -3059,7 +3059,7 @@ async function pChat(){
   $('content').innerHTML =
     '<div class="ch-wrap" id="chWrap">' +
       '<div class="ch-side">' +
-        '<div class="ch-search"><input class="search-input" id="chQ" placeholder="🔍 اسم، محل، أو رقم" ' +
+        '<div class="ch-search"><input class="search-input" id="chQ" placeholder="🔍 ابحث عن أي زبون بالاسم أو الرقم وراسله" ' +
           'oninput="chSearch(this.value)" value="' + esc(CH.q) + '"></div>' +
         '<div class="ch-threads" id="chThreads"><div class="loading">جاري التحميل…</div></div>' +
       '</div>' +
@@ -3115,6 +3115,11 @@ async function chThreads(){
   try{
     var r = await rpc('web_chat_threads', { p_q: CH.q || null });
     CH.threads = r.threads || [];
+    /* 🔎 ملف ١١٧: البحث يجيب هم زبائن ما راسلوك بعد — تبدي ويا محادثة */
+    CH.found = [];
+    if ((CH.q || '').length >= 2){
+      try{ var f = await rpc('web_chat_find', { p_q: CH.q }); CH.found = f.customers || []; }catch(e2){}
+    }
     chRenderThreads();
   }catch(e){
     var el = $('chThreads');
@@ -3124,7 +3129,17 @@ async function chThreads(){
 
 function chRenderThreads(){
   var el = $('chThreads'); if (!el) return;
+  var found = (CH.found || []).map(function(c){
+    var title = c.name || c.shop || c.phone;
+    var sub = [c.name && c.shop ? '🏪 ' + c.shop : '', c.province, c.phone].filter(Boolean).join(' · ');
+    return '<div class="ch-th" onclick="chOpen(\'' + esc(c.phone) + '\')">' +
+      '<div class="ch-av" style="background:var(--muted)">' + esc(String(title).trim().charAt(0) || '?') + '</div>' +
+      '<div class="ch-th-mid"><div class="ch-th-top"><b>' + esc(title) + '</b><span>✍️ راسله</span></div>' +
+      '<div class="ch-th-sub">' + esc(sub) + '</div></div></div>';
+  }).join('');
+  if (found) found = '<div class="hint" style="padding:10px 12px 4px;font-weight:800">زبائن ما راسلوك بعد — اضغط وابدي المحادثة</div>' + found;
   if (!CH.threads.length){
+    if (found){ el.innerHTML = found; return; }
     el.innerHTML = '<div class="ch-none">' + (CH.q ? 'ماكو نتيجة'
       : 'ماكو محادثات بعد.<br>أول ما يكتب زبون من التطبيق أو الموقع، تطلع هنا.') + '</div>';
     return;
@@ -3143,7 +3158,7 @@ function chRenderThreads(){
       '</div>' +
       (t.unread ? '<span class="ch-unread">' + t.unread + '</span>' : '') +
     '</div>';
-  }).join('');
+  }).join('') + found;
 }
 
 async function chOpen(phone){

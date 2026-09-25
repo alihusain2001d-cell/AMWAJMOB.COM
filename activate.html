@@ -976,6 +976,31 @@ body {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   border-color: transparent; box-shadow: 0 4px 12px rgba(2,132,199,.35);
 }
+/* 👋 ترحيب الدردشة — يطلع مرة وحدة بنص المحادثة */
+.chat-intro {
+  position: absolute; left: 18px; right: 18px; top: 50%; transform: translateY(-50%); z-index: 5;
+  background: var(--card); border-radius: 26px; padding: 30px 20px 20px; text-align: center;
+  box-shadow: 0 24px 60px rgba(15,23,42,.28); border: 2px solid var(--primary-light);
+  animation: ciIn .35s var(--ease-out);
+}
+@keyframes ciIn { from { opacity: 0; transform: translateY(-44%) scale(.94); } to { opacity: 1; transform: translateY(-50%) scale(1); } }
+.chat-intro .ci-x {
+  position: absolute; top: 12px; left: 12px; width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: var(--surface-2); font-size: 17px; cursor: pointer; color: var(--muted);
+}
+.chat-intro .ci-big { font-size: 34px; font-weight: 900; color: var(--primary-dark); margin-bottom: 10px; }
+.chat-intro .ci-t { font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 8px; line-height: 1.6; }
+.chat-intro .ci-s { font-size: 15.5px; color: var(--muted); line-height: 1.8; }
+.chat-intro .ci-gift {
+  margin-top: 14px; background: #F0FDF4; border: 1px dashed #86EFAC; color: #166534;
+  border-radius: 14px; padding: 10px 12px; font-size: 14.5px; line-height: 1.7; cursor: pointer;
+}
+.chat-intro .ci-go {
+  margin-top: 16px; width: 100%; border: none; border-radius: 16px; padding: 14px; cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff;
+  font-size: 17px; font-weight: 800; font-family: 'Tajawal', sans-serif;
+}
+
 /* ═══ 💬 الدردشة ويا امواج ═══ */
 #chatSheet .bsheet { background: #EAF2F8; }
 .chat-list {
@@ -3553,7 +3578,7 @@ function closeSheet(id) {
      بسحبة الرجوع وبزر الأندرويد، ولو علّقناها بالزر بس تضل
      الكاميرا شغّالة والضوء مضوّي. */
   if (id === 'qrSheet') { try { qrStop(); } catch(e) {} }
-  if (id === 'chatSheet') { try { chatStop(); } catch(e) {} }   // 💬 نوقف السؤال المتكرر
+  if (id === 'chatSheet') { try { chatStop(); _chatIntroClose(); } catch(e) {} }   // 💬 نوقف السؤال المتكرر
   el.classList.remove('open');
   // Remove from stack
   var idx = _sheetStack.lastIndexOf(id);
@@ -7600,7 +7625,7 @@ function openCallPicker(){
 var WALLET = { loaded:false, at:0, tok:'', balance:0, tier:'retail', progress:0,
                threshold:0, pct:0, on:true, items:[] };
 var WHOLESALE_ON = false;     // الأسعار المعروضة هسه أسعار جملة؟
-var USE_WALLET   = true;      // «استعمل رصيدي» بالسلة — مأشّر افتراضياً
+var USE_WALLET   = false;     // «استعمل رصيدي» بالسلة — الزبون يأشّره بنفسه (طلب علي)
 
 // يبدّل أسعار الكاتلوك بأسعار الجملة — ينادى داخل loadCatalogFromServer
 async function _applyWholesale(r){
@@ -7735,6 +7760,60 @@ function toggleUseWallet(on){ USE_WALLET = !!on; renderCart(); }
 setTimeout(function(){ walletLoad(); }, 3000);
 setInterval(function(){ if (!document.hidden) walletLoad(); }, 120000);
 document.addEventListener('visibilitychange', function(){ if (!document.hidden) walletLoad(); });
+
+/* 👋 الدردشة ميزة جديدة، وهواي زبائن ما متعودين على التطبيق — فأول
+   مرة بعد التحديث تنفتح لحالها وبنصها ترحيب كبير («صباح الخير» أو
+   «مساء الخير» حسب الوقت). يطلع **مرة وحدة بس** ويا زر ✕.
+   ينتظر لحد ما الزبون يكون بالرئيسية وماكو نافذة ثانية مفتوحة
+   (إعلان، تسجيل دخول…) حتى ما يتراكبون. */
+var CHAT_INTRO_KEY = 'amwaj_chat_intro_v1';
+function _chatIntroBusy(){
+  var home = document.getElementById('homeScreen');
+  if (!home || home.style.display === 'none') return true;
+  if (_sheetStack.length) return true;
+  return ['broadcastModal', 'loginPromptOverlay', 'imgLightbox', 'callPicker'].some(function(id){
+    var el = document.getElementById(id);
+    return el && el.style.display !== 'none';
+  });
+}
+function _chatIntroMaybe(tries){
+  tries = tries || 0;
+  try { if (localStorage.getItem(CHAT_INTRO_KEY)) return; } catch(e) { return; }
+  if (!_chatTok()) return;                  // الضيف: تطلعله بعد ما يسجّل دخول ويفتح التطبيق
+  if (_chatIntroBusy()) {
+    if (tries < 40) setTimeout(function(){ _chatIntroMaybe(tries + 1); }, 3000);
+    return;
+  }
+  try { localStorage.setItem(CHAT_INTRO_KEY, '1'); } catch(e) {}
+  openChat();
+  var h = new Date().getHours();
+  var greet = (h >= 4 && h < 12) ? 'صباح الخير ☀️' : 'مساء الخير 🌙';
+  var gift = '';
+  try {
+    if (typeof WALLET !== 'undefined' && WALLET.balance > 0) {
+      gift = '<div class="ci-gift" onclick="openWalletSheet()">🎁 وبمحفظتك <b>' + _fmtIQD(WALLET.balance) +
+             ' د.ع</b> هدية — تنخصم من طلبك الجاي</div>';
+    }
+  } catch(e) {}
+  var box = document.createElement('div');
+  box.id = 'chatIntro';
+  box.className = 'chat-intro';
+  box.innerHTML =
+    '<button class="ci-x" onclick="_chatIntroClose()" aria-label="إغلاق">✕</button>' +
+    '<div class="ci-big">' + greet + '</div>' +
+    '<div class="ci-t">صار تگدر تراسلنا من التطبيق مباشرة 💬</div>' +
+    '<div class="ci-s">اكتب سؤالك، أو صوّر القطعة الي تحتاجها ودزها — ونرد عليك هنا بأسرع وقت.</div>' +
+    gift +
+    '<button class="ci-go" onclick="_chatIntroClose(true)">اكتبلنا هسه ✍️</button>';
+  var sheet = document.querySelector('#chatSheet .bsheet');
+  if (sheet) sheet.appendChild(box);
+}
+function _chatIntroClose(focus){
+  var b = document.getElementById('chatIntro');
+  if (b) b.remove();
+  if (focus) { try { document.getElementById('chatInput').focus(); } catch(e) {} }
+}
+setTimeout(_chatIntroMaybe, 5000);
 
 // ═══ Contact System (WhatsApp + Phone) ═══
 // Primary WhatsApp number for direct contextual messages
