@@ -57,13 +57,17 @@ messaging.onBackgroundMessage(function(payload) {
   const data = payload.data || {};
   const notif = payload.notification || {};
   
-  const title = notif.title || data._title || 'أمواج للإلكترونيات';
-  const body  = notif.body  || data._body  || 'إشعار جديد';
+  // 🏷️ «امواج للالكترونيات» فوق كل إشعار — والحدث نفسه بأول سطر تحته
+  const evTitle = notif.title || data._title || '';
+  const evBody  = notif.body  || data._body  || 'إشعار جديد';
+  const branded = evTitle && evTitle.indexOf('امواج') === -1;
+  const title = branded ? 'امواج للالكترونيات' : (evTitle || 'امواج للالكترونيات');
+  const body  = branded ? (evTitle + '\n' + evBody) : evBody;
   
   // 💾 احفظ للـ notification center
   const notifData = {
-    title: title,
-    body: body,
+    title: evTitle || title,     // مركز الإشعارات بالموقع يحفظ الحدث نفسه
+    body: evBody,
     type: data.type || 'general',
     orderId: data.orderId || '',
     target: data.target || '',

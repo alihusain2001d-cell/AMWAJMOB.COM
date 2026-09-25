@@ -4834,8 +4834,8 @@ function renderCart() {
         <span>المجموع الكلي</span>
         <span class="amt">${formatPriceIQD(_grandTotal - _walUse)} د.ع</span>
       </div>
-      ${(_chatTok() && WALLET.on && WALLET.pct > 0 && !isGuest() && total > 0) ? `
-      <div class="summary-row cb-row"><span>💰 راح ينزلك بمحفظتك</span><span class="amt">${_fmtIQD(Math.floor(total * WALLET.pct / 100))} د.ع</span></div>` : ''}
+      ${(_chatTok() && _cbOn() && !isGuest() && _cbFor(total) > 0) ? `
+      <div class="summary-row cb-row"><span>💰 راح ينزلك بمحفظتك</span><span class="amt">${_fmtIQD(_cbFor(total))} د.ع</span></div>` : ''}
       ${WHOLESALE_ON ? '<div class="summary-row cb-row" style="color:#92400E"><span>⭐ الأسعار أسعار جملة</span><span></span></div>' : ''}
     </div>
   `;
@@ -7616,14 +7616,14 @@ function openCallPicker(){
 // ═══════════════════════════════════════════════════════════════
 // 👛 المحفظة + ⭐ زبون الجملة (ملف ١١٥)
 //
-//   الحساب كله بالسيرفر: الهدية، الـ١٪، الخصم، الإرجاع عند الإلغاء،
+//   الحساب كله بالسيرفر: الهدية، المكافأة، الخصم، الإرجاع عند الإلغاء،
 //   والتحويل لجملة. التطبيق يعرض بس، ويرسل «useWallet» ويا الطلب.
 //
 //   ⭐ أسعار الجملة ما تجي ويا الكاتلوك العام (أي أحد يگدر يقراه) —
 //   تجي من app_wholesale_prices بتوكن الزبون، وبس إذا هو جملة.
 // ═══════════════════════════════════════════════════════════════
 var WALLET = { loaded:false, at:0, tok:'', balance:0, tier:'retail', progress:0,
-               threshold:0, pct:0, on:true, items:[] };
+               threshold:0, cb:[0, 0, 0], on:true, items:[] };
 var WHOLESALE_ON = false;     // الأسعار المعروضة هسه أسعار جملة؟
 var USE_WALLET   = false;     // «استعمل رصيدي» بالسلة — الزبون يأشّره بنفسه (طلب علي)
 
@@ -7658,7 +7658,8 @@ function walletLoad(force){
     WALLET.tier      = r.tier || 'retail';
     WALLET.progress  = Number(r.progress) || 0;
     WALLET.threshold = Number(r.threshold) || 0;
-    WALLET.pct       = Number(r.pct) || 0;
+    // النسب الثلاث (ملف ١١٨) — للحساب بالسلة بس، **ما تنعرض للزبون أبداً**
+    WALLET.cb        = Array.isArray(r.cb) ? r.cb.map(Number) : [Number(r.pct) || 0, Number(r.pct) || 0, Number(r.pct) || 0];
     WALLET.on        = r.on !== false;
     WALLET.items     = r.items || [];
     _walletPaint();
@@ -7687,8 +7688,8 @@ function _walletCardHtml(){
          ' د.ع</b> مشتريات وتصير زبون جملة</div>';
   } else if (W.tier === 'wholesale') {
     h += '<div class="wc-hint">الأسعار الي تشوفها بالتطبيق أسعار جملة</div>';
-  } else if (W.on && W.pct > 0) {
-    h += '<div class="wc-hint">كل طلب ينزلك ' + W.pct + '٪ منه بالمحفظة</div>';
+  } else if (_cbOn()) {
+    h += '<div class="wc-hint">كل طلب من التطبيق ينزلك مكافأة بمحفظتك 💰</div>';
   }
   return h + '<span class="wc-more">التفاصيل ‹</span></div>';
 }
@@ -7707,7 +7708,7 @@ function _walletSheetHtml(){
   var h = _walletCardHtml().replace('onclick="openWalletSheet()"', '').replace('<span class="wc-more">التفاصيل ‹</span>', '');
   h = '<div style="margin:0 -14px">' + h + '</div>';
   h += '<div class="wl-how"><div class="t">شلون تشتغل؟</div>' +
-       (W.pct > 0 && W.on ? '<div>💰 كل طلب من التطبيق ينزلك <b>' + W.pct + '٪</b> منه بمحفظتك.</div>' : '') +
+       (_cbOn() ? '<div>💰 كل طلب من التطبيق ينزلك <b>مكافأة</b> بمحفظتك — وكل ما يكبر طلبك تكبر المكافأة.</div>' : '') +
        '<div>🛒 بالسلة أشّر <b>«استعمل رصيدي»</b> وينخصم من طلبك، والمندوب يستلم الباقي بس.</div>' +
        '<div>↩️ إذا انلغى طلب، الرصيد الي صرفته بي يرجعلك.</div>' +
        (W.threshold > 0 && W.on ? '<div>⭐ لما توصل مشترياتك <b>' + _fmtIQD(W.threshold) + ' د.ع</b> تصير زبون جملة وتنفتحلك أسعار الجملة.</div>' : '') +
@@ -7748,6 +7749,16 @@ function _walletPaint(){
   var chip = document.getElementById('tierChip');
   if (chip) chip.style.display = (_chatTok() && WALLET.tier === 'wholesale') ? '' : 'none';
 }
+
+// 💰 كم مكافأة على مبلغ المواد — نفس حساب السيرفر (_cashback_for)
+function _cbFor(sum){
+  sum = Number(sum) || 0;
+  if (sum < 1000) return 0;
+  var c = WALLET.cb || [0, 0, 0];
+  var pct = sum < 50000 ? c[0] : (sum < 100000 ? c[1] : c[2]);
+  return Math.max(0, Math.floor(sum * (Number(pct) || 0) / 100));
+}
+function _cbOn(){ return WALLET.on && (WALLET.cb || []).some(function(x){ return Number(x) > 0; }); }
 
 // كم ينخصم من المحفظة على هذا المجموع
 function _walletUseFor(total){
@@ -8238,7 +8249,7 @@ async function setupPushNotifications() {
       // 💾 احفظ في مركز الإشعارات داخل التطبيق
       try {
         const d = notification.data || {};
-        const title = notification.title || d._title || 'إشعار جديد';
+        const title = d._title || notification.title || 'إشعار جديد';   // _title = الحدث (فوقه صار اسم المحل)
         const body  = notification.body  || d._body  || '';
         // 💬 رد بالدردشة: ما ينحفظ بمركز الإشعارات — المحادثة نفسها هي السجل
         if (d.type === 'chat') { _chatOnPush(title, body); return; }
@@ -8265,7 +8276,7 @@ async function setupPushNotifications() {
       // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
       try {
         addNotification({
-          title: action.notification.title || data._title || 'إشعار',
+          title: data._title || action.notification.title || 'إشعار',
           body:  action.notification.body  || data._body  || '',
           type:  data.type    || 'general',
           orderId: data.orderId || '',
