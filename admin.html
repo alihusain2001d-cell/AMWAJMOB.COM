@@ -1210,6 +1210,8 @@ function custRow(c){
          : c.status==='rejected' ? '<span class="badge badge-red">مرفوض</span>'
          : '<span class="badge badge-yellow">ينتظر</span>';
   if (c.needs_review) st += ' <span class="badge badge-red" title="'+esc(c.review_note||'')+'">🔴</span>';
+  if (c.tier === 'wholesale') st += ' <span class="badge badge-yellow">⭐ جملة</span>';   // ملف ١١٥
+  if (c.wallet) st += ' <span class="badge badge-green" title="رصيد المحفظة">👛 '+nf(c.wallet)+'</span>';
   return '<tr><td><b>'+esc(c.shop_name||'—')+'</b></td><td>'+esc(c.name||'—')+'</td>'+
     '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td>'+
     '<td>'+esc(c.province||'—')+'</td><td>'+esc(c.district||'—')+'</td>'+
@@ -1224,6 +1226,7 @@ function custRow(c){
     '<td style="white-space:nowrap">'+
       (c.status!=='approved' ? '<button class="action-btn btn-approve" onclick=\'custSet('+c.id+',{status:"approved"},'+JSON.stringify(c.phone||'')+','+JSON.stringify(c.name||'')+')\'>قبول</button>' : '')+
       (c.status!=='rejected' ? '<button class="action-btn btn-reject" onclick=\'custSet('+c.id+',{status:"rejected"})\'>رفض</button>' : '')+
+      '<button class="action-btn btn-view" title="المحفظة ونوع الزبون" onclick="custWallet('+c.id+')">👛</button>'+
       '<button class="action-btn btn-edit" onclick=\'custEdit('+JSON.stringify(c)+')\'>✏️</button>'+
       '<button class="action-btn btn-reject" onclick=\'custDelete('+JSON.stringify(c.id)+','+JSON.stringify(c.shop_name||c.name||'')+')\'>🗑️</button>'+
     '</td></tr>';
@@ -2790,6 +2793,11 @@ async function pSet(){
       '<div class="msg" id="warrRes"></div>'+
     '</div></div>'+
 
+    /* 👛 المحفظة والجملة (ملف ١١٥) — تنحمّل بعد ما تنرسم الصفحة */
+    '<div class="section-card"><div class="section-head">'+
+      '<div class="section-title">👛 المحفظة وزبون الجملة</div></div>'+
+    '<div class="section-body" id="promoBox"><div class="loading">جاري التحميل…</div></div></div>'+
+
     /* 💾 النسخة الاحتياطية — الخطة المجانية بسوپابيس ماكو بيها نسخ
        تلقائية. لو انحذف شي أو انقفل الحساب ماكو من وين نرجّع. */
     '<div class="section-card"><div class="section-head">'+
@@ -2805,6 +2813,7 @@ async function pSet(){
     '</div></div>';
 
     warrPreview();
+    promoLoad();
 
     try{
       var st = await rpc2('shop_status');
@@ -3336,6 +3345,110 @@ async function pulseChat(){
     }
     PULSE.chat = last;
   }catch(e){ /* نحاول بالدورة الجاية */ }
+}
+
+
+/* ══════════════════════ 👛 المحفظة + ⭐ الجملة (ملف ١١٥) ══════════════════════
+   كل زبون: رصيده، ونوعه (مفرد/جملة)، وكم باقيله حتى يصير جملة.
+   ثلاث حالات للنوع:
+     auto      = مفرد، ويصير جملة لحاله لما يوصل الحد      (الافتراضي)
+     wholesale = جملة
+     retail    = مفرد ثابت — ما يتحوّل لحاله (لو نزّلته أنت) */
+var WL_KIND_A = { welcome:'🎁 هدية الترحيب', cashback:'💰 مكافأة طلب', spend:'🛒 صرف بطلب',
+                  refund:'↩️ رجوع رصيد', clawback:'➖ سحب مكافأة (إلغاء)', adjust:'✏️ تعديل يدوي' };
+
+async function custWallet(id){
+  modal('<div class="loading">جاري التحميل…</div>');
+  try{
+    var w = await rpc('web_customer_wallet', { p_id:id });
+    var mode = w.tier === 'wholesale' ? 'wholesale' : (w.locked ? 'retail' : 'auto');
+    var pc = w.threshold > 0 ? Math.min(100, Math.round(w.progress * 100 / w.threshold)) : 0;
+    var seg = function(v, label){
+      return '<button class="filter-tab'+(mode===v?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
+    };
+    var tx = (w.items||[]).map(function(t){
+      return '<tr><td>'+(WL_KIND_A[t.kind]||esc(t.kind))+'</td>'+
+        '<td dir="ltr" style="font-weight:800;color:'+(t.amount>=0?'var(--green)':'var(--red)')+'">'+
+          (t.amount>=0?'+':'')+nf(t.amount)+'</td>'+
+        '<td>'+esc(t.note||'')+(t.by?' <span class="hint">· '+esc(t.by)+'</span>':'')+'</td>'+
+        '<td>'+dtstr(t.at)+'</td></tr>';
+    }).join('');
+    modal('<h3>👛 '+esc(w.shop||w.name||'')+'</h3>'+
+      '<div class="stats-grid" style="grid-template-columns:1fr 1fr">'+
+        '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
+        '<div class="stat-card"><div class="hint">مشترياته المُسلّمة (من بداية العرض)</div><div class="stat-num">'+nf(w.progress)+'</div>'+
+          (mode!=='wholesale' && w.threshold>0 ? '<div style="height:7px;background:var(--border);border-radius:6px;margin-top:6px;overflow:hidden">'+
+            '<div style="height:100%;width:'+pc+'%;background:var(--yellow)"></div></div>'+
+            '<div class="hint">'+pc+'٪ من '+nf(w.threshold)+'</div>' : '')+
+        '</div></div>'+
+      '<label>نوع الزبون</label>'+
+      '<div class="filters" style="padding:0;border:none">'+
+        seg('auto','مفرد (يصير جملة لحاله)')+seg('wholesale','⭐ جملة')+seg('retail','مفرد ثابت')+
+      '</div>'+
+      '<div class="hint">«مفرد ثابت» = ما يتحوّل جملة لحاله حتى لو وصل الحد.</div>'+
+      '<label style="margin-top:14px">➕➖ تعديل الرصيد (هدية، تعويض، تصحيح)</label>'+
+      '<div class="grid2"><input class="modal-input" id="wlAmt" type="number" inputmode="numeric" placeholder="المبلغ — مثلاً 5000 أو -5000">'+
+        '<input class="modal-input" id="wlNote" placeholder="السبب (يوصل للزبون بالإشعار)"></div>'+
+      '<div style="display:flex;gap:8px;margin-top:8px">'+
+        '<button class="btn-solid green" onclick="custWalletAdj('+id+')">حفظ التعديل</button>'+
+        '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
+      '<div class="msg" id="wlMsg"></div>'+
+      '<label style="margin-top:14px">الحركات</label>'+
+      (tx ? '<div class="tbl-wrap" style="max-height:40vh"><table><thead><tr><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th>الوقت</th></tr></thead><tbody>'+tx+'</tbody></table></div>'
+          : '<div class="hint">ماكو حركات بعد</div>'));
+  }catch(e){ modal('<div class="msg err">'+esc(e.message)+'</div>'); }
+}
+async function custTier(id, tier){
+  try{
+    await rpc('web_customer_tier', { p_id:id, p_tier:tier });
+    toast(tier==='wholesale' ? '⭐ صار جملة — وصله إشعار' : '✅ انحفظ');
+    custWallet(id);
+    if (PAGE === 'cust') pCust();
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+async function custWalletAdj(id){
+  var a = parseInt(($('wlAmt').value||'').replace(/[^0-9-]/g,''), 10), m = $('wlMsg');
+  if (!a){ m.className='msg err'; m.textContent='اكتب المبلغ'; return; }
+  if (!confirm((a>0?'إضافة ':'خصم ')+nf(Math.abs(a))+' د.ع؟')) return;
+  try{
+    await rpc('web_wallet_adjust', { p_id:id, p_amount:a, p_note:$('wlNote').value.trim() || null });
+    toast('✅ انحفظ'); custWallet(id);
+    if (PAGE === 'cust') pCust();
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
+}
+
+/* ⚙️ إعدادات المحفظة والجملة — بصفحة التنبيهات والإعدادات */
+async function promoLoad(){
+  var box = $('promoBox'); if (!box) return;
+  try{
+    var p = await rpc('web_promo_get', {});
+    var s = p.stats || {};
+    box.innerHTML =
+      '<label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="prOn"'+(p.on?' checked':'')+
+        ' style="width:20px;height:20px"> <b>شغّال</b> — هدية الترحيب والمكافأة والتحويل لجملة</label>'+
+      '<div class="grid2">'+
+        '<div><label>هدية الترحيب (د.ع)</label><input class="modal-input" id="prWel" type="number" value="'+(p.welcome||0)+'"></div>'+
+        '<div><label>المكافأة من كل طلب (٪)</label><input class="modal-input" id="prPct" type="number" step="0.5" value="'+(p.pct||0)+'"></div>'+
+      '</div>'+
+      '<label>يصير جملة لما مشترياته توصل (د.ع)</label><input class="modal-input" id="prAt" type="number" value="'+(p.threshold||0)+'">'+
+      '<div class="hint">تنحسب الطلبات المُسلّمة من '+dstr(p.start)+' وجاي.</div>'+
+      '<div style="margin-top:10px"><button class="btn-solid" onclick="promoSave()">حفظ</button></div>'+
+      '<div class="msg" id="prMsg"></div>'+
+      '<div class="stats-grid" style="margin-top:12px">'+
+        '<div class="stat-card"><div class="hint">زبائن جملة</div><div class="stat-num">'+nf(s.wholesale)+'</div></div>'+
+        '<div class="stat-card"><div class="hint">بمحافظ الزبائن هسه</div><div class="stat-num">'+nf(s.owed)+'</div></div>'+
+        '<div class="stat-card"><div class="hint">انصرف بطلبات</div><div class="stat-num">'+nf(s.spent)+'</div></div>'+
+      '</div>';
+  }catch(e){ box.innerHTML = '<div class="msg err">'+esc(e.message)+'</div>'; }
+}
+async function promoSave(){
+  var m = $('prMsg');
+  try{
+    await rpc('web_promo_set', { p_on:$('prOn').checked,
+      p_welcome:parseInt($('prWel').value,10)||0, p_pct:parseFloat($('prPct').value)||0,
+      p_threshold:parseInt($('prAt').value,10)||0 });
+    m.className='msg ok'; m.textContent='✅ انحفظ';
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
 
 

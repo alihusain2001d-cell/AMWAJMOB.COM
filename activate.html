@@ -200,6 +200,19 @@
   </div>
 </div>
 
+<!-- ═══ 👛 محفظتي ═══ -->
+<div id="walletSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('walletSheet')"></button>
+      <span class="bsheet-title">👛 محفظتي</span>
+      <span style="width:40px"></span>
+    </div>
+    <div class="bsheet-body" id="walletBody"></div>
+  </div>
+</div>
+
 <!-- ═══ 💬 الدردشة ويا امواج ═══ -->
 <div id="chatSheet" class="bsheet-overlay">
   <div class="bsheet">
@@ -1059,6 +1072,42 @@ body {
 .contact-chat-card .ccc-title { font-size: 17px; font-weight: 800; color: var(--text); }
 .contact-chat-card .ccc-sub { font-size: 13.5px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
 .contact-chat-card .ccc-arrow { font-size: 22px; color: var(--primary); font-weight: 800; }
+
+/* ═══ 👛 المحفظة + ⭐ الجملة ═══ */
+.wallet-card {
+  margin: 14px 14px 4px; padding: 16px; border-radius: 20px; cursor: pointer; color: #fff;
+  background: linear-gradient(135deg, #0EA5E9, #0369A1 60%, #6D28D9);
+  box-shadow: 0 10px 26px rgba(3,105,161,.3); position: relative; overflow: hidden;
+}
+.wallet-card:active { transform: scale(.99); }
+.wallet-card .wc-top { display: flex; justify-content: space-between; align-items: center; }
+.wallet-card .wc-label { font-size: 15px; font-weight: 800; opacity: .95; }
+.wallet-card .wc-bal { font-size: 32px; font-weight: 900; margin: 6px 0 2px; }
+.wallet-card .wc-bal small { font-size: 15px; font-weight: 800; opacity: .85; }
+.wallet-card .wc-hint { font-size: 13.5px; opacity: .92; line-height: 1.6; }
+.wallet-card .wc-more { display: block; text-align: left; margin-top: 6px; font-size: 13px; font-weight: 800; opacity: .9; }
+.wc-prog { height: 8px; background: rgba(255,255,255,.25); border-radius: 8px; margin: 10px 0 6px; overflow: hidden; }
+.wc-prog > div { height: 100%; background: #FDE68A; border-radius: 8px; }
+.tier-chip {
+  display: inline-flex; align-items: center; gap: 4px; background: #FEF3C7; color: #92400E;
+  font-size: 12.5px; font-weight: 900; padding: 2px 10px; border-radius: 20px; border: 1px solid #FCD34D;
+}
+.wallet-card .tier-chip { background: rgba(255,255,255,.2); color: #fff; border-color: rgba(255,255,255,.35); }
+.wl-how { background: var(--card); border: 1px solid var(--border-light); border-radius: 16px; padding: 14px; margin: 14px 0; }
+.wl-how .t { font-size: 16px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+.wl-how div { font-size: 14.5px; color: var(--text-2); line-height: 1.9; }
+.wl-tx { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border-light);
+  border-radius: 14px; padding: 11px 13px; margin-bottom: 8px; }
+.wl-tx .ic { width: 38px; height: 38px; border-radius: 12px; background: var(--surface-2); display: flex;
+  align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.wl-tx .mid { flex: 1; min-width: 0; }
+.wl-tx .nm { font-size: 14.5px; font-weight: 800; color: var(--text); }
+.wl-tx .sub { font-size: 12.5px; color: var(--muted); }
+.wl-tx .amt { font-size: 15.5px; font-weight: 900; direction: ltr; white-space: nowrap; }
+.wl-tx .amt.plus { color: var(--green-dark); } .wl-tx .amt.minus { color: var(--red-dark); }
+.summary-row.wallet-row { background: #F0FDF4; border: 1px dashed #86EFAC; border-radius: 12px; padding: 10px 12px; margin: 6px 0; cursor: pointer; }
+.summary-row.wallet-row input { width: 20px; height: 20px; accent-color: #10B981; vertical-align: middle; margin-left: 6px; }
+.summary-row.cb-row { color: #6D28D9; font-weight: 800; font-size: 13.5px; }
 
 /* ═══ BOTTOM SHEETS ═══ */
 .bsheet-overlay {
@@ -3228,6 +3277,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
         <div>
           <div class="home-store-name">أمواج للإلكترونيات</div>
           <div class="home-store-sub" id="homeWelcome">قطع غيار موبايل · كربلاء</div>
+          <span id="tierChip" class="tier-chip" style="display:none;margin-top:4px" onclick="openWalletSheet()">⭐ زبون جملة</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="home-icon-btn chat-head-btn" onclick="openChat()" title="دردشة ويا امواج" style="position:relative;">
@@ -4735,6 +4785,7 @@ function renderCart() {
   const _provinceEl = document.getElementById('orderProvince');
   const _deliveryFee = getDeliveryFee(_provinceEl ? _provinceEl.value : '');
   const _grandTotal = total + (_deliveryFee || 0);
+  const _walUse = _walletUseFor(_grandTotal);     // 👛 ينخصم من المحفظة
   html += `
     <div class="cart-summary">
       <div class="summary-row">
@@ -4749,15 +4800,23 @@ function renderCart() {
         <span>أجور التوصيل</span>
         <span class="amt">${_deliveryFee === null ? 'اختر المحافظة' : (_deliveryFee > 0 ? formatPriceIQD(_deliveryFee) + ' د.ع' : 'مجاني')}</span>
       </div>
+      ${(_chatTok() && WALLET.loaded && WALLET.balance > 0 && !isGuest()) ? `
+      <label class="summary-row wallet-row">
+        <span><input type="checkbox" ${USE_WALLET ? 'checked' : ''} onchange="toggleUseWallet(this.checked)">👛 استعمل رصيدي (${_fmtIQD(WALLET.balance)})</span>
+        <span class="amt" style="color:var(--green-dark)">${_walUse ? '− ' + _fmtIQD(_walUse) + ' د.ع' : ''}</span>
+      </label>` : ''}
       <div class="summary-row total">
         <span>المجموع الكلي</span>
-        <span class="amt">${formatPriceIQD(_grandTotal)} د.ع</span>
+        <span class="amt">${formatPriceIQD(_grandTotal - _walUse)} د.ع</span>
       </div>
+      ${(_chatTok() && WALLET.on && WALLET.pct > 0 && !isGuest() && total > 0) ? `
+      <div class="summary-row cb-row"><span>💰 راح ينزلك بمحفظتك</span><span class="amt">${_fmtIQD(Math.floor(total * WALLET.pct / 100))} د.ع</span></div>` : ''}
+      ${WHOLESALE_ON ? '<div class="summary-row cb-row" style="color:#92400E"><span>⭐ الأسعار أسعار جملة</span><span></span></div>' : ''}
     </div>
   `;
 
   container.innerHTML = html;
-  if (totalEl) totalEl.textContent = formatPriceIQD(_grandTotal) + ' د.ع';
+  if (totalEl) totalEl.textContent = formatPriceIQD(_grandTotal - _walUse) + ' د.ع';
 }
 
 function changeQuantity(index, change) {
@@ -4906,7 +4965,8 @@ async function submitOrder() {
           payload: {
             name: name, shop: shop, phone: phone, address: fullAddress,
             province: province, district: district, districtId: districtId,
-            deliveryFee: deliveryFee, items: cart
+            deliveryFee: deliveryFee, items: cart,
+            useWallet: (!guest && USE_WALLET && WALLET.balance > 0)   // 👛
           }
         });
         if (!_ord || !_ord.ok) throw new Error((_ord && _ord.error) || 'ما وصل الطلب للسيرفر');
@@ -4931,6 +4991,14 @@ async function submitOrder() {
       // ✅ اعرض النجاح
       {
         result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+        // 👛 شنو صار بالمحفظة
+        try {
+          var _wm = [];
+          if (_ord && _ord.walletUsed) _wm.push('انخصم من محفظتك ' + _fmtIQD(_ord.walletUsed) + ' د.ع');
+          if (_ord && _ord.cashback) _wm.push('نزل بمحفظتك ' + _fmtIQD(_ord.cashback) + ' د.ع مكافأة 💰');
+          if (_wm.length) setTimeout(function(){ showPushToast('👛 محفظتك', _wm.join(' · '), openWalletSheet); }, 900);
+          walletLoad(true);
+        } catch(e) {}
 
         // تحويل زر الإرسال إلى حسناً
         cart = []; saveCart();
@@ -5070,6 +5138,9 @@ function openOrdersSheet() {
 }
 
 function openCartSheet() {
+  // 👛 الرصيد يتحدّث بالخلفية، والسلة تنرسم من جديد لما يوصل
+  try { walletLoad().then(function(){ var cs = document.getElementById('cartSheet');
+    if (cs && cs.classList.contains('open')) renderCart(); }); } catch(e) {}
   // 🕐 نحدّث حالة المحل بهدوء وقت فتح السلة — حتى لو التطبيق مفتوح من ساعات
   //    والوقت عبر منتصف الليل، الرسالة تطلع صح مو حسب حالة قديمة.
   try {
@@ -6785,6 +6856,7 @@ function _frameLayerHtml(p, isScreen){
 
 async function loadCatalogFromServer(){
   var r = await sbRpc('app_catalog');
+  await _applyWholesale(r);   // ⭐ زبون جملة؟ نبدّل الأسعار قبل ما تنبني القوائم
   var parts = r.parts || {};
 
   /* 🛡️ نسبة الضمان — تجي مع الكاتلوك، فتتحدّث لحالها أول ما
@@ -7516,6 +7588,154 @@ function openCallPicker(){
   document.body.appendChild(ov);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 👛 المحفظة + ⭐ زبون الجملة (ملف ١١٥)
+//
+//   الحساب كله بالسيرفر: الهدية، الـ١٪، الخصم، الإرجاع عند الإلغاء،
+//   والتحويل لجملة. التطبيق يعرض بس، ويرسل «useWallet» ويا الطلب.
+//
+//   ⭐ أسعار الجملة ما تجي ويا الكاتلوك العام (أي أحد يگدر يقراه) —
+//   تجي من app_wholesale_prices بتوكن الزبون، وبس إذا هو جملة.
+// ═══════════════════════════════════════════════════════════════
+var WALLET = { loaded:false, at:0, tok:'', balance:0, tier:'retail', progress:0,
+               threshold:0, pct:0, on:true, items:[] };
+var WHOLESALE_ON = false;     // الأسعار المعروضة هسه أسعار جملة؟
+var USE_WALLET   = true;      // «استعمل رصيدي» بالسلة — مأشّر افتراضياً
+
+// يبدّل أسعار الكاتلوك بأسعار الجملة — ينادى داخل loadCatalogFromServer
+async function _applyWholesale(r){
+  WHOLESALE_ON = false;
+  var tok = _chatTok();
+  if (!tok || !r) return;
+  try {
+    var w = await sbRpc('app_wholesale_prices', { p_token: tok });
+    if (!w || w.tier !== 'wholesale') return;
+    var map = w.prices || {};
+    var swap = function(i){ if (i && i.code && map[i.code]) { i.retail = i.price; i.price = map[i.code]; } };
+    (r.screens || []).forEach(swap);
+    Object.keys(r.parts || {}).forEach(function(k){ (r.parts[k] || []).forEach(swap); });
+    WHOLESALE_ON = true;
+  } catch(e) { /* نبقى على المفرد — السيرفر يحسب الصح وقت الطلب بكل الأحوال */ }
+}
+
+function walletLoad(force){
+  var tok = _chatTok();
+  if (!tok) {
+    WALLET.loaded = false; WALLET.balance = 0; WALLET.tier = 'retail'; WALLET.tok = '';
+    _walletPaint();
+    return Promise.resolve();
+  }
+  if (!force && WALLET.tok === tok && Date.now() - WALLET.at < 30000) return Promise.resolve();
+  return sbRpc('app_wallet', { p_token: tok }).then(function(r){
+    if (!r || r.ok !== true) return;
+    WALLET.loaded = true; WALLET.at = Date.now(); WALLET.tok = tok;
+    WALLET.balance   = Number(r.balance) || 0;
+    WALLET.tier      = r.tier || 'retail';
+    WALLET.progress  = Number(r.progress) || 0;
+    WALLET.threshold = Number(r.threshold) || 0;
+    WALLET.pct       = Number(r.pct) || 0;
+    WALLET.on        = r.on !== false;
+    WALLET.items     = r.items || [];
+    _walletPaint();
+    // صار جملة (أو رجع مفرد) من آخر تحميل؟ نعيد الأسعار
+    if ((WALLET.tier === 'wholesale') !== WHOLESALE_ON) {
+      try { loadCatalogFromServer().then(function(){
+        var cs = document.getElementById('cartSheet');
+        if (cs && cs.classList.contains('open')) renderCart();
+      }); } catch(e) {}
+    }
+  }).catch(function(){});
+}
+
+function _fmtIQD(n){ return formatPriceIQD(Math.abs(Number(n) || 0)); }
+
+function _walletCardHtml(){
+  if (!_chatTok()) return '';
+  var W = WALLET, h = '<div class="wallet-card" id="walletCardBox" onclick="openWalletSheet()">';
+  h += '<div class="wc-top"><span class="wc-label">👛 محفظتي</span>' +
+       (W.tier === 'wholesale' ? '<span class="tier-chip">⭐ زبون جملة</span>' : '') + '</div>';
+  h += '<div class="wc-bal">' + (W.loaded ? _fmtIQD(W.balance) : '…') + ' <small>د.ع</small></div>';
+  if (W.loaded && W.tier !== 'wholesale' && W.threshold > 0 && W.on) {
+    var pc = Math.min(100, Math.round(W.progress * 100 / W.threshold));
+    h += '<div class="wc-prog"><div style="width:' + pc + '%"></div></div>' +
+         '<div class="wc-hint">⭐ باقي لك <b>' + _fmtIQD(Math.max(0, W.threshold - W.progress)) +
+         ' د.ع</b> مشتريات وتصير زبون جملة</div>';
+  } else if (W.tier === 'wholesale') {
+    h += '<div class="wc-hint">الأسعار الي تشوفها بالتطبيق أسعار جملة</div>';
+  } else if (W.on && W.pct > 0) {
+    h += '<div class="wc-hint">كل طلب ينزلك ' + W.pct + '٪ منه بالمحفظة</div>';
+  }
+  return h + '<span class="wc-more">التفاصيل ‹</span></div>';
+}
+
+var WL_KIND = {
+  welcome:  ['🎁', 'هدية الترحيب'],
+  cashback: ['💰', 'مكافأة طلب'],
+  spend:    ['🛒', 'صرف بطلب'],
+  refund:   ['↩️', 'رجع لمحفظتك'],
+  clawback: ['➖', 'سحب مكافأة طلب ملغي'],
+  adjust:   ['✏️', 'من امواج']
+};
+
+function _walletSheetHtml(){
+  var W = WALLET;
+  var h = _walletCardHtml().replace('onclick="openWalletSheet()"', '').replace('<span class="wc-more">التفاصيل ‹</span>', '');
+  h = '<div style="margin:0 -14px">' + h + '</div>';
+  h += '<div class="wl-how"><div class="t">شلون تشتغل؟</div>' +
+       (W.pct > 0 && W.on ? '<div>💰 كل طلب من التطبيق ينزلك <b>' + W.pct + '٪</b> منه بمحفظتك.</div>' : '') +
+       '<div>🛒 بالسلة أشّر <b>«استعمل رصيدي»</b> وينخصم من طلبك، والمندوب يستلم الباقي بس.</div>' +
+       '<div>↩️ إذا انلغى طلب، الرصيد الي صرفته بي يرجعلك.</div>' +
+       (W.threshold > 0 && W.on ? '<div>⭐ لما توصل مشترياتك <b>' + _fmtIQD(W.threshold) + ' د.ع</b> تصير زبون جملة وتنفتحلك أسعار الجملة.</div>' : '') +
+       '</div>';
+  h += '<div style="font-size:16px;font-weight:800;margin:6px 2px 10px">الحركات</div>';
+  if (!W.items.length) {
+    h += '<div style="text-align:center;color:var(--muted);padding:24px">ماكو حركات بعد</div>';
+  } else {
+    W.items.forEach(function(t){
+      var k = WL_KIND[t.kind] || ['•', t.kind];
+      var d = new Date(t.at);
+      h += '<div class="wl-tx"><div class="ic">' + k[0] + '</div><div class="mid">' +
+           '<div class="nm">' + k[1] + '</div><div class="sub">' + sanitize(t.note || '') +
+           (t.note ? ' · ' : '') + d.toLocaleDateString('ar-IQ', { day:'numeric', month:'short' }) + '</div></div>' +
+           '<div class="amt ' + (t.amount >= 0 ? 'plus' : 'minus') + '">' + (t.amount >= 0 ? '+' : '−') +
+           _fmtIQD(t.amount) + '</div></div>';
+    });
+  }
+  return h;
+}
+
+function openWalletSheet(){
+  if (!_chatTok()) { showScreen('loginScreen'); return; }
+  openSheet('walletSheet');
+  var b = document.getElementById('walletBody');
+  if (b) b.innerHTML = _walletSheetHtml();
+  walletLoad(true);
+}
+
+// يحدّث كل مكان يبين بي الرصيد أو نوع الزبون
+function _walletPaint(){
+  var box = document.getElementById('walletCardBox');
+  if (box) box.outerHTML = _walletCardHtml();
+  var ws = document.getElementById('walletSheet');
+  if (ws && ws.classList.contains('open')) {
+    var b = document.getElementById('walletBody'); if (b) b.innerHTML = _walletSheetHtml();
+  }
+  var chip = document.getElementById('tierChip');
+  if (chip) chip.style.display = (_chatTok() && WALLET.tier === 'wholesale') ? '' : 'none';
+}
+
+// كم ينخصم من المحفظة على هذا المجموع
+function _walletUseFor(total){
+  if (!_chatTok() || !USE_WALLET || !WALLET.loaded || WALLET.balance <= 0) return 0;
+  try { if (isGuest()) return 0; } catch(e) {}
+  return Math.min(WALLET.balance, Math.max(0, total));
+}
+function toggleUseWallet(on){ USE_WALLET = !!on; renderCart(); }
+
+setTimeout(function(){ walletLoad(); }, 3000);
+setInterval(function(){ if (!document.hidden) walletLoad(); }, 120000);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) walletLoad(); });
+
 // ═══ Contact System (WhatsApp + Phone) ═══
 // Primary WhatsApp number for direct contextual messages
 var AMWAJ_PRIMARY_WA = '9647709000160';
@@ -7943,6 +8163,7 @@ async function setupPushNotifications() {
         const body  = notification.body  || d._body  || '';
         // 💬 رد بالدردشة: ما ينحفظ بمركز الإشعارات — المحادثة نفسها هي السجل
         if (d.type === 'chat') { _chatOnPush(title, body); return; }
+        if (d.type === 'wallet' || d.type === 'tier') walletLoad(true);   // 👛
         addNotification({
           title: title,
           body:  body,
@@ -7961,6 +8182,7 @@ async function setupPushNotifications() {
       console.log('🖱️ Notification clicked:', action);
       const data = action.notification.data || {};
       if (data.type === 'chat') { setTimeout(function(){ openChat(); }, 400); return; }   // 💬
+      if (data.type === 'wallet' || data.type === 'tier') { setTimeout(function(){ openWalletSheet(); }, 400); }   // 👛
       // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
       try {
         addNotification({
@@ -8273,6 +8495,7 @@ async function proceedWithWebPushSetup() {
       const title = notif.title || d._title || 'إشعار جديد';
       const body  = notif.body  || d._body  || '';
       if (d.type === 'chat') { _chatOnPush(title, body); return; }   // 💬
+      if (d.type === 'wallet' || d.type === 'tier') walletLoad(true);   // 👛
       
       // احفظ في مركز الإشعارات
       try {
@@ -8311,6 +8534,7 @@ function handleNotificationClickData(data) {
     const type = data.type || 'general';
     const orderId = data.orderId || '';
     if (type === 'chat') { if (typeof openChat === 'function') openChat(); return; }   // 💬
+    if (type === 'wallet' || type === 'tier') { if (typeof openWalletSheet === 'function') openWalletSheet(); return; }   // 👛
     
     if (type === 'admin_new_order' || type === 'admin_order_cancelled') {
       // للأدمن: افتح لوحة التحكم (صفحة مستقلة)
@@ -8795,6 +9019,7 @@ function renderAccountSheet() {
         </div>
       </div>
 
+      ${_walletCardHtml()}
       <div class="profile-menu">
 
         <div class="profile-menu-group">
