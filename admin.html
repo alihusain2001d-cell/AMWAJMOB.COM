@@ -1499,6 +1499,10 @@ async function ordOpen(id){
       '<div style="display:flex;gap:8px;margin-top:12px">'+
         '<button class="btn-solid" onclick="ordSave('+o.id+')">حفظ</button>'+
         '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
+      /* 💬 راسل الزبون عن هذا الطلب — تنفتح المحادثة وبيها رقم الطلب جاهز */
+      ((o.cust_phone && can('chat'))
+        ? '<button class="btn-solid green" style="width:100%;margin-top:8px" onclick="ordChat(\''+esc(o.cust_phone)+'\',\''+esc(o.order_code)+'\')">💬 راسل الزبون عن هذا الطلب</button>'
+        : '')+
       // ✏️ تعديل المواد — بس لو الطلب لسه ينتظر/بالطريق وماكو شحنة برايم فعّالة عليه
       ((o.status==='pending'||o.status==='picked') && !_curPrimeLeft
         ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordEditItems('+o.id+')">✏️ تعديل المواد (إضافة/حذف)</button>'
@@ -3072,6 +3076,19 @@ async function msgSaveTpl(key){
 var CH = { phone:'', items:[], pending:[], chain:null, lastId:0, seenUpTo:0, cust:null, threads:[], q:'',
            timer:null, tick:0, busy:false, sending:false, img:null, stick:true };
 var CH_WANT = '';     // جاي من ضغطة إشعار؟ نفتح محادثته
+var CH_DRAFT = '';    // نص جاهز بخانة الكتابة (مثلاً رقم الطلب)
+
+/* 💬 من نافذة الطلب ← المحادثة ويا صاحبه، ورقم الطلب مكتوب جاهز */
+function ordChat(phone, code){
+  var p = String(phone || '').replace(/[^0-9]/g, '');
+  if (p.indexOf('964') === 0) p = '0' + p.slice(3);
+  if (p.length === 10 && p[0] !== '0') p = '0' + p;
+  if (!p) return;
+  closeModal();
+  CH_WANT = p;
+  CH_DRAFT = 'بخصوص طلبك ⁦' + code + '⁩: ';   // ⁦⁩ = يبقى رقم الطلب قطعة وحدة وسط العربي
+  showPage('chat');
+}
 
 async function pChat(){
   $('content').innerHTML =
@@ -3194,7 +3211,7 @@ async function chOpen(phone){
       '<div class="ch-who" id="chWho"><b>…</b></div>' +
       '<div class="ch-acts" id="chActs"></div>' +
     '</div>' +
-    '<div class="ch-gone" id="chGone" style="display:none">هذا الزبون حذف حسابه — ما توصله ردود من هنا. راسله واتساب.</div>' +
+    '<div class="ch-gone" id="chGone" style="display:none">هذا الرقم ما عنده حساب بالتطبيق (أو حذفه) — ما توصله ردود من هنا. راسله واتساب.</div>' +
     '<div class="ch-list" id="chList"><div class="loading">جاري التحميل…</div></div>' +
     '<div class="ch-prev" id="chPrev"></div>' +
     '<div class="ch-bar" id="chBar">' +
@@ -3208,6 +3225,11 @@ async function chOpen(phone){
     CH.stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   }, { passive:true });
   chFit();
+  /* ✍️ جاي من زر «راسل الزبون عن هذا الطلب»؟ نكتب رقم الطلب بالخانة */
+  if (CH_DRAFT){
+    var ti = $('chInput'); ti.value = CH_DRAFT; chGrow(ti); CH_DRAFT = '';
+    setTimeout(function(){ try{ ti.focus(); ti.setSelectionRange(ti.value.length, ti.value.length); }catch(e){} }, 300);
+  }
   await chPoll(true);
   pulseChat();                       // العلامة الحمرة تنزل فوراً
 }

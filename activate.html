@@ -124,7 +124,7 @@
     <div class="bsheet-head">
       <button class="bsheet-close" onclick="closeSheet('ordersSheet')"></button>
       <span class="bsheet-title">📦 طلباتي</span>
-      <button onclick="whatsappFromOrders()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
+      <button onclick="chatAboutOrder('')" title="استفسار بالدردشة" class="header-wa-btn" style="background:linear-gradient(135deg,var(--primary),var(--primary-dark))">💬</button>
     </div>
     <div class="orders-tabs" id="ordersTabs">
       <button class="orders-tab active" data-filter="all" onclick="filterOrders('all')">الكل <span class="orders-tab-count" id="cnt-all">0</span></button>
@@ -6370,7 +6370,8 @@ function openOrderDetail(orderId) {
               sanitize(String(prime.primeCaseId)) + ' · ' + sanitize(_primeDisplayStatus(prime)) + '</div>'
           : '') +
 
-        '<a href="' + _orderWaUrl(o) + '" target="_blank" class="order-wa-btn" style="display:block;text-align:center;margin-top:12px;">💬 استفسار عن هذا الطلب</a>' +
+        '<button onclick="chatAboutOrder(\'' + sanitize(String(o.orderId || '')) + '\')" class="order-wa-btn" ' +
+          'style="display:block;width:100%;text-align:center;margin-top:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));font-family:Tajawal,sans-serif;">💬 استفسار عن هذا الطلب</button>' +
         cancelBtn +
       '</div>' +
     '</div>';
@@ -7328,6 +7329,12 @@ function openChat(){
       '<div class="chat-empty"><div class="loading-spinner"></div></div>';
   }
   CHAT.stick = true;
+  // ✍️ جاي من «استفسار عن هذا الطلب»؟ رقم الطلب مكتوب جاهز
+  if (CHAT_DRAFT) {
+    var _ci = document.getElementById('chatInput');
+    _ci.value = CHAT_DRAFT; chatAutoGrow(_ci); CHAT_DRAFT = '';
+    setTimeout(function(){ try { _ci.focus(); _ci.setSelectionRange(_ci.value.length, _ci.value.length); } catch(e) {} }, 350);
+  }
   chatFitViewport();
   chatPoll(true);
   clearInterval(CHAT.timer);
@@ -7891,6 +7898,21 @@ function _chatIntroClose(focus){
 }
 setTimeout(_chatIntroMaybe, 5000);
 
+
+/* 💬 الاستفسار عن طلب ← الدردشة (مو واتساب)، ورقم الطلب مكتوب جاهز.
+   الي ما مسجّل دخول (ماكو دردشة إله) يروح للواتساب مثل قبل. */
+var CHAT_DRAFT = '';
+function chatAboutOrder(code){
+  if (!_chatTok()) {
+    var o = (typeof _allOrdersCache !== 'undefined' && _allOrdersCache || []).find(function(x){ return (x.orderId || '-') === code; });
+    try { if (o) { window.open(_orderWaUrl(o), '_blank'); return; } } catch(e) {}
+    openWhatsApp('السلام عليكم، أريد الاستفسار عن ' + (code ? 'طلبي ' + code : 'طلباتي'));
+    return;
+  }
+  try { closeOrderDetail(); } catch(e) {}
+  CHAT_DRAFT = code ? ('بخصوص طلبي \u2066' + code + '\u2069: ') : 'بخصوص طلباتي: ';
+  openChat();
+}
 // ═══ Contact System (WhatsApp + Phone) ═══
 // Primary WhatsApp number for direct contextual messages
 var AMWAJ_PRIMARY_WA = '9647709000160';
