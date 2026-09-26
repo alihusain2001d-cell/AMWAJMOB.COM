@@ -200,6 +200,25 @@
   </div>
 </div>
 
+<!-- ═══ 📋 حركات المحفظة ═══ -->
+<div id="walletTxSheet" class="bsheet-overlay">
+  <div class="bsheet">
+    <div class="bsheet-handle"></div>
+    <div class="bsheet-head">
+      <button class="bsheet-close" onclick="closeSheet('walletTxSheet')"></button>
+      <span class="bsheet-title">📋 حركات المحفظة</span>
+      <span style="width:40px"></span>
+    </div>
+    <div class="orders-tabs" id="walletTxTabs" style="padding-top:12px">
+      <button class="orders-tab" data-r="today" onclick="walletTxFilter('today')">اليوم</button>
+      <button class="orders-tab" data-r="week" onclick="walletTxFilter('week')">أسبوع</button>
+      <button class="orders-tab active" data-r="month" onclick="walletTxFilter('month')">شهر</button>
+      <button class="orders-tab" data-r="all" onclick="walletTxFilter('all')">الكل</button>
+    </div>
+    <div class="bsheet-body" id="walletTxBody" style="padding-top:0"></div>
+  </div>
+</div>
+
 <!-- ═══ 👛 محفظتي ═══ -->
 <div id="walletSheet" class="bsheet-overlay">
   <div class="bsheet">
@@ -7726,21 +7745,54 @@ function _walletSheetHtml(){
        (W.threshold > 0 && W.on ? '<div>⭐ لما توصل مشترياتك <b>' + _fmtIQD(W.threshold) + ' د.ع</b> تصير زبون جملة وتنفتحلك أسعار الجملة.</div>' : '') +
        (W.goal > 0 && W.goalBonus > 0 && W.on ? '<div>🎯 كل ما توصل مشترياتك <b>' + _fmtIQD(W.goal) + ' د.ع</b> تنزلك مكافأة <b>' + _fmtIQD(W.goalBonus) + ' د.ع</b> بمحفظتك.</div>' : '') +
        '</div>';
-  h += '<div style="font-size:16px;font-weight:800;margin:6px 2px 10px">الحركات</div>';
-  if (!W.items.length) {
-    h += '<div style="text-align:center;color:var(--muted);padding:24px">ماكو حركات بعد</div>';
-  } else {
-    W.items.forEach(function(t){
-      var k = WL_KIND[t.kind] || ['•', t.kind];
-      var d = new Date(t.at);
-      h += '<div class="wl-tx"><div class="ic">' + k[0] + '</div><div class="mid">' +
-           '<div class="nm">' + k[1] + '</div><div class="sub">' + sanitize(t.note || '') +
-           (t.note ? ' · ' : '') + d.toLocaleDateString('ar-IQ', { day:'numeric', month:'short' }) + '</div></div>' +
-           '<div class="amt ' + (t.amount >= 0 ? 'plus' : 'minus') + '">' + (t.amount >= 0 ? '+' : '−') +
-           _fmtIQD(t.amount) + '</div></div>';
-    });
-  }
+  // 📋 الحركات بصفحة لحالها (تبويبات اليوم/أسبوع/شهر/الكل) — حتى ما تصير هوسة هنا
+  h += '<button class="profile-menu-item" style="width:100%;border-radius:16px;border:1px solid var(--border-light);background:var(--card)" onclick="openWalletTx()">' +
+       '<div class="profile-menu-icon pm-icon-orders">📋</div>' +
+       '<div class="profile-menu-label">الحركات' + (W.items.length ? ' <span style="color:var(--muted);font-weight:700">(' + W.items.length + ')</span>' : '') + '</div>' +
+       '<span class="profile-menu-arrow">‹</span></button>';
   return h;
+}
+
+function _wlTxRow(t){
+  var k = WL_KIND[t.kind] || ['•', t.kind];
+  var d = new Date(t.at);
+  return '<div class="wl-tx"><div class="ic">' + k[0] + '</div><div class="mid">' +
+         '<div class="nm">' + k[1] + '</div><div class="sub">' + sanitize(t.note || '') +
+         (t.note ? ' · ' : '') + d.toLocaleDateString('ar-IQ', { day:'numeric', month:'short' }) + '</div></div>' +
+         '<div class="amt ' + (t.amount >= 0 ? 'plus' : 'minus') + '">' + (t.amount >= 0 ? '+' : '−') +
+         _fmtIQD(t.amount) + '</div></div>';
+}
+
+var WALLET_TX_R = 'month';
+function openWalletTx(){
+  openSheet('walletTxSheet');
+  walletTxFilter(WALLET_TX_R);
+}
+function walletTxFilter(r){
+  WALLET_TX_R = r;
+  document.querySelectorAll('#walletTxTabs .orders-tab').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-r') === r);
+  });
+  var now = new Date(), from = null;
+  if (r === 'today') { from = new Date(now); from.setHours(0, 0, 0, 0); }
+  else if (r === 'week')  from = new Date(now.getTime() - 7 * 86400000);
+  else if (r === 'month') from = new Date(now.getTime() - 30 * 86400000);
+  var list = (WALLET.items || []).filter(function(t){ return !from || new Date(t.at) >= from; });
+  var b = document.getElementById('walletTxBody');
+  if (!b) return;
+  if (!list.length) {
+    b.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 10px">ماكو حركات بهالفترة</div>';
+    return;
+  }
+  var inSum = 0, outSum = 0;
+  list.forEach(function(t){ if (t.amount >= 0) inSum += t.amount; else outSum += -t.amount; });
+  b.innerHTML =
+    '<div style="display:flex;gap:8px;margin:4px 0 12px">' +
+      '<div class="wl-tx" style="flex:1;margin:0;display:block;text-align:center"><div class="sub">دخل</div>' +
+        '<div class="amt plus">+' + _fmtIQD(inSum) + '</div></div>' +
+      '<div class="wl-tx" style="flex:1;margin:0;display:block;text-align:center"><div class="sub">انصرف</div>' +
+        '<div class="amt minus">−' + _fmtIQD(outSum) + '</div></div>' +
+    '</div>' + list.map(_wlTxRow).join('');
 }
 
 function openWalletSheet(){
