@@ -6249,7 +6249,10 @@ function _orderMoney(o) {
   var itemsSum = (o.items || []).reduce(function(s, it){
     return s + (Number(String(it.price||'').replace(/[^0-9]/g,'')) || 0) * (Number(it.quantity) || 1);
   }, 0);
-  return { total: total, itemsSum: itemsSum, deliveryFee: Math.max(0, total - itemsSum) };
+  // 👛 المجموع صار **بعد** خصم المحفظة — نرجّعه بالحساب حتى التوصيل يطلع صح (ملف ١٢٧)
+  var walletUsed = Number(o.walletUsed) || 0;
+  return { total: total, itemsSum: itemsSum, walletUsed: walletUsed,
+           deliveryFee: Math.max(0, total + walletUsed - itemsSum) };
 }
 
 // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
@@ -6360,8 +6363,13 @@ function openOrderDetail(orderId) {
           '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted);padding:3px 0;">' +
             '<span>🚚 التوصيل</span><span dir="ltr">' + (money.deliveryFee > 0 ? formatPriceIQD(money.deliveryFee) + ' د.ع' : 'مجاني') + '</span>' +
           '</div>' +
+          (money.walletUsed > 0
+            ? '<div style="display:flex;justify-content:space-between;font-size:13.5px;color:#15803D;font-weight:800;padding:3px 0;">' +
+                '<span>👛 خصم المحفظة</span><span dir="ltr">− ' + formatPriceIQD(money.walletUsed) + ' د.ع</span>' +
+              '</div>'
+            : '') +
           '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--primary-dark);padding:8px 0 2px;border-top:1px solid var(--border-light,#E2E8F0);margin-top:5px;">' +
-            '<span>💰 المجموع الكلي</span><span dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</span>' +
+            '<span>💰 ' + (money.walletUsed > 0 ? 'المطلوب منك' : 'المجموع الكلي') + '</span><span dir="ltr">' + formatPriceIQD(money.total) + ' د.ع</span>' +
           '</div>' +
         '</div>' +
 
