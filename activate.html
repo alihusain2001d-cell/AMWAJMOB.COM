@@ -7694,6 +7694,8 @@ function walletLoad(force){
     WALLET.threshold = Number(r.threshold) || 0;
     // النسب الثلاث (ملف ١١٨) — للحساب بالسلة بس، **ما تنعرض للزبون أبداً**
     WALLET.cb        = Array.isArray(r.cb) ? r.cb.map(Number) : [Number(r.pct) || 0, Number(r.pct) || 0, Number(r.pct) || 0];
+    // ملف ١٢٨: أربع شرائح (1–25 · 25–50 · 50–100 · 100+ ألف)
+    WALLET.cb4       = Array.isArray(r.cb4) ? r.cb4.map(Number) : null;
     WALLET.on        = r.on !== false;
     // 🎯 مكافأة المشتريات (ملف ١٢٣): كل ما يوصل الحد ينزله مبلغ
     WALLET.goal      = Number(r.goal) || 0;
@@ -7834,11 +7836,17 @@ function _walletPaint(){
 function _cbFor(sum){
   sum = Number(sum) || 0;
   if (sum < 1000) return 0;
-  var c = WALLET.cb || [0, 0, 0];
-  var pct = sum < 50000 ? c[0] : (sum < 100000 ? c[1] : c[2]);
+  var pct;
+  if (WALLET.cb4) {
+    var q = WALLET.cb4;
+    pct = sum < 25000 ? q[0] : (sum < 50000 ? q[1] : (sum < 100000 ? q[2] : q[3]));
+  } else {
+    var c = WALLET.cb || [0, 0, 0];
+    pct = sum < 50000 ? c[0] : (sum < 100000 ? c[1] : c[2]);
+  }
   return Math.max(0, Math.floor(sum * (Number(pct) || 0) / 100));
 }
-function _cbOn(){ return WALLET.on && (WALLET.cb || []).some(function(x){ return Number(x) > 0; }); }
+function _cbOn(){ return WALLET.on && (WALLET.cb4 || WALLET.cb || []).some(function(x){ return Number(x) > 0; }); }
 
 // كم ينخصم من المحفظة على هذا المجموع
 function _walletUseFor(total){

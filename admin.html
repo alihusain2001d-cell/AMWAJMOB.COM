@@ -3497,8 +3497,9 @@ async function promoLoad(){
       '</div>'+
       /* 💰 ملف ١١٨: ثلاث نسب حسب مبلغ الطلب — الزبون ما يشوف النسبة، يشوف المبلغ بس */
       '<label>مكافأة كل طلب (٪) — حسب مبلغ الطلب</label>'+
-      '<div class="grid2" style="grid-template-columns:1fr 1fr 1fr">'+
-        '<div><div class="hint">1.000 – 50.000</div><input class="modal-input" id="prT1" type="number" step="0.1" value="'+(p.t1!=null?p.t1:(p.pct||0))+'"></div>'+
+      '<div class="grid2">'+
+        '<div><div class="hint">1.000 – 25.000</div><input class="modal-input" id="prT0" type="number" step="0.1" value="'+(p.t0!=null?p.t0:(p.t1!=null?p.t1:0))+'"></div>'+
+        '<div><div class="hint">25.000 – 50.000</div><input class="modal-input" id="prT1" type="number" step="0.1" value="'+(p.t1!=null?p.t1:(p.pct||0))+'"></div>'+
         '<div><div class="hint">50.000 – 100.000</div><input class="modal-input" id="prT2" type="number" step="0.1" value="'+(p.t2!=null?p.t2:(p.pct||0))+'"></div>'+
         '<div><div class="hint">100.000 وفوق</div><input class="modal-input" id="prT3" type="number" step="0.1" value="'+(p.t3!=null?p.t3:(p.pct||0))+'"></div>'+
       '</div>'+
@@ -3525,6 +3526,7 @@ async function promoSave(){
   try{
     await rpc('web_promo_set', { p_on:$('prOn').checked,
       p_welcome:parseInt($('prWel').value,10)||0,
+      p_t0:parseFloat($('prT0').value)||0,
       p_t1:parseFloat($('prT1').value)||0, p_t2:parseFloat($('prT2').value)||0, p_t3:parseFloat($('prT3').value)||0,
       p_threshold:0 });                          // ملف ١٢٢: ماكو تحويل تلقائي لجملة
     await rpc('web_goal_set', { p_at:parseInt($('prGoalAt').value,10)||0,
