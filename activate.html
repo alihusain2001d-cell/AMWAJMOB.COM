@@ -7973,6 +7973,9 @@ function _saveNotifs(arr) {
 
 function addNotification(notif) {
   var arr = _getNotifs();
+  // 🔁 نفس الإشعار وصل مرتين بنفس الدقيقة (من التطبيق ومن عامل الخدمة) — نحفظه مرة وحدة
+  var _t = notif.title || 'إشعار', _b = notif.body || '';
+  if (arr.some(function(n){ return n.title === _t && n.body === _b && Date.now() - (n.timestamp || 0) < 60000; })) return;
   var item = {
     id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
     title: notif.title || 'إشعار',
@@ -7981,13 +7984,54 @@ function addNotification(notif) {
     orderId: notif.orderId || '',
     target: notif.target || '',
     url: notif.url || '',
-    timestamp: Date.now(),
+    timestamp: Number(notif.timestamp) || Date.now(),
     read: false
   };
   arr.unshift(item);
   _saveNotifs(arr);
   updateBellBadge(true);
 }
+
+
+/* 📥 سجل الإشعارات من السيرفر (ملف ١٢٦)
+   قبل: الإشعار ينحفظ بالمركز بس إذا التطبيق مفتوح وقت ما يوصل.
+   هسه: نسحب من السيرفر كل ما ينفتح التطبيق أو يرجع للواجهة، ونضيف
+   الناقص. والي انضاف أصلاً (وصل والتطبيق مفتوح) ما يتكرر. */
+function _inboxKey(){ return _notifKey() + '_srv'; }
+var _inboxBusy = false;
+async function inboxSync(){
+  var tok = ''; try { tok = getCustomerToken(); } catch(e) {}
+  if (!tok || _inboxBusy) return;
+  _inboxBusy = true;
+  try {
+    var after = Number(localStorage.getItem(_inboxKey()) || 0);
+    var r = await sbRpc('app_inbox', { p_token: tok, p_after: after });
+    if (!r || r.ok !== true || !r.items || !r.items.length) return;
+    var arr = _getNotifs(), added = false, now = Date.now();
+    r.items.forEach(function(it){
+      var ts = new Date(it.at).getTime() || now;
+      var dup = arr.find(function(n){
+        // نفس الإشعار انضاف قبل (وصل والتطبيق مفتوح، أو من عامل الخدمة بعد ما وصل) — نربطه بدل ما نكرره
+        return !n.srv && n.title === it.title && n.body === it.body && (n.timestamp || 0) >= ts - 5 * 60000;
+      });
+      if (dup) { dup.srv = it.id; return; }
+      if (arr.some(function(n){ return n.srv === it.id; })) return;
+      arr.push({ id: 'srv_' + it.id, srv: it.id, title: it.title || 'إشعار', body: it.body || '',
+                 type: it.type || 'general', orderId: it.orderId || '', target: '', url: '',
+                 timestamp: ts, read: (now - ts) > 86400000 });   // الأقدم من يوم ينعد مقروء
+      added = true;
+    });
+    arr.sort(function(a, b){ return (b.timestamp || 0) - (a.timestamp || 0); });
+    _saveNotifs(arr);
+    localStorage.setItem(_inboxKey(), String(r.items[r.items.length - 1].id));
+    updateBellBadge(added);
+    var ns = document.getElementById('notificationsSheet');
+    if (ns && ns.classList.contains('open')) renderNotifications();
+  } catch(e) { /* المرة الجاية */ }
+  finally { _inboxBusy = false; }
+}
+setTimeout(inboxSync, 2500);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) inboxSync(); });
 
 function updateBellBadge(animate) {
   var badge = document.getElementById('bellBadge');
@@ -8093,6 +8137,7 @@ function renderNotifications() {
 function openNotificationsSheet() {
   // جيب الإشعارات اللي وصلت لما الموقع كان مغلق
   try { syncMissedNotifications(); } catch(e) {}
+  try { inboxSync(); } catch(e) {}      // 📥 ملف ١٢٦: الي وصلت والتطبيق مسكّر
   setTimeout(function(){
     renderNotifications();
   }, 300);
@@ -9071,7 +9116,8 @@ function syncMissedNotifications() {
               type: item.type,
               orderId: item.orderId,
               target: item.target,
-              url: item.url
+              url: item.url,
+              timestamp: item.timestamp   // وقت وصوله الحقيقي، مو وقت فتح التطبيق
             });
           } catch(e) {}
         });

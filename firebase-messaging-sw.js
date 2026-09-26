@@ -57,12 +57,12 @@ messaging.onBackgroundMessage(function(payload) {
   const data = payload.data || {};
   const notif = payload.notification || {};
   
-  // 🏷️ «امواج للالكترونيات» فوق كل إشعار — والحدث نفسه بأول سطر تحته
+  /* ⚠️ إشعارات المواقع بالآيفون: النظام نفسه يضيف سطر «from امواج للالكترونيات»
+     تحت العنوان — فما نكرر اسم المحل بالعنوان (كان يطلع مرتين). العنوان = الحدث. */
   const evTitle = notif.title || data._title || '';
   const evBody  = notif.body  || data._body  || 'إشعار جديد';
-  const branded = evTitle && evTitle.indexOf('امواج') === -1;
-  const title = branded ? 'امواج للالكترونيات' : (evTitle || 'امواج للالكترونيات');
-  const body  = branded ? (evTitle + '\n' + evBody) : evBody;
+  const title = evTitle || 'امواج للالكترونيات';
+  const body  = evBody;
   
   // 💾 احفظ للـ notification center
   const notifData = {
