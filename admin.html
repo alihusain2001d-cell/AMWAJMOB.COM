@@ -2003,7 +2003,9 @@ async function prCancel(code){
 // ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلّم أو يتلغي
 // ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلم أو يتلغي
 var _editRows = [];
+var _editReason = '', _editNotify = true;     // 📝 ملف ١٢٤: سبب التعديل يوصل للزبون
 async function ordEditItems(id){
+  _editReason = ''; _editNotify = true;
   try{
     var r = await rpc('web_order_detail',{p_id:id});
     var o = r['الطلب'], it = r['المواد'];
@@ -2091,6 +2093,12 @@ function renderEditItems(){
     '<div id="eiSearchResults" style="margin-top:4px"></div>'+
     '<button class="btn-solid gray" style="width:100%;margin-top:6px" onclick="_editAddRow()">➕ مادة يدوية (مو موجودة بالكاتلوك)</button>'+
     '<div style="text-align:left;font-weight:900;margin:10px 0" dir="ltr">مجموع المواد: '+nf(total)+' د.ع</div>'+
+    '<label style="margin-top:6px">📝 سبب التعديل — يوصل للزبون بإشعار</label>'+
+    '<input class="modal-input" id="eiReason" value="'+esc(_editReason)+'" oninput="_editReason=this.value"'+
+      ' placeholder="مثال: القطعة نفذت وبدّلناها بنوع ثاني">'+
+    '<label style="display:flex;gap:8px;align-items:center;color:var(--text);margin-top:6px">'+
+      '<input type="checkbox" id="eiNotify"'+(_editNotify?' checked':'')+' onchange="_editNotify=this.checked"'+
+      ' style="width:18px;height:18px"> بلّغ الزبون بإشعار</label>'+
     '<div class="msg" id="eiMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:8px">'+
       '<button class="btn-solid" onclick="ordEditSave()">💾 حفظ التعديل</button>'+
@@ -2105,7 +2113,13 @@ async function ordEditSave(){
   if (!items.length){ if(m){ m.className='msg err'; m.textContent='لازم مادة وحدة على الأقل'; } return; }
   try{
     await rpc('web_order_edit_items', {p_id:id, p_items:items});
-    toast('✅ انحفظ التعديل'); ordOpen(id); pOrd();
+    /* 🔔 إشعار للزبون: «تعدّل طلبك» + السبب + المجموع الجديد */
+    var _sent = false;
+    if (_editNotify){
+      try{ await rpc('web_order_notify', {p_id:id, p_reason:(_editReason||'').trim() || null}); _sent = true; }
+      catch(e2){ /* التعديل انحفظ — الإشعار ثانوي */ }
+    }
+    toast(_sent ? '✅ انحفظ التعديل ووصل إشعار للزبون' : '✅ انحفظ التعديل'); ordOpen(id); pOrd();
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
 }
 
@@ -3370,16 +3384,17 @@ async function pulseChat(){
      wholesale = جملة
      retail    = مفرد ثابت — ما يتحوّل لحاله (لو نزّلته أنت) */
 var WL_KIND_A = { welcome:'🎁 هدية الترحيب', cashback:'💰 مكافأة طلب', spend:'🛒 صرف بطلب',
-                  refund:'↩️ رجوع رصيد', clawback:'➖ سحب مكافأة (إلغاء)', adjust:'✏️ تعديل يدوي' };
+                  refund:'↩️ رجوع رصيد', clawback:'➖ سحب مكافأة (إلغاء)', adjust:'✏️ تعديل يدوي',
+                  goal:'🎯 مكافأة مشتريات' };
 
 async function custWallet(id){
   modal('<div class="loading">جاري التحميل…</div>');
   try{
     var w = await rpc('web_customer_wallet', { p_id:id });
-    var mode = w.tier === 'wholesale' ? 'wholesale' : (w.locked ? 'retail' : 'auto');
-    var pc = w.threshold > 0 ? Math.min(100, Math.round(w.progress * 100 / w.threshold)) : 0;
+    var whole = w.tier === 'wholesale';
     var seg = function(v, label){
-      return '<button class="filter-tab'+(mode===v?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
+      var on = (v === 'wholesale') === whole;
+      return '<button class="filter-tab'+(on?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
     };
     var tx = (w.items||[]).map(function(t){
       return '<tr><td>'+(WL_KIND_A[t.kind]||esc(t.kind))+'</td>'+
@@ -3389,18 +3404,18 @@ async function custWallet(id){
         '<td>'+dtstr(t.at)+'</td></tr>';
     }).join('');
     modal('<h3>👛 '+esc(w.shop||w.name||'')+'</h3>'+
-      '<div class="stats-grid" style="grid-template-columns:1fr 1fr">'+
-        '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
-        '<div class="stat-card"><div class="hint">مشترياته المُسلّمة (من بداية العرض)</div><div class="stat-num">'+nf(w.progress)+'</div>'+
-          (mode!=='wholesale' && w.threshold>0 ? '<div style="height:7px;background:var(--border);border-radius:6px;margin-top:6px;overflow:hidden">'+
-            '<div style="height:100%;width:'+pc+'%;background:var(--yellow)"></div></div>'+
-            '<div class="hint">'+pc+'٪ من '+nf(w.threshold)+'</div>' : '')+
-        '</div></div>'+
+      '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
       '<label>نوع الزبون</label>'+
-      '<div class="filters" style="padding:0;border:none">'+
-        seg('auto','مفرد (يصير جملة لحاله)')+seg('wholesale','⭐ جملة')+seg('retail','مفرد ثابت')+
-      '</div>'+
-      '<div class="hint">«مفرد ثابت» = ما يتحوّل جملة لحاله حتى لو وصل الحد.</div>'+
+      '<div class="filters" style="padding:0;border:none">'+seg('retail','مفرد')+seg('wholesale','⭐ جملة')+'</div>'+
+      /* 💰 ملف ١٢٢: نسبة مكافأة خاصة لزبون الجملة */
+      (whole
+        ? '<label style="margin-top:10px">💰 نسبة مكافأة زبون الجملة (٪)</label>'+
+          '<div style="display:flex;gap:8px;align-items:center">'+
+            '<input class="modal-input" id="wlPct" type="number" step="0.1" min="0" max="20" style="max-width:140px"'+
+              ' placeholder="النسب العامة" value="'+(w.pct!=null?w.pct:'')+'">'+
+            '<button class="btn-solid" onclick="custCbPct('+id+')">حفظ النسبة</button></div>'+
+          '<div class="hint">فارغة = ياخذ نفس النسب العامة. الزبون ما يشوف النسبة — يشوف المبلغ بس.</div>'
+        : '')+
       '<label style="margin-top:14px">➕➖ تعديل الرصيد (هدية، تعويض، تصحيح)</label>'+
       '<div class="grid2"><input class="modal-input" id="wlAmt" type="number" inputmode="numeric" placeholder="المبلغ — مثلاً 5000 أو -5000">'+
         '<input class="modal-input" id="wlNote" placeholder="السبب (يوصل للزبون بالإشعار)"></div>'+
@@ -3412,6 +3427,15 @@ async function custWallet(id){
       (tx ? '<div class="tbl-wrap" style="max-height:40vh"><table><thead><tr><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th>الوقت</th></tr></thead><tbody>'+tx+'</tbody></table></div>'
           : '<div class="hint">ماكو حركات بعد</div>'));
   }catch(e){ modal('<div class="msg err">'+esc(e.message)+'</div>'); }
+}
+async function custCbPct(id){
+  var v = ($('wlPct').value||'').trim(), m = $('wlMsg');
+  var pct = v === '' ? null : parseFloat(v);
+  if (pct !== null && (isNaN(pct) || pct < 0 || pct > 20)){ m.className='msg err'; m.textContent='النسبة بين 0 و 20'; return; }
+  try{
+    await rpc('web_customer_cbpct', { p_id:id, p_pct:pct });
+    m.className='msg ok'; m.textContent = pct === null ? '✅ رجع للنسب العامة' : '✅ انحفظت النسبة';
+  }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
 async function custTier(id, tier){
   try{
@@ -3438,6 +3462,7 @@ async function promoLoad(){
   try{
     var p = await rpc('web_promo_get', {});
     var s = p.stats || {};
+    var G = {}; try{ G = await rpc('web_goal_get', {}); }catch(e0){}
     box.innerHTML =
       '<label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="prOn"'+(p.on?' checked':'')+
         ' style="width:20px;height:20px"> <b>شغّال</b> — هدية الترحيب والمكافأة والتحويل لجملة</label>'+
@@ -3452,8 +3477,14 @@ async function promoLoad(){
         '<div><div class="hint">100.000 وفوق</div><input class="modal-input" id="prT3" type="number" step="0.1" value="'+(p.t3!=null?p.t3:(p.pct||0))+'"></div>'+
       '</div>'+
       '<div class="hint">الزبون ما يشوف النسبة — يشوف بس «راح ينزلك X د.ع». الطلب تحت 1.000 ما ياخذ مكافأة.</div>'+
-      '<label>يصير جملة لما مشترياته توصل (د.ع)</label><input class="modal-input" id="prAt" type="number" value="'+(p.threshold||0)+'">'+
-      '<div class="hint">تنحسب الطلبات المُسلّمة من '+dstr(p.start)+' وجاي.</div>'+
+      /* 🎯 ملف ١٢٣: مكافأة كل ما توصل مشتريات الزبون حد معيّن */
+      '<label style="margin-top:12px">🎯 مكافأة المشتريات</label>'+
+      '<div class="grid2">'+
+        '<div><div class="hint">كل ما توصل مشترياته (د.ع)</div><input class="modal-input" id="prGoalAt" type="number" value="'+(G.at||0)+'"></div>'+
+        '<div><div class="hint">ينزله بالمحفظة (د.ع) — صفر = طافية</div><input class="modal-input" id="prGoalBonus" type="number" value="'+(G.bonus||0)+'"></div>'+
+      '</div>'+
+      '<div class="hint">تنحسب الطلبات المُسلّمة. كل ما يوصل الحد (٢٫٥ ← ٥ ← ٧٫٥…) ينزله المبلغ ويوصله إشعار. انعطت لحد هسه: '+nf(G.paid||0)+' مكافأة.</div>'+
+      '<div class="hint" style="margin-top:8px">⭐ زبون الجملة: تحوّله بيدك من صفحة الزبائن ← 👛 — وهناك تحدد نسبته الخاصة.</div>'+
       '<div style="margin-top:10px"><button class="btn-solid" onclick="promoSave()">حفظ</button></div>'+
       '<div class="msg" id="prMsg"></div>'+
       '<div class="stats-grid" style="margin-top:12px">'+
@@ -3469,7 +3500,9 @@ async function promoSave(){
     await rpc('web_promo_set', { p_on:$('prOn').checked,
       p_welcome:parseInt($('prWel').value,10)||0,
       p_t1:parseFloat($('prT1').value)||0, p_t2:parseFloat($('prT2').value)||0, p_t3:parseFloat($('prT3').value)||0,
-      p_threshold:parseInt($('prAt').value,10)||0 });
+      p_threshold:0 });                          // ملف ١٢٢: ماكو تحويل تلقائي لجملة
+    await rpc('web_goal_set', { p_at:parseInt($('prGoalAt').value,10)||0,
+      p_bonus:parseInt($('prGoalBonus').value,10)||0 });
     m.className='msg ok'; m.textContent='✅ انحفظ';
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }

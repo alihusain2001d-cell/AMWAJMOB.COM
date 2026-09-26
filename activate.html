@@ -219,7 +219,7 @@
     <div class="bsheet-handle"></div>
     <div class="bsheet-head">
       <button class="bsheet-close" onclick="closeSheet('chatSheet')"></button>
-      <span class="bsheet-title">💬 دردشة ويا امواج</span>
+      <span class="bsheet-title">💬 دردشة مع امواج</span>
       <button onclick="openCallPicker()" title="اتصال" class="header-wa-btn">📞</button>
     </div>
     <div id="chatList" class="chat-list"></div>
@@ -257,7 +257,7 @@
       <button class="contact-chat-card" onclick="openChat()">
         <div class="ccc-icon">💬</div>
         <div class="ccc-text">
-          <div class="ccc-title">دردشة مباشرة ويا امواج</div>
+          <div class="ccc-title">دردشة مباشرة مع امواج</div>
           <div class="ccc-sub">اكتبلنا أو دز صورة القطعة — من هنا بدون واتساب</div>
         </div>
         <div class="ccc-arrow">‹</div>
@@ -3305,7 +3305,7 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
           <span id="tierChip" class="tier-chip" style="display:none;margin-top:4px" onclick="openWalletSheet()">⭐ زبون جملة</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button class="home-icon-btn chat-head-btn" onclick="openChat()" title="دردشة ويا امواج" style="position:relative;">
+          <button class="home-icon-btn chat-head-btn" onclick="openChat()" title="دردشة مع امواج" style="position:relative;">
             <span style="font-size:20px;">💬</span>
             <span class="chat-badge" id="chatHomeBadge" style="display:none">0</span>
           </button>
@@ -7661,6 +7661,10 @@ function walletLoad(force){
     // النسب الثلاث (ملف ١١٨) — للحساب بالسلة بس، **ما تنعرض للزبون أبداً**
     WALLET.cb        = Array.isArray(r.cb) ? r.cb.map(Number) : [Number(r.pct) || 0, Number(r.pct) || 0, Number(r.pct) || 0];
     WALLET.on        = r.on !== false;
+    // 🎯 مكافأة المشتريات (ملف ١٢٣): كل ما يوصل الحد ينزله مبلغ
+    WALLET.goal      = Number(r.goal) || 0;
+    WALLET.goalBonus = Number(r.goalBonus) || 0;
+    WALLET.goalLeft  = Number(r.goalLeft) || 0;
     WALLET.items     = r.items || [];
     _walletPaint();
     // صار جملة (أو رجع مفرد) من آخر تحميل؟ نعيد الأسعار
@@ -7681,7 +7685,14 @@ function _walletCardHtml(){
   h += '<div class="wc-top"><span class="wc-label">👛 محفظتي</span>' +
        (W.tier === 'wholesale' ? '<span class="tier-chip">⭐ زبون جملة</span>' : '') + '</div>';
   h += '<div class="wc-bal">' + (W.loaded ? _fmtIQD(W.balance) : '…') + ' <small>د.ع</small></div>';
-  if (W.loaded && W.tier !== 'wholesale' && W.threshold > 0 && W.on) {
+  if (W.loaded && W.on && W.goal > 0 && W.goalBonus > 0) {
+    // 🎯 شريط المكافأة الجاية — يبدي من جديد بعد كل مكافأة
+    var gp = Math.max(0, Math.min(100, Math.round((W.goal - W.goalLeft) * 100 / W.goal)));
+    h += '<div class="wc-prog"><div style="width:' + gp + '%"></div></div>' +
+         '<div class="wc-hint">🎯 باقي لك <b>' + _fmtIQD(W.goalLeft) + ' د.ع</b> مشتريات وتنزلك مكافأة <b>' +
+         _fmtIQD(W.goalBonus) + ' د.ع</b></div>';
+    if (W.tier === 'wholesale') h += '<div class="wc-hint">⭐ الأسعار الي تشوفها أسعار جملة</div>';
+  } else if (W.loaded && W.tier !== 'wholesale' && W.threshold > 0 && W.on) {
     var pc = Math.min(100, Math.round(W.progress * 100 / W.threshold));
     h += '<div class="wc-prog"><div style="width:' + pc + '%"></div></div>' +
          '<div class="wc-hint">⭐ باقي لك <b>' + _fmtIQD(Math.max(0, W.threshold - W.progress)) +
@@ -7700,7 +7711,8 @@ var WL_KIND = {
   spend:    ['🛒', 'صرف بطلب'],
   refund:   ['↩️', 'رجع لمحفظتك'],
   clawback: ['➖', 'سحب مكافأة طلب ملغي'],
-  adjust:   ['✏️', 'من امواج']
+  adjust:   ['✏️', 'من امواج'],
+  goal:     ['🎯', 'مكافأة مشتريات']
 };
 
 function _walletSheetHtml(){
@@ -7712,6 +7724,7 @@ function _walletSheetHtml(){
        '<div>🛒 بالسلة أشّر <b>«استعمل رصيدي»</b> وينخصم من طلبك، والمندوب يستلم الباقي بس.</div>' +
        '<div>↩️ إذا انلغى طلب، الرصيد الي صرفته بي يرجعلك.</div>' +
        (W.threshold > 0 && W.on ? '<div>⭐ لما توصل مشترياتك <b>' + _fmtIQD(W.threshold) + ' د.ع</b> تصير زبون جملة وتنفتحلك أسعار الجملة.</div>' : '') +
+       (W.goal > 0 && W.goalBonus > 0 && W.on ? '<div>🎯 كل ما توصل مشترياتك <b>' + _fmtIQD(W.goal) + ' د.ع</b> تنزلك مكافأة <b>' + _fmtIQD(W.goalBonus) + ' د.ع</b> بمحفظتك.</div>' : '') +
        '</div>';
   h += '<div style="font-size:16px;font-weight:800;margin:6px 2px 10px">الحركات</div>';
   if (!W.items.length) {
@@ -9133,7 +9146,7 @@ function renderAccountSheet() {
         <div class="profile-menu-group">
           <button class="profile-menu-item" onclick="openChat()">
             <div class="profile-menu-icon pm-icon-contact">💬</div>
-            <div class="profile-menu-label">دردشة ويا امواج</div>
+            <div class="profile-menu-label">دردشة مع امواج</div>
             ${_chatBadgeHtml('acctChatBadge')}
             <span class="profile-menu-arrow">‹</span>
           </button>
