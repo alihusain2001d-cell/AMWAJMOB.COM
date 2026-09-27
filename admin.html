@@ -1779,13 +1779,15 @@ function wlPanel(L, shop, title){
   modal('<h3>🏷️ ملصقات الضمان — ' + esc(title || '') + '</h3>' +
     '<div class="msg" id="wlGodexMsg" style="display:none"></div>' +
     '<div class="hint" style="margin-bottom:10px">' + L.length + ' ملصق · ' +
-      '<b>Godex</b> = تنطبع على طابعة الملصقات الثابتة بالمحل لحالها. ' +
-      '<b>من المتصفح</b> = تختار الطابعة بيدك.</div>' +
+      'الطباعة على <b>Godex</b> — <b>لا تطبعها من المتصفح</b>، يطلع مقصوص (ومكرر إذا انرسلت لـGodex).</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">' +
       '<button class="btn-solid" onclick="wlGodex()">🏷️ اطبع على Godex (' + L.length + ')</button>' +
-      '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ من المتصفح' + (L.length > 1 ? ' (' + L.length + ')' : '') + '</button>' +
       '<button class="btn-solid gray" onclick="closeModal()">✕ إغلاق</button>' +
     '</div>' +
+    /* احتياط بس — لو Godex عاطلة أو الحاسبة مطفية */
+    '<details style="margin-bottom:10px"><summary class="hint" style="cursor:pointer">🖨️ طابعة ثانية (من المتصفح)</summary>' +
+      '<button class="action-btn btn-view" style="margin-top:8px" onclick="wlPrintDoc()">🖨️ اطبع من المتصفح' +
+        (L.length > 1 ? ' (' + L.length + ')' : '') + '</button></details>' +
     '<div id="wlList"></div>' +
     '<details style="margin-top:12px"><summary class="hint" style="cursor:pointer">📐 مقاس اللصقة</summary>' +
       '<div class="grid2" style="margin-top:8px">' +
