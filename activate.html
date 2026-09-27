@@ -58,6 +58,7 @@
       <button onclick="whatsappFromProducts()" title="تواصل عبر واتساب" class="header-wa-btn">💬</button>
     </div>
     <div class="bsheet-body">
+      <div class="apple-notice" style="display:none">⚠️ القطع المعروضة <b>ليست من صنع Apple</b> ولا معتمدة منها، وتركيبها قد <b>يلغي ضمان Apple</b> للجهاز. امواج مورّد قطع غيار لمحلات الصيانة، ولا تقدّم خدمة تصليح ولا تبيع أجهزة.<div dir="ltr" style="margin-top:4px;font-size:12px;opacity:.85">Parts are not made or certified by Apple. Installing them may void the Apple warranty. Amwaj supplies spare parts to repair shops; it does not offer repair services or sell devices.</div></div>
       <div class="bsheet-search-bar"><span>🔍</span><input type="text" id="sheetSearch" placeholder="ابحث عن موديل..." oninput="handleSheetSearch()"></div>
       <div id="sheetBrands" class="sheet-brands"></div>
       <div id="sheetResults"></div>
@@ -77,7 +78,7 @@
       <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="phone" type="tel"></div>
       <div class="form-group"><label class="form-label">رقم الفاتورة</label><input class="form-input" id="invoice"></div>
       <div class="form-group"><label class="form-label">كود الشاشة</label><input class="form-input" id="screenCode" placeholder="الكود خلف الشاشة"></div>
-      <div class="form-group"><label class="form-label">اسم الشاشة (اختياري)</label><input class="form-input" id="screenName" placeholder="مثال: iPhone 11 Pro"></div>
+      <div class="form-group"><label class="form-label">اسم الشاشة (اختياري)</label><input class="form-input" id="screenName" placeholder="مثال: اسم الموديل"></div>
       <div class="form-group"><label class="form-label">نوع القطعة</label><select class="form-input" id="type"><option value="screen">شاشة</option><option value="battery">بطارية</option></select></div>
       <div class="form-group"><label class="form-label">تاريخ التركيب</label><input class="form-input" id="start" readonly></div>
       <div id="dupMsg" style="display:none;background:#FEF2F2;color:#991B1B;padding:10px;border-radius:10px;margin:10px 0;border:1px solid #FECACA;font-size:17px;"></div>
@@ -1024,6 +1025,7 @@ body {
 #chatSheet .bsheet { background: #EAF2F8; }
 .chat-list {
   flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;   /* آخر القائمة ما يسحب الشاشة كلها */
   padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px;
 }
 .chat-hello {
@@ -1152,6 +1154,12 @@ body {
 .summary-row.wallet-row { background: #F0FDF4; border: 1px dashed #86EFAC; border-radius: 12px; padding: 10px 12px; margin: 6px 0; cursor: pointer; }
 .summary-row.wallet-row input { width: 20px; height: 20px; accent-color: #10B981; vertical-align: middle; margin-left: 6px; }
 .summary-row.cb-row { color: #6D28D9; font-weight: 800; font-size: 13.5px; }
+
+/* 🍎 تنبيه القطع — بتطبيق الآيفون بس (رد أبل 1.1.6) */
+.apple-notice {
+  background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; border-radius: 12px;
+  padding: 10px 12px; font-size: 13px; line-height: 1.7; margin: 0 0 12px;
+}
 
 /* ═══ BOTTOM SHEETS ═══ */
 .bsheet-overlay {
@@ -3338,10 +3346,11 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
       </div>
 
       <!-- Hero Banner -->
+      <div class="apple-notice" style="display:none;margin:0 16px 12px">⚠️ القطع المعروضة <b>ليست من صنع Apple</b> ولا معتمدة منها، وتركيبها قد <b>يلغي ضمان Apple</b> للجهاز. امواج مورّد قطع غيار لمحلات الصيانة، ولا تقدّم خدمة تصليح ولا تبيع أجهزة.<div dir="ltr" style="margin-top:4px;font-size:12px;opacity:.85">Parts are not made or certified by Apple. Installing them may void the Apple warranty. Amwaj supplies spare parts to repair shops; it does not offer repair services or sell devices.</div></div>
       <div class="hero-banner" onclick="openContactSheet();" style="cursor:pointer;">
         <div class="hero-content">
           <div class="hero-eyebrow">🌊 أمواج للإلكترونيات</div>
-          <div class="hero-title">قطع غيار أصلية<br>بضمان حقيقي</div>
+          <div class="hero-title" id="heroTitle">قطع غيار أصلية<br>بضمان حقيقي</div>
           <button class="hero-cta" onclick="event.stopPropagation();openContactSheet();">تواصل معنا ←</button>
         </div>
         <div class="hero-illust">📱</div>
@@ -3536,6 +3545,25 @@ input, textarea { -webkit-user-select:text !important; user-select:text !importa
 <script src="sb-config.js"></script>
 <script>
 let cart = [];
+
+
+/* 🍎 تطبيق الآيفون (مو الموقع ولا الأندرويد): أبل طلبت نوضّح إن القطع
+   مو من صنعها وتركيبها يلغي ضمانها (1.1.6)، وما تريد شعارات منصات
+   ثانية (2.3.10). فبالآيفون: التنبيه يبين، وشعارات الماركات تنشال
+   (الأسماء تبقى نص عادي). */
+var IS_IOS_APP = (function(){
+  try { return !!(window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios'); }
+  catch(e) { return false; }
+})();
+function _showAppleNotices(){
+  if (!IS_IOS_APP) return;
+  document.querySelectorAll('.apple-notice').forEach(function(el){ el.style.display = ''; });
+  // «أصلية» بالبانر تتعارض ويا التنبيه (أبل 1.1.6) — بالآيفون نكتب وصف محايد
+  var ht = document.getElementById('heroTitle');
+  if (ht) ht.innerHTML = 'قطع غيار موبايل<br>لمحلات الصيانة';
+}
+document.addEventListener('DOMContentLoaded', _showAppleNotices);
+setTimeout(_showAppleNotices, 1500);
 
 function sanitize(str) {
   if (!str) return '';
@@ -5397,7 +5425,7 @@ function renderSheetBrands(type) {
   }
 
   function brandCard(b) {
-    var logosContent = getBrandLogos(b.brands);
+    var logosContent = (typeof IS_IOS_APP !== 'undefined' && IS_IOS_APP) ? '' : getBrandLogos(b.brands);   // 🍎 بلا شعارات
     return '<div class="sheet-brand-btn" onclick="openSheetBrand(\'' + b.brands + '\')">' +
       (logosContent ? '<div class="brand-logos">' + logosContent + '</div>' : '') +
       '<b>' + b.label + '</b>' +
@@ -7355,6 +7383,7 @@ function chatStop(){
   clearInterval(CHAT.timer); CHAT.timer = null;
   var s = document.querySelector('#chatSheet .bsheet');
   if (s) { s.style.height = ''; s.style.transform = ''; }
+  _chatFit.h = 0; _chatFit.t = 0;
   var el = document.getElementById('chatSheet');
   if (el) el.classList.remove('kb');
   try { document.getElementById('chatInput').blur(); } catch(e) {}
@@ -7566,14 +7595,24 @@ async function chatSend(){
 /* ⌨️ الكيبورد: بالآيفون ما يصغّر الصفحة، يغطيها. فنقيس الجزء الي
    يبين فعلاً (visualViewport) ونخلي الدردشة بحجمه بالضبط — حتى
    خانة الكتابة تبقى فوق الكيبورد والرسائل ما تختفي وراه. */
+// نقيس مرة وحدة بكل فريم، ونغيّر بس إذا الحجم فعلاً تغيّر — قبل كانت
+// تعيد الحجم وتسحب لتحت ويا كل حركة إصبع، فالشاشة تهتز.
+var _chatFit = { h: 0, t: 0, raf: 0 };
 function chatFitViewport(){
+  if (_chatFit.raf) return;
+  _chatFit.raf = requestAnimationFrame(function(){ _chatFit.raf = 0; _chatFitNow(); });
+}
+function _chatFitNow(){
   var el = document.getElementById('chatSheet');
   var s = el && el.querySelector('.bsheet');
   var vv = window.visualViewport;
   if (!s) return;
-  if (!CHAT.open || !vv) { s.style.height = ''; s.style.transform = ''; return; }
-  s.style.height = Math.round(vv.height) + 'px';
-  s.style.transform = vv.offsetTop > 1 ? 'translateY(' + Math.round(vv.offsetTop) + 'px)' : '';
+  if (!CHAT.open || !vv) { s.style.height = ''; s.style.transform = ''; _chatFit.h = 0; _chatFit.t = 0; return; }
+  var h = Math.round(vv.height), t = vv.offsetTop > 1 ? Math.round(vv.offsetTop) : 0;
+  if (Math.abs(h - _chatFit.h) < 3 && t === _chatFit.t) return;   // ما تغيّر شي — لا نلمس الشاشة
+  _chatFit.h = h; _chatFit.t = t;
+  s.style.height = h + 'px';
+  s.style.transform = t ? 'translateY(' + t + 'px)' : '';
   el.classList.toggle('kb', vv.height < window.innerHeight - 120);
   if (CHAT.stick) { var b = document.getElementById('chatList'); if (b) b.scrollTop = b.scrollHeight; }
 }
@@ -7583,6 +7622,30 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', chatFitViewport);
   window.visualViewport.addEventListener('scroll', chatFitViewport);
 }
+
+/* 🔒 جوه الدردشة: بس قائمة الرسائل (وخانة الكتابة إذا طويلة) تنسحب.
+   السحب على الهيدر، أو بعد ما توصل لأول/آخر رسالة، كان يسحب الصفحة
+   كلها وياه (وويا الكيبورد بالآيفون تتحرك الشاشة كلها) — هذا الاهتزاز. */
+(function(){
+  var lastY = 0;
+  document.addEventListener('touchstart', function(e){
+    if (e.touches.length === 1) lastY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e){
+    if (!CHAT.open || e.touches.length !== 1) return;
+    var sheet = document.getElementById('chatSheet');
+    if (!sheet || !sheet.contains(e.target)) return;
+    var y = e.touches[0].clientY, dy = y - lastY;   // موجب = الإصبع نازل (يصعد للرسائل القديمة)
+    lastY = y;
+    var box = e.target.closest && e.target.closest('.chat-list, .chat-input');
+    if (box && box.scrollHeight > box.clientHeight + 1) {
+      var atTop = box.scrollTop <= 0;
+      var atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 1;
+      if (dy === 0 || (dy > 0 && !atTop) || (dy < 0 && !atBottom)) return;   // سحب عادي داخل القائمة
+    }
+    if (e.cancelable) e.preventDefault();
+  }, { passive: false });
+})();
 
 // 🔴 العلامة الحمرة — رسائل من امواج ما انقرت
 function _chatBadgeHtml(id){
@@ -8111,6 +8174,7 @@ function _notifIconClass(type) {
   if (type === 'admin_new_order') return 'new-order';
   if (type === 'admin_order_cancelled') return 'cancelled';
   if (type === 'order_received') return 'new-order';
+  if (type === 'order_status' || type === 'order_prime_update') return 'new-order';
   if (type === 'order_delivered') return 'delivered';
   if (type === 'order_cancelled') return 'cancelled';
   if (type === 'account_approved') return 'approved';
@@ -8122,6 +8186,10 @@ function _notifIcon(type) {
   if (type === 'admin_new_order')       return '🛒';
   if (type === 'admin_order_cancelled') return '🚨';
   if (type === 'order_received')        return '✅';
+  if (type === 'order_status')          return '📦';
+  if (type === 'order_prime_update')    return '🚚';
+  if (type === 'wallet')                return '👛';
+  if (type === 'tier')                  return '⭐';
   if (type === 'order_delivered')       return '✅';
   if (type === 'order_cancelled')       return '❌';
   if (type === 'account_approved')      return '🎉';
@@ -8203,23 +8271,8 @@ function handleNotifClick(id) {
   // افتح المكان المناسب
   closeSheet('notificationsSheet');
   setTimeout(function() {
-    // 🛒 إشعارات الأدمن عن الطلبات → افتح لوحة التحكم + طلبات + مرر للطلب
-    if (n.type === 'admin_new_order' || n.type === 'admin_order_cancelled') {
-      /* ما نحتاج نفحص إذا هو أدمن: السيرفر ما يرسل هالنوع إلا
-         لأجهزة الإدارة أصلاً. فلو وصله، هو منهم. */
-      if (typeof openAdminPanel === 'function') openAdminPanel();
-    }
-    // 📦 إشعارات الزبون عن حالة طلبه → افتح طلباتي + مرر للطلب
-    else if (n.type === 'order_delivered' || n.type === 'order_cancelled' || n.type === 'order_received') {
-      if (typeof openOrdersSheet === 'function') {
-        openOrdersSheet();
-        if (n.orderId && typeof scrollToOrderCard === 'function') {
-          setTimeout(function(){ scrollToOrderCard(n.orderId); }, 800);
-        }
-      }
-    }
     // 📢 إعلان → اعرض المودال (مع الرابط والزر إذا موجود)
-    else if (n.type === 'broadcast') {
+    if (n.type === 'broadcast') {
       if (typeof showBroadcastModal === 'function') {
         showBroadcastModal({
           id: n.id,
@@ -8230,9 +8283,9 @@ function handleNotifClick(id) {
         });
       }
     }
-    // 🔗 أي إشعار ثاني فيه رابط خارجي → افتح الرابط مباشرة
-    else if (n.url) {
-      try { window.open(n.url, '_blank'); } catch(e) { location.href = n.url; }
+    // 🧭 الباقي (طلبات، محفظة، دردشة، إدارة، روابط) — نفس توجيه ضغطة الإشعار
+    else {
+      handleNotificationClickData(n);
     }
   }, 250);
 }
@@ -8420,7 +8473,6 @@ async function setupPushNotifications() {
       console.log('🖱️ Notification clicked:', action);
       const data = action.notification.data || {};
       if (data.type === 'chat') { setTimeout(function(){ openChat(); }, 400); return; }   // 💬
-      if (data.type === 'wallet' || data.type === 'tier') { setTimeout(function(){ openWalletSheet(); }, 400); }   // 👛
       // 💾 احفظ في مركز الإشعارات (إذا الإشعار جاي والتطبيق مغلق)
       try {
         addNotification({
@@ -8432,26 +8484,8 @@ async function setupPushNotifications() {
           url:     data.url     || ''
         });
       } catch(e) {}
-      // لو الإشعار عن طلب → افتح صفحة الطلبات
-      if (data.type === 'new_order' || data.type === 'order_status' || data.type === 'order_delivered' || data.type === 'order_cancelled' || data.type === 'order_received') {
-        if (typeof openOrdersSheet === 'function') openOrdersSheet();
-      } else if (data.type === 'admin_new_order' || data.type === 'admin_order_cancelled') {
-        if (typeof openAdminPanel === 'function') openAdminPanel();
-      } else if (data.type === 'account_approved') {
-        // ✅ انوافق على طلبه — نوديه مباشرة لشاشة الدخول ورقمه معبّى، حتى يسجل دخول بضغطة
-        setTimeout(function(){
-          try {
-            var _ph = (typeof _getKnownPhone === 'function') ? _getKnownPhone() : '';
-            var _inp = document.getElementById('loginPhone');
-            if (_inp && _ph) _inp.value = _ph;
-            showScreen('loginScreen');
-            var _res = document.getElementById('loginResult');
-            if (_res) _res.innerHTML = '<div class="result success">✅ تمت الموافقة على طلبك! اضغط "دخول" للمتابعة</div>';
-          } catch(e){}
-        }, 400);
-      } else if (data.type === 'broadcast' && data.target) {
-        setTimeout(function(){ navigateToTarget(data.target); }, 400);
-      }
+      // 🧭 نفس توجيه المتصفح ومركز الإشعارات (طلب ← طلباتي ويأشّر عليه، محفظة، إعلان…)
+      setTimeout(function(){ handleNotificationClickData(data); }, 400);
     });
 
     console.log('✅ Push notifications setup complete');
@@ -8766,27 +8800,57 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// دالة موحّدة للتنقّل حسب نوع الإشعار
+// 🧭 دالة وحدة للتنقّل حسب نوع الإشعار — تستعملها ضغطة الإشعار بالتطبيق،
+//    وبالمتصفح، وبمركز الإشعارات. أي نوع جديد ينضاف هنا بس.
+var ORDER_NOTIF_TYPES = ['new_order', 'order_status', 'order_delivered', 'order_cancelled',
+                         'order_received', 'order_prime_update'];
+var ADMIN_NOTIF_PAGE  = { admin_new_customer: 'cust', admin_new_order: 'ord',
+                          admin_order_cancelled: 'ord', admin_chat: 'chat' };
 function handleNotificationClickData(data) {
   try {
+    data = data || {};
     const type = data.type || 'general';
     const orderId = data.orderId || '';
     if (type === 'chat') { if (typeof openChat === 'function') openChat(); return; }   // 💬
     if (type === 'wallet' || type === 'tier') { if (typeof openWalletSheet === 'function') openWalletSheet(); return; }   // 👛
-    
-    if (type === 'admin_new_order' || type === 'admin_order_cancelled') {
-      // للأدمن: افتح لوحة التحكم (صفحة مستقلة)
-      if (typeof openAdminPanel === 'function') openAdminPanel();
-    } else if (type === 'new_order' || type === 'order_status' || type === 'order_delivered' || type === 'order_cancelled' || type === 'order_received') {
-      // للزبون: افتح طلباتي
+
+    if (type.indexOf('admin_') === 0) {
+      // 🧑‍💼 للإدارة: لوحة التحكم على الصفحة الصحيحة (طلب تسجيل ← الزبائن…)
+      var pg = ADMIN_NOTIF_PAGE[type] || 'ord';
+      if (pg === 'chat' && data.phone) pg += ':' + encodeURIComponent(data.phone);   // محادثة الزبون نفسه
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        window.open(ADMIN_PANEL_URL + '#' + pg, '_blank');
+      } else {
+        location.href = '/admin.html#' + pg;
+      }
+    } else if (ORDER_NOTIF_TYPES.indexOf(type) !== -1) {
+      // 📦 للزبون: طلباتي، ونأشّر على الطلب نفسه إذا نعرفه
       if (typeof openOrdersSheet === 'function') {
         openOrdersSheet();
         if (orderId) setTimeout(function(){ scrollToOrderCard(orderId); }, 800);
       }
-    } else if (type === 'broadcast' && data.target) {
-      setTimeout(function(){
-        if (typeof navigateToTarget === 'function') navigateToTarget(data.target);
-      }, 400);
+    } else if (type === 'account_approved') {
+      // ✅ انوافق على حسابه: إذا بعده مو داخل، شاشة الدخول ورقمه معبّى
+      var _tok = ''; try { _tok = getCustomerToken(); } catch(e) {}
+      if (!_tok) {
+        var _ph = (typeof _getKnownPhone === 'function') ? _getKnownPhone() : '';
+        var _inp = document.getElementById('loginPhone');
+        if (_inp && _ph) _inp.value = _ph;
+        showScreen('loginScreen');
+        var _res = document.getElementById('loginResult');
+        if (_res) _res.innerHTML = '<div class="result success">✅ تمت الموافقة على طلبك! اضغط "دخول" للمتابعة</div>';
+      }
+    } else if (type === 'broadcast') {
+      // 📢 إعلان: القسم الي حدده، أو الرابط، أو يبقى بالرئيسية
+      if (data.target) {
+        setTimeout(function(){
+          if (typeof navigateToTarget === 'function') navigateToTarget(data.target);
+        }, 400);
+      } else if (data.url) {
+        try { window.open(data.url, '_blank'); } catch(e) { location.href = data.url; }
+      }
+    } else if (data.url) {
+      try { window.open(data.url, '_blank'); } catch(e) { location.href = data.url; }
     }
   } catch(e) { console.error('handleNotificationClickData error:', e); }
 }
@@ -8936,6 +9000,7 @@ function _pullToRefreshAction() {
 
   document.addEventListener('touchstart', function(e) {
     if (refreshing || e.touches.length !== 1) return;
+    if (e.target && e.target.closest && e.target.closest('#chatSheet')) { pulling = false; return; }   // 💬 الدردشة إلها سحبها
     scrollEl = findScrollable(e.target);
     if (scrollTopOf(scrollEl) > 0) { scrollEl = null; return; }
     startX = e.touches[0].clientX;

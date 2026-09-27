@@ -16,6 +16,18 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+/* 🧭 إشعارات الإدارة (طلب جديد، تسجيل، دردشة…) أحياناً توصل لهذا الملف
+   مو لـadmin-sw.js — الموقع واللوحة على نفس الدومين، وأي واحد تفتحه
+   آخر شي بنفس المتصفح ياخذ مكان الثاني. فلازم هذا الملف هم يعرف
+   يوديها للوحة، مو لصفحة الموقع. */
+const ADMIN_PAGE_OF = {
+  admin_new_customer:    'cust',
+  admin_new_order:       'ord',
+  admin_order_cancelled: 'ord',
+  admin_chat:            'chat',
+};
+function isAdminType(t) { return String(t || '').indexOf('admin_') === 0; }
+
 // 💾 احفظ الإشعار في IndexedDB عشان الموقع يقدر يجيبه لمركز الإشعارات
 function saveNotifToDB(notif) {
   return new Promise(function(resolve){
@@ -74,20 +86,22 @@ messaging.onBackgroundMessage(function(payload) {
     url: data.url || ''
   };
   
+  const forAdmin = isAdminType(data.type);
   const options = {
     body: body,
-    icon: 'https://www.amwajmob.com/icon-192.png',
-    badge: 'https://www.amwajmob.com/icon-192.png',
+    icon: forAdmin ? '/pwa-192.png' : 'https://www.amwajmob.com/icon-192.png',
+    badge: forAdmin ? '/pwa-192.png' : 'https://www.amwajmob.com/icon-192.png',
     dir: 'rtl',
     lang: 'ar',
-    tag: 'amwaj_' + Date.now(),
+    // نفس وسم اللوحة — لو وصل من الطريقين، الثاني يبدّل الأول بدل ما يتكرر
+    tag: forAdmin ? 'amwaj-' + (ADMIN_PAGE_OF[data.type] || 'ord') : 'amwaj_' + Date.now(),
     renotify: true,
     requireInteraction: true,
     data: data,
     vibrate: [300, 100, 300, 100, 300],
     silent: false,
     timestamp: Date.now(),
-    actions: [
+    actions: forAdmin ? [] : [
       { action: 'open', title: '📱 افتح التطبيق' }
     ]
   };
@@ -98,7 +112,8 @@ messaging.onBackgroundMessage(function(payload) {
   return Promise.all([
     self.registration.showNotification(title, options),
     // 💬 رد الدردشة: المحادثة نفسها هي السجل — ما نكرره بمركز الإشعارات
-    data.type === 'chat' ? Promise.resolve() : saveNotifToDB(notifData)
+    // 🧑‍💼 إشعار إدارة: مو من إشعارات الزبون، فما ينحفظ بمركزه
+    (data.type === 'chat' || forAdmin) ? Promise.resolve() : saveNotifToDB(notifData)
   ]).then(function(){
     console.log('[SW] ✅ Notification shown + saved to DB');
   }).catch(function(err){
@@ -129,19 +144,39 @@ self.addEventListener('notificationclick', function(event) {
     return;
   }
   
-  // 📍 وإلا افتح الموقع مع بارامترات التوجيه الداخلي
-  let targetUrl = '/';
+  // 🧑‍💼 إشعار إدارة → لوحة التحكم على الصفحة الصحيحة (مو الموقع)
+  if (isAdminType(type)) {
+    const page = ADMIN_PAGE_OF[type] || 'ord';
+    event.waitUntil(
+      clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(list) {
+        for (const c of list) {
+          if (c.url.indexOf('/admin.html') !== -1 && 'focus' in c) {
+            c.postMessage({ amwaj: 'open', page: page, phone: data.phone || '' });
+            return c.focus();
+          }
+        }
+        return clients.openWindow('/admin.html#' + page +
+          (page === 'chat' && data.phone ? ':' + encodeURIComponent(data.phone) : ''));
+      })
+    );
+    return;
+  }
+
+  /* 📍 وإلا افتح المتجر مع بارامترات التوجيه الداخلي.
+     ⚠️ مو «/» — هذيك صفحة التعريف (الواجهة)، مو المتجر. كانت
+     كل ضغطة إشعار والموقع مسكّر تودّي الزبون لها. */
   const params = [];
   if (type) params.push('notif_type=' + encodeURIComponent(type));
   if (orderId) params.push('notif_orderId=' + encodeURIComponent(orderId));
   if (target) params.push('notif_target=' + encodeURIComponent(target));
-  if (params.length) targetUrl = '/?' + params.join('&');
-  
+  const targetUrl = '/activate.html' + (params.length ? '?' + params.join('&') : '');
+
   event.waitUntil(
     clients.matchAll({type: 'window', includeUncontrolled: true}).then(function(clientList) {
       for (let i = 0; i < clientList.length; i++) {
         const client = clientList[i];
-        if (client.url.indexOf(self.registration.scope) === 0 && 'focus' in client) {
+        // صفحة المتجر المفتوحة — مو اللوحة ولا صفحة التعريف
+        if (client.url.indexOf('/activate.html') !== -1 && 'focus' in client) {
           client.postMessage({
             type: 'notification-click',
             data: data

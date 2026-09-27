@@ -15,7 +15,7 @@
       الحالي — وهذا أخطر من إنك ما تشوف شي.
    ══════════════════════════════════════════════════════════════ */
 
-const V = 'amwaj-panel-v2';
+const V = 'amwaj-panel-v3';
 const SHELL = [
   '/admin.html',
   '/sb-config.js',
@@ -133,8 +133,21 @@ const PAGE_OF = {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const d = event.notification.data || {};
+
+  /* 🛍️ إشعار زبون (طلبه، محفظته، دردشته…) وصل لهنا؟ يصير لو هذا الملف
+     قديم ماسك مكان firebase-messaging-sw.js بنفس المتصفح. نوديه للمتجر. */
+  const t = String(d.type || '');
+  if (t && t.indexOf('admin_') !== 0 && t !== 'test') {
+    const q = ['notif_type=' + encodeURIComponent(t)];
+    if (d.orderId) q.push('notif_orderId=' + encodeURIComponent(d.orderId));
+    if (d.target)  q.push('notif_target=' + encodeURIComponent(d.target));
+    event.waitUntil(self.clients.openWindow(d.url || ('/activate.html?' + q.join('&'))));
+    return;
+  }
+
   const page = PAGE_OF[d.type] || 'ord';
-  const target = '/admin.html#' + page;
+  // دردشة: نلزگ رقم الزبون بالرابط حتى تنفتح محادثته حتى لو اللوحة مسكّرة
+  const target = '/admin.html#' + page + (page === 'chat' && d.phone ? ':' + encodeURIComponent(d.phone) : '');
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {

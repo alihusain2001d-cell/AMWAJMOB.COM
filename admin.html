@@ -545,10 +545,39 @@ function pwaInstall(){
     : '📲 من قائمة المتصفح ⋮ اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»');
 }
 
-/* نسجّل عامل الخدمة — بدونه ما تنتصّب. على الملف المحلي ما يشتغل. */
+/* نسجّل عامل الخدمة — بدونه ما تنتصّب. على الملف المحلي ما يشتغل.
+
+   ⚠️ نطاقه «/admin» مو «/». قبل كان على «/» — نفس نطاق الموقع — فلو
+   فتحت الموقع بنفس المتصفح، عامل الموقع ياخذ مكانه، وضغطة إشعار «طلب
+   تسجيل» تفتح الموقع بدل اللوحة. هسه كل واحد بمكانه. */
+var PANEL_SW_SCOPE = '/admin';
+var _panelSWp = null;
+function panelSW(){
+  if (!_panelSWp){
+    _panelSWp = navigator.serviceWorker.register('admin-sw.js', { scope: PANEL_SW_SCOPE })
+      .then(function(reg){
+        if (reg.active) return reg;
+        return new Promise(function(res){
+          var w = reg.installing || reg.waiting;
+          if (!w) return res(reg);
+          w.addEventListener('statechange', function(){ if (w.state === 'activated') res(reg); });
+        });
+      });
+  }
+  return _panelSWp;
+}
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('admin-sw.js').catch(function(e){
+    panelSW().then(function(){
+      /* 🧹 العامل القديم مالتنا الي چان على «/» — نشيله، حتى ما يوصلك
+         كل إشعار مرتين، وحتى الموقع ياخذ مكانه الصحيح. */
+      return navigator.serviceWorker.getRegistrations().then(function(rs){
+        rs.forEach(function(r){
+          var w = r.active || r.waiting || r.installing;
+          if (r.scope === location.origin + '/' && w && /\/admin-sw\.js$/.test(w.scriptURL)) r.unregister();
+        });
+      });
+    }).catch(function(e){
       console.warn('service worker:', e && e.message);
     });
   });
@@ -673,7 +702,10 @@ function labelTables(root){
 var WANT_PAGE = '';
 
 function pageFromHash(){
-  var h = (location.hash || '').replace('#','').trim();
+  /* #chat:0770… = إشعار دردشة واللوحة چانت مسكّرة — نفتح محادثة هذا الزبون */
+  var parts = decodeURIComponent((location.hash || '').replace('#','')).trim().split(':');
+  var h = parts[0];
+  if (h === 'chat' && parts[1] && !CH_WANT) CH_WANT = parts[1];
   return PAGE_PERM.hasOwnProperty(h) ? h : '';
 }
 function goWantedPage(){
@@ -916,7 +948,7 @@ async function pushRegister(){
     /* ⚠️ نستعمل عامل الخدمة مالتنا نفسه — ما نسجّل firebase-messaging-sw.js.
        المتصفح يسمح بعامل واحد لكل نطاق، ولو سجّلنا الثاني يلغي الأول
        فتضيع خاصية التنصيب (ذاك الملف ماكو عنده معالج fetch أصلاً). */
-    var reg = await navigator.serviceWorker.ready;
+    var reg = await panelSW();                  // عامل اللوحة بنطاقها («/admin»)
 
     if (!window.firebase || !firebase.messaging){
       await _loadJs('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
@@ -929,6 +961,12 @@ async function pushRegister(){
     if (!token) return;
 
     await rpcOpen('staff_push_register', { p_token: token, p_agent: navigator.userAgent });
+    /* الجهاز صار إله رقم جديد (من نقلنا العامل لـ«/admin»)؟ نشيل القديم
+       من قائمة الموظفين، وإلا كل إشعار يوصلك مرتين. */
+    try{
+      var old = localStorage.getItem('amwaj_push');
+      if (old && old !== token) await rpcOpen('staff_push_forget', { p_token: old });
+    }catch(e){}
     try{ localStorage.setItem('amwaj_push', token); }catch(e){}
     console.log('✅ إشعارات اللوحة مفعّلة');
 
