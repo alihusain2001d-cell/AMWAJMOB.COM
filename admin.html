@@ -1777,10 +1777,13 @@ function wlPanel(L, shop, title){
 
   var z = wlSize();
   modal('<h3>🏷️ ملصقات الضمان — ' + esc(title || '') + '</h3>' +
+    '<div class="msg" id="wlGodexMsg" style="display:none"></div>' +
     '<div class="hint" style="margin-bottom:10px">' + L.length + ' ملصق · ' +
-      'اضغط <b>اطبع</b> ← اختار طابعة الملصقات. الصفحة تسكّر نفسها وترجع لهنا.</div>' +
+      '<b>Godex</b> = تنطبع على طابعة الملصقات الثابتة بالمحل لحالها. ' +
+      '<b>من المتصفح</b> = تختار الطابعة بيدك.</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">' +
-      (L.length > 1 ? '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ اطبع الكل (' + L.length + ')</button>' : '') +
+      '<button class="btn-solid" onclick="wlGodex()">🏷️ اطبع على Godex (' + L.length + ')</button>' +
+      '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ من المتصفح' + (L.length > 1 ? ' (' + L.length + ')' : '') + '</button>' +
       '<button class="btn-solid gray" onclick="closeModal()">✕ إغلاق</button>' +
     '</div>' +
     '<div id="wlList"></div>' +
@@ -1879,6 +1882,28 @@ function wlPrintDoc(one){
     try{ w.document.open(); w.document.write(html); w.document.close(); return; }catch(e){}
   }
   toast('⚠️ المتصفح حجب النافذة — اسمحله بالنوافذ المنبثقة', 5000);
+}
+
+
+/* 🏷️ طابعة الملصقات الثابتة (Godex) — ملف ١٢٩.
+   نحط الأكواد بطابور بالسيرفر، وبرنامج الطابعة بحاسبة المحل يسحبها
+   خلال ~٢٠ ثانية ويطبعها. يشتغل من أي جهاز — حتى من التلفون. */
+async function wlGodex(codes, quiet){
+  codes = codes || _wlSet.items.map(function(x){ return x.c; });
+  var m = $('wlGodexMsg');
+  try{
+    var r = await rpc('web_warranty_labels_queue', { p_codes: codes });
+    var n = r['عدد'] || 0;
+    var t = '✅ ' + n + ' ملصق انرسل لطابعة Godex — ينطبع خلال ثواني';
+    if (m){ m.style.display = 'block'; m.className = 'msg ok'; m.textContent = t; }
+    if (!quiet) toast(t, 4000);
+    return n;
+  }catch(e){
+    var t2 = '⚠️ ما انرسل لـGodex: ' + e.message + ' — اطبعه من المتصفح';
+    if (m){ m.style.display = 'block'; m.className = 'msg err'; m.textContent = t2; }
+    else toast(t2, 6000);
+    return 0;
+  }
 }
 
 
@@ -1981,6 +2006,8 @@ async function wlQuickGo(){
 
     wlPanel(L, r['المحل'] || '', 'بيع مباشر');
     try{ await rpc('web_warranty_labels_mark', { p_codes: L.map(function(x){ return x['الكود']; }) }); }catch(e){}
+    // 🏷️ الي تولّدها هنا تنطبع على Godex لحالها (طلب علي)
+    await wlGodex(L.map(function(x){ return x['الكود']; }), true);
   }catch(e){
     m.className = 'msg err'; m.textContent = e.message;
   }
