@@ -3565,6 +3565,57 @@ function _showAppleNotices(){
 document.addEventListener('DOMContentLoaded', _showAppleNotices);
 setTimeout(_showAppleNotices, 1500);
 
+
+/* ═══ ✏️ تعديل طلب (ملف ١٣١) ═══
+   مواد الطلب ترجع للسلة، الزبون يعدّل ويأكد، والسيرفر يلغي القديم ويسوي
+   الجديد بنفس اللحظة. الأسعار من الكاتلوك مثل أي طلب. يصير بس والطلب
+   «ينتظر» (أول ١٥ دقيقة بكربلاء). */
+var EDIT_ORDER = '';
+try { EDIT_ORDER = localStorage.getItem('amwaj_edit_order') || ''; } catch(e) {}
+function _setEditOrder(code){
+  EDIT_ORDER = code || '';
+  try { if (EDIT_ORDER) localStorage.setItem('amwaj_edit_order', EDIT_ORDER); else localStorage.removeItem('amwaj_edit_order'); } catch(e) {}
+}
+function editOrder(orderId){
+  var o = (_allOrdersCache || []).find(function(x){ return (x.orderId || '-') === orderId; });
+  if (!o || !_orderIsCancellable(o)) { alert('الطلب ما عاد ينعدل — صار بالطريق أو مر وقت التعديل.'); return; }
+  if (cart.length && !confirm('سلتك بيها مواد — راح تنشال وتنحط مواد الطلب ' + orderId + ' بدالها. نكمل؟')) return;
+  var pct = (typeof warrantyPct === 'function') ? warrantyPct() : 0;
+  cart = (o.items || []).map(function(it){
+    var live = (it.code && CATALOG_BY_CODE) ? CATALOG_BY_CODE[it.code] : null;
+    var item = live ? JSON.parse(JSON.stringify(live)) : {};
+    var paid = Number(String(it.price || '').replace(/[^0-9]/g, '')) || 0;
+    // سعر الطلب بيه زيادة الضمان — السلة تحتاج السعر الأساسي (السلة تضيف الضمان بنفسها)
+    var base = live ? live.price : ((it.hasWarranty && pct > 0) ? Math.round(paid / (1 + pct / 100)) : paid);
+    item.code = it.code || item.code || '';
+    item.name = it.name || item.name || '';
+    item.brand = it.brand || item.brand || '';
+    item.type = it.type || item.type || '';
+    if (it.notes) item.notes = it.notes;
+    item.price = base;
+    item.quantity = Number(it.quantity) || 1;
+    item.itemType = it.itemType || item.itemType || 'parts';
+    item.hasWarranty = !!it.hasWarranty;
+    return item;
+  });
+  saveCart();
+  _setEditOrder(orderId);
+  closeOrderDetail();
+  try { closeSheet('ordersSheet'); } catch(e) {}
+  setTimeout(function(){ openCartSheet(); }, 250);
+}
+function cancelEditOrder(){
+  if (!confirm('تلغي التعديل؟ طلبك ' + EDIT_ORDER + ' يبقى مثل ما هو، والسلة تتفرّغ.')) return;
+  _setEditOrder('');
+  cart = []; saveCart(); renderCart();
+}
+function editOrderBanner(){
+  if (!EDIT_ORDER) return '';
+  return '<div style="background:#FEF3C7;border:1px solid #FCD34D;color:#92400E;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:14px;line-height:1.7">' +
+    '✏️ <b>تعدّل الطلب ' + sanitize(EDIT_ORDER) + '</b><br>زيد أو نقّص أو احذف، واضغط <b>إرسال</b> — الطلب القديم ينلغى وينحط هذا بداله.' +
+    '<div><button onclick="cancelEditOrder()" style="margin-top:6px;background:none;border:1px solid #D97706;color:#92400E;border-radius:8px;padding:4px 10px;font-family:Tajawal,sans-serif;font-weight:700;cursor:pointer">إلغاء التعديل</button></div></div>';
+}
+
 function sanitize(str) {
   if (!str) return '';
   return String(str)
@@ -4743,7 +4794,7 @@ function showCartToast(name) {
 }
 
 function removeFromCart(index) { cart.splice(index, 1); saveCart(); renderCart(); }
-function clearCart() { if (confirm('هل تريد إفراغ السلة؟')) { cart = []; saveCart(); renderCart(); } }
+function clearCart() { if (confirm('هل تريد إفراغ السلة؟')) { cart = []; saveCart(); _setEditOrder(''); renderCart(); } }
 
 function getDeliveryFee(province) {
   if (!province) return null;
@@ -4782,7 +4833,7 @@ function renderCart() {
   if (_skipCartSync) _skipCartSync = false; else syncCartWithCatalog();
 
   let total = 0;
-  let html = cartChangesBanner();  // شريط يشرح شنو تغيّر (يطلع بس إذا أكو تغيير)
+  let html = editOrderBanner() + cartChangesBanner();  // ✏️ تعديل طلب + شريط شنو تغيّر
 
   cart.forEach((item, index) => {
     const basePrice = Number(String(item.price || '').replace(/[^0-9]/g, '')) || 0;
@@ -5034,6 +5085,7 @@ async function submitOrder() {
       try {
         var _ord = await sbFn('placeorder', {
           token: guest ? null : getCustomerToken(),
+          replaces: (!guest && EDIT_ORDER) ? EDIT_ORDER : undefined,   // ✏️ ملف ١٣١
           payload: {
             name: name, shop: shop, phone: phone, address: fullAddress,
             province: province, district: district, districtId: districtId,
@@ -5062,7 +5114,10 @@ async function submitOrder() {
 
       // ✅ اعرض النجاح
       {
-        result.innerHTML = '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+        result.innerHTML = (_ord && _ord.replaced)
+          ? '<div class="result success">✏️ تم تعديل الطلب!<br>صار رقمه ' + sanitize(_ord.orderId || '') + ' (بدل ' + sanitize(_ord.replaced) + ')</div>'
+          : '<div class="result success">✅ تم إرسال الطلب بنجاح!<br>سيتم تجهيزها قريباً 📦</div>';
+        _setEditOrder('');
         // 👛 شنو صار بالمحفظة
         try {
           var _wm = [];
@@ -6363,6 +6418,9 @@ function openOrderDetail(orderId) {
     return _orderItemHtml(it);
   }).join('') || '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px;">لا توجد منتجات</div>';
 
+  var editBtn = (_orderIsCancellable(o) && !isGuest())
+    ? '<button onclick="editOrder(\'' + orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#F59E0B;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:8px;">✏️ تعديل الطلب</button>'
+    : '';
   var cancelBtn = _orderIsCancellable(o)
     ? '<button onclick="closeOrderDetail();cancelOrder(\'' + orderId + '\')" style="width:100%;padding:12px;border:none;border-radius:10px;background:#EF4444;color:#fff;font-size:14.5px;font-weight:800;font-family:Tajawal,sans-serif;cursor:pointer;margin-top:8px;">❌ إلغاء الطلب</button>'
     : '';
@@ -6408,7 +6466,7 @@ function openOrderDetail(orderId) {
 
         '<button onclick="chatAboutOrder(\'' + sanitize(String(o.orderId || '')) + '\')" class="order-wa-btn" ' +
           'style="display:block;width:100%;text-align:center;margin-top:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));font-family:Tajawal,sans-serif;">💬 استفسار عن هذا الطلب</button>' +
-        cancelBtn +
+        editBtn + cancelBtn +
       '</div>' +
     '</div>';
 
