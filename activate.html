@@ -6145,7 +6145,7 @@ function renderOrdersList() {
   filtered = filtered.filter(function(o){ return _orderInDateRange(o, _ordersDateFilter); });
 
   if (!filtered.length) {
-    var labelMap = { all: 'لا توجد طلبات', pending: 'لا توجد طلبات قيد المراجعة', picked: 'لا توجد طلبات قيد التجهيز', delivered: 'لا توجد طلبات مسلمة', cancelled: 'لا توجد طلبات ملغية' };
+    var labelMap = { all: 'لا توجد طلبات', pending: 'لا توجد طلبات قيد المراجعة', picked: 'لا توجد طلبات بالطريق', delivered: 'لا توجد طلبات مسلمة', cancelled: 'لا توجد طلبات ملغية' };
     var dateHint = _ordersDateFilter !== 'all' ? '<div style="color:var(--muted);font-size:13px;margin-top:8px;">جرّب تبويب "الكل" لعرض الطلبات الأقدم</div>' : '';
     listDiv.innerHTML = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:48px;margin-bottom:10px;opacity:0.5;">📦</div><div style="color:var(--muted);font-size:15px;font-weight:600;">' + (labelMap[_ordersFilter] || 'لا توجد طلبات') + '</div>' + dateHint + '</div>';
     return;
@@ -6216,7 +6216,7 @@ var PRIME_STEP_TEXT = {
 
 function _orderStatusMeta(o) {
   var m = { text: 'تم استلام طلبك', cls: 'pill-pending', icon: '✅' };
-  if (o.status === 'picked')         m = { text: 'قيد التجهيز', cls: 'pill-picked',    icon: '📦' };
+  if (o.status === 'picked')         m = { text: 'بالطريق',     cls: 'pill-picked',    icon: '🚚' };   // نفس اللوحة وإشعار «طلبك بالطريق»
   else if (o.status === 'delivered') m = { text: 'تم التسليم',  cls: 'pill-delivered', icon: '✅' };
   else if (o.status === 'cancelled') m = { text: 'ملغي',        cls: 'pill-cancelled', icon: '❌' };
 
