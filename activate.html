@@ -8132,9 +8132,10 @@ function _saveNotifs(arr) {
 
 function addNotification(notif) {
   var arr = _getNotifs();
-  // 🔁 نفس الإشعار وصل مرتين بنفس الدقيقة (من التطبيق ومن عامل الخدمة) — نحفظه مرة وحدة
+  // 🔁 نفس الإشعار ينضاف أكثر من مرة: لما يوصل والتطبيق مفتوح، ولما ينضغط، ومن السجل —
+  //    والضغطة ممكن تجي بعد دقايق. فنفس العنوان والنص خلال ١٠ دقايق = نفس الإشعار.
   var _t = notif.title || 'إشعار', _b = notif.body || '';
-  if (arr.some(function(n){ return n.title === _t && n.body === _b && Date.now() - (n.timestamp || 0) < 60000; })) return;
+  if (arr.some(function(n){ return n.title === _t && n.body === _b && Date.now() - (n.timestamp || 0) < 10 * 60000; })) return;
   var item = {
     id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
     title: notif.title || 'إشعار',
