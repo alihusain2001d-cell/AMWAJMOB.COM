@@ -1509,6 +1509,30 @@ function ordBadge(o){
   return '<span class="badge '+s[1]+'">'+esc(s[0])+'</span>';
 }
 var _curPrimeLeft = false;
+/* 👛 محفظة الزبون بهذا الطلب — كم انخصم منها وكم نزلتله مكافأة.
+   الطلب الملغي: الخصم يرجعله والمكافأة تنسحب (ملف ١١٥)، فنكتبها. */
+function ordWalletHtml(o){
+  var wu = Number(o.wallet_used) || 0, cb = Number(o.cashback) || 0;
+  var off = o.status === 'cancelled', rows = '';
+  var row = function(label, val, note, color){
+    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0">' +
+      '<span>' + label + (note ? ' <span class="hint">(' + note + ')</span>' : '') + '</span>' +
+      '<b dir="ltr" style="color:' + color + ';white-space:nowrap">' + val + '</b></div>';
+  };
+  if (wu > 0){
+    rows += row('المواد والتوصيل', nf(Number(o.total || 0) + wu) + ' د.ع', '', 'var(--text)');
+    rows += row('🛒 انخصم من محفظته', '− ' + nf(wu) + ' د.ع', off ? 'رجعله لأن الطلب انلغى' : '', '#DC2626');
+  }
+  if (cb > 0){
+    rows += row('💰 نزل بمحفظته مكافأة', '+ ' + nf(cb) + ' د.ع', off ? 'انسحبت لأن الطلب انلغى' : '', '#16A34A');
+  }
+  if (o.replaces_code) rows += row('✏️ تعديل على الطلب', esc(o.replaces_code), 'القديم انلغى', 'var(--text)');
+  if (o.replaced_by && o.replaced_by !== '…') rows += row('✏️ الزبون عدّله', '← ' + esc(o.replaced_by), 'هذا انلغى', 'var(--text)');
+  if (!rows) return '';
+  return '<div style="border:1px solid var(--border);border-radius:9px;padding:8px 12px;margin:0 0 10px;font-size:14px">' +
+    '<div style="font-weight:800;margin-bottom:4px">👛 محفظة الزبون</div>' + rows + '</div>';
+}
+
 async function ordOpen(id){
   _curOrderId = id;
   try{
@@ -1527,6 +1551,7 @@ async function ordOpen(id){
       '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">'+
       it.map(orderItemHtml).join('')+'</div>'+
       '<div style="text-align:left;font-size:17px;font-weight:900;margin:10px 0" dir="ltr">'+nf(o.total)+' د.ع</div>'+
+      ordWalletHtml(o)+
       (o.cancel_reason ? '<div class="msg err">سبب الإلغاء: '+esc(o.cancel_reason)+'</div>' : '')+
       '<label>تغيير الحالة</label>'+
       '<select class="modal-select" id="oSt">'+
