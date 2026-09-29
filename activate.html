@@ -8653,21 +8653,28 @@ async function setupWebPushNotifications(force) {
 }
 
 // 🎨 بانر جميل يطلب من الزبون تفعيل الإشعارات
-/* ══════════ 📲 بانر «حمّل التطبيق» — للأندرويد بس ══════════
+/* ══════════ 📲 بانر «حمّل التطبيق» — أندرويد وآيفون ══════════
 
-   يطلع لزائر الموقع اللي عنده أندرويد وما عنده التطبيق.
+   يطلع لزائر الموقع من تلفون أندرويد (كوكل بلاي) أو آيفون (App Store).
+   بالآيفون يطلع حتى للي ضايف الموقع للشاشة الرئيسية — التطبيق أحسن
+   بالإشعارات والسرعة.
 
    ليش ما يطلع بالتطبيق نفسه: التطبيق يشغّل نسخته الداخلية مو
-   الموقع، وفوق هذا نفحص window.Capacitor احتياطاً.
-
-   الآيفون ما يشوفه — ماكو تطبيق آيفون بعد.                */
+   الموقع، وفوق هذا نفحص window.Capacitor احتياطاً.        */
 var APP_STORE_URL = 'https://play.google.com/store/apps/details?id=com.amwajmob.app';
+var IOS_APP_URL   = 'https://apps.apple.com/app/id6815197745';
+// آيباد الجديد يگول عن نفسه «ماك» — بس عنده لمس
+var _isIOSDevice  = /iPhone|iPad|iPod/i.test(navigator.userAgent || '') ||
+                    (/Macintosh/i.test(navigator.userAgent || '') && (navigator.maxTouchPoints || 0) > 1);
 
 function showGetAppBanner(){
   try{
     if (document.getElementById('getAppBanner')) return;
     if (window.Capacitor) return;                       // إحنا جوّا التطبيق
-    if (!/Android/i.test(navigator.userAgent||'')) return;
+    var isAnd = /Android/i.test(navigator.userAgent||'');
+    if (!isAnd && !_isIOSDevice) return;
+    var storeUrl = isAnd ? APP_STORE_URL : IOS_APP_URL;
+    var accent   = isAnd ? '#10B981' : '#0EA5E9';
     if (document.getElementById('notifOptInBanner')) return;  // ما نكدّس بانرين
 
     /* انضغط «لاحقاً»؟ نسكت أسبوع */
@@ -8679,7 +8686,7 @@ function showGetAppBanner(){
     b.id = 'getAppBanner';
     b.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:white;'+
       'border-radius:20px;padding:14px;box-shadow:0 10px 40px rgba(15,23,42,.25);z-index:9997;'+
-      'max-width:420px;margin:0 auto;border:2px solid #10B981;animation:notifBannerSlide .5s;';
+      'max-width:420px;margin:0 auto;border:2px solid ' + accent + ';animation:notifBannerSlide .5s;';
 
     b.innerHTML =
       '<div style="display:flex;align-items:center;gap:12px">'+
@@ -8691,10 +8698,11 @@ function showGetAppBanner(){
         '</div>'+
       '</div>'+
       '<div style="display:flex;gap:8px;margin-top:11px">'+
-        '<a id="getAppYes" href="'+APP_STORE_URL+'" target="_blank" rel="noopener" '+
-          'style="flex:1;text-align:center;text-decoration:none;background:linear-gradient(135deg,#10B981,#047857);'+
+        '<a id="getAppYes" href="'+storeUrl+'" target="_blank" rel="noopener" '+
+          'style="flex:1;text-align:center;text-decoration:none;background:' +
+            (isAnd ? 'linear-gradient(135deg,#10B981,#047857)' : 'linear-gradient(135deg,#0EA5E9,#0369A1)') + ';'+
           'color:#fff;padding:10px;border-radius:10px;font-size:14px;font-weight:700;'+
-          'box-shadow:0 3px 10px rgba(16,185,129,.3)">⬇️ تحميل</a>'+
+          'box-shadow:0 3px 10px rgba(15,23,42,.18)">' + (isAnd ? '⬇️ تحميل' : ' تحميل من App Store') + '</a>'+
         '<button id="getAppNo" style="flex:0 0 auto;background:#F1F5F9;color:#475569;border:none;'+
           'padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">لاحقاً</button>'+
       '</div>';
@@ -10167,7 +10175,7 @@ function closeInstallPrompt() {
    يوم ما ينزل تطبيق الآيفون. */
 var _isAndroidBrowser = /Android/i.test(navigator.userAgent || '');
 
-if (!_isNativeApp && !_isAndroidBrowser && !localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
+if (!_isNativeApp && !_isAndroidBrowser && !_isIOSDevice && !localStorage.getItem('amwaj_install_shown') && !localStorage.getItem('amwaj_installed') && !_isInStandaloneMode) {
   setTimeout(function() {
     showInstallPrompt();
   }, 3000);
