@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>طلعة طلب — امواج</title>
+<!--
+  🚚 صفحة الـQR المطبوع بورقة طلب كربلاء (ملف ١٣٦).
+  الموظف يصوّر الرمز وقت ما يطلع الطلب ← هاي الصفحة تنفتح وتحوّل الطلب
+  لـ«بالطريق» وتوصل الزبون إشعار. بدون دخول: الرمز عشوائي، خاص بطلب
+  وحد، يشتغل مرة وحدة، وما يگدر يسوي غير «بالطريق».
+-->
+<script src="sb-config.js"></script>
+<style>
+  :root { --bg:#F6F8FB; --card:#fff; --text:#0F172A; --muted:#64748B; --ok:#16A34A; --err:#DC2626; --pri:#0284C7; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family: Tajawal, "Segoe UI", Tahoma, Arial, sans-serif;
+         display:flex; align-items:center; justify-content:center; padding:16px; }
+  .card { background:var(--card); border-radius:22px; padding:28px 20px; width:100%; max-width:380px;
+          text-align:center; box-shadow:0 10px 40px rgba(15,23,42,.12); }
+  .icon { font-size:64px; line-height:1; margin-bottom:12px; }
+  h1 { font-size:24px; margin:0 0 8px; }
+  .code { font-size:22px; font-weight:900; direction:ltr; margin:6px 0; }
+  .shop { color:var(--muted); font-size:16px; }
+  .msg { color:var(--muted); font-size:15px; line-height:1.7; margin-top:12px; }
+  button { margin-top:18px; width:100%; border:0; border-radius:14px; padding:14px; font-size:17px;
+           font-weight:800; font-family:inherit; color:#fff; background:var(--pri); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="card" id="box">
+  <div class="icon">⏳</div>
+  <h1>لحظة…</h1>
+</div>
+<script>
+(function(){
+  var box = document.getElementById('box');
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function show(icon, title, code, shop, msg, color, retry){
+    box.innerHTML = '<div class="icon">' + icon + '</div>' +
+      '<h1 style="color:' + color + '">' + esc(title) + '</h1>' +
+      (code ? '<div class="code">' + esc(code) + '</div>' : '') +
+      (shop ? '<div class="shop">' + esc(shop) + '</div>' : '') +
+      (msg ? '<div class="msg">' + esc(msg) + '</div>' : '') +
+      (retry ? '<button onclick="location.reload()">🔄 حاول مرة ثانية</button>' : '');
+  }
+  var t = new URLSearchParams(location.search).get('t') || '';
+  if (!t) { show('⚠️', 'الرمز ناقص', '', '', 'صوّر الـQR الي بورقة الطلب مرة ثانية.', 'var(--err)'); return; }
+  var C = window.SB_CONFIG || {};
+  fetch(C.URL + '/rest/v1/rpc/order_out', {
+    method: 'POST',
+    headers: { apikey: C.KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_token: t })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.ok && d.already) {
+      show('ℹ️', d.status === 'delivered' ? 'هذا الطلب انسلّم قبل' : 'هذا الطلب بالطريق من قبل',
+           d.order, d.shop, 'ما تحتاج تسوي شي.', 'var(--pri)');
+    } else if (d && d.ok) {
+      show('🚚', 'صار بالطريق', d.order, d.shop, 'وصل للزبون إشعار إن طلبه طلع. بعد ١٠ دقايق يصير «تم التسليم» لحاله.', 'var(--ok)');
+    } else {
+      show('❌', (d && d.error) || 'ما صار', (d && d.order) || '', '', '', 'var(--err)', !(d && d.order));
+    }
+  }).catch(function(){
+    show('📶', 'ما وصل للسيرفر', '', '', 'تأكد من النت وحاول مرة ثانية.', 'var(--err)', true);
+  });
+})();
+</script>
+</body>
+</html>

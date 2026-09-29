@@ -6280,6 +6280,7 @@ function _orderStatusMeta(o) {
   if (o.status === 'picked')         m = { text: 'بالطريق',     cls: 'pill-picked',    icon: '🚚' };   // نفس اللوحة وإشعار «طلبك بالطريق»
   else if (o.status === 'delivered') m = { text: 'تم التسليم',  cls: 'pill-delivered', icon: '✅' };
   else if (o.status === 'cancelled') m = { text: 'ملغي',        cls: 'pill-cancelled', icon: '❌' };
+  else if (o.prepLocked)             m = { text: 'قيد التجهيز', cls: 'pill-picked',    icon: '📦' };   // كربلاء بعد ١٥ د (ملف ١٣٦)
 
   /* الطلب لسه شغّال وعنده شحنة؟ نعرض المرحلة الحقيقية بدل النص العام.
      المُسلَّم والملغي ما نلمسهن — حالتهن أوضح من أي مرحلة. */
@@ -6347,6 +6348,7 @@ function _orderMoney(o) {
 // ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
 function _orderIsCancellable(o) {
   if (o.status !== 'pending') return false;
+  if (o.prepLocked) return false;          // 📦 قيد التجهيز — السيرفر يرفض أصلاً (ملف ١٣٦)
   // كربلاء (ملف ١٣٠/١٣٥): «ينتظر» = ينلغي وينعدل — حتى لو طلبه بالاستراحة أو بالليل وطال
   if (/^\s*كربلاء/.test(String(o.address || ''))) return true;
   var t = _orderTimeOf(o);
@@ -10044,6 +10046,14 @@ var APP_VERSION = '1.0.9';
 (function(){
   var _vEl = document.getElementById('appVersionFooter');
   if (_vEl && _isNativeApp) _vEl.textContent = 'الإصدار ' + APP_VERSION;
+  /* 🍎 الآيفون أرقامه غير الأندرويد (1.0.1 مقابل 1.0.25) — ناخذ رقمه الحقيقي من النظام */
+  try {
+    if (_vEl && window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'ios') {
+      window.Capacitor.Plugins.App.getInfo().then(function(info){
+        if (info && info.version) _vEl.textContent = 'الإصدار ' + info.version;
+      }).catch(function(){});
+    }
+  } catch(e) {}
 })();
 
 function _isNewerVersion(latest, current) {
