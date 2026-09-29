@@ -2871,16 +2871,23 @@ async function pSet(){
     /* ── تحديث التطبيق ── */
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">📲 تحديث التطبيق</div>'+
-      (av.version ? '<span class="badge badge-blue">آخر نسخة '+esc(av.version)+'</span>' : '')+'</div>'+
+      (av.version ? '<span class="badge badge-blue">أندرويد '+esc(av.version)+'</span>' : '')+
+      (av.ios_version ? ' <span class="badge badge-blue">آيفون '+esc(av.ios_version)+'</span>' : '')+'</div>'+
     '<div class="section-body">'+
       '<div class="hint" style="margin-bottom:8px">الزبون اللي نسخته أقدم من هاي، يطلعله طلب تحديث.<br>'+
         'بالتطبيق التحديث <b>إجباري دائماً</b> (ماكو زر «لاحقاً») — بالموقع اختياري.</div>'+
-      '<label>رقم آخر نسخة</label>'+
-      '<input class="modal-input" id="avVer" dir="ltr" value="'+esc(av.version||'')+'" placeholder="1.0.14">'+
+      '<div class="hint" style="margin-bottom:8px">⚠️ غيّر الرقم <b>بعد</b> ما توافق كوكل / أبل وتنزل النسخة بالمتجر — '+
+        'وإلا الزبون يطلعله تحديث ما موجود.</div>'+
+      '<label>🤖 رقم آخر نسخة أندرويد</label>'+
+      '<input class="modal-input" id="avVer" dir="ltr" value="'+esc(av.version||'')+'" placeholder="1.0.25">'+
+      '<label>🍎 رقم آخر نسخة آيفون <span class="hint">(فاضي = ماكو طلب تحديث للآيفون)</span></label>'+
+      '<input class="modal-input" id="avIosVer" dir="ltr" value="'+esc(av.ios_version||'')+'" placeholder="1.0.1">'+
       '<label>الرسالة</label>'+
       '<textarea class="modal-input" id="avMsg" rows="2">'+esc(av.message||'')+'</textarea>'+
-      '<label>رابط المتجر</label>'+
+      '<label>رابط كوكل بلاي</label>'+
       '<input class="modal-input" id="avUrl" dir="ltr" value="'+esc(av.store_url||'')+'">'+
+      '<label>رابط App Store</label>'+
+      '<input class="modal-input" id="avIosUrl" dir="ltr" value="'+esc(av.ios_url||'https://apps.apple.com/app/id6815197745')+'">'+
       '<button class="btn-solid green" style="margin-top:10px" onclick="setSaveVer()">💾 حفظ</button>'+
       '<div class="msg" id="avRes"></div>'+
     '</div></div>'+
@@ -2994,10 +3001,16 @@ async function setSaveVer(){
     return;
   }
   try{
+    var iv = $('avIosVer').value.trim();
+    if (iv && !/^\d+(\.\d+){1,3}$/.test(iv)){
+      m.className='msg err'; m.textContent='رقم نسخة الآيفون لازم أرقام ونقاط بس — مثل 1.0.1'; return;
+    }
     await rpc('web_setting_set',{p_name:'app_version', p_value:{
-      version:   v,
-      message:   $('avMsg').value.trim(),
-      store_url: $('avUrl').value.trim()}});
+      version:     v,
+      message:     $('avMsg').value.trim(),
+      store_url:   $('avUrl').value.trim(),
+      ios_version: iv,                                  // 🍎 منفصل — الآيفون أرقامه غير الأندرويد
+      ios_url:     $('avIosUrl').value.trim()}});
     toast('✅ انحفظت النسخة'); pSet();
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }

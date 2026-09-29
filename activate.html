@@ -10071,11 +10071,24 @@ async function checkAppUpdate() {
      لو احتجناه بالمستقبل: رقم ورابط منفصلين للآيفون باللوحة. */
   var _plat = (window.Capacitor && window.Capacitor.getPlatform)
                 ? window.Capacitor.getPlatform() : '';
-  if (_plat === 'ios' || (!_plat && _isIos)) return;
 
   try {
     var v = APP_VER_INFO;
     if (!v) { var r = await sbRpc('app_catalog'); v = APP_VER_INFO = (r && r.ver) || null; }
+
+    /* 🍎 الآيفون: رقم ورابط منفصلين باللوحة (ios_version / ios_url) — نسخ
+       الآيفون أرقامها غير الأندرويد وتتأخر بمراجعة أبل. ونقارن برقم
+       التطبيق الحقيقي من النظام (مو APP_VERSION — هذا رقم الأندرويد). */
+    if (_plat === 'ios' || (!_plat && _isIos)) {
+      if (!v || !v.ios_version) return;
+      var cur = '';
+      try { var info = await window.Capacitor.Plugins.App.getInfo(); cur = (info && info.version) || ''; } catch(e) {}
+      if (cur && _isNewerVersion(v.ios_version, cur)) {
+        showAppUpdateModal(v.message, v.ios_url || 'https://apps.apple.com/app/id6815197745');
+      }
+      return;
+    }
+
     if (v && _isNewerVersion(v.version, APP_VERSION)) {
       showAppUpdateModal(v.message, v.store_url);
     }
