@@ -1227,6 +1227,7 @@ async function pCust(){
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">👥 الزبائن</div>'+
+        '<button class="btn-solid" style="margin-inline-start:auto" onclick="custBayanUnlinked()">🔗 غير مربوطين بالبيان</button>'+
         '<input class="search-input" id="cq" value="'+esc(q)+'" placeholder="ابحث باسم · محل · رقم">'+
       '</div>'+
       '<div class="filters">'+ftab(F.cust,'','الكل',n['الكل'],'setCustF')+
@@ -1235,9 +1236,9 @@ async function pCust(){
         ftab(F.cust,'rejected','❌ مرفوض',n['مرفوض'],'setCustF')+
         ftab(F.cust,'review','🔴 مراجعة',n['مراجعة'],'setCustF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>المحل</th><th>الاسم</th><th>الهاتف</th>'+
-        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody id="custBody">'+
+        '<th>الحالة</th><th>حساب البيان</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody id="custBody">'+
       (d.length ? d.map(function(c){ return custRow(c); }).join('')
-                : '<tr><td colspan="11" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+                : '<tr><td colspan="12" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
       '</tbody></table></div>'+pgBar('cust')+'</div>';
     pgFoot('cust');
     var el = $('cq');
@@ -1256,6 +1257,7 @@ function custRow(c){
   if (c.wallet) st += ' <span class="badge badge-green" title="رصيد المحفظة">👛 '+nf(c.wallet)+'</span>';
   return '<tr><td><b>'+esc(c.shop_name||'—')+'</b></td><td>'+esc(c.name||'—')+'</td>'+
     '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td>'+
+    '<td data-bq="'+c.id+'" data-lbl="'+esc(c.shop_name||c.name||'')+'" style="white-space:nowrap"><span class="hint">…</span></td>'+   // 🔗 ملف ١٤١
     '<td>'+esc(c.province||'—')+'</td><td>'+esc(c.district||'—')+'</td>'+
     /* النقطة الدالة نص حر يطول — نقصّه بالعرض والكامل يبيّن بالتلميح */
     '<td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"'+
@@ -1273,6 +1275,98 @@ function custRow(c){
       '<button class="action-btn btn-reject" onclick=\'custDelete('+JSON.stringify(c.id)+','+JSON.stringify(c.shop_name||c.name||'')+')\'>🗑️</button>'+
     '</td></tr>';
 }
+/* ══════ 🔗 ربط الزبون بحساب البيان (ملف ١٤١) ══════
+   ✅ تلقائي = رقم موبايله موجود بحساب بالبيان · 🔗 يدوي = انت ربطته (يغلب)
+   الطلبات تطلع بالـQR على هذا الحساب. محل بيه أكثر من فني = كلهم على حساب المحل. */
+var BAYAN_PAY = {1:'آجل', 2:'نقد'};
+function bayanBtn(id, lbl, t){
+  return ' <button class="action-btn btn-edit" style="padding:3px 8px" data-id="'+id+'" data-lbl="'+esc(lbl||'')+'" '+
+         'onclick="custBayanLink(Number(this.dataset.id), this.dataset.lbl)">'+t+'</button>';
+}
+function bayanCell(id, b, lbl){
+  if (!b) return '<span class="hint">—</span>';
+  var acc = b.acct ? '<b>'+b.acct+'</b> '+esc(b.name||'')+(BAYAN_PAY[b.pay] ? ' <span class="hint">('+BAYAN_PAY[b.pay]+')</span>' : '') : '';
+  if (b.how === 'manual') return '<span class="badge badge-green">🔗 يدوي</span> '+acc+bayanBtn(id, lbl, '✏️');
+  if (b.how === 'auto')   return '<span class="badge badge-green">✅</span> '+acc+bayanBtn(id, lbl, '✏️');
+  if (b.how === 'multi')  return '<span class="badge badge-yellow">⚠️ '+nf(b.cnt)+' حسابات بنفس الرقم</span>'+bayanBtn(id, lbl, '🔗 اربط');
+  return '<span class="badge badge-red">⚠️ مو مربوط</span>'+bayanBtn(id, lbl, '🔗 اربط');
+}
+async function custBayanFill(){
+  var cells = Array.prototype.slice.call(document.querySelectorAll('td[data-bq]:not([data-done])'));
+  if (!cells.length) return;
+  cells.forEach(function(td){ td.setAttribute('data-done', '1'); });
+  var ids = cells.map(function(td){ return Number(td.getAttribute('data-bq')); });
+  try{
+    var r = await rpc('web_customers_bayan', {p_ids: ids}), m = r['البيانات'] || {};
+    cells.forEach(function(td){
+      var id = td.getAttribute('data-bq');
+      td.innerHTML = bayanCell(Number(id), m[id], td.getAttribute('data-lbl'));
+    });
+  }catch(e){
+    cells.forEach(function(td){ td.innerHTML = '<span class="hint" title="'+esc(e.message)+'">—</span>'; });
+  }
+}
+function custBayanLink(id, lbl){
+  window._bqUnlinkedOpen = !!$('bqList');     // جاي من قائمة «غير مربوطين»؟ نرجعله بعد الربط
+  modal('<h3>🔗 حساب البيان — '+esc(lbl||'')+'</h3>'+
+    '<div class="hint">اكتب اسم الحساب أو رقمه بالبيان. محل بيه أكثر من فني؟ اربطهم كلهم بحساب المحل.</div>'+
+    '<input class="modal-input" id="bqQ" placeholder="مثلاً: همسة" autocomplete="off">'+
+    '<div id="bqRes" style="max-height:340px;overflow:auto;margin-top:8px"></div>'+
+    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+
+      '<button class="action-btn btn-reject" onclick="custBayanSet('+id+',null)">فك الربط اليدوي (يرجع للموبايل)</button>'+
+      '<button class="action-btn" onclick="closeModal()">إغلاق</button></div>');
+  var el = $('bqQ'), seq = 0;
+  el.focus();
+  el.oninput = function(){
+    clearTimeout(el._t);
+    el._t = setTimeout(async function(){
+      var my = ++seq, q = el.value.trim(), box = $('bqRes');
+      if (q.length < 2){ box.innerHTML = ''; return; }
+      box.innerHTML = '<div class="hint">… دا يدوّر</div>';
+      try{
+        var d = (await rpc('web_bayan_search', {p_q: q}))['البيانات'] || [];
+        if (my !== seq) return;
+        box.innerHTML = d.length ? d.map(function(a){
+          return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eee">'+
+            '<b style="min-width:60px" dir="ltr">'+a.num+'</b><span style="flex:1">'+esc(a.name)+
+            (BAYAN_PAY[a.pay] ? ' <span class="hint">('+BAYAN_PAY[a.pay]+')</span>' : '')+
+            (a.users ? ' <span class="badge badge-green" title="زبائن موقع مربوطين بيه">👥 '+a.users+'</span>' : '')+'</span>'+
+            '<button class="action-btn btn-approve" onclick="custBayanSet('+id+','+a.num+')">اختار</button></div>';
+        }).join('') : '<div class="hint">ماكو حساب بهذا الاسم — تأكد إنه موجود بالبيان (القائمة تتحدث كل دقيقتين)</div>';
+      }catch(e){ if (my === seq) box.innerHTML = '<div class="hint">⚠️ '+esc(e.message)+'</div>'; }
+    }, 300);
+  };
+}
+async function custBayanSet(id, acct){
+  try{
+    await rpc('web_customer_bayan_set', {p_id: id, p_acct: acct});
+    closeModal();
+    toast(acct ? '✅ انربط — طلباته الجاية تطلع على الحساب '+acct : '✅ انفك الربط اليدوي');
+    var td = document.querySelector('td[data-bq="'+id+'"]');
+    if (td){ td.removeAttribute('data-done'); custBayanFill(); }
+    if (window._bqUnlinkedOpen) custBayanUnlinked();
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+async function custBayanUnlinked(){
+  window._bqUnlinkedOpen = false;
+  try{
+    var d = (await rpc('web_bayan_unlinked', {}))['البيانات'] || [];
+    modal('<h3>🔗 زبائن موافق عليهم وما مربوطين بالبيان ('+nf(d.length)+')</h3>'+
+      '<div class="hint">طلباتهم تطلع بورقة الطلب بدون حساب — اربط كل واحد بحسابه، أو بحساب محله.</div>'+
+      '<div id="bqList" style="max-height:420px;overflow:auto;margin-top:8px">'+
+      (d.length ? d.map(function(c){
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eee">'+
+          '<span style="flex:1"><b>'+esc(c.shop_name||'—')+'</b> · '+esc(c.name||'')+
+          ' <span class="hint" dir="ltr">'+esc(c.phone||'')+'</span>'+
+          (c.province ? ' <span class="hint">'+esc(c.province)+'</span>' : '')+
+          (c.cnt > 1 ? ' <span class="badge badge-yellow">'+c.cnt+' حسابات بنفس الرقم</span>' : '')+
+          (c.orders_count ? ' <span class="badge badge-green">'+nf(c.orders_count)+' طلب</span>' : '')+'</span>'+
+          bayanBtn(c.id, c.shop_name || c.name || '', '🔗 اربط')+'</div>';
+      }).join('') : '<div class="hint" style="padding:14px">✅ كل الزبائن مربوطين</div>')+
+      '</div><div style="margin-top:12px"><button class="action-btn" onclick="closeModal()">إغلاق</button></div>');
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+
 async function custSet(id, patch, phone, name){
   try{
     await rpc('web_customer_set',{p_id:id,p_patch:patch});
@@ -2450,6 +2544,7 @@ function pgStart(k, d, total){
 function pgBar(k){ return '<div id="pgFoot_'+k+'" style="padding:14px;text-align:center"></div>'; }
 
 function pgFoot(k){
+  if (k === 'cust') custBayanFill();          // 🔗 ملف ١٤١
   var g = pgGet(k), el = $('pgFoot_'+k);
   if (!el) return;
   el.innerHTML =
