@@ -1227,7 +1227,7 @@ async function pCust(){
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">👥 الزبائن</div>'+
-        '<button class="btn-solid" style="margin-inline-start:auto" onclick="custBayanUnlinked()">🔗 غير مربوطين بالبيان</button>'+
+        '<button class="btn-solid" style="margin-inline-start:auto" onclick="custBayanUnlinked()">🔗 كربلاء غير مربوطين</button>'+
         '<input class="search-input" id="cq" value="'+esc(q)+'" placeholder="ابحث باسم · محل · رقم">'+
       '</div>'+
       '<div class="filters">'+ftab(F.cust,'','الكل',n['الكل'],'setCustF')+
@@ -1350,8 +1350,10 @@ async function custBayanSet(id, acct){
 async function custBayanUnlinked(){
   window._bqUnlinkedOpen = false;
   try{
-    var d = (await rpc('web_bayan_unlinked', {}))['البيانات'] || [];
-    modal('<h3>🔗 زبائن موافق عليهم وما مربوطين بالبيان ('+nf(d.length)+')</h3>'+
+    var d = ((await rpc('web_bayan_unlinked', {}))['البيانات'] || []).filter(function(c){
+      return /^\s*كربلاء/.test(c.province || '');     // بس كربلاء — طلباتهم هي الي تدخل البيان بالـQR
+    });
+    modal('<h3>🔗 زبائن كربلاء الي ما مربوطين بالبيان ('+nf(d.length)+')</h3>'+
       '<div class="hint">طلباتهم تطلع بورقة الطلب بدون حساب — اربط كل واحد بحسابه، أو بحساب محله.</div>'+
       '<div id="bqList" style="max-height:420px;overflow:auto;margin-top:8px">'+
       (d.length ? d.map(function(c){
@@ -1362,7 +1364,7 @@ async function custBayanUnlinked(){
           (c.cnt > 1 ? ' <span class="badge badge-yellow">'+c.cnt+' حسابات بنفس الرقم</span>' : '')+
           (c.orders_count ? ' <span class="badge badge-green">'+nf(c.orders_count)+' طلب</span>' : '')+'</span>'+
           bayanBtn(c.id, c.shop_name || c.name || '', '🔗 اربط')+'</div>';
-      }).join('') : '<div class="hint" style="padding:14px">✅ كل الزبائن مربوطين</div>')+
+      }).join('') : '<div class="hint" style="padding:14px">✅ كل زبائن كربلاء مربوطين</div>')+
       '</div><div style="margin-top:12px"><button class="action-btn" onclick="closeModal()">إغلاق</button></div>');
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
