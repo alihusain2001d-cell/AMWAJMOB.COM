@@ -1662,6 +1662,10 @@ async function ordOpen(id){
       ((o.cust_phone && can('chat'))
         ? '<button class="btn-solid green" style="width:100%;margin-top:8px" onclick="ordChat(\''+esc(o.cust_phone)+'\',\''+esc(o.order_code)+'\')">💬 راسل الزبون عن هذا الطلب</button>'
         : '')+
+      /* 🖨️ ضاع الوصل؟ يرجع لطابعة المحل وينطبع وفوقه «إعادة طباعة» (ملف ١٤٤) */
+      (o.status !== 'cancelled'
+        ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordReprint(\''+esc(o.order_code)+'\')">🖨️ إعادة طباعة الوصل</button>'
+        : '')+
       // ✏️ تعديل المواد — بس لو الطلب لسه ينتظر/بالطريق وماكو شحنة برايم فعّالة عليه
       ((o.status==='pending'||o.status==='picked') && !_curPrimeLeft
         ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordEditItems('+o.id+')">✏️ تعديل المواد (إضافة/حذف)</button>'
@@ -1707,6 +1711,14 @@ async function ordOpen(id){
              '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ اطبع الملصق</button>'+cancelBtn))+
         '</div>';
       })()));
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+
+async function ordReprint(code){
+  if (!confirm('إعادة طباعة وصل '+code+'؟ ينطبع بطابعة المحل وفوقه «إعادة طباعة».')) return;
+  try{
+    await rpc('web_order_reprint', {p_code: code});
+    toast('🖨️ انرسل للطابعة — ينطبع خلال ثواني');
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
