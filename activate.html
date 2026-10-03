@@ -3584,7 +3584,7 @@ function _setEditOrder(code){
 }
 function editOrder(orderId){
   var o = (_allOrdersCache || []).find(function(x){ return (x.orderId || '-') === orderId; });
-  if (!o || !_orderIsCancellable(o)) { alert('الطلب ما عاد ينعدل — صار بالطريق أو مر وقت التعديل.'); return; }
+  if (!o || !_orderIsCancellable(o)) { alert('الطلب ما عاد ينعدل — طلع للتوصيل.'); return; }
   if (cart.length && !confirm('سلتك بيها مواد — راح تنشال وتنحط مواد الطلب ' + orderId + ' بدالها. نكمل؟')) return;
   var pct = (typeof warrantyPct === 'function') ? warrantyPct() : 0;
   cart = (o.items || []).map(function(it){
@@ -6345,15 +6345,14 @@ function _orderMoney(o) {
            deliveryFee: Math.max(0, total + walletUsed - itemsSum) };
 }
 
-// ── يمكن الإلغاء خلال 20 دقيقة من إنشاء الطلب وفقط إذا قيد المراجعة ──
+// ── الإلغاء والتعديل: ما دام الطلب «ينتظر» وما طلع ──
 function _orderIsCancellable(o) {
   if (o.status !== 'pending') return false;
   if (o.prepLocked) return false;          // 📦 قيد التجهيز — السيرفر يرفض أصلاً (ملف ١٣٦)
-  // كربلاء (ملف ١٣٠/١٣٥): «ينتظر» = ينلغي وينعدل — حتى لو طلبه بالاستراحة أو بالليل وطال
+  // كربلاء (ملف ١٣٩): «ينتظر» = ينلغي وينعدل — لحد ما يطلع مع المندوب
   if (/^\s*كربلاء/.test(String(o.address || ''))) return true;
-  var t = _orderTimeOf(o);
-  if (isNaN(t)) return false;
-  return ((Date.now() - t) / 60000) < 20;
+  // المحافظات (ملف ١٤٣): لحد ما ينرسل لبرايم (جاهز للتسليم) — بعدها السيرفر يرفض هم
+  return !o.primeStep;
 }
 
 function _orderWaUrl(o) {
