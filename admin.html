@@ -2913,6 +2913,15 @@ async function pSet(){
     var today = new Date().toISOString().slice(0,10);
 
     $('content').innerHTML =
+    /* ── 💰 السعر الي يظهر بالتطبيق (ملف ١٤٥) ── */
+    '<div class="section-card"><div class="section-head">'+
+      '<div class="section-title">💰 السعر الي يظهر بالتطبيق</div>'+
+      '<span class="hint" id="psNow">…</span></div>'+
+    '<div class="section-body">'+
+      '<div class="hint" style="margin-bottom:10px">أي سعر من البيان يشوفه الزبون بالتطبيق والموقع. تغيّره وكل الأسعار تتبدّل فوراً — وزبون الجملة يبقى يشوف سعر الجملة.</div>'+
+      '<div id="psBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>'+
+      '<div class="msg" id="psRes"></div>'+
+    '</div></div>'+
     /* ── تنبيه عام ── */
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">🚨 تنبيه عام — يظهر بأعلى التطبيق</div>'+
@@ -3044,6 +3053,7 @@ async function pSet(){
 
     warrPreview();
     promoLoad();
+    psLoad();          // 💰 ملف ١٤٥
 
     try{
       var st = await rpc2('shop_status');
@@ -3068,6 +3078,31 @@ async function rpc2(fn){
     'Content-Type':'application/json'}, body:'{}' });
   return await res.json();
 }
+/* 💰 ملف ١٤٥: مفرد (Price4) · مفرق (Price3) · جملة (Price1) من البيان */
+var PRICE_SRC = [['mufrad','مفرد'],['mufraq','مفرق'],['jumla','جملة']];
+async function psLoad(){
+  var box = $('psBtns'); if (!box) return;
+  try{
+    var r = await rpc('web_price_source_get', {});
+    var cur = r.source || 'mufrad';
+    $('psNow').innerHTML = '<span class="badge badge-green">هسه: '+((PRICE_SRC.filter(function(x){ return x[0]===cur; })[0]||['',''])[1])+'</span>';
+    box.innerHTML = PRICE_SRC.map(function(x){
+      return '<button class="btn-solid'+(x[0]===cur ? ' green' : ' gray')+'" onclick="psSet(\''+x[0]+'\')">'+
+             (x[0]===cur ? '✅ ' : '')+x[1]+'</button>';
+    }).join('');
+    if (!r.ready) $('psRes').innerHTML = '<span class="hint">⏳ برنامج الطابعة بعده ما رفع أسعار البيان الثلاثة — خلال نص ساعة تجهز</span>';
+  }catch(e){ box.innerHTML = '<span class="hint">⚠️ '+esc(e.message)+' — شغّل ملف ١٤٥</span>'; }
+}
+async function psSet(src){
+  var name = (PRICE_SRC.filter(function(x){ return x[0]===src; })[0]||['',''])[1];
+  if (!confirm('كل الأسعار بالتطبيق تصير «'+name+'» من البيان هسه. متأكد؟')) return;
+  try{
+    var r = await rpc('web_price_source_set', {p_source: src});
+    toast('✅ صار «'+name+'» — تبدّل سعر '+nf((r.products||0)+(r.screens||0))+' مادة', 4000);
+    psLoad();
+  }catch(e){ toast('⚠️ '+e.message, 4000); }
+}
+
 async function setSaveNotice(){
   var m = $('snRes');
   try{
