@@ -545,39 +545,10 @@ function pwaInstall(){
     : '📲 من قائمة المتصفح ⋮ اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»');
 }
 
-/* نسجّل عامل الخدمة — بدونه ما تنتصّب. على الملف المحلي ما يشتغل.
-
-   ⚠️ نطاقه «/admin» مو «/». قبل كان على «/» — نفس نطاق الموقع — فلو
-   فتحت الموقع بنفس المتصفح، عامل الموقع ياخذ مكانه، وضغطة إشعار «طلب
-   تسجيل» تفتح الموقع بدل اللوحة. هسه كل واحد بمكانه. */
-var PANEL_SW_SCOPE = '/admin';
-var _panelSWp = null;
-function panelSW(){
-  if (!_panelSWp){
-    _panelSWp = navigator.serviceWorker.register('admin-sw.js', { scope: PANEL_SW_SCOPE })
-      .then(function(reg){
-        if (reg.active) return reg;
-        return new Promise(function(res){
-          var w = reg.installing || reg.waiting;
-          if (!w) return res(reg);
-          w.addEventListener('statechange', function(){ if (w.state === 'activated') res(reg); });
-        });
-      });
-  }
-  return _panelSWp;
-}
+/* نسجّل عامل الخدمة — بدونه ما تنتصّب. على الملف المحلي ما يشتغل. */
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
   window.addEventListener('load', function(){
-    panelSW().then(function(){
-      /* 🧹 العامل القديم مالتنا الي چان على «/» — نشيله، حتى ما يوصلك
-         كل إشعار مرتين، وحتى الموقع ياخذ مكانه الصحيح. */
-      return navigator.serviceWorker.getRegistrations().then(function(rs){
-        rs.forEach(function(r){
-          var w = r.active || r.waiting || r.installing;
-          if (r.scope === location.origin + '/' && w && /\/admin-sw\.js$/.test(w.scriptURL)) r.unregister();
-        });
-      });
-    }).catch(function(e){
+    navigator.serviceWorker.register('admin-sw.js').catch(function(e){
       console.warn('service worker:', e && e.message);
     });
   });
@@ -702,10 +673,7 @@ function labelTables(root){
 var WANT_PAGE = '';
 
 function pageFromHash(){
-  /* #chat:0770… = إشعار دردشة واللوحة چانت مسكّرة — نفتح محادثة هذا الزبون */
-  var parts = decodeURIComponent((location.hash || '').replace('#','')).trim().split(':');
-  var h = parts[0];
-  if (h === 'chat' && parts[1] && !CH_WANT) CH_WANT = parts[1];
+  var h = (location.hash || '').replace('#','').trim();
   return PAGE_PERM.hasOwnProperty(h) ? h : '';
 }
 function goWantedPage(){
@@ -853,14 +821,10 @@ async function pulse(){
 
     if (typeof p['طلبات'] === 'number'){
       pulseBadge('bgOrd', p['طلبات']);
-      /* 🔔 ننبّه بس لما يوصل طلب **جديد** (رقم آخر طلب تغيّر).
-         قبل كان ينبّه كل ما زاد عدد «ينتظر» — فلو رجّعت طلب قديم
-         للمراجعة (حتى تعدّله) يطلع «طلب جديد» باسم زبون ثاني. */
-      var o = p['آخر_طلب'] || {};
-      if (PULSE.ordCode && o['رقم'] && o['رقم'] !== PULSE.ordCode){
+      if (PULSE.ord !== null && p['طلبات'] > PULSE.ord){
+        var o = p['آخر_طلب'] || {};
         pulseNotify('طلب جديد', (o['محل'] || '') + ' · ' + nf(o['مبلغ'] || 0) + ' د.ع', 'ord');
       }
-      if (o['رقم']) PULSE.ordCode = o['رقم'];
       PULSE.ord = p['طلبات'];
     }
 
@@ -948,7 +912,7 @@ async function pushRegister(){
     /* ⚠️ نستعمل عامل الخدمة مالتنا نفسه — ما نسجّل firebase-messaging-sw.js.
        المتصفح يسمح بعامل واحد لكل نطاق، ولو سجّلنا الثاني يلغي الأول
        فتضيع خاصية التنصيب (ذاك الملف ماكو عنده معالج fetch أصلاً). */
-    var reg = await panelSW();                  // عامل اللوحة بنطاقها («/admin»)
+    var reg = await navigator.serviceWorker.ready;
 
     if (!window.firebase || !firebase.messaging){
       await _loadJs('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
@@ -961,12 +925,6 @@ async function pushRegister(){
     if (!token) return;
 
     await rpcOpen('staff_push_register', { p_token: token, p_agent: navigator.userAgent });
-    /* الجهاز صار إله رقم جديد (من نقلنا العامل لـ«/admin»)؟ نشيل القديم
-       من قائمة الموظفين، وإلا كل إشعار يوصلك مرتين. */
-    try{
-      var old = localStorage.getItem('amwaj_push');
-      if (old && old !== token) await rpcOpen('staff_push_forget', { p_token: old });
-    }catch(e){}
     try{ localStorage.setItem('amwaj_push', token); }catch(e){}
     console.log('✅ إشعارات اللوحة مفعّلة');
 
@@ -1227,7 +1185,6 @@ async function pCust(){
     $('content').innerHTML =
       '<div class="section-card">'+
       '<div class="section-head"><div class="section-title">👥 الزبائن</div>'+
-        '<button class="btn-solid" style="margin-inline-start:auto" onclick="custBayanUnlinked()">🔗 كربلاء غير مربوطين</button>'+
         '<input class="search-input" id="cq" value="'+esc(q)+'" placeholder="ابحث باسم · محل · رقم">'+
       '</div>'+
       '<div class="filters">'+ftab(F.cust,'','الكل',n['الكل'],'setCustF')+
@@ -1236,9 +1193,9 @@ async function pCust(){
         ftab(F.cust,'rejected','❌ مرفوض',n['مرفوض'],'setCustF')+
         ftab(F.cust,'review','🔴 مراجعة',n['مراجعة'],'setCustF')+'</div>'+
       '<div class="tbl-wrap"><table><thead><tr><th>المحل</th><th>الاسم</th><th>الهاتف</th>'+
-        '<th>الحالة</th><th>حساب البيان</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody id="custBody">'+
+        '<th>الحالة</th><th>المحافظة</th><th>القضاء</th><th>اقرب نقطة دالة</th><th>طلبات</th><th>ضمان</th><th>صورة</th><th></th></tr></thead><tbody id="custBody">'+
       (d.length ? d.map(function(c){ return custRow(c); }).join('')
-                : '<tr><td colspan="12" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
+                : '<tr><td colspan="11" style="text-align:center;color:var(--muted)">ماكو نتائج</td></tr>')+
       '</tbody></table></div>'+pgBar('cust')+'</div>';
     pgFoot('cust');
     var el = $('cq');
@@ -1257,7 +1214,6 @@ function custRow(c){
   if (c.wallet) st += ' <span class="badge badge-green" title="رصيد المحفظة">👛 '+nf(c.wallet)+'</span>';
   return '<tr><td><b>'+esc(c.shop_name||'—')+'</b></td><td>'+esc(c.name||'—')+'</td>'+
     '<td dir="ltr">'+esc(c.phone)+'</td><td>'+st+'</td>'+
-    '<td data-bq="'+c.id+'" data-lbl="'+esc(c.shop_name||c.name||'')+'" style="white-space:nowrap"><span class="hint">…</span></td>'+   // 🔗 ملف ١٤١
     '<td>'+esc(c.province||'—')+'</td><td>'+esc(c.district||'—')+'</td>'+
     /* النقطة الدالة نص حر يطول — نقصّه بالعرض والكامل يبيّن بالتلميح */
     '<td style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"'+
@@ -1275,100 +1231,6 @@ function custRow(c){
       '<button class="action-btn btn-reject" onclick=\'custDelete('+JSON.stringify(c.id)+','+JSON.stringify(c.shop_name||c.name||'')+')\'>🗑️</button>'+
     '</td></tr>';
 }
-/* ══════ 🔗 ربط الزبون بحساب البيان (ملف ١٤١) ══════
-   ✅ تلقائي = رقم موبايله موجود بحساب بالبيان · 🔗 يدوي = انت ربطته (يغلب)
-   الطلبات تطلع بالـQR على هذا الحساب. محل بيه أكثر من فني = كلهم على حساب المحل. */
-var BAYAN_PAY = {1:'آجل', 2:'نقد'};
-function bayanBtn(id, lbl, t){
-  return ' <button class="action-btn btn-edit" style="padding:3px 8px" data-id="'+id+'" data-lbl="'+esc(lbl||'')+'" '+
-         'onclick="custBayanLink(Number(this.dataset.id), this.dataset.lbl)">'+t+'</button>';
-}
-function bayanCell(id, b, lbl){
-  if (!b) return '<span class="hint">—</span>';
-  var acc = b.acct ? '<b>'+b.acct+'</b> '+esc(b.name||'')+(BAYAN_PAY[b.pay] ? ' <span class="hint">('+BAYAN_PAY[b.pay]+')</span>' : '') : '';
-  if (b.how === 'manual') return '<span class="badge badge-green">🔗 يدوي</span> '+acc+bayanBtn(id, lbl, '✏️');
-  if (b.how === 'auto')   return '<span class="badge badge-green">✅</span> '+acc+bayanBtn(id, lbl, '✏️');
-  if (b.how === 'multi')  return '<span class="badge badge-yellow">⚠️ '+nf(b.cnt)+' حسابات بنفس الرقم</span>'+bayanBtn(id, lbl, '🔗 اربط');
-  return '<span class="badge badge-red">⚠️ مو مربوط</span>'+bayanBtn(id, lbl, '🔗 اربط');
-}
-async function custBayanFill(){
-  var cells = Array.prototype.slice.call(document.querySelectorAll('td[data-bq]:not([data-done])'));
-  if (!cells.length) return;
-  cells.forEach(function(td){ td.setAttribute('data-done', '1'); });
-  var ids = cells.map(function(td){ return Number(td.getAttribute('data-bq')); });
-  try{
-    var r = await rpc('web_customers_bayan', {p_ids: ids}), m = r['البيانات'] || {};
-    cells.forEach(function(td){
-      var id = td.getAttribute('data-bq');
-      td.innerHTML = bayanCell(Number(id), m[id], td.getAttribute('data-lbl'));
-    });
-  }catch(e){
-    cells.forEach(function(td){ td.innerHTML = '<span class="hint" title="'+esc(e.message)+'">—</span>'; });
-  }
-}
-function custBayanLink(id, lbl){
-  window._bqUnlinkedOpen = !!$('bqList');     // جاي من قائمة «غير مربوطين»؟ نرجعله بعد الربط
-  modal('<h3>🔗 حساب البيان — '+esc(lbl||'')+'</h3>'+
-    '<div class="hint">اكتب اسم الحساب أو رقمه بالبيان. محل بيه أكثر من فني؟ اربطهم كلهم بحساب المحل.</div>'+
-    '<input class="modal-input" id="bqQ" placeholder="مثلاً: همسة" autocomplete="off">'+
-    '<div id="bqRes" style="max-height:340px;overflow:auto;margin-top:8px"></div>'+
-    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'+
-      '<button class="action-btn btn-reject" onclick="custBayanSet('+id+',null)">فك الربط اليدوي (يرجع للموبايل)</button>'+
-      '<button class="action-btn" onclick="closeModal()">إغلاق</button></div>');
-  var el = $('bqQ'), seq = 0;
-  el.focus();
-  el.oninput = function(){
-    clearTimeout(el._t);
-    el._t = setTimeout(async function(){
-      var my = ++seq, q = el.value.trim(), box = $('bqRes');
-      if (q.length < 2){ box.innerHTML = ''; return; }
-      box.innerHTML = '<div class="hint">… دا يدوّر</div>';
-      try{
-        var d = (await rpc('web_bayan_search', {p_q: q}))['البيانات'] || [];
-        if (my !== seq) return;
-        box.innerHTML = d.length ? d.map(function(a){
-          return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eee">'+
-            '<b style="min-width:60px" dir="ltr">'+a.num+'</b><span style="flex:1">'+esc(a.name)+
-            (BAYAN_PAY[a.pay] ? ' <span class="hint">('+BAYAN_PAY[a.pay]+')</span>' : '')+
-            (a.users ? ' <span class="badge badge-green" title="زبائن موقع مربوطين بيه">👥 '+a.users+'</span>' : '')+'</span>'+
-            '<button class="action-btn btn-approve" onclick="custBayanSet('+id+','+a.num+')">اختار</button></div>';
-        }).join('') : '<div class="hint">ماكو حساب بهذا الاسم — تأكد إنه موجود بالبيان (القائمة تتحدث كل دقيقتين)</div>';
-      }catch(e){ if (my === seq) box.innerHTML = '<div class="hint">⚠️ '+esc(e.message)+'</div>'; }
-    }, 300);
-  };
-}
-async function custBayanSet(id, acct){
-  try{
-    await rpc('web_customer_bayan_set', {p_id: id, p_acct: acct});
-    closeModal();
-    toast(acct ? '✅ انربط — طلباته الجاية تطلع على الحساب '+acct : '✅ انفك الربط اليدوي');
-    var td = document.querySelector('td[data-bq="'+id+'"]');
-    if (td){ td.removeAttribute('data-done'); custBayanFill(); }
-    if (window._bqUnlinkedOpen) custBayanUnlinked();
-  }catch(e){ toast('⚠️ '+e.message, 4000); }
-}
-async function custBayanUnlinked(){
-  window._bqUnlinkedOpen = false;
-  try{
-    var d = ((await rpc('web_bayan_unlinked', {}))['البيانات'] || []).filter(function(c){
-      return /^\s*كربلاء/.test(c.province || '');     // بس كربلاء — طلباتهم هي الي تدخل البيان بالـQR
-    });
-    modal('<h3>🔗 زبائن كربلاء الي ما مربوطين بالبيان ('+nf(d.length)+')</h3>'+
-      '<div class="hint">طلباتهم تطلع بورقة الطلب بدون حساب — اربط كل واحد بحسابه، أو بحساب محله.</div>'+
-      '<div id="bqList" style="max-height:420px;overflow:auto;margin-top:8px">'+
-      (d.length ? d.map(function(c){
-        return '<div style="display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #eee">'+
-          '<span style="flex:1"><b>'+esc(c.shop_name||'—')+'</b> · '+esc(c.name||'')+
-          ' <span class="hint" dir="ltr">'+esc(c.phone||'')+'</span>'+
-          (c.province ? ' <span class="hint">'+esc(c.province)+'</span>' : '')+
-          (c.cnt > 1 ? ' <span class="badge badge-yellow">'+c.cnt+' حسابات بنفس الرقم</span>' : '')+
-          (c.orders_count ? ' <span class="badge badge-green">'+nf(c.orders_count)+' طلب</span>' : '')+'</span>'+
-          bayanBtn(c.id, c.shop_name || c.name || '', '🔗 اربط')+'</div>';
-      }).join('') : '<div class="hint" style="padding:14px">✅ كل زبائن كربلاء مربوطين</div>')+
-      '</div><div style="margin-top:12px"><button class="action-btn" onclick="closeModal()">إغلاق</button></div>');
-  }catch(e){ toast('⚠️ '+e.message, 4000); }
-}
-
 async function custSet(id, patch, phone, name){
   try{
     await rpc('web_customer_set',{p_id:id,p_patch:patch});
@@ -1605,30 +1467,6 @@ function ordBadge(o){
   return '<span class="badge '+s[1]+'">'+esc(s[0])+'</span>';
 }
 var _curPrimeLeft = false;
-/* 👛 محفظة الزبون بهذا الطلب — كم انخصم منها وكم نزلتله مكافأة.
-   الطلب الملغي: الخصم يرجعله والمكافأة تنسحب (ملف ١١٥)، فنكتبها. */
-function ordWalletHtml(o){
-  var wu = Number(o.wallet_used) || 0, cb = Number(o.cashback) || 0;
-  var off = o.status === 'cancelled', rows = '';
-  var row = function(label, val, note, color){
-    return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0">' +
-      '<span>' + label + (note ? ' <span class="hint">(' + note + ')</span>' : '') + '</span>' +
-      '<b dir="ltr" style="color:' + color + ';white-space:nowrap">' + val + '</b></div>';
-  };
-  if (wu > 0){
-    rows += row('المواد والتوصيل', nf(Number(o.total || 0) + wu) + ' د.ع', '', 'var(--text)');
-    rows += row('🛒 انخصم من محفظته', '− ' + nf(wu) + ' د.ع', off ? 'رجعله لأن الطلب انلغى' : '', '#DC2626');
-  }
-  if (cb > 0){
-    rows += row('💰 نزل بمحفظته مكافأة', '+ ' + nf(cb) + ' د.ع', off ? 'انسحبت لأن الطلب انلغى' : '', '#16A34A');
-  }
-  if (o.replaces_code) rows += row('✏️ تعديل على الطلب', esc(o.replaces_code), 'القديم انلغى', 'var(--text)');
-  if (o.replaced_by && o.replaced_by !== '…') rows += row('✏️ الزبون عدّله', '← ' + esc(o.replaced_by), 'هذا انلغى', 'var(--text)');
-  if (!rows) return '';
-  return '<div style="border:1px solid var(--border);border-radius:9px;padding:8px 12px;margin:0 0 10px;font-size:14px">' +
-    '<div style="font-weight:800;margin-bottom:4px">👛 محفظة الزبون</div>' + rows + '</div>';
-}
-
 async function ordOpen(id){
   _curOrderId = id;
   try{
@@ -1647,7 +1485,6 @@ async function ordOpen(id){
       '<div style="border:1px solid var(--border);border-radius:9px;overflow:hidden">'+
       it.map(orderItemHtml).join('')+'</div>'+
       '<div style="text-align:left;font-size:17px;font-weight:900;margin:10px 0" dir="ltr">'+nf(o.total)+' د.ع</div>'+
-      ordWalletHtml(o)+
       (o.cancel_reason ? '<div class="msg err">سبب الإلغاء: '+esc(o.cancel_reason)+'</div>' : '')+
       '<label>تغيير الحالة</label>'+
       '<select class="modal-select" id="oSt">'+
@@ -1658,14 +1495,6 @@ async function ordOpen(id){
       '<div style="display:flex;gap:8px;margin-top:12px">'+
         '<button class="btn-solid" onclick="ordSave('+o.id+')">حفظ</button>'+
         '<button class="btn-solid gray" onclick="closeModal()">إغلاق</button></div>'+
-      /* 💬 راسل الزبون عن هذا الطلب — تنفتح المحادثة وبيها رقم الطلب جاهز */
-      ((o.cust_phone && can('chat'))
-        ? '<button class="btn-solid green" style="width:100%;margin-top:8px" onclick="ordChat(\''+esc(o.cust_phone)+'\',\''+esc(o.order_code)+'\')">💬 راسل الزبون عن هذا الطلب</button>'
-        : '')+
-      /* 🖨️ ضاع الوصل؟ يرجع لطابعة المحل وينطبع وفوقه «إعادة طباعة» (ملف ١٤٤) */
-      (o.status !== 'cancelled'
-        ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordReprint(\''+esc(o.order_code)+'\')">🖨️ إعادة طباعة الوصل</button>'
-        : '')+
       // ✏️ تعديل المواد — بس لو الطلب لسه ينتظر/بالطريق وماكو شحنة برايم فعّالة عليه
       ((o.status==='pending'||o.status==='picked') && !_curPrimeLeft
         ? '<button class="btn-solid gray" style="width:100%;margin-top:8px" onclick="ordEditItems('+o.id+')">✏️ تعديل المواد (إضافة/حذف)</button>'
@@ -1711,14 +1540,6 @@ async function ordOpen(id){
              '<button class="btn-solid" onclick="prLabel(\''+esc(o.order_code)+'\')">🖨️ اطبع الملصق</button>'+cancelBtn))+
         '</div>';
       })()));
-  }catch(e){ toast('⚠️ '+e.message, 4000); }
-}
-
-async function ordReprint(code){
-  if (!confirm('إعادة طباعة وصل '+code+'؟ ينطبع بطابعة المحل وفوقه «إعادة طباعة».')) return;
-  try{
-    await rpc('web_order_reprint', {p_code: code});
-    toast('🖨️ انرسل للطابعة — ينطبع خلال ثواني');
   }catch(e){ toast('⚠️ '+e.message, 4000); }
 }
 
@@ -1910,17 +1731,12 @@ function wlPanel(L, shop, title){
 
   var z = wlSize();
   modal('<h3>🏷️ ملصقات الضمان — ' + esc(title || '') + '</h3>' +
-    '<div class="msg" id="wlGodexMsg" style="display:none"></div>' +
     '<div class="hint" style="margin-bottom:10px">' + L.length + ' ملصق · ' +
-      'الطباعة على <b>Godex</b> — <b>لا تطبعها من المتصفح</b>، يطلع مقصوص (ومكرر إذا انرسلت لـGodex).</div>' +
+      'اضغط <b>اطبع</b> ← اختار طابعة الملصقات. الصفحة تسكّر نفسها وترجع لهنا.</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">' +
-      '<button class="btn-solid" onclick="wlGodex()">🏷️ اطبع على Godex (' + L.length + ')</button>' +
+      (L.length > 1 ? '<button class="btn-solid green" onclick="wlPrintDoc()">🖨️ اطبع الكل (' + L.length + ')</button>' : '') +
       '<button class="btn-solid gray" onclick="closeModal()">✕ إغلاق</button>' +
     '</div>' +
-    /* احتياط بس — لو Godex عاطلة أو الحاسبة مطفية */
-    '<details style="margin-bottom:10px"><summary class="hint" style="cursor:pointer">🖨️ طابعة ثانية (من المتصفح)</summary>' +
-      '<button class="action-btn btn-view" style="margin-top:8px" onclick="wlPrintDoc()">🖨️ اطبع من المتصفح' +
-        (L.length > 1 ? ' (' + L.length + ')' : '') + '</button></details>' +
     '<div id="wlList"></div>' +
     '<details style="margin-top:12px"><summary class="hint" style="cursor:pointer">📐 مقاس اللصقة</summary>' +
       '<div class="grid2" style="margin-top:8px">' +
@@ -2017,28 +1833,6 @@ function wlPrintDoc(one){
     try{ w.document.open(); w.document.write(html); w.document.close(); return; }catch(e){}
   }
   toast('⚠️ المتصفح حجب النافذة — اسمحله بالنوافذ المنبثقة', 5000);
-}
-
-
-/* 🏷️ طابعة الملصقات الثابتة (Godex) — ملف ١٢٩.
-   نحط الأكواد بطابور بالسيرفر، وبرنامج الطابعة بحاسبة المحل يسحبها
-   خلال ~٢٠ ثانية ويطبعها. يشتغل من أي جهاز — حتى من التلفون. */
-async function wlGodex(codes, quiet){
-  codes = codes || _wlSet.items.map(function(x){ return x.c; });
-  var m = $('wlGodexMsg');
-  try{
-    var r = await rpc('web_warranty_labels_queue', { p_codes: codes });
-    var n = r['عدد'] || 0;
-    var t = '✅ ' + n + ' ملصق انرسل لطابعة Godex — ينطبع خلال ثواني';
-    if (m){ m.style.display = 'block'; m.className = 'msg ok'; m.textContent = t; }
-    if (!quiet) toast(t, 4000);
-    return n;
-  }catch(e){
-    var t2 = '⚠️ ما انرسل لـGodex: ' + e.message + ' — اطبعه من المتصفح';
-    if (m){ m.style.display = 'block'; m.className = 'msg err'; m.textContent = t2; }
-    else toast(t2, 6000);
-    return 0;
-  }
 }
 
 
@@ -2141,8 +1935,6 @@ async function wlQuickGo(){
 
     wlPanel(L, r['المحل'] || '', 'بيع مباشر');
     try{ await rpc('web_warranty_labels_mark', { p_codes: L.map(function(x){ return x['الكود']; }) }); }catch(e){}
-    // 🏷️ الي تولّدها هنا تنطبع على Godex لحالها (طلب علي)
-    await wlGodex(L.map(function(x){ return x['الكود']; }), true);
   }catch(e){
     m.className = 'msg err'; m.textContent = e.message;
   }
@@ -2211,9 +2003,7 @@ async function prCancel(code){
 // ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلّم أو يتلغي
 // ✏️ تعديل مواد الطلب — إضافة/حذف قبل ما يتسلم أو يتلغي
 var _editRows = [];
-var _editReason = '', _editNotify = true;     // 📝 ملف ١٢٤: سبب التعديل يوصل للزبون
 async function ordEditItems(id){
-  _editReason = ''; _editNotify = true;
   try{
     var r = await rpc('web_order_detail',{p_id:id});
     var o = r['الطلب'], it = r['المواد'];
@@ -2301,12 +2091,6 @@ function renderEditItems(){
     '<div id="eiSearchResults" style="margin-top:4px"></div>'+
     '<button class="btn-solid gray" style="width:100%;margin-top:6px" onclick="_editAddRow()">➕ مادة يدوية (مو موجودة بالكاتلوك)</button>'+
     '<div style="text-align:left;font-weight:900;margin:10px 0" dir="ltr">مجموع المواد: '+nf(total)+' د.ع</div>'+
-    '<label style="margin-top:6px">📝 سبب التعديل — يوصل للزبون بإشعار</label>'+
-    '<input class="modal-input" id="eiReason" value="'+esc(_editReason)+'" oninput="_editReason=this.value"'+
-      ' placeholder="مثال: القطعة نفذت وبدّلناها بنوع ثاني">'+
-    '<label style="display:flex;gap:8px;align-items:center;color:var(--text);margin-top:6px">'+
-      '<input type="checkbox" id="eiNotify"'+(_editNotify?' checked':'')+' onchange="_editNotify=this.checked"'+
-      ' style="width:18px;height:18px"> بلّغ الزبون بإشعار</label>'+
     '<div class="msg" id="eiMsg"></div>'+
     '<div style="display:flex;gap:8px;margin-top:8px">'+
       '<button class="btn-solid" onclick="ordEditSave()">💾 حفظ التعديل</button>'+
@@ -2321,13 +2105,7 @@ async function ordEditSave(){
   if (!items.length){ if(m){ m.className='msg err'; m.textContent='لازم مادة وحدة على الأقل'; } return; }
   try{
     await rpc('web_order_edit_items', {p_id:id, p_items:items});
-    /* 🔔 إشعار للزبون: «تعدّل طلبك» + السبب + المجموع الجديد */
-    var _sent = false;
-    if (_editNotify){
-      try{ await rpc('web_order_notify', {p_id:id, p_reason:(_editReason||'').trim() || null}); _sent = true; }
-      catch(e2){ /* التعديل انحفظ — الإشعار ثانوي */ }
-    }
-    toast(_sent ? '✅ انحفظ التعديل ووصل إشعار للزبون' : '✅ انحفظ التعديل'); ordOpen(id); pOrd();
+    toast('✅ انحفظ التعديل'); ordOpen(id); pOrd();
   }catch(e){ if (m){ m.className='msg err'; m.textContent=e.message; } }
 }
 
@@ -2558,7 +2336,6 @@ function pgStart(k, d, total){
 function pgBar(k){ return '<div id="pgFoot_'+k+'" style="padding:14px;text-align:center"></div>'; }
 
 function pgFoot(k){
-  if (k === 'cust') custBayanFill();          // 🔗 ملف ١٤١
   var g = pgGet(k), el = $('pgFoot_'+k);
   if (!el) return;
   el.innerHTML =
@@ -2913,15 +2690,6 @@ async function pSet(){
     var today = new Date().toISOString().slice(0,10);
 
     $('content').innerHTML =
-    /* ── 💰 السعر الي يظهر بالتطبيق (ملف ١٤٥) ── */
-    '<div class="section-card"><div class="section-head">'+
-      '<div class="section-title">💰 السعر الي يظهر بالتطبيق</div>'+
-      '<span class="hint" id="psNow">…</span></div>'+
-    '<div class="section-body">'+
-      '<div class="hint" style="margin-bottom:10px">أي سعر من البيان يشوفه الزبون بالتطبيق والموقع. تغيّره وكل الأسعار تتبدّل فوراً — وزبون الجملة يبقى يشوف سعر الجملة.</div>'+
-      '<div id="psBtns" style="display:flex;gap:8px;flex-wrap:wrap"></div>'+
-      '<div class="msg" id="psRes"></div>'+
-    '</div></div>'+
     /* ── تنبيه عام ── */
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">🚨 تنبيه عام — يظهر بأعلى التطبيق</div>'+
@@ -2989,23 +2757,16 @@ async function pSet(){
     /* ── تحديث التطبيق ── */
     '<div class="section-card"><div class="section-head">'+
       '<div class="section-title">📲 تحديث التطبيق</div>'+
-      (av.version ? '<span class="badge badge-blue">أندرويد '+esc(av.version)+'</span>' : '')+
-      (av.ios_version ? ' <span class="badge badge-blue">آيفون '+esc(av.ios_version)+'</span>' : '')+'</div>'+
+      (av.version ? '<span class="badge badge-blue">آخر نسخة '+esc(av.version)+'</span>' : '')+'</div>'+
     '<div class="section-body">'+
       '<div class="hint" style="margin-bottom:8px">الزبون اللي نسخته أقدم من هاي، يطلعله طلب تحديث.<br>'+
         'بالتطبيق التحديث <b>إجباري دائماً</b> (ماكو زر «لاحقاً») — بالموقع اختياري.</div>'+
-      '<div class="hint" style="margin-bottom:8px">⚠️ غيّر الرقم <b>بعد</b> ما توافق كوكل / أبل وتنزل النسخة بالمتجر — '+
-        'وإلا الزبون يطلعله تحديث ما موجود.</div>'+
-      '<label>🤖 رقم آخر نسخة أندرويد</label>'+
-      '<input class="modal-input" id="avVer" dir="ltr" value="'+esc(av.version||'')+'" placeholder="1.0.25">'+
-      '<label>🍎 رقم آخر نسخة آيفون <span class="hint">(فاضي = ماكو طلب تحديث للآيفون)</span></label>'+
-      '<input class="modal-input" id="avIosVer" dir="ltr" value="'+esc(av.ios_version||'')+'" placeholder="1.0.1">'+
+      '<label>رقم آخر نسخة</label>'+
+      '<input class="modal-input" id="avVer" dir="ltr" value="'+esc(av.version||'')+'" placeholder="1.0.14">'+
       '<label>الرسالة</label>'+
       '<textarea class="modal-input" id="avMsg" rows="2">'+esc(av.message||'')+'</textarea>'+
-      '<label>رابط كوكل بلاي</label>'+
+      '<label>رابط المتجر</label>'+
       '<input class="modal-input" id="avUrl" dir="ltr" value="'+esc(av.store_url||'')+'">'+
-      '<label>رابط App Store</label>'+
-      '<input class="modal-input" id="avIosUrl" dir="ltr" value="'+esc(av.ios_url||'https://apps.apple.com/app/id6815197745')+'">'+
       '<button class="btn-solid green" style="margin-top:10px" onclick="setSaveVer()">💾 حفظ</button>'+
       '<div class="msg" id="avRes"></div>'+
     '</div></div>'+
@@ -3053,7 +2814,6 @@ async function pSet(){
 
     warrPreview();
     promoLoad();
-    psLoad();          // 💰 ملف ١٤٥
 
     try{
       var st = await rpc2('shop_status');
@@ -3078,31 +2838,6 @@ async function rpc2(fn){
     'Content-Type':'application/json'}, body:'{}' });
   return await res.json();
 }
-/* 💰 ملف ١٤٥: مفرد (Price4) · مفرق (Price3) · جملة (Price1) من البيان */
-var PRICE_SRC = [['mufrad','مفرد'],['mufraq','مفرق'],['jumla','جملة']];
-async function psLoad(){
-  var box = $('psBtns'); if (!box) return;
-  try{
-    var r = await rpc('web_price_source_get', {});
-    var cur = r.source || 'mufrad';
-    $('psNow').innerHTML = '<span class="badge badge-green">هسه: '+((PRICE_SRC.filter(function(x){ return x[0]===cur; })[0]||['',''])[1])+'</span>';
-    box.innerHTML = PRICE_SRC.map(function(x){
-      return '<button class="btn-solid'+(x[0]===cur ? ' green' : ' gray')+'" onclick="psSet(\''+x[0]+'\')">'+
-             (x[0]===cur ? '✅ ' : '')+x[1]+'</button>';
-    }).join('');
-    if (!r.ready) $('psRes').innerHTML = '<span class="hint">⏳ برنامج الطابعة بعده ما رفع أسعار البيان الثلاثة — خلال نص ساعة تجهز</span>';
-  }catch(e){ box.innerHTML = '<span class="hint">⚠️ '+esc(e.message)+' — شغّل ملف ١٤٥</span>'; }
-}
-async function psSet(src){
-  var name = (PRICE_SRC.filter(function(x){ return x[0]===src; })[0]||['',''])[1];
-  if (!confirm('كل الأسعار بالتطبيق تصير «'+name+'» من البيان هسه. متأكد؟')) return;
-  try{
-    var r = await rpc('web_price_source_set', {p_source: src});
-    toast('✅ صار «'+name+'» — تبدّل سعر '+nf((r.products||0)+(r.screens||0))+' مادة', 4000);
-    psLoad();
-  }catch(e){ toast('⚠️ '+e.message, 4000); }
-}
-
 async function setSaveNotice(){
   var m = $('snRes');
   try{
@@ -3145,16 +2880,10 @@ async function setSaveVer(){
     return;
   }
   try{
-    var iv = $('avIosVer').value.trim();
-    if (iv && !/^\d+(\.\d+){1,3}$/.test(iv)){
-      m.className='msg err'; m.textContent='رقم نسخة الآيفون لازم أرقام ونقاط بس — مثل 1.0.1'; return;
-    }
     await rpc('web_setting_set',{p_name:'app_version', p_value:{
-      version:     v,
-      message:     $('avMsg').value.trim(),
-      store_url:   $('avUrl').value.trim(),
-      ios_version: iv,                                  // 🍎 منفصل — الآيفون أرقامه غير الأندرويد
-      ios_url:     $('avIosUrl').value.trim()}});
+      version:   v,
+      message:   $('avMsg').value.trim(),
+      store_url: $('avUrl').value.trim()}});
     toast('✅ انحفظت النسخة'); pSet();
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
@@ -3325,19 +3054,6 @@ async function msgSaveTpl(key){
 var CH = { phone:'', items:[], pending:[], chain:null, lastId:0, seenUpTo:0, cust:null, threads:[], q:'',
            timer:null, tick:0, busy:false, sending:false, img:null, stick:true };
 var CH_WANT = '';     // جاي من ضغطة إشعار؟ نفتح محادثته
-var CH_DRAFT = '';    // نص جاهز بخانة الكتابة (مثلاً رقم الطلب)
-
-/* 💬 من نافذة الطلب ← المحادثة ويا صاحبه، ورقم الطلب مكتوب جاهز */
-function ordChat(phone, code){
-  var p = String(phone || '').replace(/[^0-9]/g, '');
-  if (p.indexOf('964') === 0) p = '0' + p.slice(3);
-  if (p.length === 10 && p[0] !== '0') p = '0' + p;
-  if (!p) return;
-  closeModal();
-  CH_WANT = p;
-  CH_DRAFT = 'بخصوص طلبك ⁦' + code + '⁩: ';   // ⁦⁩ = يبقى رقم الطلب قطعة وحدة وسط العربي
-  showPage('chat');
-}
 
 async function pChat(){
   $('content').innerHTML =
@@ -3460,7 +3176,7 @@ async function chOpen(phone){
       '<div class="ch-who" id="chWho"><b>…</b></div>' +
       '<div class="ch-acts" id="chActs"></div>' +
     '</div>' +
-    '<div class="ch-gone" id="chGone" style="display:none">هذا الرقم ما عنده حساب بالتطبيق (أو حذفه) — ما توصله ردود من هنا. راسله واتساب.</div>' +
+    '<div class="ch-gone" id="chGone" style="display:none">هذا الزبون حذف حسابه — ما توصله ردود من هنا. راسله واتساب.</div>' +
     '<div class="ch-list" id="chList"><div class="loading">جاري التحميل…</div></div>' +
     '<div class="ch-prev" id="chPrev"></div>' +
     '<div class="ch-bar" id="chBar">' +
@@ -3474,11 +3190,6 @@ async function chOpen(phone){
     CH.stick = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   }, { passive:true });
   chFit();
-  /* ✍️ جاي من زر «راسل الزبون عن هذا الطلب»؟ نكتب رقم الطلب بالخانة */
-  if (CH_DRAFT){
-    var ti = $('chInput'); ti.value = CH_DRAFT; chGrow(ti); CH_DRAFT = '';
-    setTimeout(function(){ try{ ti.focus(); ti.setSelectionRange(ti.value.length, ti.value.length); }catch(e){} }, 300);
-  }
   await chPoll(true);
   pulseChat();                       // العلامة الحمرة تنزل فوراً
 }
@@ -3659,17 +3370,16 @@ async function pulseChat(){
      wholesale = جملة
      retail    = مفرد ثابت — ما يتحوّل لحاله (لو نزّلته أنت) */
 var WL_KIND_A = { welcome:'🎁 هدية الترحيب', cashback:'💰 مكافأة طلب', spend:'🛒 صرف بطلب',
-                  refund:'↩️ رجوع رصيد', clawback:'➖ سحب مكافأة (إلغاء)', adjust:'✏️ تعديل يدوي',
-                  goal:'🎯 مكافأة مشتريات' };
+                  refund:'↩️ رجوع رصيد', clawback:'➖ سحب مكافأة (إلغاء)', adjust:'✏️ تعديل يدوي' };
 
 async function custWallet(id){
   modal('<div class="loading">جاري التحميل…</div>');
   try{
     var w = await rpc('web_customer_wallet', { p_id:id });
-    var whole = w.tier === 'wholesale';
+    var mode = w.tier === 'wholesale' ? 'wholesale' : (w.locked ? 'retail' : 'auto');
+    var pc = w.threshold > 0 ? Math.min(100, Math.round(w.progress * 100 / w.threshold)) : 0;
     var seg = function(v, label){
-      var on = (v === 'wholesale') === whole;
-      return '<button class="filter-tab'+(on?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
+      return '<button class="filter-tab'+(mode===v?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
     };
     var tx = (w.items||[]).map(function(t){
       return '<tr><td>'+(WL_KIND_A[t.kind]||esc(t.kind))+'</td>'+
@@ -3679,18 +3389,18 @@ async function custWallet(id){
         '<td>'+dtstr(t.at)+'</td></tr>';
     }).join('');
     modal('<h3>👛 '+esc(w.shop||w.name||'')+'</h3>'+
-      '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
+      '<div class="stats-grid" style="grid-template-columns:1fr 1fr">'+
+        '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
+        '<div class="stat-card"><div class="hint">مشترياته المُسلّمة (من بداية العرض)</div><div class="stat-num">'+nf(w.progress)+'</div>'+
+          (mode!=='wholesale' && w.threshold>0 ? '<div style="height:7px;background:var(--border);border-radius:6px;margin-top:6px;overflow:hidden">'+
+            '<div style="height:100%;width:'+pc+'%;background:var(--yellow)"></div></div>'+
+            '<div class="hint">'+pc+'٪ من '+nf(w.threshold)+'</div>' : '')+
+        '</div></div>'+
       '<label>نوع الزبون</label>'+
-      '<div class="filters" style="padding:0;border:none">'+seg('retail','مفرد')+seg('wholesale','⭐ جملة')+'</div>'+
-      /* 💰 ملف ١٢٢: نسبة مكافأة خاصة لزبون الجملة */
-      (whole
-        ? '<label style="margin-top:10px">💰 نسبة مكافأة زبون الجملة (٪)</label>'+
-          '<div style="display:flex;gap:8px;align-items:center">'+
-            '<input class="modal-input" id="wlPct" type="number" step="0.1" min="0" max="20" style="max-width:140px"'+
-              ' placeholder="النسب العامة" value="'+(w.pct!=null?w.pct:'')+'">'+
-            '<button class="btn-solid" onclick="custCbPct('+id+')">حفظ النسبة</button></div>'+
-          '<div class="hint">فارغة = ياخذ نفس النسب العامة. الزبون ما يشوف النسبة — يشوف المبلغ بس.</div>'
-        : '')+
+      '<div class="filters" style="padding:0;border:none">'+
+        seg('auto','مفرد (يصير جملة لحاله)')+seg('wholesale','⭐ جملة')+seg('retail','مفرد ثابت')+
+      '</div>'+
+      '<div class="hint">«مفرد ثابت» = ما يتحوّل جملة لحاله حتى لو وصل الحد.</div>'+
       '<label style="margin-top:14px">➕➖ تعديل الرصيد (هدية، تعويض، تصحيح)</label>'+
       '<div class="grid2"><input class="modal-input" id="wlAmt" type="number" inputmode="numeric" placeholder="المبلغ — مثلاً 5000 أو -5000">'+
         '<input class="modal-input" id="wlNote" placeholder="السبب (يوصل للزبون بالإشعار)"></div>'+
@@ -3702,15 +3412,6 @@ async function custWallet(id){
       (tx ? '<div class="tbl-wrap" style="max-height:40vh"><table><thead><tr><th>النوع</th><th>المبلغ</th><th>ملاحظة</th><th>الوقت</th></tr></thead><tbody>'+tx+'</tbody></table></div>'
           : '<div class="hint">ماكو حركات بعد</div>'));
   }catch(e){ modal('<div class="msg err">'+esc(e.message)+'</div>'); }
-}
-async function custCbPct(id){
-  var v = ($('wlPct').value||'').trim(), m = $('wlMsg');
-  var pct = v === '' ? null : parseFloat(v);
-  if (pct !== null && (isNaN(pct) || pct < 0 || pct > 20)){ m.className='msg err'; m.textContent='النسبة بين 0 و 20'; return; }
-  try{
-    await rpc('web_customer_cbpct', { p_id:id, p_pct:pct });
-    m.className='msg ok'; m.textContent = pct === null ? '✅ رجع للنسب العامة' : '✅ انحفظت النسبة';
-  }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
 async function custTier(id, tier){
   try{
@@ -3737,7 +3438,6 @@ async function promoLoad(){
   try{
     var p = await rpc('web_promo_get', {});
     var s = p.stats || {};
-    var G = {}; try{ G = await rpc('web_goal_get', {}); }catch(e0){}
     box.innerHTML =
       '<label style="display:flex;gap:8px;align-items:center;color:var(--text)"><input type="checkbox" id="prOn"'+(p.on?' checked':'')+
         ' style="width:20px;height:20px"> <b>شغّال</b> — هدية الترحيب والمكافأة والتحويل لجملة</label>'+
@@ -3746,21 +3446,14 @@ async function promoLoad(){
       '</div>'+
       /* 💰 ملف ١١٨: ثلاث نسب حسب مبلغ الطلب — الزبون ما يشوف النسبة، يشوف المبلغ بس */
       '<label>مكافأة كل طلب (٪) — حسب مبلغ الطلب</label>'+
-      '<div class="grid2">'+
-        '<div><div class="hint">1.000 – 25.000</div><input class="modal-input" id="prT0" type="number" step="0.1" value="'+(p.t0!=null?p.t0:(p.t1!=null?p.t1:0))+'"></div>'+
-        '<div><div class="hint">25.000 – 50.000</div><input class="modal-input" id="prT1" type="number" step="0.1" value="'+(p.t1!=null?p.t1:(p.pct||0))+'"></div>'+
+      '<div class="grid2" style="grid-template-columns:1fr 1fr 1fr">'+
+        '<div><div class="hint">1.000 – 50.000</div><input class="modal-input" id="prT1" type="number" step="0.1" value="'+(p.t1!=null?p.t1:(p.pct||0))+'"></div>'+
         '<div><div class="hint">50.000 – 100.000</div><input class="modal-input" id="prT2" type="number" step="0.1" value="'+(p.t2!=null?p.t2:(p.pct||0))+'"></div>'+
         '<div><div class="hint">100.000 وفوق</div><input class="modal-input" id="prT3" type="number" step="0.1" value="'+(p.t3!=null?p.t3:(p.pct||0))+'"></div>'+
       '</div>'+
       '<div class="hint">الزبون ما يشوف النسبة — يشوف بس «راح ينزلك X د.ع». الطلب تحت 1.000 ما ياخذ مكافأة.</div>'+
-      /* 🎯 ملف ١٢٣: مكافأة كل ما توصل مشتريات الزبون حد معيّن */
-      '<label style="margin-top:12px">🎯 مكافأة المشتريات</label>'+
-      '<div class="grid2">'+
-        '<div><div class="hint">كل ما توصل مشترياته (د.ع)</div><input class="modal-input" id="prGoalAt" type="number" value="'+(G.at||0)+'"></div>'+
-        '<div><div class="hint">ينزله بالمحفظة (د.ع) — صفر = طافية</div><input class="modal-input" id="prGoalBonus" type="number" value="'+(G.bonus||0)+'"></div>'+
-      '</div>'+
-      '<div class="hint">تنحسب الطلبات المُسلّمة. كل ما يوصل الحد (٢٫٥ ← ٥ ← ٧٫٥…) ينزله المبلغ ويوصله إشعار. انعطت لحد هسه: '+nf(G.paid||0)+' مكافأة.</div>'+
-      '<div class="hint" style="margin-top:8px">⭐ زبون الجملة: تحوّله بيدك من صفحة الزبائن ← 👛 — وهناك تحدد نسبته الخاصة.</div>'+
+      '<label>يصير جملة لما مشترياته توصل (د.ع)</label><input class="modal-input" id="prAt" type="number" value="'+(p.threshold||0)+'">'+
+      '<div class="hint">تنحسب الطلبات المُسلّمة من '+dstr(p.start)+' وجاي.</div>'+
       '<div style="margin-top:10px"><button class="btn-solid" onclick="promoSave()">حفظ</button></div>'+
       '<div class="msg" id="prMsg"></div>'+
       '<div class="stats-grid" style="margin-top:12px">'+
@@ -3775,11 +3468,8 @@ async function promoSave(){
   try{
     await rpc('web_promo_set', { p_on:$('prOn').checked,
       p_welcome:parseInt($('prWel').value,10)||0,
-      p_t0:parseFloat($('prT0').value)||0,
       p_t1:parseFloat($('prT1').value)||0, p_t2:parseFloat($('prT2').value)||0, p_t3:parseFloat($('prT3').value)||0,
-      p_threshold:0 });                          // ملف ١٢٢: ماكو تحويل تلقائي لجملة
-    await rpc('web_goal_set', { p_at:parseInt($('prGoalAt').value,10)||0,
-      p_bonus:parseInt($('prGoalBonus').value,10)||0 });
+      p_threshold:parseInt($('prAt').value,10)||0 });
     m.className='msg ok'; m.textContent='✅ انحفظ';
   }catch(e){ m.className='msg err'; m.textContent=e.message; }
 }
