@@ -7798,12 +7798,13 @@ async function _applyWholesale(r){
   if (!tok || !r) return;
   try {
     var w = await sbRpc('app_wholesale_prices', { p_token: tok });
-    if (!w || w.tier !== 'wholesale') return;
+    // ⭐ جملة، أو 🏷️ مفرق (ملف ١٤٨ — زبون تختاره من اللوحة يشوف سعر المفرق)
+    if (!w || (w.tier !== 'wholesale' && w.tier !== 'mufraq')) return;
     var map = w.prices || {};
     var swap = function(i){ if (i && i.code && map[i.code]) { i.retail = i.price; i.price = map[i.code]; } };
     (r.screens || []).forEach(swap);
     Object.keys(r.parts || {}).forEach(function(k){ (r.parts[k] || []).forEach(swap); });
-    WHOLESALE_ON = true;
+    WHOLESALE_ON = (w.tier === 'wholesale');   // «أسعار جملة» تنكتب بس للجملة
   } catch(e) { /* نبقى على المفرد — السيرفر يحسب الصح وقت الطلب بكل الأحوال */ }
 }
 

@@ -3724,8 +3724,10 @@ async function custWallet(id){
   try{
     var w = await rpc('web_customer_wallet', { p_id:id });
     var whole = w.tier === 'wholesale';
+    // 🏷️ ملف ١٤٨: مفرد · مفرق · جملة
+    var curT = w.mode === 'mufraq' ? 'mufraq' : (whole ? 'wholesale' : 'retail');
     var seg = function(v, label){
-      var on = (v === 'wholesale') === whole;
+      var on = v === curT;
       return '<button class="filter-tab'+(on?' active':'')+'" onclick="custTier('+id+',\''+v+'\')">'+label+'</button>';
     };
     var tx = (w.items||[]).map(function(t){
@@ -3738,7 +3740,8 @@ async function custWallet(id){
     modal('<h3>👛 '+esc(w.shop||w.name||'')+'</h3>'+
       '<div class="stat-card"><div class="hint">الرصيد</div><div class="stat-num">'+nf(w.balance)+' <small>د.ع</small></div></div>'+
       '<label>نوع الزبون</label>'+
-      '<div class="filters" style="padding:0;border:none">'+seg('retail','مفرد')+seg('wholesale','⭐ جملة')+'</div>'+
+      '<div class="filters" style="padding:0;border:none">'+seg('retail','مفرد')+seg('mufraq','🏷️ مفرق')+seg('wholesale','⭐ جملة')+'</div>'+
+      '<div class="hint">مفرد/مفرق/جملة = السعر الي يشوفه هذا الزبون من البيان، وعليه ينحسب طلبه.</div>'+
       /* 💰 ملف ١٢٢: نسبة مكافأة خاصة لزبون الجملة */
       (whole
         ? '<label style="margin-top:10px">💰 نسبة مكافأة زبون الجملة (٪)</label>'+
@@ -3772,7 +3775,7 @@ async function custCbPct(id){
 async function custTier(id, tier){
   try{
     await rpc('web_customer_tier', { p_id:id, p_tier:tier });
-    toast(tier==='wholesale' ? '⭐ صار جملة — وصله إشعار' : '✅ انحفظ');
+    toast(tier==='wholesale' ? '⭐ صار جملة — وصله إشعار' : tier==='mufraq' ? '🏷️ صار مفرق' : '✅ انحفظ');
     custWallet(id);
     if (PAGE === 'cust') pCust();
   }catch(e){ toast('⚠️ '+e.message, 4000); }
